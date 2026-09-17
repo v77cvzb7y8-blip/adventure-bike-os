@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.6 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.7 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -54,7 +54,7 @@ def brouter(a, b, profile="trekking"):
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.6-stage-fallback")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.7-stage-optimizer")
 
 @app.get("/health")
 def health():
@@ -77,7 +77,7 @@ def stage_candidates():
             r.raise_for_status(); data=r.json(); a=data.get("address") or {}
             name=a.get("city") or a.get("town") or a.get("village") or a.get("municipality") or a.get("county") or data.get("name")
             if not name or name.casefold() in seen: continue
-            seen.add(name.casefold()); candidates.append({"name":name,"lat":lat,"lon":lon,"route_delta_km":round(float(p.get("route_delta_km") or 0),1),"source":"Nominatim"})
+            seen.add(name.casefold()); candidates.append({"name":name,"lat":lat,"lon":lon,"route_delta_km":round(float(p.get("route_delta_km") or 0),1),"route_index":int(p.get("route_index") or 0),"source":"Nominatim"})
             if len(candidates)>=3: break
         return jsonify(candidates=candidates)
     except (TypeError,ValueError,KeyError): return jsonify(error="Ungültige Koordinaten."),400

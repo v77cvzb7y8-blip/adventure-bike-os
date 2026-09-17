@@ -27,7 +27,7 @@
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ETAPPEN 3.1</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ETAPPEN 4.0</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
   <div class="sub">Zuerst die echte Route. Danach werden Tagesetappen aus Distanz und Höhenmetern abgeleitet – nicht umgekehrt.</div>
 </header>
@@ -70,7 +70,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">Etappen 3.1: Rund um die mathematische Etappengrenze werden mehrere Punkte der echten Route geprüft und reale Ortsnamen robust ermittelt. Fällt die Zusatzsuche aus, bleibt der bereits berechnete Etappenort erhalten. Unterkunft und Versorgung werden erst angezeigt, wenn sie separat verifiziert werden können.</p>
+      <p class="note">Etappen 4.0: Das System prüft einen Korridor entlang der Route, wählt reale Etappenorte und verschiebt den Routenschnitt tatsächlich dorthin. Kilometer und Höhenmeter werden danach neu berechnet. Unterkunft und Versorgung bleiben bis zur separaten Verifizierung ausdrücklich ungeprüft.</p>
     </div>
   </section>
 </main>
@@ -188,54 +188,28 @@ async function resolveStagePlaces(coords,stages,startName,destName){
   names.push(shortPlace(destName));
   return names;
 }
-function candidateRoutePoints(coords,stage){const span=Math.max(1,stage.e-stage.s),offs=[0,-.06,.06,-.12,.12],pts=[];for(const f of offs){const idx=Math.max(stage.s,Math.min(coords.length-1,Math.round(stage.e+span*f))),c=coords[idx];if(c)pts.push({lat:c[1],lon:c[0],route_delta_km:Math.abs(f)*stage.km})}return pts}
-async function getStageCandidates(coords,stage){try{const r=await fetch('https://adventure-bike-os-api.onrender.com/api/stage-candidates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({points:candidateRoutePoints(coords,stage)})});const d=await r.json();return r.ok?(d.candidates||[]):[]}catch(e){return []}}
-async function enrichStages(coords,stages,names){const x=[];for(let i=0;i<stages.length;i++){if(i===stages.length-1){x.push({name:names[i+1],candidate:null});continue}const cs=await getStageCandidates(coords,stages[i]),best=cs[0]||null;x.push({name:best?.name||names[i+1],candidate:best})}return x}
-function renderStages(stages,names,enriched){
- $('stages').innerHTML=stages.map((s,i)=>{const from=i===0?shortPlace($('start').value):(enriched?.[i-1]?.name||names?.[i]||'…'),to=i===stages.length-1?shortPlace($('dest').value):(enriched?.[i]?.name||names?.[i+1]||'…'),c=enriched?.[i]?.candidate,warn=s.hm>+$('hmday').value?' · ⚠ über HM-Ziel':'';const chips=c?[`📍 realer Ort nahe Etappengrenze`,c.route_delta_km?`↔ ca. ${c.route_delta_km.toFixed(1)} km entlang der Route vom Idealpunkt`:'↔ direkt am Idealpunkt']:[];const why=c?'Etappenziel aus realen Orten entlang der Route abgeleitet. Unterkunft und Versorgung werden separat verifiziert.':(i===stages.length-1?'Ziel der Reise.':'Mathematischer Etappenort bleibt aktiv; Zusatzsuche war nicht verfügbar.');return `<div class="stageCard"><div class="stageTop"><div class="badge">${i+1}</div><div><div class="stageRoute">${from} → ${to}</div><small>Etappe ${i+1}${warn}</small></div><strong>${s.km.toFixed(1)} km · ${Math.round(s.hm)} HM</strong></div>${chips.length?`<div class="chips">${chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>`:''}<div class="why">${why}</div></div>`}).join('');
-}
+function pointAtDistance(m,target){let lo=0,hi=m.dist.length-1;while(lo<hi){const mid=(lo+hi)>>1;if(m.dist[mid]<target)lo=mid+1;else hi=mid}return lo}
+function candidateRoutePoints(coords,m,stage){const ideal=m.dist[stage.e],offs=[0,-15,15,-8,8],pts=[];for(const delta of offs){const target=Math.max(m.dist[stage.s]+20,Math.min(m.totalDist-10,ideal+delta)),idx=pointAtDistance(m,target),c=coords[idx];if(c&&!pts.some(p=>p.route_index===idx))pts.push({lat:c[1],lon:c[0],route_delta_km:Math.abs(m.dist[idx]-ideal),route_index:idx})}return pts}
+async function getStageCandidates(coords,m,stage){try{const r=await fetch('https://adventure-bike-os-api.onrender.com/api/stage-candidates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({points:candidateRoutePoints(coords,m,stage)})});const d=await r.json();return r.ok?(d.candidates||[]):[]}catch(e){return []}}
+function candidateScore(c,s,m,target,maxHm){const idx=c.route_index||s,km=m.dist[idx]-m.dist[s],hm=m.asc[idx]-m.asc[s];if(km<35||hm>maxHm*1.03)return -9999;return 100-Math.abs(km-target)/Math.max(1,target)*45-(hm/maxHm)*6-(c.route_delta_km||0)*.35}
+async function optimizeStages(coords,m,base,target,maxHm,startName,destName){const stages=[],labels=[shortPlace(startName)],meta=[];let s=0;for(let i=0;i<base.length-1;i++){const b={...base[i],s},cs=await getStageCandidates(coords,m,b),ranked=cs.map(c=>({...c,_score:candidateScore(c,s,m,target,maxHm)})).filter(c=>c._score>-1000).sort((a,b)=>b._score-a._score),best=ranked[0],e=best?.route_index||b.e;stages.push({s,e,km:m.dist[e]-m.dist[s],hm:m.asc[e]-m.asc[s]});labels.push(best?.name||'Etappenort');meta.push({best,alternative:ranked[1]||null});s=e}stages.push({s,e:coords.length-1,km:m.dist.at(-1)-m.dist[s],hm:m.asc.at(-1)-m.asc[s]});labels.push(shortPlace(destName));meta.push({best:null,alternative:null});return{stages,labels,meta}}
+function renderStages(stages,names,meta){$('stages').innerHTML=stages.map((s,i)=>{const info=meta?.[i],warn=s.hm>+$('hmday').value?'⚠ über HM-Ziel':'✓ innerhalb HM-Ziel',alt=info?.alternative,why=info?.best?'Etappenende wurde auf einen realen Ort entlang der Route verschoben; km und HM wurden danach neu berechnet.':(i===stages.length-1?'Ziel der Reise.':'Fallback auf den mathematischen Etappenpunkt.');return `<div class="stageCard"><div class="stageTop"><div class="badge">${i+1}</div><div><div class="stageRoute">${names[i]} → ${names[i+1]}</div><small>${warn}</small></div><strong>${s.km.toFixed(1)} km · ${Math.round(s.hm)} HM</strong></div><div class="chips"><span class="chip">📍 echter Routenschnitt</span>${info?.best?`<span class="chip">↔ ${info.best.route_delta_km.toFixed(1)} km vom Idealpunkt</span>`:''}<span class="chip">🛏 Versorgung: noch nicht verifiziert</span></div><div class="why">${why}${alt?` Alternative: ${alt.name} (${alt.route_delta_km.toFixed(1)} km vom Idealpunkt).`:''}</div></div>`}).join('')}
 async function plan(){
-  const btn=$('go'); btn.disabled=true; $('status').className='status'; $('status').textContent='Anfrage wird vorbereitet …';
-  try{
-    $('status').textContent='Server berechnet Fahrradroute …';
-    const profile=$('profile').value;
-    const rr=await fetch('https://adventure-bike-os-api.onrender.com/api/route',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        start:$('start').value.trim(),
-        destination:$('dest').value.trim(),
-        profile
-      })
-    });
-    const gj=await rr.json().catch(()=>({}));
-    if(!rr.ok) throw new Error(gj.error || ('Server antwortet mit '+rr.status));
-    if(!gj?.geometry?.coordinates?.length) throw new Error('Keine Route erhalten');
-    const coords=gj.geometry.coordinates;
-    const m=metrics(coords);
-    const target=+$('kmday').value, maxHm=+$('hmday').value;
-    const stages=makeStages(coords,m,target,maxHm);
-    $('distance').textContent=m.totalDist.toFixed(1)+' km';
-    $('ascent').textContent=Math.round(m.totalAsc)+' HM';
-    $('days').textContent=stages.length;
-    $('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';
-    $('stageTitle').textContent=`${stages.length} Etappen · ${$('start').value} → ${$('dest').value}`;
-    $('result').classList.remove('hidden');
-    setTimeout(()=>{showMap(coords,stages);drawElevation(coords,m,stages);},50);
-    renderStages(stages);
-    $('status').textContent='Route berechnet. Etappenorte werden ermittelt …';
-    const placeNames=await resolveStagePlaces(coords,stages,$('start').value,$('dest').value);
-    renderStages(stages,placeNames);
-    $('status').textContent='Geeignete reale Etappenorte entlang der Route werden geprüft …';
-    const enriched=await enrichStages(coords,stages,placeNames);
-    renderStages(stages,placeNames,enriched);
-    stageMarkers.forEach((marker,n)=>{if(n===0)marker.bindTooltip(placeNames[0]);else if(n===stageMarkers.length-1)marker.bindTooltip(placeNames.at(-1));else marker.bindTooltip('Empfohlenes Etappenziel: '+(enriched[n-1]?.name||placeNames[n]));});
-    $('status').textContent='Route und robuste Etappenorte erfolgreich berechnet.';
-    $('result').scrollIntoView({behavior:'smooth'});
-  }catch(e){
-    $('status').className='status error';
-    $('status').textContent='Route konnte nicht berechnet werden: '+e.message+'. Bitte erneut versuchen oder Ortsnamen präzisieren.';
-  }finally{btn.disabled=false}
+ const btn=$('go');btn.disabled=true;$('status').className='status';
+ try{
+  $('status').textContent='Server berechnet Fahrradroute …';
+  const rr=await fetch('https://adventure-bike-os-api.onrender.com/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:$('start').value.trim(),destination:$('dest').value.trim(),profile:$('profile').value})});
+  const gj=await rr.json().catch(()=>({}));if(!rr.ok)throw new Error(gj.error||('Server antwortet mit '+rr.status));
+  const coords=gj?.geometry?.coordinates;if(!coords?.length)throw new Error('Keine Route erhalten');
+  const m=metrics(coords),target=+$('kmday').value,maxHm=+$('hmday').value,base=makeStages(coords,m,target,maxHm);
+  $('result').classList.remove('hidden');$('distance').textContent=m.totalDist.toFixed(1)+' km';$('ascent').textContent=Math.round(m.totalAsc)+' HM';
+  $('status').textContent='Route berechnet. Etappenkorridor wird optimiert …';
+  const opt=await optimizeStages(coords,m,base,target,maxHm,$('start').value,$('dest').value),stages=opt.stages;
+  $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
+  renderStages(stages,opt.labels,opt.meta);await new Promise(r=>setTimeout(r,50));showMap(coords,stages);drawElevation(coords,m,stages);
+  stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
+  $('status').textContent='Etappen 4.0: reale Etappenziele gewählt und km/HM neu berechnet.';$('result').scrollIntoView({behavior:'smooth'});
+ }catch(e){$('status').className='status error';$('status').textContent='Route konnte nicht berechnet werden: '+e.message+'.'}finally{btn.disabled=false}
 }
 $('go').addEventListener('click',plan);
 </script>
