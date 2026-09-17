@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.2 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.3 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -30,7 +30,7 @@ def geocode(q):
     }
 
 def brouter(a, b, profile="trekking"):
-    url = "https://brouter.de/brouter-web/brouter"
+    url = "https://brouter.de/brouter"
     params = {
         "lonlats": f'{a["lon"]},{a["lat"]}|{b["lon"]},{b["lat"]}',
         "profile": profile,
@@ -54,7 +54,7 @@ def brouter(a, b, profile="trekking"):
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.2-debug")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.3-brouter-endpoint-fix")
 
 @app.get("/health")
 def health():
