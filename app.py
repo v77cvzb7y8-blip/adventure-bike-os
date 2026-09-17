@@ -1,4 +1,4 @@
-import math, os, time
+import os, time
 import requests
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -10,36 +10,51 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.1 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.2 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
 def geocode(q):
-    r=session.get("https://nominatim.openstreetmap.org/search",
-        params={"q":q,"format":"jsonv2","limit":1}, timeout=20)
+    url = "https://nominatim.openstreetmap.org/search"
+    print(f"[GEOCODE] {q}", flush=True)
+    r = session.get(url, params={"q": q, "format": "jsonv2", "limit": 1}, timeout=20)
+    print(f"[GEOCODE] status={r.status_code}", flush=True)
     r.raise_for_status()
-    data=r.json()
+    data = r.json()
     if not data:
         raise ValueError(f"Ort nicht gefunden: {q}")
-    return {"lat":float(data[0]["lat"]), "lon":float(data[0]["lon"]),
-            "name":data[0].get("display_name",q)}
-
-def brouter(a,b,profile="trekking"):
-    params={
-      "lonlats":f'{a["lon"]},{a["lat"]}|{b["lon"]},{b["lat"]}',
-      "profile":profile,
-      "alternativeidx":0,
-      "format":"geojson"
+    return {
+        "lat": float(data[0]["lat"]),
+        "lon": float(data[0]["lon"]),
+        "name": data[0].get("display_name", q)
     }
-    r=session.get("https://brouter.de/brouter-web/brouter",params=params,timeout=90)
-    r.raise_for_status()
-    data=r.json()
-    f=data["features"][0] if "features" in data else data
-    return f
+
+def brouter(a, b, profile="trekking"):
+    url = "https://brouter.de/brouter-web/brouter"
+    params = {
+        "lonlats": f'{a["lon"]},{a["lat"]}|{b["lon"]},{b["lat"]}',
+        "profile": profile,
+        "alternativeidx": 0,
+        "format": "geojson"
+    }
+    print(f"[BROUTER] request profile={profile} lonlats={params['lonlats']}", flush=True)
+    try:
+        r = session.get(url, params=params, timeout=90)
+        print(f"[BROUTER] status={r.status_code} content-type={r.headers.get('content-type')}", flush=True)
+        if not r.ok:
+            print(f"[BROUTER] response={r.text[:1000]}", flush=True)
+        r.raise_for_status()
+        return r.json()
+    except requests.RequestException as e:
+        print(f"[BROUTER] REQUEST ERROR: {type(e).__name__}: {e}", flush=True)
+        raise
+    except ValueError as e:
+        print(f"[BROUTER] JSON ERROR: {e}; body={r.text[:1000]}", flush=True)
+        raise
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.2-debug")
 
 @app.get("/health")
 def health():
@@ -48,29 +63,47 @@ def health():
 @app.post("/api/route")
 def route():
     try:
-        body=request.get_json(force=True) or {}
-        start=(body.get("start") or "").strip()
-        dest=(body.get("destination") or "").strip()
-        profile=body.get("profile") or "trekking"
+        body = request.get_json(force=True) or {}
+        start = (body.get("start") or "").strip()
+        dest = (body.get("destination") or "").strip()
+        profile = body.get("profile") or "trekking"
+
+        print(f"[ROUTE] start={start!r} destination={dest!r} profile={profile!r}", flush=True)
+
         if not start or not dest:
-            return jsonify(error="Start und Ziel sind erforderlich."),400
-        a=geocode(start)
-        time.sleep(1.05)  # respect public Nominatim rate limit
-        b=geocode(dest)
-        feature=brouter(a,b,profile)
+            return jsonify(error="Start und Ziel sind erforderlich."), 400
+
+        a = geocode(start)
+        time.sleep(1.05)
+        b = geocode(dest)
+        print(f"[ROUTE] geocoded start={a} destination={b}", flush=True)
+
+        feature = brouter(a, b, profile)
+        f = feature["features"][0] if "features" in feature else feature
+
+        print("[ROUTE] success", flush=True)
         return jsonify({
-          "start":a, "destination":b,
-          "geometry":feature.get("geometry"),
-          "properties":feature.get("properties",{})
+            "start": a,
+            "destination": b,
+            "geometry": f.get("geometry"),
+            "properties": f.get("properties", {})
         })
+
     except ValueError as e:
-        return jsonify(error=str(e)),404
+        print(f"[ROUTE] VALUE ERROR: {e}", flush=True)
+        return jsonify(error=str(e)), 404
     except requests.RequestException as e:
-        return jsonify(error="Externer Routingdienst derzeit nicht erreichbar.",
-                       detail=str(e)[:300]),502
+        print(f"[ROUTE] EXTERNAL ERROR: {type(e).__name__}: {e}", flush=True)
+        return jsonify(
+            error="Externer Routingdienst derzeit nicht erreichbar.",
+            detail=f"{type(e).__name__}: {str(e)[:500]}"
+        ), 502
     except Exception as e:
-        return jsonify(error="Route konnte nicht berechnet werden.",
-                       detail=str(e)[:300]),500
+        print(f"[ROUTE] INTERNAL ERROR: {type(e).__name__}: {e}", flush=True)
+        return jsonify(
+            error="Route konnte nicht berechnet werden.",
+            detail=f"{type(e).__name__}: {str(e)[:500]}"
+        ), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
