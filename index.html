@@ -26,7 +26,7 @@
 .copyBtn{background:#edf2ee;color:var(--accent);border:1px solid var(--line)}
 .rememberBtn{background:#f6f1df;color:#765d13;border:1px solid #e8ddae}
 .poiToggle{background:#edf2ee;color:var(--ink);border:1px solid var(--line);margin:4px 0;width:100%;text-align:left}
-.poiList{display:none;padding:7px 0 3px}.poiList.open{display:block}.poiRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.poiAdd{background:var(--accent);color:white}.poiAdd.selected{background:#765d13}
+.poiList{display:none;padding:7px 0 3px}.poiList.open{display:block}.supplyStatus{margin:7px 0;padding:9px 10px;border-radius:10px;background:#f7f8f7;border:1px solid var(--line)}.supplyStatus.warn{background:#fff7e8;border-color:#ecd8a5}.supplyStatus.ok{background:#eef7f1;border-color:#cfe5d6}.poiRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.poiAdd{background:var(--accent);color:white}.poiAdd.selected{background:#765d13}
 .selectedPlan{margin-top:12px;padding:12px;border-radius:14px;background:#fbfaf3;border:1px solid #e8ddae}.selectedPlan h3{margin:0 0 8px}
 .elevWrap{position:relative}.elevTip{position:absolute;display:none;pointer-events:none;background:rgba(19,32,25,.94);color:#fff;border-radius:9px;padding:7px 9px;font-size:12px;transform:translate(-50%,-115%);white-space:nowrap;z-index:3}
 .copyToast{position:fixed;right:18px;bottom:18px;background:#132019;color:#fff;padding:10px 13px;border-radius:10px;font-size:12px;display:none;z-index:9999}.pdfBar{position:sticky;bottom:12px;z-index:30;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 28px rgba(20,40,25,.12);border-radius:16px;padding:12px 14px;margin-top:14px}.pdfBar button{width:auto;margin:0}.pdfCount{font-size:13px;color:var(--muted)}.pdfBuild{background:#132019}.rememberBtn.active{background:#765d13;color:#fff;border-color:#765d13}
@@ -36,9 +36,9 @@
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · PDF BUILDER 7.2.1</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · PDF BUILDER 7.2.3</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.2.1 erklärt Terrain-Stichproben klarer und übernimmt das Höhenprofil beim PDF-Export als echte Grafik.</div>
+  <div class="sub">7.2.3 macht Versorgung transparent: Unterkunft, Essen, Trinkwasser, Einkauf und Bike-Service bleiben immer sichtbar – auch bei 0 Treffern oder Datenquellen-Ausfall.</div>
 </header>
 <main>
   <section class="card">
@@ -107,19 +107,19 @@
       <div class="eyebrow">HÖHENPROFIL</div>
       <h2>Was die Route wirklich verlangt</h2>
       <div class="elevWrap"><canvas id="elevation" width="1000" height="260"></canvas><div id="elevTip" class="elevTip"></div></div>
-      <p class="note">Tippe oder fahre über das Profil, um Kilometer und Höhe an einer Stelle zu sehen. Vertikale Linien markieren Etappenenden. Wenn du diesen Block für die PDF auswählst, wird das Höhenprofil als Grafik mit übernommen.</p>
+      <p class="note pdfExclude">Tippe oder fahre über das Profil, um Kilometer und Höhe an einer Stelle zu sehen. Vertikale Linien markieren Etappenenden. Wenn du diesen Block für die PDF auswählst, wird das Höhenprofil als Grafik mit übernommen.</p>
     </div>
 
     <div class="card">
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">PDF Builder 7.2.1: Blöcke lassen sich an- und abwählen. Beim Höhenprofil wird zusätzlich die Grafik gespeichert und in der persönlichen Reise-PDF eingebettet.</p>
+      <p class="note">PDF Builder 7.2.3: PDF-Auswahl bleibt bereinigt; zusätzlich sind Unterkunft, Essen, Trinkwasser, Einkauf und Bike-Service pro Etappe immer sichtbar – als Trefferzahl, 0 Treffer oder Datenquelle nicht verfügbar.</p>
     </div>
   </section>
   <div class="pdfBar noPrint">
     <div><strong>Meine Reise-PDF</strong><div id="pdfCount" class="pdfCount">0 Blöcke ausgewählt</div></div>
-    <button id="pdfCreate" class="pdfBuild" type="button" onclick="createPersonalPDF()">PDF ERSTELLEN</button>
+    <div style="display:flex;gap:8px;align-items:center"><button type="button" class="copyBtn" onclick="clearPdfSelection()">Auswahl leeren</button><button id="pdfCreate" class="pdfBuild" type="button" onclick="createPersonalPDF()">PDF ERSTELLEN</button></div>
   </div>
 </main>
 <div id="copyToast" class="copyToast">Kopiert</div>
@@ -624,42 +624,56 @@ function terrainBars(t){
   const line=(label,n)=>`<p>${label}: <strong>${n}</strong> Stichproben-Treffer</p>`;
   return line('Befestigt · OSM-Wegtreffer',c.paved||0)+line('Gravel/kompaktiert · OSM-Wegtreffer',c.gravel||0)+line('Rau/erdig · OSM-Wegtreffer',c.rough||0)+line('Track/Path ohne Surface-Tag',c.unknown_offroad||0)+line('Unbekannt · OSM-Wegtreffer',c.unknown||0);
 }
-function supplyCategory(stage,cat,label,arr){
+function supplyCategory(stage,cat,label,arr,sourceAvailable=true){
   const id=`poi-${stage}-${cat}`;
-  if(!arr?.length)return `<p>${label}: <strong>kein OSM-Treffer im ~5-km-Umfeld</strong></p>`;
   const selected=window.stageSelections[selectionKey(stage,cat)];
-  return `<button type="button" class="poiToggle" onclick="togglePoiList('${id}')">${label}: ${arr.length} Treffer ▾</button>
+  if(!sourceAvailable){
+    return `<div class="supplyStatus warn"><strong>${label}</strong><br><span class="tiny">Datenquelle für diesen Lauf nicht verfügbar. Kategorie bleibt sichtbar und wird beim nächsten erfolgreichen Datenabruf wieder befüllt.</span></div>`;
+  }
+  if(!arr?.length){
+    return `<div class="supplyStatus"><strong>${label}: 0 Treffer</strong><br><span class="tiny">Im ca. 5-km-Umfeld des Etappenziels wurde in OSM kein passender POI gefunden. Das bedeutet nicht zwingend, dass es vor Ort nichts gibt.</span></div>`;
+  }
+  return `<div class="supplyStatus ok"><button type="button" class="poiToggle" onclick="togglePoiList('${id}')">${label}: ${arr.length} Treffer ▾</button>
     <div id="${id}" class="poiList">${arr.map((x,idx)=>{
       const isSel=selected?.name===x.name;
       return `<div class="poiRow"><div><strong>${x.name}</strong><br><span class="tiny">${x.distance.toFixed(1)} km vom Etappenziel · OSM-Treffer, Öffnung/Verfügbarkeit nicht geprüft</span></div>
       <button type="button" class="poiAdd ${isSel?'selected':''}" onclick="addStagePOI(${stage},'${cat}',${idx})">${isSel?'✓ Hinzugefügt':'＋ Zur Etappe'}</button></div>`;
-    }).join('')}</div>`;
+    }).join('')}</div></div>`;
 }
 function renderTerrainSupply(data,stages,names){
   window.__terrainSupplyData=data;window.__lastStages=stages;window.__lastStageNames=names;
   if(!data?.available){
-    $('terrainSupply').innerHTML=`<div class="intelCard"><h3>Terrain & Versorgung</h3><p><strong>Zusatzdaten derzeit nicht verfügbar.</strong></p><p>${data?.reason||'Die Route und alle übrigen Ebenen bleiben nutzbar.'}</p></div>`;
-    attachBlockActions($('terrainSupply'));return;
+    const cards=stages.map((s,i)=>`<div class="intelCard">
+      <h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3>
+      <p><strong>Terrain & Versorgung:</strong> Zusatzdatenquelle derzeit nicht verfügbar.</p>
+      ${supplyCategory(i,'sleep','🛏 Unterkunft',[],false)}
+      ${supplyCategory(i,'food','🍽 Essen',[],false)}
+      ${supplyCategory(i,'water','💧 Trinkwasser',[],false)}
+      ${supplyCategory(i,'grocery','🛒 Einkauf',[],false)}
+      ${supplyCategory(i,'bike','🔧 Bike-Service',[],false)}
+    </div>`).join('');
+    $('terrainSupply').innerHTML=cards;
+    updateSelectedStops();attachBlockActions($('terrainSupply'));return;
   }
   $('terrainSupply').innerHTML=data.stages.map((x,i)=>`<div class="intelCard">
     <h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3>
     <p><strong>Terrain-Profil:</strong> ${x.terrain.difficulty.label}</p>
     <p>${x.terrain.difficulty.reason}</p>
-    <p class="tiny"><strong>Was bedeutet „Treffer“?</strong> Ein Treffer ist ein OSM-Wegobjekt, das in einer Stichprobe nahe deiner Route gefunden wurde. Die Zahl ist kein Kilometeranteil und keine Prozentangabe, sondern ein Indikator dafür, welche Oberflächen-Tags in den geprüften Bereichen vorkommen.</p>
+    <p class="tiny"><strong>Was bedeutet „Treffer“?</strong> Ein Treffer ist ein OSM-Wegobjekt, das in einer Stichprobe nahe deiner Route gefunden wurde. Die Zahl ist kein Kilometeranteil und keine Prozentangabe.</p>
     ${terrainBars(x.terrain)}
     ${x.terrain.names?.length?`<p class="tiny">Nahe Stichprobe: ${x.terrain.names.join(' · ')}</p>`:''}
     <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
-    ${supplyCategory(i,'sleep','🛏 Unterkunft',x.supply.sleep)}
-    ${supplyCategory(i,'food','🍽 Essen',x.supply.food)}
-    ${supplyCategory(i,'water','💧 Trinkwasser',x.supply.water)}
-    ${supplyCategory(i,'grocery','🛒 Einkauf',x.supply.grocery)}
-    ${supplyCategory(i,'bike','🔧 Bike-Service',x.supply.bike)}
+    ${supplyCategory(i,'sleep','🛏 Unterkunft',x.supply.sleep,true)}
+    ${supplyCategory(i,'food','🍽 Essen',x.supply.food,true)}
+    ${supplyCategory(i,'water','💧 Trinkwasser',x.supply.water,true)}
+    ${supplyCategory(i,'grocery','🛒 Einkauf',x.supply.grocery,true)}
+    ${supplyCategory(i,'bike','🔧 Bike-Service',x.supply.bike,true)}
   </div>`).join('');
   updateSelectedStops();attachBlockActions($('terrainSupply'));
 }
 
-let pdfMemory=JSON.parse(localStorage.getItem('abo-pdf-memory-v2')||'[]');
-function cleanBlockText(el){const c=el.cloneNode(true);c.querySelectorAll('.blockActions,.poiAdd,.poiToggle').forEach(x=>x.remove());c.querySelectorAll('.poiList:not(.open)').forEach(x=>x.remove());return c.innerText.replace(/\n{3,}/g,'\n\n').trim()}
+let pdfMemory=JSON.parse(localStorage.getItem('abo-pdf-memory-v3')||'[]');
+function cleanBlockText(el){const c=el.cloneNode(true);c.querySelectorAll('.blockActions,.poiAdd,.poiToggle,.pdfExclude').forEach(x=>x.remove());c.querySelectorAll('.poiList:not(.open)').forEach(x=>x.remove());return c.innerText.replace(/\n{3,}/g,'\n\n').trim()}
 function blockId(el){if(!el.dataset.pdfId)el.dataset.pdfId='pdf-'+Math.random().toString(36).slice(2)+'-'+Date.now();return el.dataset.pdfId}
 async function copyBlock(btn){const text=cleanBlockText(btn.closest('.copyable'));try{await navigator.clipboard.writeText(text);showCopyToast('Block kopiert')}catch(e){showCopyToast('Kopieren nicht möglich')}}
 function rememberBlock(btn){
@@ -674,9 +688,16 @@ function rememberBlock(btn){
    btn.textContent='✓ Für PDF gemerkt';btn.classList.add('active');
    showCopyToast(image?'Für PDF gemerkt – inklusive Höhenprofil-Grafik':'Für persönliche PDF gemerkt');
  }
- localStorage.setItem('abo-pdf-memory-v2',JSON.stringify(pdfMemory));updatePdfCount();
+ localStorage.setItem('abo-pdf-memory-v3',JSON.stringify(pdfMemory));updatePdfCount();
 }
 function updatePdfCount(){const el=$('pdfCount');if(el)el.textContent=`${pdfMemory.length} Block${pdfMemory.length===1?'':'e'} ausgewählt`}
+function clearPdfSelection(){
+  pdfMemory=[];
+  localStorage.setItem('abo-pdf-memory-v3','[]');
+  syncRememberButtons();
+  updatePdfCount();
+  showCopyToast('PDF-Auswahl geleert');
+}
 function syncRememberButtons(root=document){root.querySelectorAll('.copyable').forEach(el=>{const id=blockId(el),btn=el.querySelector('.rememberBtn');if(!btn)return;const active=pdfMemory.some(x=>x.id===id);btn.textContent=active?'✓ Für PDF gemerkt':'＋ Für PDF merken';btn.classList.toggle('active',active)});updatePdfCount()}
 function showCopyToast(text){const t=$('copyToast');t.textContent=text;t.style.display='block';clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>t.style.display='none',1800)}
 function attachBlockActions(root=document){root.querySelectorAll('.card,.layerBox,.intelCard,.stageCard,.summaryBox').forEach(el=>{if(el.dataset.copyReady)return;el.dataset.copyReady='1';el.classList.add('copyable');blockId(el);const bar=document.createElement('div');bar.className='blockActions noPrint';bar.innerHTML='<button class="copyBtn" type="button" onclick="copyBlock(this)">⧉ Kopieren</button><button class="rememberBtn" type="button" onclick="rememberBlock(this)">＋ Für PDF merken</button>';el.insertBefore(bar,el.firstChild)});syncRememberButtons(root)}
@@ -720,6 +741,8 @@ async function copySelectedStops(){
 }
 async function plan(){
  const btn=$('go');btn.disabled=true;$('status').className='status';
+ // A newly calculated trip starts with a clean personal PDF selection.
+ pdfMemory=[];localStorage.setItem('abo-pdf-memory-v3','[]');updatePdfCount();
  try{
   $('status').textContent='Server berechnet Fahrradroute …';
   const rr=await fetch('https://adventure-bike-os-api.onrender.com/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:$('start').value.trim(),destination:$('dest').value.trim(),profile:$('profile').value})});
@@ -732,7 +755,7 @@ async function plan(){
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
   renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);const terrainSupply=await fetchTerrainSupply(coords,stages);renderTerrainSupply(terrainSupply,stages,opt.labels);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  attachBlockActions();$('status').textContent='PDF Builder 7.2.1: Route, Etappen, interaktive Treffer, Höhenprofil-Grafik und persönliche PDF-Auswahl bereit.';$('result').scrollIntoView({behavior:'smooth'});
+  attachBlockActions();$('status').textContent='PDF Builder 7.2.3: Route, Etappen, Höhenprofil-Grafik, transparente Versorgung und persönliche PDF-Auswahl bereit.';$('result').scrollIntoView({behavior:'smooth'});
  }catch(e){$('status').className='status error';$('status').textContent='Route konnte nicht berechnet werden: '+e.message+'.'}finally{btn.disabled=false}
 }
 $('go').addEventListener('click',plan);
