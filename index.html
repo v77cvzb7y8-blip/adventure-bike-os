@@ -20,16 +20,16 @@
     #map{height:430px;border-radius:18px;overflow:hidden;background:#e8ece8}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
     .stat{background:#f6f8f6;border-radius:16px;padding:14px}.stat b{font-size:25px;display:block}.stat span{font-size:12px;color:var(--muted)}
     .hidden{display:none}.stage{display:grid;grid-template-columns:60px 1fr auto;gap:12px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
-    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)} .stageRoute{font-size:16px;font-weight:850;margin-bottom:4px}.placePending{opacity:.65}.stageCard{padding:16px 0;border-top:1px solid var(--line)}.stageTop{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center}.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0 64px}.chip{font-size:12px;background:#f1f5f1;border-radius:999px;padding:6px 9px;color:var(--muted)}.why{margin:8px 0 0 64px;font-size:12px;color:var(--muted)}
+    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)} .stageRoute{font-size:16px;font-weight:850;margin-bottom:4px}.placePending{opacity:.65}.stageCard{padding:16px 0;border-top:1px solid var(--line)}.stageTop{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center}.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0 64px}.chip{font-size:12px;background:#f1f5f1;border-radius:999px;padding:6px 9px;color:var(--muted)}.why{margin:8px 0 0 64px;font-size:12px;color:var(--muted)}.decision{margin:10px 0 0 64px;padding:10px 12px;border-left:3px solid var(--accent);background:#f7f9f7;border-radius:8px;font-size:13px}.summaryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.summaryBox{background:#f6f8f6;border-radius:14px;padding:12px}.summaryBox b{display:block;font-size:18px}.summaryBox span{font-size:12px;color:var(--muted)}
     canvas{width:100%;height:180px;border-radius:14px;background:#f6f8f6}.note{font-size:13px;color:var(--muted);line-height:1.45}
-    @media(max-width:700px){.grid,.four,.stats{grid-template-columns:1fr 1fr}#map{height:360px}.stage{grid-template-columns:52px 1fr}.stage>strong{grid-column:2}}
+    @media(max-width:700px){.grid,.four,.stats,.summaryGrid{grid-template-columns:1fr 1fr}#map{height:360px}.stage{grid-template-columns:52px 1fr}.stage>strong{grid-column:2}}
   </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ETAPPEN 4.0</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · REISEPLANER 5.0</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">Zuerst die echte Route. Danach werden Tagesetappen aus Distanz und Höhenmetern abgeleitet – nicht umgekehrt.</div>
+  <div class="sub">Die echte Route zuerst. Danach optimiert Adventure Bike OS Etappen nach Leistung, realen Orten und praktischer Reise-Eignung.</div>
 </header>
 <main>
   <section class="card">
@@ -61,6 +61,12 @@
     </div>
 
     <div class="card">
+      <div class="eyebrow">REISEPLAN 5.0</div>
+      <h2>Warum diese Etappen?</h2>
+      <div id="tripSummary" class="note">Der Reiseplan wird nach der Routenberechnung erstellt.</div>
+    </div>
+
+    <div class="card">
       <div class="eyebrow">HÖHENPROFIL</div>
       <h2>Was die Route wirklich verlangt</h2>
       <canvas id="elevation" width="1000" height="220"></canvas>
@@ -70,7 +76,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">Etappen 4.0: Das System prüft einen Korridor entlang der Route, wählt reale Etappenorte und verschiebt den Routenschnitt tatsächlich dorthin. Kilometer und Höhenmeter werden danach neu berechnet. Unterkunft und Versorgung bleiben bis zur separaten Verifizierung ausdrücklich ungeprüft.</p>
+      <p class="note">Reiseplaner 5.0: Etappenziele werden in einem breiteren Routenkorridor nach Leistungsgrenzen, Tagesdistanz und praktischer Orts-Eignung verglichen. Der Routenschnitt wird tatsächlich verschoben und km/HM werden neu berechnet. Versorgung bleibt ausdrücklich unverifiziert, bis eine belastbare Quelle verfügbar ist.</p>
     </div>
   </section>
 </main>
@@ -158,11 +164,15 @@ function showMap(coords,stages){
   if(routeLayer)routeLayer.remove(); stageMarkers.forEach(x=>x.remove());stageMarkers=[];
   const latlngs=coords.map(c=>[c[1],c[0]]);
   routeLayer=L.polyline(latlngs,{weight:5,opacity:.9}).addTo(map);
-  map.fitBounds(routeLayer.getBounds(),{padding:[20,20]});
+  const bounds=routeLayer.getBounds();
   [0,...stages.map(x=>x.e)].forEach((idx,n)=>{
     const marker=L.circleMarker(latlngs[idx],{radius:8,weight:3,fillOpacity:1}).addTo(map).bindTooltip(n===0?'Start':n===stages.length?'Ziel':'Etappe '+n);
     stageMarkers.push(marker);
   });
+  map.invalidateSize(true);
+  map.fitBounds(bounds,{padding:[28,28]});
+  requestAnimationFrame(()=>{map.invalidateSize(true);map.fitBounds(bounds,{padding:[28,28]})});
+  setTimeout(()=>{map.invalidateSize(true);map.fitBounds(bounds,{padding:[28,28]})},250);
 }
 function shortPlace(value){
   return (value||'').split(',')[0].trim() || '–';
@@ -189,11 +199,78 @@ async function resolveStagePlaces(coords,stages,startName,destName){
   return names;
 }
 function pointAtDistance(m,target){let lo=0,hi=m.dist.length-1;while(lo<hi){const mid=(lo+hi)>>1;if(m.dist[mid]<target)lo=mid+1;else hi=mid}return lo}
-function candidateRoutePoints(coords,m,stage){const ideal=m.dist[stage.e],offs=[0,-15,15,-8,8],pts=[];for(const delta of offs){const target=Math.max(m.dist[stage.s]+20,Math.min(m.totalDist-10,ideal+delta)),idx=pointAtDistance(m,target),c=coords[idx];if(c&&!pts.some(p=>p.route_index===idx))pts.push({lat:c[1],lon:c[0],route_delta_km:Math.abs(m.dist[idx]-ideal),route_index:idx})}return pts}
+function candidateRoutePoints(coords,m,stage){
+  const ideal=m.dist[stage.e], offsets=[0,-8,8,-15,15,-22,22], pts=[];
+  for(const delta of offsets){
+    const target=Math.max(m.dist[stage.s]+35,Math.min(m.totalDist-15,ideal+delta));
+    const idx=pointAtDistance(m,target),c=coords[idx];
+    if(c&&!pts.some(p=>p.route_index===idx)){
+      pts.push({lat:c[1],lon:c[0],route_delta_km:Math.abs(m.dist[idx]-ideal),route_index:idx});
+    }
+  }
+  return pts;
+}
 async function getStageCandidates(coords,m,stage){try{const r=await fetch('https://adventure-bike-os-api.onrender.com/api/stage-candidates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({points:candidateRoutePoints(coords,m,stage)})});const d=await r.json();return r.ok?(d.candidates||[]):[]}catch(e){return []}}
-function candidateScore(c,s,m,target,maxHm){const idx=c.route_index||s,km=m.dist[idx]-m.dist[s],hm=m.asc[idx]-m.asc[s];if(km<35||hm>maxHm*1.03)return -9999;return 100-Math.abs(km-target)/Math.max(1,target)*45-(hm/maxHm)*6-(c.route_delta_km||0)*.35}
-async function optimizeStages(coords,m,base,target,maxHm,startName,destName){const stages=[],labels=[shortPlace(startName)],meta=[];let s=0;for(let i=0;i<base.length-1;i++){const b={...base[i],s},cs=await getStageCandidates(coords,m,b),ranked=cs.map(c=>({...c,_score:candidateScore(c,s,m,target,maxHm)})).filter(c=>c._score>-1000).sort((a,b)=>b._score-a._score),best=ranked[0],e=best?.route_index||b.e;stages.push({s,e,km:m.dist[e]-m.dist[s],hm:m.asc[e]-m.asc[s]});labels.push(best?.name||'Etappenort');meta.push({best,alternative:ranked[1]||null});s=e}stages.push({s,e:coords.length-1,km:m.dist.at(-1)-m.dist[s],hm:m.asc.at(-1)-m.asc[s]});labels.push(shortPlace(destName));meta.push({best:null,alternative:null});return{stages,labels,meta}}
-function renderStages(stages,names,meta){$('stages').innerHTML=stages.map((s,i)=>{const info=meta?.[i],warn=s.hm>+$('hmday').value?'⚠ über HM-Ziel':'✓ innerhalb HM-Ziel',alt=info?.alternative,why=info?.best?'Etappenende wurde auf einen realen Ort entlang der Route verschoben; km und HM wurden danach neu berechnet.':(i===stages.length-1?'Ziel der Reise.':'Fallback auf den mathematischen Etappenpunkt.');return `<div class="stageCard"><div class="stageTop"><div class="badge">${i+1}</div><div><div class="stageRoute">${names[i]} → ${names[i+1]}</div><small>${warn}</small></div><strong>${s.km.toFixed(1)} km · ${Math.round(s.hm)} HM</strong></div><div class="chips"><span class="chip">📍 echter Routenschnitt</span>${info?.best?`<span class="chip">↔ ${info.best.route_delta_km.toFixed(1)} km vom Idealpunkt</span>`:''}<span class="chip">🛏 Versorgung: noch nicht verifiziert</span></div><div class="why">${why}${alt?` Alternative: ${alt.name} (${alt.route_delta_km.toFixed(1)} km vom Idealpunkt).`:''}</div></div>`}).join('')}
+function placeUtility(c){
+  const typeBonus={city:22,town:18,municipality:11,village:7,place:3}[c.place_type]||3;
+  return typeBonus+Math.min(12,(c.importance||0)*40);
+}
+function candidateScore(c,s,m,target,maxHm,priority){
+  const idx=c.route_index||s,km=m.dist[idx]-m.dist[s],hm=m.asc[idx]-m.asc[s];
+  if(km<45||hm>maxHm*1.015)return -9999;
+  const distanceFit=100-Math.abs(km-target)/Math.max(1,target)*55;
+  const hmHeadroom=Math.max(0,(maxHm-hm)/Math.max(1,maxHm))*10;
+  const place=placeUtility(c);
+  const deltaPenalty=(c.route_delta_km||0)*(priority==='Einfacher fahrbar'?0.55:0.32);
+  const placeWeight=priority==='Mehr Gravel'?0.85:1;
+  return distanceFit+hmHeadroom+place*placeWeight-deltaPenalty;
+}
+async function optimizeStages(coords,m,base,target,maxHm,startName,destName,priority){
+  const stages=[],labels=[shortPlace(startName)],meta=[];let s=0;
+  for(let i=0;i<base.length-1;i++){
+    const b={...base[i],s},cs=await getStageCandidates(coords,m,b);
+    const ranked=cs.map(c=>({...c,_score:candidateScore(c,s,m,target,maxHm,priority),_utility:placeUtility(c)}))
+      .filter(c=>c._score>-1000).sort((a,b)=>b._score-a._score);
+    const best=ranked[0],e=best?.route_index||b.e;
+    stages.push({s,e,km:m.dist[e]-m.dist[s],hm:m.asc[e]-m.asc[s]});
+    labels.push(best?.name||'Etappenort');
+    meta.push({best,alternative:ranked[1]||null,ideal_index:b.e});
+    s=e;
+  }
+  stages.push({s,e:coords.length-1,km:m.dist.at(-1)-m.dist[s],hm:m.asc.at(-1)-m.asc[s]});
+  labels.push(shortPlace(destName));meta.push({best:null,alternative:null});
+  return{stages,labels,meta};
+}
+function renderTripSummary(stages,names,meta,target,maxHm){
+  const within=stages.filter(s=>s.hm<=maxHm).length;
+  const shifted=meta.filter(x=>x?.best&&x.best.route_delta_km>0.5).length;
+  const avg=stages.reduce((a,s)=>a+s.km,0)/stages.length;
+  $('tripSummary').innerHTML=`<div class="summaryGrid">
+    <div class="summaryBox"><b>${within}/${stages.length}</b><span>Etappen im HM-Ziel</span></div>
+    <div class="summaryBox"><b>${avg.toFixed(1)} km</b><span>Ø Tagesdistanz</span></div>
+    <div class="summaryBox"><b>${shifted}</b><span>Etappenziele bewusst verschoben</span></div>
+  </div><p style="margin:12px 0 0">Adventure Bike OS bevorzugt einen praktischeren realen Ort, wenn der zusätzliche Weg vertretbar bleibt und dein Höhenmeter-Limit eingehalten wird. Unterkunft, Essen, Einkauf und Bikeshop werden erst als ✓ angezeigt, sobald eine belastbare Datenquelle sie separat bestätigt.</p>`;
+}
+function renderStages(stages,names,meta){
+ $('stages').innerHTML=stages.map((s,i)=>{
+  const info=meta?.[i],best=info?.best,alt=info?.alternative;
+  const hmOK=s.hm<=+$('hmday').value;
+  const typeLabel={city:'Stadt',town:'Ort/Stadt',municipality:'Gemeinde',village:'Dorf',place:'Ort'}[best?.place_type]||'Ort';
+  const move=best?.route_delta_km||0;
+  let decision=i===stages.length-1?'Reiseziel erreicht.':
+    best?(move<0.6?`${names[i+1]} liegt praktisch direkt am leistungsbasierten Idealpunkt.`:
+      `${names[i+1]} wurde trotz ${move.toFixed(1)} km Verschiebung gewählt, weil der Ort als ${typeLabel} für einen Etappenstopp geeigneter gewichtet wird und das HM-Limit eingehalten bleibt.`):
+      'Zusatzoptimierung nicht verfügbar; der leistungsbasierte Etappenpunkt bleibt aktiv.';
+  return `<div class="stageCard"><div class="stageTop"><div class="badge">${i+1}</div><div><div class="stageRoute">${names[i]} → ${names[i+1]}</div><small>${hmOK?'✓ innerhalb HM-Ziel':'⚠ über HM-Ziel'}</small></div><strong>${s.km.toFixed(1)} km · ${Math.round(s.hm)} HM</strong></div>
+  <div class="chips"><span class="chip">📍 echter Routenschnitt</span>${best?`<span class="chip">🏘 ${typeLabel}</span><span class="chip">↔ ${move.toFixed(1)} km vom Idealpunkt</span>`:''}<span class="chip">🛏 Unterkunft: nicht verifiziert</span><span class="chip">🍽 Essen: nicht verifiziert</span><span class="chip">🛒 Einkauf: nicht verifiziert</span><span class="chip">🔧 Bikeshop: nicht verifiziert</span></div>
+  <div class="decision"><b>Warum ${names[i+1]}?</b> ${decision}</div>
+  ${alt?`<div class="why"><b>Alternative:</b> ${alt.name} · ${alt.route_delta_km.toFixed(1)} km vom Idealpunkt · ${Math.round(maybeStageKm(alt,s))||'–'} km Tagesdistanz.</div>`:''}</div>`;
+ }).join('');
+}
+function maybeStageKm(candidate,stage){
+  if(!candidate||candidate.route_index==null||!window.__routeMetrics)return NaN;
+  return window.__routeMetrics.dist[candidate.route_index]-window.__routeMetrics.dist[stage.s];
+}
 async function plan(){
  const btn=$('go');btn.disabled=true;$('status').className='status';
  try{
@@ -201,14 +278,14 @@ async function plan(){
   const rr=await fetch('https://adventure-bike-os-api.onrender.com/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:$('start').value.trim(),destination:$('dest').value.trim(),profile:$('profile').value})});
   const gj=await rr.json().catch(()=>({}));if(!rr.ok)throw new Error(gj.error||('Server antwortet mit '+rr.status));
   const coords=gj?.geometry?.coordinates;if(!coords?.length)throw new Error('Keine Route erhalten');
-  const m=metrics(coords),target=+$('kmday').value,maxHm=+$('hmday').value,base=makeStages(coords,m,target,maxHm);
+  const m=metrics(coords),target=+$('kmday').value,maxHm=+$('hmday').value,base=makeStages(coords,m,target,maxHm);window.__routeMetrics=m;
   $('result').classList.remove('hidden');$('distance').textContent=m.totalDist.toFixed(1)+' km';$('ascent').textContent=Math.round(m.totalAsc)+' HM';
   $('status').textContent='Route berechnet. Etappenkorridor wird optimiert …';
-  const opt=await optimizeStages(coords,m,base,target,maxHm,$('start').value,$('dest').value),stages=opt.stages;
+  const opt=await optimizeStages(coords,m,base,target,maxHm,$('start').value,$('dest').value,$('priority').value),stages=opt.stages;
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
-  renderStages(stages,opt.labels,opt.meta);await new Promise(r=>setTimeout(r,50));showMap(coords,stages);drawElevation(coords,m,stages);
+  renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  $('status').textContent='Etappen 4.0: reale Etappenziele gewählt und km/HM neu berechnet.';$('result').scrollIntoView({behavior:'smooth'});
+  $('status').textContent='Reiseplaner 5.0: Etappen nach Leistung und praktischer Reise-Eignung optimiert.';$('result').scrollIntoView({behavior:'smooth'});
  }catch(e){$('status').className='status error';$('status').textContent='Route konnte nicht berechnet werden: '+e.message+'.'}finally{btn.disabled=false}
 }
 $('go').addEventListener('click',plan);
