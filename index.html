@@ -36,19 +36,19 @@
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · PDF BUILDER 7.2.3</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · PDF BUILDER 7.2.5</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.2.3 macht Versorgung transparent: Unterkunft, Essen, Trinkwasser, Einkauf und Bike-Service bleiben immer sichtbar – auch bei 0 Treffern oder Datenquellen-Ausfall.</div>
+  <div class="sub">7.2.5 startet mit leeren Reise-Eingaben. Versorgung bleibt pro Etappe sichtbar und ist bei vorhandenen Treffern direkt auswählbar.</div>
 </header>
 <main>
   <section class="card">
     <div class="grid">
-      <div><label>Start</label><input id="start" value="Brixen, Südtirol"></div>
-      <div><label>Ziel</label><input id="dest" value="München"></div>
+      <div><label>Start</label><input id="start" placeholder="z. B. Innsbruck"></div>
+      <div><label>Ziel</label><input id="dest" placeholder="z. B. Barcelona"></div>
     </div>
     <div class="grid four" style="margin-top:14px">
-      <div><label>Ziel km / Tag</label><input id="kmday" type="number" min="30" max="300" value="150"></div>
-      <div><label>Max. HM / Tag</label><input id="hmday" type="number" min="300" max="6000" value="2000"></div>
+      <div><label>Ziel km / Tag</label><input id="kmday" type="number" min="30" max="300" placeholder="z. B. 120"></div>
+      <div><label>Max. HM / Tag</label><input id="hmday" type="number" min="300" max="6000" placeholder="z. B. 1800"></div>
       <div><label>Routing</label><select id="profile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schnell / Asphalt</option><option value="gravel">Gravel</option></select></div>
       <div><label>Priorität</label><select id="priority"><option>Ausgewogen</option><option>Mehr Gravel</option><option>Einfacher fahrbar</option></select></div>
     </div>
@@ -56,7 +56,7 @@
       <div><label>Abfahrt</label><input id="tripdate" type="date"></div>
       <div><label>Fitness</label><select id="fitness"><option value="sportlich">Sportlich</option><option value="sehr-sportlich" selected>Sehr sportlich</option><option value="ultra">Ultra / Langdistanz</option></select></div>
       <div><label>Bike</label><select id="biketype"><option value="gravel" selected>Gravelbike</option><option value="trekking">Trekkingbike</option><option value="mtb">MTB</option><option value="road">Rennrad</option></select></div>
-      <div><label>Reifenbreite mm</label><input id="tire" type="number" min="25" max="70" value="45"></div>
+      <div><label>Reifenbreite mm</label><input id="tire" type="number" min="25" max="70" placeholder="z. B. 45"></div>
     </div>
     <div class="grid" style="margin-top:14px">
       <div><label>Übernachtung</label><select id="lodging"><option value="hotel" selected>Hotel / Pension</option><option value="mixed">Gemischt</option><option value="camping">Camping / Biwak</option></select></div>
@@ -105,8 +105,8 @@
 
     <div class="card">
       <div class="eyebrow">HÖHENPROFIL</div>
-      <h2>Was die Route wirklich verlangt</h2>
-      <div class="elevWrap"><canvas id="elevation" width="1000" height="260"></canvas><div id="elevTip" class="elevTip"></div></div>
+      <h2 class="pdfExclude">Was die Route wirklich verlangt</h2>
+      <div class="elevWrap"><canvas id="elevation" width="1000" height="260"></canvas><div id="elevTip" class="elevTip pdfExclude"></div></div>
       <p class="note pdfExclude">Tippe oder fahre über das Profil, um Kilometer und Höhe an einer Stelle zu sehen. Vertikale Linien markieren Etappenenden. Wenn du diesen Block für die PDF auswählst, wird das Höhenprofil als Grafik mit übernommen.</p>
     </div>
 
@@ -114,7 +114,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">PDF Builder 7.2.3: PDF-Auswahl bleibt bereinigt; zusätzlich sind Unterkunft, Essen, Trinkwasser, Einkauf und Bike-Service pro Etappe immer sichtbar – als Trefferzahl, 0 Treffer oder Datenquelle nicht verfügbar.</p>
+      <p class="note">PDF Builder 7.2.5: Die Reise startet mit leeren Eingabefeldern. Unterkunft, Essen, Trinkwasser, Einkauf und Bike-Service bleiben je Etappe sichtbar; vorhandene Treffer können aufgeklappt und zur Etappe hinzugefügt werden.</p>
     </div>
   </section>
   <div class="pdfBar noPrint">
@@ -128,7 +128,7 @@
 <script>
 const $=id=>document.getElementById(id);
 let map, routeLayer, stageMarkers=[];
-const tomorrow=new Date(Date.now()+86400000); $('tripdate').value=tomorrow.toISOString().slice(0,10);
+
 $('elevation').addEventListener('mousemove',elevationPointer);
 $('elevation').addEventListener('mouseleave',hideElevationTip);
 $('elevation').addEventListener('touchstart',e=>{elevationPointer(e)},{passive:true});
@@ -188,7 +188,7 @@ function makeStages(coords,m,targetKm,maxHm){
 }
 function drawElevation(coords,m,stages){
   const c=$('elevation'),ctx=c.getContext('2d'),W=c.width,H=c.height;
-  const L=52,R=20,T=28,B=46;
+  const L=52,R=58,T=28,B=46;
   ctx.clearRect(0,0,W,H);
   const elev=coords.map(x=>x[2]).filter(Number.isFinite);
   if(!elev.length){ctx.fillText('Keine Höhendaten geliefert.',30,40);return}
@@ -208,7 +208,7 @@ function drawElevation(coords,m,stages){
   }
   if(m.totalDist%roughStep>roughStep*.25){
     const x=xForKm(m.totalDist);ctx.beginPath();ctx.moveTo(x,H-B);ctx.lineTo(x,H-B+7);ctx.stroke();
-    ctx.fillText(m.totalDist.toFixed(0)+' km',x,H-13);
+    ctx.textAlign='right';ctx.fillText(m.totalDist.toFixed(0)+' km',W-6,H-13);ctx.textAlign='center';
   }
 
   // profile
@@ -706,7 +706,7 @@ function createPersonalPDF(){
  if(!pdfMemory.length){showCopyToast('Noch keine Blöcke für PDF ausgewählt');return}
  const title=`${$('start').value.trim()} → ${$('dest').value.trim()}`,date=$('tripdate').value||'',popup=window.open('','_blank');
  if(!popup){showCopyToast('Pop-up blockiert');return}
- const body=pdfMemory.map((x,i)=>`<section style="padding:18px 0;border-top:1px solid #ddd;break-inside:avoid"><h3>${i+1}</h3>${x.image?`<img src="${x.image}" alt="Höhenprofil" style="display:block;width:100%;max-width:900px;height:auto;border:1px solid #ddd;border-radius:10px;margin:8px 0 14px">`:''}<pre style="white-space:pre-wrap;font:14px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">${escapeHtml(x.text)}</pre></section>`).join('');
+ const body=pdfMemory.map((x,i)=>`<section style="padding:18px 0;border-top:1px solid #ddd;break-inside:avoid"><h3>${i+1}</h3>${x.image?`<img src="${x.image}" alt="Höhenprofil" style="display:block;width:100%;max-width:100%;height:auto;object-fit:contain;border:1px solid #ddd;border-radius:10px;margin:8px auto 14px">`:`<pre style="white-space:pre-wrap;font:14px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">${escapeHtml(x.text)}</pre>`}</section>`).join('');
  popup.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:36px;color:#132019"><button onclick="window.print()" style="padding:10px 14px;background:#1f6f4a;color:#fff;border:0;border-radius:10px;font-weight:700">Als PDF speichern / drucken</button><h1>${escapeHtml(title)}</h1><div>${date?'Abfahrt '+escapeHtml(date):''}</div>${body}</body></html>`);
  popup.document.close();
 }
@@ -741,6 +741,9 @@ async function copySelectedStops(){
 }
 async function plan(){
  const btn=$('go');btn.disabled=true;$('status').className='status';
+ const startVal=$('start').value.trim(),destVal=$('dest').value.trim();
+ if(!startVal||!destVal){$('status').textContent='Bitte Start und Ziel eingeben.';$('status').className='status error';btn.disabled=false;return}
+ if(!$('kmday').value||!$('hmday').value){$('status').textContent='Bitte Ziel-km pro Tag und max. Höhenmeter pro Tag eingeben.';$('status').className='status error';btn.disabled=false;return}
  // A newly calculated trip starts with a clean personal PDF selection.
  pdfMemory=[];localStorage.setItem('abo-pdf-memory-v3','[]');updatePdfCount();
  try{
@@ -755,7 +758,7 @@ async function plan(){
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
   renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);const terrainSupply=await fetchTerrainSupply(coords,stages);renderTerrainSupply(terrainSupply,stages,opt.labels);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  attachBlockActions();$('status').textContent='PDF Builder 7.2.3: Route, Etappen, Höhenprofil-Grafik, transparente Versorgung und persönliche PDF-Auswahl bereit.';$('result').scrollIntoView({behavior:'smooth'});
+  attachBlockActions();$('status').textContent='PDF Builder 7.2.5: Leere Startfelder, Route, Etappen, transparente Versorgung und persönliche PDF-Auswahl bereit.';$('result').scrollIntoView({behavior:'smooth'});
  }catch(e){$('status').className='status error';$('status').textContent='Route konnte nicht berechnet werden: '+e.message+'.'}finally{btn.disabled=false}
 }
 $('go').addEventListener('click',plan);
