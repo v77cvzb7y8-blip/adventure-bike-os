@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.9 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.10 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -54,7 +54,7 @@ def brouter(a, b, profile="trekking"):
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.9-adventure-layers")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.10-adventure-layers-6.1")
 
 @app.get("/health")
 def health():
@@ -146,39 +146,64 @@ def reverse():
 
 @app.post("/api/weather")
 def weather():
-    """Optional stage weather. Failure never blocks route planning."""
+    """Optional per-stage weather. Never blocks route planning."""
     try:
         body=request.get_json(force=True) or {}
         points=(body.get("points") or [])[:10]
         date=(body.get("date") or "").strip()
         if not points or not date:
-            return jsonify(available=False, reason="Kein Reisedatum oder keine Etappenpunkte angegeben.")
+            return jsonify(available=False, reason="Kein Reisedatum oder keine Etappenpunkte angegeben.", results=[])
+
+        from datetime import date as _date, datetime as _dt
+        try:
+            trip_date=_dt.strptime(date,"%Y-%m-%d").date()
+        except ValueError:
+            return jsonify(available=False, reason="Ungültiges Reisedatum.", results=[])
+
+        today=_date.today()
+        delta=(trip_date-today).days
+        # Open-Meteo's useful forecast window can vary. Treat near-term dates as forecast,
+        # longer horizons as planning-only rather than returning a misleading error.
+        if delta < 0:
+            return jsonify(available=False, reason="Das Reisedatum liegt in der Vergangenheit.", results=[])
+        if delta > 15:
+            return jsonify(available=False, reason="Für dieses Datum ist noch keine belastbare Kurzfristprognose verfügbar.", results=[])
+
         results=[]
         for p in points:
             lat=float(p["lat"]); lon=float(p["lon"])
-            r=session.get(
-                "https://api.open-meteo.com/v1/forecast",
-                params={
-                    "latitude":lat,"longitude":lon,
-                    "daily":"temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max",
-                    "timezone":"auto","start_date":date,"end_date":date
-                },timeout=20
-            )
-            print(f"[WEATHER] {lat},{lon} {date} status={r.status_code}",flush=True)
+            params={
+                "latitude":lat,
+                "longitude":lon,
+                "daily":"temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max",
+                "timezone":"auto",
+                "forecast_days":16
+            }
+            r=session.get("https://api.open-meteo.com/v1/forecast",params=params,timeout=20)
+            print(f"[WEATHER] {lat},{lon} target={date} delta={delta} status={r.status_code}",flush=True)
             if not r.ok:
-                results.append({"available":False})
-                continue
-            d=r.json().get("daily") or {}
-            if not d.get("time"):
                 results.append({"available":False}); continue
+            d=r.json().get("daily") or {}
+            times=d.get("time") or []
+            if date not in times:
+                results.append({"available":False}); continue
+            i=times.index(date)
+            def pick(key):
+                vals=d.get(key) or []
+                return vals[i] if i < len(vals) else None
             results.append({
                 "available":True,
-                "tmax":(d.get("temperature_2m_max") or [None])[0],
-                "tmin":(d.get("temperature_2m_min") or [None])[0],
-                "rain":(d.get("precipitation_probability_max") or [None])[0],
-                "wind":(d.get("wind_speed_10m_max") or [None])[0]
+                "date":date,
+                "tmax":pick("temperature_2m_max"),
+                "tmin":pick("temperature_2m_min"),
+                "rain":pick("precipitation_probability_max"),
+                "wind":pick("wind_speed_10m_max")
             })
-        return jsonify(available=any(x.get("available") for x in results), results=results)
+        return jsonify(
+            available=any(x.get("available") for x in results),
+            reason=None if any(x.get("available") for x in results) else "Wetterdienst lieferte für das gewählte Datum keine Etappenprognose.",
+            results=results
+        )
     except Exception as e:
         print(f"[WEATHER] ERROR: {type(e).__name__}: {e}",flush=True)
         return jsonify(available=False,reason="Wetterdaten derzeit nicht verfügbar.",results=[]),200

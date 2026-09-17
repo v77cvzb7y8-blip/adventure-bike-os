@@ -27,9 +27,9 @@
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE LAYERS 6.0</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE LAYERS 6.1</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">Route und Etappen bleiben die Basis. Jetzt kommen Fahrerprofil, Bike-Fit, Wetter, Belastung, Packen und Navigation als zusätzliche Ebenen dazu.</div>
+  <div class="sub">Route und Etappen bleiben die Basis. 6.1 ergänzt belastbares Kurzfristwetter, Kleidung, Trink-/Energieplanung und konkretere Bike-Setup-Hinweise.</div>
 </header>
 <main>
   <section class="card">
@@ -94,7 +94,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">Adventure Layers 6.0: Die Etappenoptimierung bleibt erhalten und wird um Fahrerprofil, Bike-Fit, Belastung, optionales Wetter, Packplan, Navigation sowie Energie-/Wasserhinweise ergänzt. Nicht verifizierte Wegoberfläche und Versorgung werden weiterhin ausdrücklich als offen markiert.</p>
+      <p class="note">Adventure Layers 6.1: Kurzfristwetter wird robust je Etappe abgefragt und in Kleidung, Wasser/Energie und Warnungen übersetzt. Bike-Setup und Packplan werden konkreter; Terrain und Versorgung bleiben bis zur separaten Verifizierung offen.</p>
     </div>
   </section>
 </main>
@@ -324,22 +324,73 @@ async function fetchStageWeather(coords,stages){
   }catch(e){return {available:false,reason:'Wetterdienst nicht erreichbar.'}}
 }
 function weatherHtml(w){
-  if(!w?.available)return `<p><strong>Noch keine belastbare Prognose.</strong> ${w?.reason||'Für weiter entfernte Reisedaten bleibt Wetter zunächst eine Planungsvariable.'}</p>`;
-  return (w.results||[]).map((x,i)=>x.available?`<span class="layerTag">Tag ${i+1}: ${Math.round(x.tmin)}–${Math.round(x.tmax)} °C · Regen ${Math.round(x.rain||0)}% · Wind ${Math.round(x.wind||0)} km/h</span>`:`<span class="layerTag">Tag ${i+1}: keine Daten</span>`).join('');
+  if(!w?.available)return `<p><strong>Wetter noch offen.</strong> ${w?.reason||'Keine verlässlichen Daten verfügbar.'}</p>`;
+  return (w.results||[]).map((x,i)=>x.available?
+    `<span class="layerTag">Tag ${i+1}: ${Math.round(x.tmin)}–${Math.round(x.tmax)} °C · Regen ${Math.round(x.rain||0)}% · Wind ${Math.round(x.wind||0)} km/h</span>`:
+    `<span class="layerTag">Tag ${i+1}: keine Daten</span>`).join('');
+}
+function clothingPlan(weather){
+  if(!weather?.available)return ['Basisschicht + Trikot','leichte Wärmeschicht','Regenjacke','Armlinge/Beinlinge je nach Saison'];
+  const vals=(weather.results||[]).filter(x=>x.available);
+  if(!vals.length)return ['Basisschicht + Trikot','leichte Wärmeschicht','Regenjacke'];
+  const tmin=Math.min(...vals.map(x=>x.tmin??99)),tmax=Math.max(...vals.map(x=>x.tmax??-99));
+  const rain=Math.max(...vals.map(x=>x.rain||0)),wind=Math.max(...vals.map(x=>x.wind||0));
+  const out=['Trikot + Bib/Shorts'];
+  if(tmin<12)out.push('Armlinge oder leichte Isolationsschicht');
+  if(tmin<7)out.push('wärmere Handschuhe / zusätzliche Schicht');
+  if(rain>=40)out.push('wasserdichte Regenjacke');
+  else out.push('leichte Wind-/Regenjacke');
+  if(wind>=30)out.push('winddichte Außenschicht');
+  if(tmax>24)out.push('Sonnenschutz + leichte Kleidung');
+  return out;
+}
+function hydrationEnergy(stages,weather){
+  const maxKm=Math.max(...stages.map(s=>s.km));
+  let temp=18;
+  const vals=(weather?.results||[]).filter(x=>x.available&&Number.isFinite(x.tmax));
+  if(vals.length)temp=Math.max(...vals.map(x=>x.tmax));
+  const water=temp>=26?'0,6–0,9 l/h':temp>=20?'0,5–0,75 l/h':'0,4–0,65 l/h';
+  const carbs=maxKm>=130?'60–90 g Kohlenhydrate/h':'45–75 g Kohlenhydrate/h';
+  return {water,carbs,note:'Startwerte für Ausdauerfahrten; individuelle Verträglichkeit und Hitzeakklimatisation beachten.'};
+}
+function setupAdvice(stages){
+  const type=$('biketype').value,tire=+$('tire').value,profile=$('profile').value;
+  const maxHm=Math.max(...stages.map(s=>s.hm));
+  const notes=[];
+  if(type==='gravel'){
+    notes.push(tire>=40?`${tire} mm: guter Ausgangspunkt für Komfort und Reserve.`:`${tire} mm: für raues Gravel eher knapp; Oberfläche ist noch nicht verifiziert.`);
+    notes.push('Tubeless sinnvoll, wenn bereits zuverlässig eingerichtet.');
+  }
+  if(maxHm>=1800)notes.push('Für lange Klettertage: leichte Übersetzung priorisieren; keine unnötig großen Gänge erzwingen.');
+  if(profile==='trekking')notes.push('Setup auf Zuverlässigkeit und Gepäckstabilität statt reine Geschwindigkeit optimieren.');
+  return notes;
+}
+function stageWarnings(stages,weather){
+  return stages.map((s,i)=>{
+    const w=weather?.results?.[i];
+    const warns=[];
+    if(s.hm>+$('hmday').value)warns.push('HM-Ziel überschritten');
+    if(s.km>+$('kmday').value*1.1)warns.push('deutlich über Ziel-km');
+    if(w?.available&&(w.rain||0)>=60)warns.push('hohe Regenwahrscheinlichkeit');
+    if(w?.available&&(w.wind||0)>=35)warns.push('starker Wind möglich');
+    return warns;
+  });
 }
 function renderAdventureLayers(stages,weather){
   const loads=routeLoad(stages),hardest=loads.reduce((a,b)=>a.hm100>b.hm100?a:b);
-  const fit=bikeFit(stages),pack=packingPlan(),nav=navigationPlan();
+  const fit=bikeFit(stages),pack=packingPlan(),nav=navigationPlan(),clothes=clothingPlan(weather),fuel=hydrationEnergy(stages,weather),setup=setupAdvice(stages),warnings=stageWarnings(stages,weather);
   const tech=$('tech').value,fitness=$('fitness').value;
   let loadText=`Härteste Etappe: ${hardest.km.toFixed(0)} km / ${Math.round(hardest.hm)} HM (${Math.round(hardest.hm100)} HM je 100 km).`;
   if(fitness==='sportlich'&&hardest.km>120)loadText+=' Das liegt oberhalb eines konservativen Tagesziels für das gewählte Profil.';
   $('adventureLayers').innerHTML=`
-    <div class="layerBox"><h3>🚴 Bike-Fit</h3><p><strong>${fit.verdict}</strong></p>${fit.notes.map(x=>`<p>• ${x}</p>`).join('')}</div>
-    <div class="layerBox"><h3>⛰ Belastung & Technik</h3><p>${loadText}</p><p>Technik-Level: <strong>${tech==='easy'?'eher einfach':tech==='medium'?'solide Gravel-Erfahrung':'technisch erfahren'}</strong>. Steigungs- und Oberflächenwarnungen werden erst belastbar, wenn Wegoberfläche/Segmentdaten angeschlossen sind.</p></div>
-    <div class="layerBox"><h3>🌦 Wetter</h3>${weatherHtml(weather)}<p>Wetter ist optional und blockiert die Routenplanung nie.</p></div>
+    <div class="layerBox"><h3>🚴 Bike-Fit & Setup</h3><p><strong>${fit.verdict}</strong></p>${fit.notes.concat(setup).map(x=>`<p>• ${x}</p>`).join('')}</div>
+    <div class="layerBox"><h3>⛰ Belastung & Warnungen</h3><p>${loadText}</p><p>Technik-Level: <strong>${tech==='easy'?'eher einfach':tech==='medium'?'solide Gravel-Erfahrung':'technisch erfahren'}</strong>.</p>${warnings.map((w,i)=>`<p><strong>Tag ${i+1}:</strong> ${w.length?w.join(' · '):'keine Warnung aus km/HM/Wetter'}</p>`).join('')}<p>Wegoberfläche/technische Segmente sind noch nicht verifiziert.</p></div>
+    <div class="layerBox"><h3>🌦 Wetter</h3>${weatherHtml(weather)}<p>Kurzfristwetter ist optional und blockiert die Planung nie.</p></div>
+    <div class="layerBox"><h3>🧥 Kleidung</h3>${clothes.map(x=>`<span class="layerTag">${x}</span>`).join('')}<p>Aus Temperatur, Regen und Wind abgeleitet, sofern Wetterdaten verfügbar sind.</p></div>
     <div class="layerBox"><h3>🧳 Packplan</h3><p><strong>${pack.target}</strong></p><p>${pack.bags}</p>${pack.items.map(x=>`<span class="layerTag">${x}</span>`).join('')}</div>
     <div class="layerBox"><h3>🧭 Navigation</h3>${nav.map(x=>`<p>✓ ${x}</p>`).join('')}</div>
-    <div class="layerBox"><h3>🍌 Energie & Wasser</h3><p>Startwert pro Etappe: regelmäßig essen statt große Mahlzeiten abwarten; Wasserreserven an Temperatur und Versorgung anpassen.</p><p>Konkrete Wasser-/Food-POIs folgen mit verifizierter Versorgungsquelle.</p></div>`;
+    <div class="layerBox"><h3>💧 Wasser & Energie</h3><p><strong>Trinken:</strong> ${fuel.water}</p><p><strong>Energie:</strong> ${fuel.carbs}</p><p>${fuel.note}</p><p>Konkrete Wasser-/Food-POIs folgen mit verifizierter Versorgungsquelle.</p></div>
+    <div class="layerBox"><h3>🛣 Terrain-Status</h3><p><strong>Noch nicht verifiziert.</strong> Die Route kennt Distanz und Höhe, aber noch keine belastbare Oberflächen-/Schwierigkeitsklassifikation pro Segment.</p><p>Diese Ebene ist vorbereitet und wird als Nächstes mit echten Segmentdaten befüllt.</p></div>`;
 }
 async function plan(){
  const btn=$('go');btn.disabled=true;$('status').className='status';
@@ -355,7 +406,7 @@ async function plan(){
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
   renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  $('status').textContent='Adventure Layers 6.0: Route, Etappen, Bike-Fit, Wetter und Packplan berechnet.';$('result').scrollIntoView({behavior:'smooth'});
+  $('status').textContent='Adventure Layers 6.1: Route, Etappen, Wetter, Kleidung, Bike-Setup und Energieplanung berechnet.';$('result').scrollIntoView({behavior:'smooth'});
  }catch(e){$('status').className='status error';$('status').textContent='Route konnte nicht berechnet werden: '+e.message+'.'}finally{btn.disabled=false}
 }
 $('go').addEventListener('click',plan);
