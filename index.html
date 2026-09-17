@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Adventure Bike OS</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root{--bg:#f5f5f0;--card:#fff;--ink:#132019;--muted:#66736b;--accent:#1f6f4a;--line:#dfe5df;--warn:#9a6515}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+    header{padding:28px 20px 14px;max-width:1100px;margin:auto}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--accent)}
+    h1{font-size:clamp(34px,7vw,64px);line-height:.95;margin:10px 0 12px;letter-spacing:-.045em}.sub{max-width:720px;color:var(--muted);font-size:17px}
+    main{max-width:1100px;margin:auto;padding:12px 20px 60px}.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;margin:14px 0;box-shadow:0 6px 25px rgba(20,40,25,.04)}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+    label{display:block;font-size:12px;font-weight:800;margin:0 0 7px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+    input,select{width:100%;font:inherit;border:1px solid var(--line);border-radius:13px;padding:13px;background:#fff;color:var(--ink)}
+    button{border:0;border-radius:14px;padding:14px 18px;font:inherit;font-weight:800;cursor:pointer;background:var(--accent);color:white;width:100%;margin-top:14px}
+    button:disabled{opacity:.55}.status{margin-top:12px;color:var(--muted);font-size:14px}.error{color:#a32929}
+    #map{height:430px;border-radius:18px;overflow:hidden;background:#e8ece8}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+    .stat{background:#f6f8f6;border-radius:16px;padding:14px}.stat b{font-size:25px;display:block}.stat span{font-size:12px;color:var(--muted)}
+    .hidden{display:none}.stage{display:grid;grid-template-columns:60px 1fr auto;gap:12px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)}
+    canvas{width:100%;height:180px;border-radius:14px;background:#f6f8f6}.note{font-size:13px;color:var(--muted);line-height:1.45}
+    @media(max-width:700px){.grid,.four,.stats{grid-template-columns:1fr 1fr}#map{height:360px}.stage{grid-template-columns:52px 1fr}.stage>strong{grid-column:2}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">ADVENTURE BIKE OS · MVP</div>
+  <h1>Dein Bike.<br>Dein Abenteuer.</h1>
+  <div class="sub">Zuerst die echte Route. Danach werden Tagesetappen aus Distanz und Höhenmetern abgeleitet – nicht umgekehrt.</div>
+</header>
+<main>
+  <section class="card">
+    <div class="grid">
+      <div><label>Start</label><input id="start" value="Brixen, Südtirol"></div>
+      <div><label>Ziel</label><input id="dest" value="München"></div>
+    </div>
+    <div class="grid four" style="margin-top:14px">
+      <div><label>Ziel km / Tag</label><input id="kmday" type="number" min="30" max="300" value="150"></div>
+      <div><label>Max. HM / Tag</label><input id="hmday" type="number" min="300" max="6000" value="2000"></div>
+      <div><label>Routing</label><select id="profile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schnell / Asphalt</option><option value="gravel">Gravel</option></select></div>
+      <div><label>Priorität</label><select id="priority"><option>Ausgewogen</option><option>Mehr Gravel</option><option>Einfacher fahrbar</option></select></div>
+    </div>
+    <button id="go">FAHRRADROUTE BERECHNEN</button>
+    <div id="status" class="status">Testfall ist bereits mit Brixen → München vorausgefüllt.</div>
+  </section>
+
+  <section id="result" class="hidden">
+    <div class="card">
+      <div class="eyebrow">DEINE ROUTE</div>
+      <div class="stats">
+        <div class="stat"><b id="distance">–</b><span>Gesamtdistanz</span></div>
+        <div class="stat"><b id="ascent">–</b><span>Anstieg gesamt</span></div>
+        <div class="stat"><b id="days">–</b><span>Etappen</span></div>
+        <div class="stat"><b id="avg">–</b><span>Ø km / Tag</span></div>
+      </div>
+      <div id="map"></div>
+      <p class="note">Karte © OpenStreetMap-Mitwirkende. Route: BRouter. Die Route ist eine Planungsgrundlage; Wegzustand, Sperren und lokale Regeln vor der Fahrt prüfen.</p>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">HÖHENPROFIL</div>
+      <h2>Was die Route wirklich verlangt</h2>
+      <canvas id="elevation" width="1000" height="220"></canvas>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
+      <h2 id="stageTitle">Etappenplan</h2>
+      <div id="stages"></div>
+      <p class="note">MVP-Logik: Etappengrenzen werden entlang der berechneten Route so gesetzt, dass Zielkilometer und maximal gewünschte Höhenmeter möglichst eingehalten werden. Später kommen Unterkunft, Wasser, Bahnhöfe, technische Schwierigkeit und POIs als echte Stop-Kriterien hinzu.</p>
+    </div>
+  </section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let map, routeLayer, stageMarkers=[];
+
+async function geocode(q){
+  const u='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(q);
+  const r=await fetch(u,{headers:{'Accept':'application/json'}});
+  if(!r.ok) throw new Error('Ortssuche nicht erreichbar');
+  const a=await r.json();
+  if(!a.length) throw new Error('Ort nicht gefunden: '+q);
+  return {lat:+a[0].lat,lon:+a[0].lon,name:a[0].display_name};
+}
+const rad=x=>x*Math.PI/180;
+function hav(a,b){
+  const R=6371, dLat=rad(b[1]-a[1]), dLon=rad(b[0]-a[0]);
+  const s=Math.sin(dLat/2)**2+Math.cos(rad(a[1]))*Math.cos(rad(b[1]))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(s));
+}
+function metrics(coords){
+  let dist=[0], asc=[0];
+  for(let i=1;i<coords.length;i++){
+    dist[i]=dist[i-1]+hav(coords[i-1],coords[i]);
+    const dz=(coords[i][2]??0)-(coords[i-1][2]??0);
+    asc[i]=asc[i-1]+Math.max(0,dz);
+  }
+  return {dist,asc,totalDist:dist.at(-1),totalAsc:asc.at(-1)};
+}
+function makeStages(coords,m,targetKm,maxHm){
+  const out=[]; let s=0;
+  while(s<coords.length-1){
+    let e=s+1, best=e;
+    while(e<coords.length){
+      const d=m.dist[e]-m.dist[s], h=m.asc[e]-m.asc[s];
+      if((d>targetKm || h>maxHm) && best>s+1) break;
+      best=e;
+      if(d>=targetKm*.92) break;
+      e++;
+    }
+    if(best<=s) best=Math.min(s+1,coords.length-1);
+    out.push({s,e:best,km:m.dist[best]-m.dist[s],hm:m.asc[best]-m.asc[s]});
+    s=best;
+  }
+  // Avoid a tiny last stage by rebalancing last two.
+  if(out.length>1 && out.at(-1).km<targetKm*.35){
+    const a=out[out.length-2], b=out[out.length-1], start=a.s, end=b.e;
+    const total=m.dist[end]-m.dist[start], splitTarget=total/2;
+    let split=start+1, err=Infinity;
+    for(let i=start+1;i<end;i++){let x=Math.abs((m.dist[i]-m.dist[start])-splitTarget);if(x<err){err=x;split=i}}
+    out.splice(out.length-2,2,
+      {s:start,e:split,km:m.dist[split]-m.dist[start],hm:m.asc[split]-m.asc[start]},
+      {s:split,e:end,km:m.dist[end]-m.dist[split],hm:m.asc[end]-m.asc[split]});
+  }
+  return out;
+}
+function drawElevation(coords,m,stages){
+  const c=$('elevation'),ctx=c.getContext('2d'),W=c.width,H=c.height,p=28;
+  ctx.clearRect(0,0,W,H);
+  const elev=coords.map(x=>x[2]).filter(Number.isFinite);
+  if(!elev.length){ctx.fillText('Keine Höhendaten geliefert.',30,40);return}
+  const lo=Math.min(...elev), hi=Math.max(...elev), span=Math.max(1,hi-lo);
+  ctx.beginPath();
+  coords.forEach((x,i)=>{
+    const xx=p+(W-2*p)*(m.dist[i]/m.totalDist), yy=H-p-(H-2*p)*(((x[2]??lo)-lo)/span);
+    i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);
+  }); ctx.strokeStyle='#1f6f4a';ctx.lineWidth=4;ctx.stroke();
+  ctx.fillStyle='#66736b';ctx.font='24px system-ui';
+  ctx.fillText(Math.round(hi)+' m',p,24);ctx.fillText(Math.round(lo)+' m',p,H-5);
+  stages.slice(0,-1).forEach(st=>{
+    const x=p+(W-2*p)*(m.dist[st.e]/m.totalDist);
+    ctx.beginPath();ctx.moveTo(x,p);ctx.lineTo(x,H-p);ctx.strokeStyle='#9aa69e';ctx.lineWidth=2;ctx.stroke();
+  });
+}
+function initMap(){
+  if(map)return;
+  map=L.map('map',{zoomControl:true});
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+}
+function showMap(coords,stages){
+  initMap();
+  if(routeLayer)routeLayer.remove(); stageMarkers.forEach(x=>x.remove());stageMarkers=[];
+  const latlngs=coords.map(c=>[c[1],c[0]]);
+  routeLayer=L.polyline(latlngs,{weight:5,opacity:.9}).addTo(map);
+  map.fitBounds(routeLayer.getBounds(),{padding:[20,20]});
+  [0,...stages.map(x=>x.e)].forEach((idx,n)=>{
+    const marker=L.circleMarker(latlngs[idx],{radius:8,weight:3,fillOpacity:1}).addTo(map).bindTooltip(n===0?'Start':n===stages.length?'Ziel':'Etappe '+n);
+    stageMarkers.push(marker);
+  });
+}
+function renderStages(stages){
+  $('stages').innerHTML=stages.map((s,i)=>{
+    const warn=s.hm>+$('hmday').value?' · ⚠ über HM-Ziel':'';
+    return `<div class="stage"><div class="badge">${i+1}</div><div><strong>Etappe ${i+1}</strong><br><small>automatisch aus der echten Route abgeleitet${warn}</small></div><strong>${s.km.toFixed(0)} km · ${Math.round(s.hm)} HM</strong></div>`;
+  }).join('');
+}
+async function plan(){
+  const btn=$('go'); btn.disabled=true; $('status').className='status'; $('status').textContent='Orte werden gesucht …';
+  try{
+    const a=await geocode($('start').value.trim());
+    await new Promise(r=>setTimeout(r,1100)); // Nominatim: max. 1 Request/s
+    const b=await geocode($('dest').value.trim());
+    $('status').textContent='Fahrradroute wird berechnet …';
+    const profile=$('profile').value;
+    const url='https://brouter.de/brouter-web/brouter?lonlats='+a.lon+','+a.lat+'%3B'+b.lon+','+b.lat+'&profile='+encodeURIComponent(profile)+'&alternativeidx=0&format=geojson';
+    const rr=await fetch(url);
+    if(!rr.ok) throw new Error('BRouter antwortet mit '+rr.status);
+    const gj=await rr.json();
+    const f=gj.features?gj.features[0]:gj;
+    if(!f?.geometry?.coordinates?.length) throw new Error('Keine Route erhalten');
+    const coords=f.geometry.coordinates;
+    const m=metrics(coords);
+    const target=+$('kmday').value, maxHm=+$('hmday').value;
+    const stages=makeStages(coords,m,target,maxHm);
+    $('distance').textContent=m.totalDist.toFixed(0)+' km';
+    $('ascent').textContent=Math.round(m.totalAsc)+' HM';
+    $('days').textContent=stages.length;
+    $('avg').textContent=(m.totalDist/stages.length).toFixed(0)+' km';
+    $('stageTitle').textContent=`${stages.length} Etappen · ${$('start').value} → ${$('dest').value}`;
+    $('result').classList.remove('hidden');
+    setTimeout(()=>{showMap(coords,stages);drawElevation(coords,m,stages);},50);
+    renderStages(stages);
+    $('status').textContent='Route erfolgreich berechnet.';
+    $('result').scrollIntoView({behavior:'smooth'});
+  }catch(e){
+    $('status').className='status error';
+    $('status').textContent='Route konnte nicht berechnet werden: '+e.message+'. Bitte erneut versuchen oder Ortsnamen präzisieren.';
+  }finally{btn.disabled=false}
+}
+$('go').addEventListener('click',plan);
+</script>
+</body>
+</html>
