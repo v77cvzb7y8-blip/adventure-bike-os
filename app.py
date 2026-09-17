@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.8 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.9 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -54,7 +54,7 @@ def brouter(a, b, profile="trekking"):
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.8-trip-planner")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.9-adventure-layers")
 
 @app.get("/health")
 def health():
@@ -142,6 +142,46 @@ def reverse():
         print(f"[REVERSE] ERROR: {type(e).__name__}: {e}", flush=True)
         return jsonify(error="Ortsname konnte nicht ermittelt werden."), 502
 
+
+
+@app.post("/api/weather")
+def weather():
+    """Optional stage weather. Failure never blocks route planning."""
+    try:
+        body=request.get_json(force=True) or {}
+        points=(body.get("points") or [])[:10]
+        date=(body.get("date") or "").strip()
+        if not points or not date:
+            return jsonify(available=False, reason="Kein Reisedatum oder keine Etappenpunkte angegeben.")
+        results=[]
+        for p in points:
+            lat=float(p["lat"]); lon=float(p["lon"])
+            r=session.get(
+                "https://api.open-meteo.com/v1/forecast",
+                params={
+                    "latitude":lat,"longitude":lon,
+                    "daily":"temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max",
+                    "timezone":"auto","start_date":date,"end_date":date
+                },timeout=20
+            )
+            print(f"[WEATHER] {lat},{lon} {date} status={r.status_code}",flush=True)
+            if not r.ok:
+                results.append({"available":False})
+                continue
+            d=r.json().get("daily") or {}
+            if not d.get("time"):
+                results.append({"available":False}); continue
+            results.append({
+                "available":True,
+                "tmax":(d.get("temperature_2m_max") or [None])[0],
+                "tmin":(d.get("temperature_2m_min") or [None])[0],
+                "rain":(d.get("precipitation_probability_max") or [None])[0],
+                "wind":(d.get("wind_speed_10m_max") or [None])[0]
+            })
+        return jsonify(available=any(x.get("available") for x in results), results=results)
+    except Exception as e:
+        print(f"[WEATHER] ERROR: {type(e).__name__}: {e}",flush=True)
+        return jsonify(available=False,reason="Wetterdaten derzeit nicht verfügbar.",results=[]),200
 
 @app.post("/api/route")
 def route():

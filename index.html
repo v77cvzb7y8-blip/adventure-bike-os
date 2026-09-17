@@ -20,16 +20,16 @@
     #map{height:430px;border-radius:18px;overflow:hidden;background:#e8ece8}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
     .stat{background:#f6f8f6;border-radius:16px;padding:14px}.stat b{font-size:25px;display:block}.stat span{font-size:12px;color:var(--muted)}
     .hidden{display:none}.stage{display:grid;grid-template-columns:60px 1fr auto;gap:12px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
-    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)} .stageRoute{font-size:16px;font-weight:850;margin-bottom:4px}.placePending{opacity:.65}.stageCard{padding:16px 0;border-top:1px solid var(--line)}.stageTop{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center}.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0 64px}.chip{font-size:12px;background:#f1f5f1;border-radius:999px;padding:6px 9px;color:var(--muted)}.why{margin:8px 0 0 64px;font-size:12px;color:var(--muted)}.decision{margin:10px 0 0 64px;padding:10px 12px;border-left:3px solid var(--accent);background:#f7f9f7;border-radius:8px;font-size:13px}.summaryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.summaryBox{background:#f6f8f6;border-radius:14px;padding:12px}.summaryBox b{display:block;font-size:18px}.summaryBox span{font-size:12px;color:var(--muted)}
+    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)} .stageRoute{font-size:16px;font-weight:850;margin-bottom:4px}.placePending{opacity:.65}.stageCard{padding:16px 0;border-top:1px solid var(--line)}.stageTop{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center}.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0 64px}.chip{font-size:12px;background:#f1f5f1;border-radius:999px;padding:6px 9px;color:var(--muted)}.why{margin:8px 0 0 64px;font-size:12px;color:var(--muted)}.decision{margin:10px 0 0 64px;padding:10px 12px;border-left:3px solid var(--accent);background:#f7f9f7;border-radius:8px;font-size:13px}.summaryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.summaryBox{background:#f6f8f6;border-radius:14px;padding:12px}.summaryBox b{display:block;font-size:18px}.summaryBox span{font-size:12px;color:var(--muted)}.layersGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.layerBox{background:#f6f8f6;border-radius:16px;padding:15px;line-height:1.45}.layerBox h3{margin:0 0 8px;font-size:17px}.layerBox p{margin:6px 0;color:var(--muted);font-size:13px}.layerBox strong{color:var(--ink)}.layerTag{display:inline-block;margin:4px 5px 0 0;padding:5px 8px;border-radius:999px;background:#e8f2ec;color:var(--accent);font-size:11px;font-weight:800}
     canvas{width:100%;height:180px;border-radius:14px;background:#f6f8f6}.note{font-size:13px;color:var(--muted);line-height:1.45}
-    @media(max-width:700px){.grid,.four,.stats,.summaryGrid{grid-template-columns:1fr 1fr}#map{height:360px}.stage{grid-template-columns:52px 1fr}.stage>strong{grid-column:2}}
+    @media(max-width:700px){.grid,.four,.stats,.summaryGrid,.layersGrid{grid-template-columns:1fr 1fr}#map{height:360px}.stage{grid-template-columns:52px 1fr}.stage>strong{grid-column:2}}
   </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · REISEPLANER 5.0</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE LAYERS 6.0</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">Die echte Route zuerst. Danach optimiert Adventure Bike OS Etappen nach Leistung, realen Orten und praktischer Reise-Eignung.</div>
+  <div class="sub">Route und Etappen bleiben die Basis. Jetzt kommen Fahrerprofil, Bike-Fit, Wetter, Belastung, Packen und Navigation als zusätzliche Ebenen dazu.</div>
 </header>
 <main>
   <section class="card">
@@ -42,6 +42,16 @@
       <div><label>Max. HM / Tag</label><input id="hmday" type="number" min="300" max="6000" value="2000"></div>
       <div><label>Routing</label><select id="profile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schnell / Asphalt</option><option value="gravel">Gravel</option></select></div>
       <div><label>Priorität</label><select id="priority"><option>Ausgewogen</option><option>Mehr Gravel</option><option>Einfacher fahrbar</option></select></div>
+    </div>
+    <div class="grid four" style="margin-top:14px">
+      <div><label>Abfahrt</label><input id="tripdate" type="date"></div>
+      <div><label>Fitness</label><select id="fitness"><option value="sportlich">Sportlich</option><option value="sehr-sportlich" selected>Sehr sportlich</option><option value="ultra">Ultra / Langdistanz</option></select></div>
+      <div><label>Bike</label><select id="biketype"><option value="gravel" selected>Gravelbike</option><option value="trekking">Trekkingbike</option><option value="mtb">MTB</option><option value="road">Rennrad</option></select></div>
+      <div><label>Reifenbreite mm</label><input id="tire" type="number" min="25" max="70" value="45"></div>
+    </div>
+    <div class="grid" style="margin-top:14px">
+      <div><label>Übernachtung</label><select id="lodging"><option value="hotel" selected>Hotel / Pension</option><option value="mixed">Gemischt</option><option value="camping">Camping / Biwak</option></select></div>
+      <div><label>Technik-Level</label><select id="tech"><option value="easy">Eher einfach</option><option value="medium" selected>Solide Gravel-Erfahrung</option><option value="advanced">Technisch erfahren</option></select></div>
     </div>
     <button id="go">FAHRRADROUTE BERECHNEN</button>
     <div id="status" class="status">Testfall ist bereits mit Brixen → München vorausgefüllt.</div>
@@ -67,6 +77,14 @@
     </div>
 
     <div class="card">
+      <div class="eyebrow">ADVENTURE LAYERS</div>
+      <h2>Bike, Belastung, Wetter & Packen</h2>
+      <div id="adventureLayers" class="layersGrid">
+        <div class="layerBox"><b>Wird berechnet …</b></div>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="eyebrow">HÖHENPROFIL</div>
       <h2>Was die Route wirklich verlangt</h2>
       <canvas id="elevation" width="1000" height="220"></canvas>
@@ -76,7 +94,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">Reiseplaner 5.0: Etappenziele werden in einem breiteren Routenkorridor nach Leistungsgrenzen, Tagesdistanz und praktischer Orts-Eignung verglichen. Der Routenschnitt wird tatsächlich verschoben und km/HM werden neu berechnet. Versorgung bleibt ausdrücklich unverifiziert, bis eine belastbare Quelle verfügbar ist.</p>
+      <p class="note">Adventure Layers 6.0: Die Etappenoptimierung bleibt erhalten und wird um Fahrerprofil, Bike-Fit, Belastung, optionales Wetter, Packplan, Navigation sowie Energie-/Wasserhinweise ergänzt. Nicht verifizierte Wegoberfläche und Versorgung werden weiterhin ausdrücklich als offen markiert.</p>
     </div>
   </section>
 </main>
@@ -85,6 +103,7 @@
 <script>
 const $=id=>document.getElementById(id);
 let map, routeLayer, stageMarkers=[];
+const tomorrow=new Date(Date.now()+86400000); $('tripdate').value=tomorrow.toISOString().slice(0,10);
 
 async function geocode(q){
   const u='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(q);
@@ -271,6 +290,57 @@ function maybeStageKm(candidate,stage){
   if(!candidate||candidate.route_index==null||!window.__routeMetrics)return NaN;
   return window.__routeMetrics.dist[candidate.route_index]-window.__routeMetrics.dist[stage.s];
 }
+
+function routeLoad(stages){
+  return stages.map(s=>({km:s.km,hm:s.hm,hm100:s.km?100*s.hm/s.km:0}));
+}
+function bikeFit(stages){
+  const type=$('biketype').value,tire=+$('tire').value,profile=$('profile').value;
+  const maxLoad=Math.max(...routeLoad(stages).map(x=>x.hm100));
+  let verdict='Gut passend',notes=[];
+  if(type==='road'&&profile!=='fastbike'){verdict='Nur bedingt passend';notes.push('Rennrad + Bikepacking/Gravel-Routing kann auf unbefestigten Abschnitten unpassend sein.');}
+  if(type==='gravel'&&tire>=40)notes.push(`${tire} mm Reifen sind für einen robusten Bikepacking-Startpunkt plausibel.`);
+  else if(type==='gravel'&&tire<35)notes.push('Für rauere Abschnitte könnte mehr Reifenvolumen sinnvoll sein; Oberfläche ist noch nicht verifiziert.');
+  if(maxLoad>1500)notes.push('Hohe Kletterbelastung: leichte Übersetzung und niedrige Gänge priorisieren.');
+  notes.push('Oberfläche und technische Schwierigkeit sind noch nicht verifiziert.');
+  return {verdict,notes};
+}
+function packingPlan(){
+  const lodging=$('lodging').value;
+  if(lodging==='hotel') return {target:'ca. 7–9 kg ohne Wasser/Essen',bags:'Satteltasche + Rahmentasche + kleine Lenkertasche',items:['2–3 Trikots/Shirts','2 Bibs/Shorts','Regenjacke','leichte Abendkleidung','Tools + Ersatzschlauch/Plugs','Powerbank + Ladekabel']};
+  if(lodging==='mixed') return {target:'ca. 9–12 kg ohne Wasser/Essen',bags:'Satteltasche + Rahmentasche + Lenkertasche',items:['leichter Schlafsack/Inlet','Regen-/Wärmeschicht','Tools + Ersatzteile','Powerbank','kompakte Hygiene','Notfallverpflegung']};
+  return {target:'ca. 12–16 kg ohne Wasser/Essen',bags:'vollwertiges Bikepacking-Set, ggf. Fork Bags',items:['Zelt/Tarp','Schlafsystem','Kocher optional','Wärmeschicht','Tools + Ersatzteile','Powerbank + Licht','mehr Wasserreserve']};
+}
+function navigationPlan(){
+  return ['Bikecomputer als Primärnavigation','GPX offline gespeichert','Smartphone als Backup','Offline-Karten vor Abfahrt laden','Powerbank / Ladestrategie','Nicht auf Live-Mobilfunk verlassen'];
+}
+async function fetchStageWeather(coords,stages){
+  const date=$('tripdate').value;
+  if(!date)return {available:false,reason:'Kein Abfahrtsdatum gewählt.'};
+  const points=stages.map(s=>{const c=coords[s.e];return {lat:c[1],lon:c[0]}});
+  try{
+    const r=await fetch('https://adventure-bike-os-api.onrender.com/api/weather',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,points})});
+    return await r.json();
+  }catch(e){return {available:false,reason:'Wetterdienst nicht erreichbar.'}}
+}
+function weatherHtml(w){
+  if(!w?.available)return `<p><strong>Noch keine belastbare Prognose.</strong> ${w?.reason||'Für weiter entfernte Reisedaten bleibt Wetter zunächst eine Planungsvariable.'}</p>`;
+  return (w.results||[]).map((x,i)=>x.available?`<span class="layerTag">Tag ${i+1}: ${Math.round(x.tmin)}–${Math.round(x.tmax)} °C · Regen ${Math.round(x.rain||0)}% · Wind ${Math.round(x.wind||0)} km/h</span>`:`<span class="layerTag">Tag ${i+1}: keine Daten</span>`).join('');
+}
+function renderAdventureLayers(stages,weather){
+  const loads=routeLoad(stages),hardest=loads.reduce((a,b)=>a.hm100>b.hm100?a:b);
+  const fit=bikeFit(stages),pack=packingPlan(),nav=navigationPlan();
+  const tech=$('tech').value,fitness=$('fitness').value;
+  let loadText=`Härteste Etappe: ${hardest.km.toFixed(0)} km / ${Math.round(hardest.hm)} HM (${Math.round(hardest.hm100)} HM je 100 km).`;
+  if(fitness==='sportlich'&&hardest.km>120)loadText+=' Das liegt oberhalb eines konservativen Tagesziels für das gewählte Profil.';
+  $('adventureLayers').innerHTML=`
+    <div class="layerBox"><h3>🚴 Bike-Fit</h3><p><strong>${fit.verdict}</strong></p>${fit.notes.map(x=>`<p>• ${x}</p>`).join('')}</div>
+    <div class="layerBox"><h3>⛰ Belastung & Technik</h3><p>${loadText}</p><p>Technik-Level: <strong>${tech==='easy'?'eher einfach':tech==='medium'?'solide Gravel-Erfahrung':'technisch erfahren'}</strong>. Steigungs- und Oberflächenwarnungen werden erst belastbar, wenn Wegoberfläche/Segmentdaten angeschlossen sind.</p></div>
+    <div class="layerBox"><h3>🌦 Wetter</h3>${weatherHtml(weather)}<p>Wetter ist optional und blockiert die Routenplanung nie.</p></div>
+    <div class="layerBox"><h3>🧳 Packplan</h3><p><strong>${pack.target}</strong></p><p>${pack.bags}</p>${pack.items.map(x=>`<span class="layerTag">${x}</span>`).join('')}</div>
+    <div class="layerBox"><h3>🧭 Navigation</h3>${nav.map(x=>`<p>✓ ${x}</p>`).join('')}</div>
+    <div class="layerBox"><h3>🍌 Energie & Wasser</h3><p>Startwert pro Etappe: regelmäßig essen statt große Mahlzeiten abwarten; Wasserreserven an Temperatur und Versorgung anpassen.</p><p>Konkrete Wasser-/Food-POIs folgen mit verifizierter Versorgungsquelle.</p></div>`;
+}
 async function plan(){
  const btn=$('go');btn.disabled=true;$('status').className='status';
  try{
@@ -283,9 +353,9 @@ async function plan(){
   $('status').textContent='Route berechnet. Etappenkorridor wird optimiert …';
   const opt=await optimizeStages(coords,m,base,target,maxHm,$('start').value,$('dest').value,$('priority').value),stages=opt.stages;
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
-  renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
+  renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  $('status').textContent='Reiseplaner 5.0: Etappen nach Leistung und praktischer Reise-Eignung optimiert.';$('result').scrollIntoView({behavior:'smooth'});
+  $('status').textContent='Adventure Layers 6.0: Route, Etappen, Bike-Fit, Wetter und Packplan berechnet.';$('result').scrollIntoView({behavior:'smooth'});
  }catch(e){$('status').className='status error';$('status').textContent='Route konnte nicht berechnet werden: '+e.message+'.'}finally{btn.disabled=false}
 }
 $('go').addEventListener('click',plan);
