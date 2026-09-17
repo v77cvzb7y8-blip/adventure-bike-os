@@ -20,14 +20,14 @@
     #map{height:430px;border-radius:18px;overflow:hidden;background:#e8ece8}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
     .stat{background:#f6f8f6;border-radius:16px;padding:14px}.stat b{font-size:25px;display:block}.stat span{font-size:12px;color:var(--muted)}
     .hidden{display:none}.stage{display:grid;grid-template-columns:60px 1fr auto;gap:12px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
-    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)} .stageRoute{font-size:16px;font-weight:850;margin-bottom:4px}.placePending{opacity:.65}
+    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)} .stageRoute{font-size:16px;font-weight:850;margin-bottom:4px}.placePending{opacity:.65}.stageCard{padding:16px 0;border-top:1px solid var(--line)}.stageTop{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center}.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0 64px}.chip{font-size:12px;background:#f1f5f1;border-radius:999px;padding:6px 9px;color:var(--muted)}.why{margin:8px 0 0 64px;font-size:12px;color:var(--muted)}
     canvas{width:100%;height:180px;border-radius:14px;background:#f6f8f6}.note{font-size:13px;color:var(--muted);line-height:1.45}
     @media(max-width:700px){.grid,.four,.stats{grid-template-columns:1fr 1fr}#map{height:360px}.stage{grid-template-columns:52px 1fr}.stage>strong{grid-column:2}}
   </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ETAPPEN 2.0</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ETAPPEN 3.0</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
   <div class="sub">Zuerst die echte Route. Danach werden Tagesetappen aus Distanz und Höhenmetern abgeleitet – nicht umgekehrt.</div>
 </header>
@@ -70,7 +70,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">Etappen 2.0: Zuerst werden Grenzen aus Distanz und Höhenmetern berechnet. Danach wird der nächstgelegene Ort als verständliches Etappenziel angezeigt. In der nächsten Stufe wählen wir den Übernachtungsort aktiv nach Unterkunft, Versorgung und Abweichung von der Route.</p>
+      <p class="note">Etappen 3.0: Rund um den idealen Tagespunkt werden reale Orte nach Nähe, Ortsgröße sowie OSM-Daten zu Unterkunft, Gastro, Supermarkt und Bikeshop bewertet. Das sind Planungsindikatoren, keine Echtzeit-Verfügbarkeiten.</p>
     </div>
   </section>
 </main>
@@ -188,13 +188,16 @@ async function resolveStagePlaces(coords,stages,startName,destName){
   names.push(shortPlace(destName));
   return names;
 }
-function renderStages(stages,names){
-  $('stages').innerHTML=stages.map((s,i)=>{
-    const warn=s.hm>+$('hmday').value?' · ⚠ über HM-Ziel':'';
-    const from=names?.[i] || (i===0?shortPlace($('start').value):'…');
-    const to=names?.[i+1] || (i===stages.length-1?shortPlace($('dest').value):'Etappenort wird gesucht …');
-    return `<div class="stage"><div class="badge">${i+1}</div><div><div class="stageRoute">${from} → ${to}</div><small>Etappe ${i+1} · aus Distanz + Höhenmetern abgeleitet${warn}</small></div><strong>${s.km.toFixed(1)} km · ${Math.round(s.hm)} HM</strong></div>`;
-  }).join('');
+async function getStageCandidates(coord){try{const r=await fetch('https://adventure-bike-os-api.onrender.com/api/stage-candidates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:coord[1],lon:coord[0],radius:12000})});const d=await r.json();return r.ok?(d.candidates||[]):[]}catch(e){return []}}
+async function enrichStages(coords,stages,names){const x=[];for(let i=0;i<stages.length;i++){if(i===stages.length-1){x.push({name:names[i+1],candidate:null});continue}const cs=await getStageCandidates(coords[stages[i].e]);x.push({name:cs[0]?.name||names[i+1],candidate:cs[0]||null})}return x}
+function renderStages(stages,names,enriched){
+ $('stages').innerHTML=stages.map((s,i)=>{
+  const from=i===0?shortPlace($('start').value):(enriched?.[i-1]?.name||names?.[i]||'…');
+  const to=i===stages.length-1?shortPlace($('dest').value):(enriched?.[i]?.name||names?.[i+1]||'…');
+  const c=enriched?.[i]?.candidate,a=c?.amenities||{},warn=s.hm>+$('hmday').value?' · ⚠ über HM-Ziel':'';
+  const chips=c?[`↔ ca. ${c.distance_km} km vom idealen Tagespunkt`,a.sleep?`🛏 ${a.sleep} Unterkunft-Treffer`:'🛏 keine Unterkunftsdaten',a.food?`🍽 ${a.food} Gastro-Treffer`:'🍽 keine Gastro-Daten',a.supermarket?'🛒 Supermarkt':'🛒 kein Supermarkt-Treffer',a.bike?'🔧 Bikeshop':''].filter(Boolean):[];
+  return `<div class="stageCard"><div class="stageTop"><div class="badge">${i+1}</div><div><div class="stageRoute">${from} → ${to}</div><small>Etappe ${i+1}${warn}</small></div><strong>${s.km.toFixed(1)} km · ${Math.round(s.hm)} HM</strong></div>${chips.length?`<div class="chips">${chips.map(x=>`<span class="chip">${x}</span>`).join('')}</div>`:''}<div class="why">${c?'Empfohlen aus Nähe, Ortsgröße und Basis-Versorgung.':(i===stages.length-1?'Ziel der Reise.':'Basis-Versorgung derzeit nicht verfügbar.')}</div></div>`;
+ }).join('');
 }
 async function plan(){
   const btn=$('go'); btn.disabled=true; $('status').className='status'; $('status').textContent='Anfrage wird vorbereitet …';
@@ -228,13 +231,11 @@ async function plan(){
     $('status').textContent='Route berechnet. Etappenorte werden ermittelt …';
     const placeNames=await resolveStagePlaces(coords,stages,$('start').value,$('dest').value);
     renderStages(stages,placeNames);
-    // Replace generic intermediate marker tooltips with actual place names.
-    stageMarkers.forEach((marker,n)=>{
-      if(n===0) marker.bindTooltip(placeNames[0]);
-      else if(n===stageMarkers.length-1) marker.bindTooltip(placeNames.at(-1));
-      else marker.bindTooltip('Etappenziel: '+placeNames[n]);
-    });
-    $('status').textContent='Route und Etappenorte erfolgreich berechnet.';
+    $('status').textContent='Geeignete Übernachtungsorte und Versorgung werden geprüft …';
+    const enriched=await enrichStages(coords,stages,placeNames);
+    renderStages(stages,placeNames,enriched);
+    stageMarkers.forEach((marker,n)=>{if(n===0)marker.bindTooltip(placeNames[0]);else if(n===stageMarkers.length-1)marker.bindTooltip(placeNames.at(-1));else marker.bindTooltip('Empfohlenes Etappenziel: '+(enriched[n-1]?.name||placeNames[n]));});
+    $('status').textContent='Route, Etappenorte und Basis-Versorgung erfolgreich berechnet.';
     $('result').scrollIntoView({behavior:'smooth'});
   }catch(e){
     $('status').className='status error';
