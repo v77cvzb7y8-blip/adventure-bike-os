@@ -171,20 +171,23 @@ function renderStages(stages){
   }).join('');
 }
 async function plan(){
-  const btn=$('go'); btn.disabled=true; $('status').className='status'; $('status').textContent='Orte werden gesucht …';
+  const btn=$('go'); btn.disabled=true; $('status').className='status'; $('status').textContent='Anfrage wird vorbereitet …';
   try{
-    const a=await geocode($('start').value.trim());
-    await new Promise(r=>setTimeout(r,1100)); // Nominatim: max. 1 Request/s
-    const b=await geocode($('dest').value.trim());
-    $('status').textContent='Fahrradroute wird berechnet …';
+    $('status').textContent='Server berechnet Fahrradroute …';
     const profile=$('profile').value;
-    const url='https://brouter.de/brouter-web/brouter?lonlats='+a.lon+','+a.lat+'%3B'+b.lon+','+b.lat+'&profile='+encodeURIComponent(profile)+'&alternativeidx=0&format=geojson';
-    const rr=await fetch(url);
-    if(!rr.ok) throw new Error('BRouter antwortet mit '+rr.status);
-    const gj=await rr.json();
-    const f=gj.features?gj.features[0]:gj;
-    if(!f?.geometry?.coordinates?.length) throw new Error('Keine Route erhalten');
-    const coords=f.geometry.coordinates;
+    const rr=await fetch('https://adventure-bike-os-api.onrender.com/api/route',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        start:$('start').value.trim(),
+        destination:$('dest').value.trim(),
+        profile
+      })
+    });
+    const gj=await rr.json().catch(()=>({}));
+    if(!rr.ok) throw new Error(gj.error || ('Server antwortet mit '+rr.status));
+    if(!gj?.geometry?.coordinates?.length) throw new Error('Keine Route erhalten');
+    const coords=gj.geometry.coordinates;
     const m=metrics(coords);
     const target=+$('kmday').value, maxHm=+$('hmday').value;
     const stages=makeStages(coords,m,target,maxHm);
