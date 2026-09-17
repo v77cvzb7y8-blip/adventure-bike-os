@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.19 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.20 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -37,24 +37,104 @@ def brouter(a, b, profile="trekking"):
         "alternativeidx": 0,
         "format": "geojson"
     }
-    print(f"[BROUTER] request profile={profile} lonlats={params['lonlats']}", flush=True)
+    last_error = None
+    for attempt in range(3):
+        print(f"[BROUTER] attempt={attempt+1} profile={profile} lonlats={params['lonlats']}", flush=True)
+        try:
+            r = session.get(url, params=params, timeout=75)
+            print(f"[BROUTER] status={r.status_code} content-type={r.headers.get('content-type')}", flush=True)
+            if r.ok:
+                return r.json()
+            print(f"[BROUTER] response={r.text[:500]}", flush=True)
+            last_error = requests.HTTPError(f"BRouter HTTP {r.status_code}", response=r)
+        except (requests.RequestException, ValueError) as e:
+            last_error = e
+            print(f"[BROUTER] ERROR attempt={attempt+1}: {type(e).__name__}: {e}", flush=True)
+        time.sleep(1.2 * (attempt + 1))
+    raise last_error or requests.RequestException("BRouter failed")
+
+def _decode_polyline6(encoded):
+    coords=[]
+    index=0
+    lat=0
+    lon=0
+    length=len(encoded)
+    while index < length:
+        result=1; shift=0; b=0
+        while True:
+            b=ord(encoded[index])-63; index+=1
+            result += (b & 0x1f) << shift; shift += 5
+            if b < 0x20: break
+        dlat = ~(result >> 1) if (result & 1) else (result >> 1)
+        lat += dlat
+        result=1; shift=0
+        while True:
+            b=ord(encoded[index])-63; index+=1
+            result += (b & 0x1f) << shift; shift += 5
+            if b < 0x20: break
+        dlon = ~(result >> 1) if (result & 1) else (result >> 1)
+        lon += dlon
+        coords.append([lon * 1e-6, lat * 1e-6])
+    return coords
+
+def valhalla_route(a, b):
+    """Fallback bicycle route via FOSSGIS Valhalla demo. Prototype/fair-use only."""
+    headers={"X-Client-Id":"adventure-bike-os-prototype"}
+    payload={
+        "locations":[{"lat":a["lat"],"lon":a["lon"]},{"lat":b["lat"],"lon":b["lon"]}],
+        "costing":"bicycle",
+        "units":"kilometers",
+        "directions_options":{"units":"kilometers"}
+    }
+    print("[VALHALLA] fallback route request", flush=True)
+    r=session.post("https://valhalla1.openstreetmap.de/route",json=payload,headers=headers,timeout=75)
+    print(f"[VALHALLA] route status={r.status_code}", flush=True)
+    r.raise_for_status()
+    data=r.json()
+    legs=(data.get("trip") or {}).get("legs") or []
+    if not legs:
+        raise ValueError("Valhalla returned no route legs")
+    coords=[]
+    for leg in legs:
+        shape=leg.get("shape")
+        if not shape: continue
+        pts=_decode_polyline6(shape)
+        if coords and pts and coords[-1]==pts[0]:
+            pts=pts[1:]
+        coords.extend(pts)
+    if len(coords)<2:
+        raise ValueError("Valhalla returned no usable route geometry")
+
+    # Sample the route for elevation to keep payload manageable.
+    step=max(1, len(coords)//450)
+    sampled=coords[::step]
+    if sampled[-1] != coords[-1]:
+        sampled.append(coords[-1])
+    hreq={"shape":[{"lat":c[1],"lon":c[0]} for c in sampled],"height_precision":0}
     try:
-        r = session.get(url, params=params, timeout=90)
-        print(f"[BROUTER] status={r.status_code} content-type={r.headers.get('content-type')}", flush=True)
-        if not r.ok:
-            print(f"[BROUTER] response={r.text[:1000]}", flush=True)
-        r.raise_for_status()
-        return r.json()
-    except requests.RequestException as e:
-        print(f"[BROUTER] REQUEST ERROR: {type(e).__name__}: {e}", flush=True)
-        raise
-    except ValueError as e:
-        print(f"[BROUTER] JSON ERROR: {e}; body={r.text[:1000]}", flush=True)
-        raise
+        hr=session.post("https://valhalla1.openstreetmap.de/height",json=hreq,headers=headers,timeout=60)
+        print(f"[VALHALLA] height status={hr.status_code}", flush=True)
+        hr.raise_for_status()
+        hd=hr.json()
+        heights=hd.get("height") or []
+        if len(heights)==len(sampled):
+            coords3=[[c[0],c[1],heights[i] if heights[i] is not None else 0] for i,c in enumerate(sampled)]
+        else:
+            coords3=[[c[0],c[1],0] for c in sampled]
+    except Exception as e:
+        print(f"[VALHALLA] height fallback failed: {e}", flush=True)
+        coords3=[[c[0],c[1],0] for c in sampled]
+
+    return {
+        "type":"Feature",
+        "geometry":{"type":"LineString","coordinates":coords3},
+        "properties":{"routing_source":"Valhalla fallback"}
+    }
+
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.19-empty-inputs-7.2.5")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.20-trip-window-routing-7.3")
 
 @app.get("/health")
 def health():
@@ -226,15 +306,21 @@ def route():
         b = geocode(dest)
         print(f"[ROUTE] geocoded start={a} destination={b}", flush=True)
 
-        feature = brouter(a, b, profile)
+        routing_source="BRouter"
+        try:
+            feature = brouter(a, b, profile)
+        except Exception as primary_error:
+            print(f"[ROUTE] BRouter unavailable, trying Valhalla: {primary_error}", flush=True)
+            feature = valhalla_route(a, b)
+            routing_source="Valhalla"
         f = feature["features"][0] if "features" in feature else feature
 
-        print("[ROUTE] success", flush=True)
+        print(f"[ROUTE] success source={routing_source}", flush=True)
         return jsonify({
             "start": a,
             "destination": b,
             "geometry": f.get("geometry"),
-            "properties": f.get("properties", {})
+            "properties": {**f.get("properties", {}), "routing_source": routing_source}
         })
 
     except ValueError as e:

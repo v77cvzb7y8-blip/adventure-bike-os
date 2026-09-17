@@ -20,7 +20,7 @@
     #map{height:430px;border-radius:18px;overflow:hidden;background:#e8ece8}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
     .stat{background:#f6f8f6;border-radius:16px;padding:14px}.stat b{font-size:25px;display:block}.stat span{font-size:12px;color:var(--muted)}
     .hidden{display:none}.stage{display:grid;grid-template-columns:60px 1fr auto;gap:12px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
-    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)} .stageRoute{font-size:16px;font-weight:850;margin-bottom:4px}.placePending{opacity:.65}.stageCard{padding:16px 0;border-top:1px solid var(--line)}.stageTop{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center}.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0 64px}.chip{font-size:12px;background:#f1f5f1;border-radius:999px;padding:6px 9px;color:var(--muted)}.why{margin:8px 0 0 64px;font-size:12px;color:var(--muted)}.decision{margin:10px 0 0 64px;padding:10px 12px;border-left:3px solid var(--accent);background:#f7f9f7;border-radius:8px;font-size:13px}.summaryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.summaryBox{background:#f6f8f6;border-radius:14px;padding:12px}.summaryBox b{display:block;font-size:18px}.summaryBox span{font-size:12px;color:var(--muted)}.layersGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.layerBox{background:#f6f8f6;border-radius:16px;padding:15px;line-height:1.45}.layerBox h3{margin:0 0 8px;font-size:17px}.layerBox p{margin:6px 0;color:var(--muted);font-size:13px}.layerBox strong{color:var(--ink)}.layerTag{display:inline-block;margin:4px 5px 0 0;padding:5px 8px;border-radius:999px;background:#e8f2ec;color:var(--accent);font-size:11px;font-weight:800}.intelGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.intelCard{background:#f6f8f6;border-radius:16px;padding:15px}.intelCard h3{margin:0 0 8px;font-size:17px}.intelCard p{margin:6px 0;color:var(--muted);font-size:13px}.meter{height:8px;background:#e4e9e4;border-radius:999px;overflow:hidden;margin:8px 0}.meter>span{display:block;height:100%;background:var(--accent)}.tiny{font-size:11px;color:var(--muted)}
+    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)} .stageRoute{font-size:16px;font-weight:850;margin-bottom:4px}.stageMapBtn{width:auto;margin:7px 0 0;padding:7px 10px;border-radius:9px;background:#edf2ee;color:var(--accent);border:1px solid var(--line);font-size:11px;font-weight:800}.feasible{color:#1f6f4a}.tight{color:#8a6415}.notfeasible{color:#9d3228}.placePending{opacity:.65}.stageCard{padding:16px 0;border-top:1px solid var(--line)}.stageTop{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center}.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0 64px}.chip{font-size:12px;background:#f1f5f1;border-radius:999px;padding:6px 9px;color:var(--muted)}.why{margin:8px 0 0 64px;font-size:12px;color:var(--muted)}.decision{margin:10px 0 0 64px;padding:10px 12px;border-left:3px solid var(--accent);background:#f7f9f7;border-radius:8px;font-size:13px}.summaryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.summaryBox{background:#f6f8f6;border-radius:14px;padding:12px}.summaryBox b{display:block;font-size:18px}.summaryBox span{font-size:12px;color:var(--muted)}.layersGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.layerBox{background:#f6f8f6;border-radius:16px;padding:15px;line-height:1.45}.layerBox h3{margin:0 0 8px;font-size:17px}.layerBox p{margin:6px 0;color:var(--muted);font-size:13px}.layerBox strong{color:var(--ink)}.layerTag{display:inline-block;margin:4px 5px 0 0;padding:5px 8px;border-radius:999px;background:#e8f2ec;color:var(--accent);font-size:11px;font-weight:800}.intelGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.intelCard{background:#f6f8f6;border-radius:16px;padding:15px}.intelCard h3{margin:0 0 8px;font-size:17px}.intelCard p{margin:6px 0;color:var(--muted);font-size:13px}.meter{height:8px;background:#e4e9e4;border-radius:999px;overflow:hidden;margin:8px 0}.meter>span{display:block;height:100%;background:var(--accent)}.tiny{font-size:11px;color:var(--muted)}
 .copyBtn,.rememberBtn,.poiToggle,.poiAdd{width:auto;margin:0;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:800}
 .blockActions{display:flex;gap:6px;justify-content:flex-end;margin:-4px 0 8px}
 .copyBtn{background:#edf2ee;color:var(--accent);border:1px solid var(--line)}
@@ -36,9 +36,9 @@
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · PDF BUILDER 7.2.5</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · TRIP WINDOW 7.3</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.2.5 startet mit leeren Reise-Eingaben. Versorgung bleibt pro Etappe sichtbar und ist bei vorhandenen Treffern direkt auswählbar.</div>
+  <div class="sub">7.3 ergänzt robuste Routing-Fallbacks, Start- und Enddatum, einen Machbarkeits-Schnellcheck sowie eine Kartenansicht pro Tagesetappe.</div>
 </header>
 <main>
   <section class="card">
@@ -53,14 +53,20 @@
       <div><label>Priorität</label><select id="priority"><option>Ausgewogen</option><option>Mehr Gravel</option><option>Einfacher fahrbar</option></select></div>
     </div>
     <div class="grid four" style="margin-top:14px">
-      <div><label>Abfahrt</label><input id="tripdate" type="date"></div>
+      <div><label>Startdatum</label><input id="tripdate" type="date"></div>
       <div><label>Fitness</label><select id="fitness"><option value="sportlich">Sportlich</option><option value="sehr-sportlich" selected>Sehr sportlich</option><option value="ultra">Ultra / Langdistanz</option></select></div>
       <div><label>Bike</label><select id="biketype"><option value="gravel" selected>Gravelbike</option><option value="trekking">Trekkingbike</option><option value="mtb">MTB</option><option value="road">Rennrad</option></select></div>
       <div><label>Reifenbreite mm</label><input id="tire" type="number" min="25" max="70" placeholder="z. B. 45"></div>
     </div>
-    <div class="grid" style="margin-top:14px">
+    <div class="grid four" style="margin-top:14px">
+      <div><label>Enddatum</label><input id="enddate" type="date"></div>
       <div><label>Übernachtung</label><select id="lodging"><option value="hotel" selected>Hotel / Pension</option><option value="mixed">Gemischt</option><option value="camping">Camping / Biwak</option></select></div>
       <div><label>Technik-Level</label><select id="tech"><option value="easy">Eher einfach</option><option value="medium" selected>Solide Gravel-Erfahrung</option><option value="advanced">Technisch erfahren</option></select></div>
+    </div>
+    <div id="quickcheck" class="summaryGrid" style="margin-top:14px">
+      <div class="summaryBox"><b id="quickDistance">– km</b><span>Gesamtroute</span></div>
+      <div class="summaryBox"><b id="quickDays">–</b><span>verfügbare Fahrtage</span></div>
+      <div class="summaryBox"><b id="quickFeasibility">Noch offen</b><span>Machbarkeit</span></div>
     </div>
     <button id="go">FAHRRADROUTE BERECHNEN</button>
     <div id="status" class="status">Testfall ist bereits mit Brixen → München vorausgefüllt.</div>
@@ -76,7 +82,8 @@
         <div class="stat"><b id="avg">–</b><span>Ø km / Tag</span></div>
       </div>
       <div id="map"></div>
-      <p class="note">Karte © OpenStreetMap-Mitwirkende. Route: BRouter. Die Route ist eine Planungsgrundlage; Wegzustand, Sperren und lokale Regeln vor der Fahrt prüfen.</p>
+      <p class="note">Karte © OpenStreetMap-Mitwirkende. Routing: <span id="routingSource">–</span>. Die Route ist eine Planungsgrundlage; Wegzustand, Sperren und lokale Regeln vor der Fahrt prüfen.</p>      <button type="button" class="stageMapBtn noPrint" onclick="showWholeRoute()">Gesamtroute anzeigen</button>
+
     </div>
 
     <div class="card">
@@ -114,7 +121,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">PDF Builder 7.2.5: Die Reise startet mit leeren Eingabefeldern. Unterkunft, Essen, Trinkwasser, Einkauf und Bike-Service bleiben je Etappe sichtbar; vorhandene Treffer können aufgeklappt und zur Etappe hinzugefügt werden.</p>
+      <p class="note">Trip Window 7.3: Leere Eingaben bleiben erhalten. Start- und Enddatum liefern einen Machbarkeitscheck; Tagesetappen lassen sich einzeln auf der Karte anzeigen. Versorgung nutzt zusätzliche OSM-Fallbacks.</p>
     </div>
   </section>
   <div class="pdfBar noPrint">
@@ -346,7 +353,42 @@ function renderTripSummary(stages,names,meta,target,maxHm){
     <div class="summaryBox"><b>${within}/${stages.length}</b><span>Etappen im HM-Ziel</span></div>
     <div class="summaryBox"><b>${avg.toFixed(1)} km</b><span>Ø Tagesdistanz</span></div>
     <div class="summaryBox"><b>${shifted}</b><span>Etappenziele bewusst verschoben</span></div>
-  </div><p style="margin:12px 0 0">Adventure Bike OS bevorzugt einen praktischeren realen Ort, wenn der zusätzliche Weg vertretbar bleibt und dein Höhenmeter-Limit eingehalten wird. Unterkunft, Essen, Einkauf und Bikeshop werden erst als ✓ angezeigt, sobald eine belastbare Datenquelle sie separat bestätigt.</p>`;
+  </div><p style="margin:12px 0 0">Adventure Bike OS bevorzugt einen praktischeren realen Ort, wenn der zusätzliche Weg vertretbar bleibt und dein Höhenmeter-Limit eingehalten wird.</p>
+  ${travelDays()?`<p><strong>Zeitfenster:</strong> ${travelDays()} Fahrtage · Plan erzeugt ${stages.length} Etappen · erforderlich Ø ${(stages.reduce((a,s)=>a+s.km,0)/travelDays()).toFixed(0)} km/Tag.</p>`:''}`;
+}
+let stageHighlight=null;
+function showStageOnMap(i){
+  const ctx=window.__routeContext;if(!ctx||!map)return;
+  const st=ctx.stages[i],slice=ctx.coords.slice(st.s,st.e+1).map(c=>[c[1],c[0]]);
+  if(stageHighlight)stageHighlight.remove();
+  stageHighlight=L.polyline(slice,{weight:9,opacity:.95}).addTo(map);
+  map.fitBounds(stageHighlight.getBounds(),{padding:[35,35]});
+}
+function showWholeRoute(){
+  const ctx=window.__routeContext;if(!ctx||!routeLayer)return;
+  if(stageHighlight){stageHighlight.remove();stageHighlight=null}
+  map.fitBounds(routeLayer.getBounds(),{padding:[28,28]});
+}
+function travelDays(){
+  const s=$('tripdate').value,e=$('enddate').value;
+  if(!s||!e)return null;
+  const a=new Date(s+'T12:00:00'),b=new Date(e+'T12:00:00');
+  const d=Math.floor((b-a)/86400000)+1;
+  return d>0?d:null;
+}
+function updateQuickcheck(m,stages){
+  $('quickDistance').textContent=m?m.totalDist.toFixed(1)+' km':'– km';
+  const days=travelDays();
+  $('quickDays').textContent=days?days+' Tage':'–';
+  if(!m||!days){$('quickFeasibility').textContent='Noch offen';$('quickFeasibility').className='';return}
+  const neededKm=m.totalDist/days,neededHm=m.totalAsc/days,target=+$('kmday').value,maxHm=+$('hmday').value;
+  const requiredStages=stages?.length||Math.ceil(m.totalDist/Math.max(1,target));
+  let text,cls;
+  if(requiredStages<=days&&neededKm<=target*1.05&&neededHm<=maxHm*1.05){text='passt gut';cls='feasible'}
+  else if(requiredStages<=days+1&&neededKm<=target*1.2&&neededHm<=maxHm*1.2){text='sportlich / knapp';cls='tight'}
+  else{text='mit Limits eher nicht';cls='notfeasible'}
+  $('quickFeasibility').textContent=`${text} · nötig Ø ${neededKm.toFixed(0)} km / ${Math.round(neededHm)} HM pro Tag`;
+  $('quickFeasibility').className=cls;
 }
 function renderStages(stages,names,meta){
  $('stages').innerHTML=stages.map((s,i)=>{
@@ -360,6 +402,7 @@ function renderStages(stages,names,meta){
       'Zusatzoptimierung nicht verfügbar; der leistungsbasierte Etappenpunkt bleibt aktiv.';
   return `<div class="stageCard"><div class="stageTop"><div class="badge">${i+1}</div><div><div class="stageRoute">${names[i]} → ${names[i+1]}</div><small>${hmOK?'✓ innerhalb HM-Ziel':'⚠ über HM-Ziel'}</small></div><strong>${s.km.toFixed(1)} km · ${Math.round(s.hm)} HM</strong></div>
   <div class="chips"><span class="chip">📍 echter Routenschnitt</span>${best?`<span class="chip">🏘 ${typeLabel}</span><span class="chip">↔ ${move.toFixed(1)} km vom Idealpunkt</span>`:''}<span class="chip">🛏 Unterkunft: nicht verifiziert</span><span class="chip">🍽 Essen: nicht verifiziert</span><span class="chip">🛒 Einkauf: nicht verifiziert</span><span class="chip">🔧 Bikeshop: nicht verifiziert</span></div>
+  <button type="button" class="stageMapBtn noPrint" onclick="showStageOnMap(${i})">🗺 Etappe auf Karte anzeigen</button>
   <div class="decision"><b>Warum ${names[i+1]}?</b> ${decision}</div>
   ${alt?`<div class="why"><b>Alternative:</b> ${alt.name} · ${alt.route_delta_km.toFixed(1)} km vom Idealpunkt · ${Math.round(maybeStageKm(alt,s))||'–'} km Tagesdistanz.</div>`:''}</div>`;
  }).join('');
@@ -526,7 +569,8 @@ function distKmLatLon(a,b){
 async function overpassFetch(query){
   const endpoints=[
     'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter'
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
   ];
   for(const url of endpoints){
     const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),18000);
@@ -574,8 +618,14 @@ async function fetchTerrainSupply(coords,stages){
   const terrainClauses=samples.slice(0,28).map(p=>`way(around:140,${p.lat},${p.lon})["highway"];`).join('');
   const poiClauses=endpoints.slice(0,10).map(p=>`nwr(around:5000,${p.lat},${p.lon})["tourism"~"hotel|hostel|guest_house|motel|camp_site|alpine_hut"];nwr(around:5000,${p.lat},${p.lon})["amenity"~"restaurant|cafe|fast_food|bar|pub|drinking_water|bicycle_repair_station"];nwr(around:5000,${p.lat},${p.lon})["shop"~"supermarket|convenience|bakery|bicycle"];`).join('');
   const q=`[out:json][timeout:25];(${terrainClauses}${poiClauses});out center tags;`;
-  const res=await overpassFetch(q);
-  if(!res.ok)return {available:false,reason:'OSM-Detaildienst derzeit nicht erreichbar.',stages:[]};
+  let res=await overpassFetch(q);
+  let terrainAvailable=true;
+  if(!res.ok){
+    terrainAvailable=false;
+    const supplyOnly=`[out:json][timeout:20];(${poiClauses});out center tags;`;
+    res=await overpassFetch(supplyOnly);
+    if(!res.ok)return {available:false,reason:'OSM-Detaildienst derzeit nicht erreichbar.',stages:[]};
+  }
 
   const intel=stages.map((s,si)=>({
     terrain:{counts:{paved:0,gravel:0,rough:0,unknown_offroad:0,unknown:0},total:0,roughSignals:0,names:[]},
@@ -614,7 +664,7 @@ async function fetchTerrainSupply(coords,stages){
 
   intel.forEach(x=>{
     Object.values(x.supply).forEach(arr=>arr.sort((a,b)=>a.distance-b.distance));
-    x.terrain.difficulty=terrainDifficulty(x.terrain.counts,x.terrain.roughSignals,x.terrain.total);
+    x.terrain.difficulty=terrainAvailable?terrainDifficulty(x.terrain.counts,x.terrain.roughSignals,x.terrain.total):{label:'nicht verfügbar',level:'unknown',reason:'Versorgung konnte geladen werden, Terrain-Stichproben jedoch nicht.'};
   });
   return {available:true,source:res.source,stages:intel};
 }
@@ -744,6 +794,8 @@ async function plan(){
  const startVal=$('start').value.trim(),destVal=$('dest').value.trim();
  if(!startVal||!destVal){$('status').textContent='Bitte Start und Ziel eingeben.';$('status').className='status error';btn.disabled=false;return}
  if(!$('kmday').value||!$('hmday').value){$('status').textContent='Bitte Ziel-km pro Tag und max. Höhenmeter pro Tag eingeben.';$('status').className='status error';btn.disabled=false;return}
+ if(($('tripdate').value&&!$('enddate').value)||(!$('tripdate').value&&$('enddate').value)){$('status').textContent='Bitte Start- und Enddatum gemeinsam eingeben.';$('status').className='status error';btn.disabled=false;return}
+ if($('tripdate').value&&$('enddate').value&&new Date($('enddate').value)<new Date($('tripdate').value)){$('status').textContent='Das Enddatum muss am oder nach dem Startdatum liegen.';$('status').className='status error';btn.disabled=false;return}
  // A newly calculated trip starts with a clean personal PDF selection.
  pdfMemory=[];localStorage.setItem('abo-pdf-memory-v3','[]');updatePdfCount();
  try{
@@ -751,14 +803,14 @@ async function plan(){
   const rr=await fetch('https://adventure-bike-os-api.onrender.com/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:$('start').value.trim(),destination:$('dest').value.trim(),profile:$('profile').value})});
   const gj=await rr.json().catch(()=>({}));if(!rr.ok)throw new Error(gj.error||('Server antwortet mit '+rr.status));
   const coords=gj?.geometry?.coordinates;if(!coords?.length)throw new Error('Keine Route erhalten');
-  const m=metrics(coords),target=+$('kmday').value,maxHm=+$('hmday').value,base=makeStages(coords,m,target,maxHm);window.__routeMetrics=m;
+  const m=metrics(coords),target=+$('kmday').value,maxHm=+$('hmday').value,base=makeStages(coords,m,target,maxHm);window.__routeMetrics=m;window.__routeContext={coords,m,stages:base};$('routingSource').textContent=gj?.properties?.routing_source||'BRouter';updateQuickcheck(m,base);
   $('result').classList.remove('hidden');$('distance').textContent=m.totalDist.toFixed(1)+' km';$('ascent').textContent=Math.round(m.totalAsc)+' HM';
   $('status').textContent='Route berechnet. Etappenkorridor wird optimiert …';
-  const opt=await optimizeStages(coords,m,base,target,maxHm,$('start').value,$('dest').value,$('priority').value),stages=opt.stages;
+  const opt=await optimizeStages(coords,m,base,target,maxHm,$('start').value,$('dest').value,$('priority').value),stages=opt.stages;window.__routeContext={coords,m,stages};updateQuickcheck(m,stages);
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
   renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);const terrainSupply=await fetchTerrainSupply(coords,stages);renderTerrainSupply(terrainSupply,stages,opt.labels);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  attachBlockActions();$('status').textContent='PDF Builder 7.2.5: Leere Startfelder, Route, Etappen, transparente Versorgung und persönliche PDF-Auswahl bereit.';$('result').scrollIntoView({behavior:'smooth'});
+  attachBlockActions();$('status').textContent='Trip Window 7.3: Route, Zeitfenster, Tagesetappen, robuste Versorgung und persönliche PDF-Auswahl bereit.';$('result').scrollIntoView({behavior:'smooth'});
  }catch(e){$('status').className='status error';$('status').textContent='Route konnte nicht berechnet werden: '+e.message+'.'}finally{btn.disabled=false}
 }
 $('go').addEventListener('click',plan);
