@@ -20,14 +20,14 @@
     #map{height:430px;border-radius:18px;overflow:hidden;background:#e8ece8}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
     .stat{background:#f6f8f6;border-radius:16px;padding:14px}.stat b{font-size:25px;display:block}.stat span{font-size:12px;color:var(--muted)}
     .hidden{display:none}.stage{display:grid;grid-template-columns:60px 1fr auto;gap:12px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
-    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)}
+    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)} .stageRoute{font-size:16px;font-weight:850;margin-bottom:4px}.placePending{opacity:.65}
     canvas{width:100%;height:180px;border-radius:14px;background:#f6f8f6}.note{font-size:13px;color:var(--muted);line-height:1.45}
     @media(max-width:700px){.grid,.four,.stats{grid-template-columns:1fr 1fr}#map{height:360px}.stage{grid-template-columns:52px 1fr}.stage>strong{grid-column:2}}
   </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · MVP</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ETAPPEN 2.0</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
   <div class="sub">Zuerst die echte Route. Danach werden Tagesetappen aus Distanz und Höhenmetern abgeleitet – nicht umgekehrt.</div>
 </header>
@@ -70,7 +70,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">MVP-Logik: Etappengrenzen werden entlang der berechneten Route so gesetzt, dass Zielkilometer und maximal gewünschte Höhenmeter möglichst eingehalten werden. Später kommen Unterkunft, Wasser, Bahnhöfe, technische Schwierigkeit und POIs als echte Stop-Kriterien hinzu.</p>
+      <p class="note">Etappen 2.0: Zuerst werden Grenzen aus Distanz und Höhenmetern berechnet. Danach wird der nächstgelegene Ort als verständliches Etappenziel angezeigt. In der nächsten Stufe wählen wir den Übernachtungsort aktiv nach Unterkunft, Versorgung und Abweichung von der Route.</p>
     </div>
   </section>
 </main>
@@ -164,10 +164,36 @@ function showMap(coords,stages){
     stageMarkers.push(marker);
   });
 }
-function renderStages(stages){
+function shortPlace(value){
+  return (value||'').split(',')[0].trim() || '–';
+}
+async function resolveStagePlaces(coords,stages,startName,destName){
+  const names=[shortPlace(startName)];
+  for(let i=0;i<stages.length-1;i++){
+    const c=coords[stages[i].e];
+    try{
+      // Public Nominatim is called by our backend, sequentially and gently.
+      const r=await fetch('https://adventure-bike-os-api.onrender.com/api/reverse',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({lat:c[1],lon:c[0],zoom:10})
+      });
+      const data=await r.json();
+      names.push(r.ok && data.name ? data.name : 'Etappenort');
+    }catch(e){
+      names.push('Etappenort');
+    }
+    await new Promise(r=>setTimeout(r,1100));
+  }
+  names.push(shortPlace(destName));
+  return names;
+}
+function renderStages(stages,names){
   $('stages').innerHTML=stages.map((s,i)=>{
     const warn=s.hm>+$('hmday').value?' · ⚠ über HM-Ziel':'';
-    return `<div class="stage"><div class="badge">${i+1}</div><div><strong>Etappe ${i+1}</strong><br><small>automatisch aus der echten Route abgeleitet${warn}</small></div><strong>${s.km.toFixed(0)} km · ${Math.round(s.hm)} HM</strong></div>`;
+    const from=names?.[i] || (i===0?shortPlace($('start').value):'…');
+    const to=names?.[i+1] || (i===stages.length-1?shortPlace($('dest').value):'Etappenort wird gesucht …');
+    return `<div class="stage"><div class="badge">${i+1}</div><div><div class="stageRoute">${from} → ${to}</div><small>Etappe ${i+1} · aus Distanz + Höhenmetern abgeleitet${warn}</small></div><strong>${s.km.toFixed(1)} km · ${Math.round(s.hm)} HM</strong></div>`;
   }).join('');
 }
 async function plan(){
@@ -191,15 +217,24 @@ async function plan(){
     const m=metrics(coords);
     const target=+$('kmday').value, maxHm=+$('hmday').value;
     const stages=makeStages(coords,m,target,maxHm);
-    $('distance').textContent=m.totalDist.toFixed(0)+' km';
+    $('distance').textContent=m.totalDist.toFixed(1)+' km';
     $('ascent').textContent=Math.round(m.totalAsc)+' HM';
     $('days').textContent=stages.length;
-    $('avg').textContent=(m.totalDist/stages.length).toFixed(0)+' km';
+    $('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';
     $('stageTitle').textContent=`${stages.length} Etappen · ${$('start').value} → ${$('dest').value}`;
     $('result').classList.remove('hidden');
     setTimeout(()=>{showMap(coords,stages);drawElevation(coords,m,stages);},50);
     renderStages(stages);
-    $('status').textContent='Route erfolgreich berechnet.';
+    $('status').textContent='Route berechnet. Etappenorte werden ermittelt …';
+    const placeNames=await resolveStagePlaces(coords,stages,$('start').value,$('dest').value);
+    renderStages(stages,placeNames);
+    // Replace generic intermediate marker tooltips with actual place names.
+    stageMarkers.forEach((marker,n)=>{
+      if(n===0) marker.bindTooltip(placeNames[0]);
+      else if(n===stageMarkers.length-1) marker.bindTooltip(placeNames.at(-1));
+      else marker.bindTooltip('Etappenziel: '+placeNames[n]);
+    });
+    $('status').textContent='Route und Etappenorte erfolgreich berechnet.';
     $('result').scrollIntoView({behavior:'smooth'});
   }catch(e){
     $('status').className='status error';

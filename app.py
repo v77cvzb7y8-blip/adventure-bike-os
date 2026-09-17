@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.3 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.4 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -54,11 +54,61 @@ def brouter(a, b, profile="trekking"):
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.3-brouter-endpoint-fix")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.4-stage-places")
 
 @app.get("/health")
 def health():
     return jsonify(status="ok")
+
+
+@app.post("/api/reverse")
+def reverse():
+    """Resolve a route coordinate to a nearby town/city label for stage naming."""
+    try:
+        body = request.get_json(force=True) or {}
+        lat = float(body.get("lat"))
+        lon = float(body.get("lon"))
+        zoom = int(body.get("zoom") or 10)
+
+        r = session.get(
+            "https://nominatim.openstreetmap.org/reverse",
+            params={
+                "lat": lat,
+                "lon": lon,
+                "format": "jsonv2",
+                "zoom": zoom,
+                "addressdetails": 1
+            },
+            timeout=20
+        )
+        print(f"[REVERSE] {lat},{lon} status={r.status_code}", flush=True)
+        r.raise_for_status()
+        data = r.json()
+        address = data.get("address", {})
+
+        name = (
+            address.get("city")
+            or address.get("town")
+            or address.get("village")
+            or address.get("municipality")
+            or address.get("county")
+            or data.get("name")
+            or data.get("display_name")
+            or "Etappenort"
+        )
+
+        return jsonify({
+            "name": name,
+            "display_name": data.get("display_name", name),
+            "lat": lat,
+            "lon": lon
+        })
+    except (TypeError, ValueError):
+        return jsonify(error="Ungültige Koordinaten."), 400
+    except requests.RequestException as e:
+        print(f"[REVERSE] ERROR: {type(e).__name__}: {e}", flush=True)
+        return jsonify(error="Ortsname konnte nicht ermittelt werden."), 502
+
 
 @app.post("/api/route")
 def route():
