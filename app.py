@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.5 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.6 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -54,7 +54,7 @@ def brouter(a, b, profile="trekking"):
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.5-overnight-candidates")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.6-stage-fallback")
 
 @app.get("/health")
 def health():
@@ -62,57 +62,28 @@ def health():
 
 
 
-def _place_label(tags):
-    return tags.get("name") or tags.get("name:de") or tags.get("official_name")
-
 @app.post("/api/stage-candidates")
 def stage_candidates():
     try:
         body=request.get_json(force=True) or {}
-        lat=float(body.get("lat")); lon=float(body.get("lon"))
-        radius=max(3000,min(int(body.get("radius") or 12000),20000))
-        query=f"""[out:json][timeout:25];(
-        nwr["place"~"city|town|village"](around:{radius},{lat},{lon});
-        nwr["tourism"~"hotel|hostel|guest_house"](around:{radius},{lat},{lon});
-        nwr["shop"="supermarket"](around:{radius},{lat},{lon});
-        nwr["amenity"~"restaurant|cafe"](around:{radius},{lat},{lon});
-        nwr["shop"="bicycle"](around:{radius},{lat},{lon});
-        );out center tags;"""
-        r=session.post("https://overpass-api.de/api/interpreter",data={"data":query},timeout=45)
-        print(f"[CANDIDATES] {lat},{lon} status={r.status_code}",flush=True); r.raise_for_status()
-        elements=r.json().get("elements",[]); settlements=[]; amenities=[]
-        for el in elements:
-            tags=el.get("tags",{}); center=el.get("center") or {}
-            plat=el.get("lat",center.get("lat")); plon=el.get("lon",center.get("lon"))
-            if plat is None or plon is None: continue
-            item={"lat":float(plat),"lon":float(plon),"tags":tags}
-            if tags.get("place") in ("city","town","village") and _place_label(tags):
-                item.update(name=_place_label(tags),place=tags.get("place")); settlements.append(item)
-            else: amenities.append(item)
-        import math
-        def km(a,b,c,d):
-            R=6371.; p1=math.radians(a); p2=math.radians(c); dp=math.radians(c-a); dl=math.radians(d-b)
-            x=math.sin(dp/2)**2+math.cos(p1)*math.cos(p2)*math.sin(dl/2)**2
-            return 2*R*math.asin(math.sqrt(x))
-        scored=[]
-        for s in settlements:
-            d=km(lat,lon,s["lat"],s["lon"]); counts={"sleep":0,"food":0,"supermarket":0,"bike":0}
-            for a in amenities:
-                if km(s["lat"],s["lon"],a["lat"],a["lon"])>4: continue
-                t=a["tags"]
-                if t.get("tourism") in ("hotel","hostel","guest_house"): counts["sleep"]+=1
-                if t.get("amenity") in ("restaurant","cafe"): counts["food"]+=1
-                if t.get("shop")=="supermarket": counts["supermarket"]+=1
-                if t.get("shop")=="bicycle": counts["bike"]+=1
-            score={"city":4,"town":3,"village":1}.get(s["place"],0)+min(counts["sleep"],3)*3+min(counts["food"],3)*2+min(counts["supermarket"],2)*2+min(counts["bike"],1)*2-d*.75
-            scored.append({"name":s["name"],"place":s["place"],"distance_km":round(d,1),"amenities":counts,"score":round(score,2)})
-        scored.sort(key=lambda x:x["score"],reverse=True)
-        return jsonify(candidates=scored[:5])
-    except (TypeError,ValueError): return jsonify(error="Ungültige Koordinaten."),400
-    except requests.RequestException as e:
-        print(f"[CANDIDATES] ERROR: {type(e).__name__}: {e}",flush=True)
-        return jsonify(error="Etappenorte konnten derzeit nicht recherchiert werden."),502
-
+        points=(body.get("points") or [])[:5]
+        if not points:
+            points=[{"lat":float(body.get("lat")),"lon":float(body.get("lon")),"route_delta_km":0}]
+        seen=set(); candidates=[]
+        for p in points:
+            lat=float(p["lat"]); lon=float(p["lon"])
+            r=session.get("https://nominatim.openstreetmap.org/reverse",params={"lat":lat,"lon":lon,"format":"jsonv2","zoom":10,"addressdetails":1},timeout=20)
+            print(f"[STAGE-PLACE] reverse {lat},{lon} status={r.status_code}",flush=True)
+            r.raise_for_status(); data=r.json(); a=data.get("address") or {}
+            name=a.get("city") or a.get("town") or a.get("village") or a.get("municipality") or a.get("county") or data.get("name")
+            if not name or name.casefold() in seen: continue
+            seen.add(name.casefold()); candidates.append({"name":name,"lat":lat,"lon":lon,"route_delta_km":round(float(p.get("route_delta_km") or 0),1),"source":"Nominatim"})
+            if len(candidates)>=3: break
+        return jsonify(candidates=candidates)
+    except (TypeError,ValueError,KeyError): return jsonify(error="Ungültige Koordinaten."),400
+    except requests.RequestException as ex:
+        print(f"[STAGE-PLACE] ERROR: {type(ex).__name__}: {ex}",flush=True)
+        return jsonify(candidates=[],warning="Etappenort-Suche derzeit nicht verfügbar."),200
 
 @app.post("/api/reverse")
 def reverse():
