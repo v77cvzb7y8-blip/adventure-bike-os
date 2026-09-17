@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: adventure-bike-os-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    healthCheckPath: /health
