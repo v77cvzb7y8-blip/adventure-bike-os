@@ -29,16 +29,16 @@
 .poiList{display:none;padding:7px 0 3px}.poiList.open{display:block}.poiRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.poiAdd{background:var(--accent);color:white}.poiAdd.selected{background:#765d13}
 .selectedPlan{margin-top:12px;padding:12px;border-radius:14px;background:#fbfaf3;border:1px solid #e8ddae}.selectedPlan h3{margin:0 0 8px}
 .elevWrap{position:relative}.elevTip{position:absolute;display:none;pointer-events:none;background:rgba(19,32,25,.94);color:#fff;border-radius:9px;padding:7px 9px;font-size:12px;transform:translate(-50%,-115%);white-space:nowrap;z-index:3}
-.copyToast{position:fixed;right:18px;bottom:18px;background:#132019;color:#fff;padding:10px 13px;border-radius:10px;font-size:12px;display:none;z-index:9999}
+.copyToast{position:fixed;right:18px;bottom:18px;background:#132019;color:#fff;padding:10px 13px;border-radius:10px;font-size:12px;display:none;z-index:9999}.pdfBar{position:sticky;bottom:12px;z-index:30;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 28px rgba(20,40,25,.12);border-radius:16px;padding:12px 14px;margin-top:14px}.pdfBar button{width:auto;margin:0}.pdfCount{font-size:13px;color:var(--muted)}.pdfBuild{background:#132019}.rememberBtn.active{background:#765d13;color:#fff;border-color:#765d13}
     canvas{width:100%;height:180px;border-radius:14px;background:#f6f8f6}.note{font-size:13px;color:var(--muted);line-height:1.45}
     @media(max-width:700px){.grid,.four,.stats,.summaryGrid,.layersGrid,.intelGrid{grid-template-columns:1fr 1fr}#map{height:360px}.stage{grid-template-columns:52px 1fr}.stage>strong{grid-column:2}}
   </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · INTERACTIVE 7.1</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · PDF BUILDER 7.2</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.1 macht Versorgungs-Treffer auswählbar, ergänzt eine persönliche Merkliste und macht das Höhenprofil mit Kilometerachse und Tap-Werten interaktiv.</div>
+  <div class="sub">7.2 macht die PDF-Merkliste editierbar: Blöcke lassen sich an- und abwählen und anschließend als persönliche Reise-PDF druckfertig zusammenstellen.</div>
 </header>
 <main>
   <section class="card">
@@ -114,9 +114,13 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">Interactive 7.1: Versorgungs-Treffer lassen sich aufklappen und einzeln einer Etappe zuordnen. Das Höhenprofil zeigt Kilometer, Etappenmarker und Tap-Werte. Relevante Blöcke können kopiert oder lokal für eine spätere persönliche PDF gemerkt werden.</p>
+      <p class="note">PDF Builder 7.2: Blöcke lassen sich per Klick für die persönliche Reise-PDF an- und wieder abwählen. Unten zeigt „PDF erstellen“ jederzeit die aktuelle Auswahl und öffnet eine druckfertige Ansicht zum Speichern als PDF.</p>
     </div>
   </section>
+  <div class="pdfBar noPrint">
+    <div><strong>Meine Reise-PDF</strong><div id="pdfCount" class="pdfCount">0 Blöcke ausgewählt</div></div>
+    <button id="pdfCreate" class="pdfBuild" type="button" onclick="createPersonalPDF()">PDF ERSTELLEN</button>
+  </div>
 </main>
 <div id="copyToast" class="copyToast">Kopiert</div>
 
@@ -129,7 +133,7 @@ $('elevation').addEventListener('mousemove',elevationPointer);
 $('elevation').addEventListener('mouseleave',hideElevationTip);
 $('elevation').addEventListener('touchstart',e=>{elevationPointer(e)},{passive:true});
 $('elevation').addEventListener('touchmove',e=>{elevationPointer(e)},{passive:true});
-setTimeout(()=>attachBlockActions(),0);
+setTimeout(()=>{attachBlockActions();updatePdfCount()},0);
 
 
 async function geocode(q){
@@ -653,41 +657,31 @@ function renderTerrainSupply(data,stages,names){
   updateSelectedStops();attachBlockActions($('terrainSupply'));
 }
 
-const pdfMemory=JSON.parse(localStorage.getItem('abo-pdf-memory')||'[]');
-function cleanBlockText(el){
-  const clone=el.cloneNode(true);
-  clone.querySelectorAll('.blockActions,.poiAdd,.poiToggle').forEach(x=>x.remove());
-  clone.querySelectorAll('.poiList:not(.open)').forEach(x=>x.remove());
-  return clone.innerText.replace(/\n{3,}/g,'\n\n').trim();
-}
-async function copyBlock(btn){
-  const el=btn.closest('.copyable');
-  const text=cleanBlockText(el);
-  try{await navigator.clipboard.writeText(text);showCopyToast('Block kopiert');}
-  catch(e){
-    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();showCopyToast('Block kopiert');
-  }
-}
+let pdfMemory=JSON.parse(localStorage.getItem('abo-pdf-memory-v2')||'[]');
+function cleanBlockText(el){const c=el.cloneNode(true);c.querySelectorAll('.blockActions,.poiAdd,.poiToggle').forEach(x=>x.remove());c.querySelectorAll('.poiList:not(.open)').forEach(x=>x.remove());return c.innerText.replace(/\n{3,}/g,'\n\n').trim()}
+function blockId(el){if(!el.dataset.pdfId)el.dataset.pdfId='pdf-'+Math.random().toString(36).slice(2)+'-'+Date.now();return el.dataset.pdfId}
+async function copyBlock(btn){const text=cleanBlockText(btn.closest('.copyable'));try{await navigator.clipboard.writeText(text);showCopyToast('Block kopiert')}catch(e){showCopyToast('Kopieren nicht möglich')}}
 function rememberBlock(btn){
-  const el=btn.closest('.copyable'),text=cleanBlockText(el);
-  if(!pdfMemory.includes(text)){pdfMemory.push(text);localStorage.setItem('abo-pdf-memory',JSON.stringify(pdfMemory));}
-  btn.textContent='✓ Für PDF gemerkt';showCopyToast('Für persönliche PDF gemerkt');
+ const el=btn.closest('.copyable'),id=blockId(el),text=cleanBlockText(el),idx=pdfMemory.findIndex(x=>x.id===id);
+ if(idx>=0){pdfMemory.splice(idx,1);btn.textContent='＋ Für PDF merken';btn.classList.remove('active');showCopyToast('Aus PDF-Auswahl entfernt')}
+ else{pdfMemory.push({id,text});btn.textContent='✓ Für PDF gemerkt';btn.classList.add('active');showCopyToast('Für persönliche PDF gemerkt')}
+ localStorage.setItem('abo-pdf-memory-v2',JSON.stringify(pdfMemory));updatePdfCount();
 }
-function showCopyToast(text){
-  const t=$('copyToast');t.textContent=text;t.style.display='block';clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>t.style.display='none',1800);
+function updatePdfCount(){const el=$('pdfCount');if(el)el.textContent=`${pdfMemory.length} Block${pdfMemory.length===1?'':'e'} ausgewählt`}
+function syncRememberButtons(root=document){root.querySelectorAll('.copyable').forEach(el=>{const id=blockId(el),btn=el.querySelector('.rememberBtn');if(!btn)return;const active=pdfMemory.some(x=>x.id===id);btn.textContent=active?'✓ Für PDF gemerkt':'＋ Für PDF merken';btn.classList.toggle('active',active)});updatePdfCount()}
+function showCopyToast(text){const t=$('copyToast');t.textContent=text;t.style.display='block';clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>t.style.display='none',1800)}
+function attachBlockActions(root=document){root.querySelectorAll('.card,.layerBox,.intelCard,.stageCard,.summaryBox').forEach(el=>{if(el.dataset.copyReady)return;el.dataset.copyReady='1';el.classList.add('copyable');blockId(el);const bar=document.createElement('div');bar.className='blockActions noPrint';bar.innerHTML='<button class="copyBtn" type="button" onclick="copyBlock(this)">⧉ Kopieren</button><button class="rememberBtn" type="button" onclick="rememberBlock(this)">＋ Für PDF merken</button>';el.insertBefore(bar,el.firstChild)});syncRememberButtons(root)}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function createPersonalPDF(){
+ if(!pdfMemory.length){showCopyToast('Noch keine Blöcke für PDF ausgewählt');return}
+ const title=`${$('start').value.trim()} → ${$('dest').value.trim()}`,date=$('tripdate').value||'',popup=window.open('','_blank');
+ if(!popup){showCopyToast('Pop-up blockiert');return}
+ const body=pdfMemory.map((x,i)=>`<section style="padding:18px 0;border-top:1px solid #ddd;break-inside:avoid"><h3>${i+1}</h3><pre style="white-space:pre-wrap;font:14px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">${escapeHtml(x.text)}</pre></section>`).join('');
+ popup.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:36px;color:#132019"><button onclick="window.print()" style="padding:10px 14px;background:#1f6f4a;color:#fff;border:0;border-radius:10px;font-weight:700">Als PDF speichern / drucken</button><h1>${escapeHtml(title)}</h1><div>${date?'Abfahrt '+escapeHtml(date):''}</div>${body}</body></html>`);
+ popup.document.close();
 }
-function attachBlockActions(root=document){
-  root.querySelectorAll('.card,.layerBox,.intelCard,.stageCard,.summaryBox').forEach(el=>{
-    if(el.dataset.copyReady)return;
-    el.dataset.copyReady='1';el.classList.add('copyable');
-    const bar=document.createElement('div');bar.className='blockActions';
-    bar.innerHTML='<button class="copyBtn" type="button" onclick="copyBlock(this)">⧉ Kopieren</button><button class="rememberBtn" type="button" onclick="rememberBlock(this)">＋ Für PDF merken</button>';
-    el.insertBefore(bar,el.firstChild);
-  });
-}
-function exportMemoryText(){
-  return pdfMemory.join('\n\n------------------------------\n\n');
-}
+function exportMemoryText(){return pdfMemory.map(x=>x.text).join('\n\n------------------------------\n\n')}
+
 window.stageSelections={};
 function togglePoiList(id){
   const el=document.getElementById(id);if(el)el.classList.toggle('open');
@@ -729,7 +723,7 @@ async function plan(){
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
   renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);const terrainSupply=await fetchTerrainSupply(coords,stages);renderTerrainSupply(terrainSupply,stages,opt.labels);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  attachBlockActions();$('status').textContent='Interactive 7.1: Route, Etappen, interaktive Treffer, Höhenprofil und Kopier-/PDF-Merkliste bereit.';$('result').scrollIntoView({behavior:'smooth'});
+  attachBlockActions();$('status').textContent='PDF Builder 7.2: Route, Etappen, interaktive Treffer, Höhenprofil und persönliche PDF-Auswahl bereit.';$('result').scrollIntoView({behavior:'smooth'});
  }catch(e){$('status').className='status error';$('status').textContent='Route konnte nicht berechnet werden: '+e.message+'.'}finally{btn.disabled=false}
 }
 $('go').addEventListener('click',plan);
