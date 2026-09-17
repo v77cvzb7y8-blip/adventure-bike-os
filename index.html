@@ -20,16 +20,25 @@
     #map{height:430px;border-radius:18px;overflow:hidden;background:#e8ece8}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
     .stat{background:#f6f8f6;border-radius:16px;padding:14px}.stat b{font-size:25px;display:block}.stat span{font-size:12px;color:var(--muted)}
     .hidden{display:none}.stage{display:grid;grid-template-columns:60px 1fr auto;gap:12px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
-    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)} .stageRoute{font-size:16px;font-weight:850;margin-bottom:4px}.placePending{opacity:.65}.stageCard{padding:16px 0;border-top:1px solid var(--line)}.stageTop{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center}.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0 64px}.chip{font-size:12px;background:#f1f5f1;border-radius:999px;padding:6px 9px;color:var(--muted)}.why{margin:8px 0 0 64px;font-size:12px;color:var(--muted)}.decision{margin:10px 0 0 64px;padding:10px 12px;border-left:3px solid var(--accent);background:#f7f9f7;border-radius:8px;font-size:13px}.summaryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.summaryBox{background:#f6f8f6;border-radius:14px;padding:12px}.summaryBox b{display:block;font-size:18px}.summaryBox span{font-size:12px;color:var(--muted)}
+    .badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e8f2ec;color:var(--accent);font-weight:900}.stage small{color:var(--muted)} .stageRoute{font-size:16px;font-weight:850;margin-bottom:4px}.placePending{opacity:.65}.stageCard{padding:16px 0;border-top:1px solid var(--line)}.stageTop{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center}.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0 64px}.chip{font-size:12px;background:#f1f5f1;border-radius:999px;padding:6px 9px;color:var(--muted)}.why{margin:8px 0 0 64px;font-size:12px;color:var(--muted)}.decision{margin:10px 0 0 64px;padding:10px 12px;border-left:3px solid var(--accent);background:#f7f9f7;border-radius:8px;font-size:13px}.summaryGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.summaryBox{background:#f6f8f6;border-radius:14px;padding:12px}.summaryBox b{display:block;font-size:18px}.summaryBox span{font-size:12px;color:var(--muted)}.layersGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.layerBox{background:#f6f8f6;border-radius:16px;padding:15px;line-height:1.45}.layerBox h3{margin:0 0 8px;font-size:17px}.layerBox p{margin:6px 0;color:var(--muted);font-size:13px}.layerBox strong{color:var(--ink)}.layerTag{display:inline-block;margin:4px 5px 0 0;padding:5px 8px;border-radius:999px;background:#e8f2ec;color:var(--accent);font-size:11px;font-weight:800}.intelGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.intelCard{background:#f6f8f6;border-radius:16px;padding:15px}.intelCard h3{margin:0 0 8px;font-size:17px}.intelCard p{margin:6px 0;color:var(--muted);font-size:13px}.meter{height:8px;background:#e4e9e4;border-radius:999px;overflow:hidden;margin:8px 0}.meter>span{display:block;height:100%;background:var(--accent)}.tiny{font-size:11px;color:var(--muted)}
+.copyBtn,.rememberBtn,.poiToggle,.poiAdd{width:auto;margin:0;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:800}
+.blockActions{display:flex;gap:6px;justify-content:flex-end;margin:-4px 0 8px}
+.copyBtn{background:#edf2ee;color:var(--accent);border:1px solid var(--line)}
+.rememberBtn{background:#f6f1df;color:#765d13;border:1px solid #e8ddae}
+.poiToggle{background:#edf2ee;color:var(--ink);border:1px solid var(--line);margin:4px 0;width:100%;text-align:left}
+.poiList{display:none;padding:7px 0 3px}.poiList.open{display:block}.poiRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.poiAdd{background:var(--accent);color:white}.poiAdd.selected{background:#765d13}
+.selectedPlan{margin-top:12px;padding:12px;border-radius:14px;background:#fbfaf3;border:1px solid #e8ddae}.selectedPlan h3{margin:0 0 8px}
+.elevWrap{position:relative}.elevTip{position:absolute;display:none;pointer-events:none;background:rgba(19,32,25,.94);color:#fff;border-radius:9px;padding:7px 9px;font-size:12px;transform:translate(-50%,-115%);white-space:nowrap;z-index:3}
+.copyToast{position:fixed;right:18px;bottom:18px;background:#132019;color:#fff;padding:10px 13px;border-radius:10px;font-size:12px;display:none;z-index:9999}.pdfBar{position:sticky;bottom:12px;z-index:30;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 28px rgba(20,40,25,.12);border-radius:16px;padding:12px 14px;margin-top:14px}.pdfBar button{width:auto;margin:0}.pdfCount{font-size:13px;color:var(--muted)}.pdfBuild{background:#132019}.rememberBtn.active{background:#765d13;color:#fff;border-color:#765d13}
     canvas{width:100%;height:180px;border-radius:14px;background:#f6f8f6}.note{font-size:13px;color:var(--muted);line-height:1.45}
-    @media(max-width:700px){.grid,.four,.stats,.summaryGrid{grid-template-columns:1fr 1fr}#map{height:360px}.stage{grid-template-columns:52px 1fr}.stage>strong{grid-column:2}}
+    @media(max-width:700px){.grid,.four,.stats,.summaryGrid,.layersGrid,.intelGrid{grid-template-columns:1fr 1fr}#map{height:360px}.stage{grid-template-columns:52px 1fr}.stage>strong{grid-column:2}}
   </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · REISEPLANER 5.0</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · PDF BUILDER 7.2.1</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">Die echte Route zuerst. Danach optimiert Adventure Bike OS Etappen nach Leistung, realen Orten und praktischer Reise-Eignung.</div>
+  <div class="sub">7.2.1 erklärt Terrain-Stichproben klarer und übernimmt das Höhenprofil beim PDF-Export als echte Grafik.</div>
 </header>
 <main>
   <section class="card">
@@ -42,6 +51,16 @@
       <div><label>Max. HM / Tag</label><input id="hmday" type="number" min="300" max="6000" value="2000"></div>
       <div><label>Routing</label><select id="profile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schnell / Asphalt</option><option value="gravel">Gravel</option></select></div>
       <div><label>Priorität</label><select id="priority"><option>Ausgewogen</option><option>Mehr Gravel</option><option>Einfacher fahrbar</option></select></div>
+    </div>
+    <div class="grid four" style="margin-top:14px">
+      <div><label>Abfahrt</label><input id="tripdate" type="date"></div>
+      <div><label>Fitness</label><select id="fitness"><option value="sportlich">Sportlich</option><option value="sehr-sportlich" selected>Sehr sportlich</option><option value="ultra">Ultra / Langdistanz</option></select></div>
+      <div><label>Bike</label><select id="biketype"><option value="gravel" selected>Gravelbike</option><option value="trekking">Trekkingbike</option><option value="mtb">MTB</option><option value="road">Rennrad</option></select></div>
+      <div><label>Reifenbreite mm</label><input id="tire" type="number" min="25" max="70" value="45"></div>
+    </div>
+    <div class="grid" style="margin-top:14px">
+      <div><label>Übernachtung</label><select id="lodging"><option value="hotel" selected>Hotel / Pension</option><option value="mixed">Gemischt</option><option value="camping">Camping / Biwak</option></select></div>
+      <div><label>Technik-Level</label><select id="tech"><option value="easy">Eher einfach</option><option value="medium" selected>Solide Gravel-Erfahrung</option><option value="advanced">Technisch erfahren</option></select></div>
     </div>
     <button id="go">FAHRRADROUTE BERECHNEN</button>
     <div id="status" class="status">Testfall ist bereits mit Brixen → München vorausgefüllt.</div>
@@ -67,24 +86,55 @@
     </div>
 
     <div class="card">
+      <div class="eyebrow">ADVENTURE LAYERS</div>
+      <h2>Bike, Belastung, Wetter & Packen</h2>
+      <div id="adventureLayers" class="layersGrid">
+        <div class="layerBox"><b>Wird berechnet …</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow">TERRAIN & VERSORGUNG 7.0</div>
+      <h2>Was entlang der Etappen liegt</h2>
+      <div id="terrainSupply" class="intelGrid">
+        <div class="intelCard"><b>Wird nach der Route analysiert …</b></div>
+      </div>
+      <p class="note">Terrain basiert auf OSM-Tags in Stichproben nahe der Route. Versorgung zeigt OSM-POI-Treffer im Umfeld der Etappenziele; das ist keine Echtzeit-Verfügbarkeit und keine Garantie für Öffnungszeiten.</p>      <div id="selectedStops" class="selectedPlan"><h3>📌 Für deine Etappen ausgewählt</h3><p class="tiny">Noch nichts ausgewählt. Öffne einen Trefferblock und füge einzelne Orte zur Etappe hinzu.</p></div>
+
+    </div>
+
+    <div class="card">
       <div class="eyebrow">HÖHENPROFIL</div>
       <h2>Was die Route wirklich verlangt</h2>
-      <canvas id="elevation" width="1000" height="220"></canvas>
+      <div class="elevWrap"><canvas id="elevation" width="1000" height="260"></canvas><div id="elevTip" class="elevTip"></div></div>
+      <p class="note">Tippe oder fahre über das Profil, um Kilometer und Höhe an einer Stelle zu sehen. Vertikale Linien markieren Etappenenden. Wenn du diesen Block für die PDF auswählst, wird das Höhenprofil als Grafik mit übernommen.</p>
     </div>
 
     <div class="card">
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">Reiseplaner 5.0: Etappenziele werden in einem breiteren Routenkorridor nach Leistungsgrenzen, Tagesdistanz und praktischer Orts-Eignung verglichen. Der Routenschnitt wird tatsächlich verschoben und km/HM werden neu berechnet. Versorgung bleibt ausdrücklich unverifiziert, bis eine belastbare Quelle verfügbar ist.</p>
+      <p class="note">PDF Builder 7.2.1: Blöcke lassen sich an- und abwählen. Beim Höhenprofil wird zusätzlich die Grafik gespeichert und in der persönlichen Reise-PDF eingebettet.</p>
     </div>
   </section>
+  <div class="pdfBar noPrint">
+    <div><strong>Meine Reise-PDF</strong><div id="pdfCount" class="pdfCount">0 Blöcke ausgewählt</div></div>
+    <button id="pdfCreate" class="pdfBuild" type="button" onclick="createPersonalPDF()">PDF ERSTELLEN</button>
+  </div>
 </main>
+<div id="copyToast" class="copyToast">Kopiert</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 let map, routeLayer, stageMarkers=[];
+const tomorrow=new Date(Date.now()+86400000); $('tripdate').value=tomorrow.toISOString().slice(0,10);
+$('elevation').addEventListener('mousemove',elevationPointer);
+$('elevation').addEventListener('mouseleave',hideElevationTip);
+$('elevation').addEventListener('touchstart',e=>{elevationPointer(e)},{passive:true});
+$('elevation').addEventListener('touchmove',e=>{elevationPointer(e)},{passive:true});
+setTimeout(()=>{attachBlockActions();updatePdfCount()},0);
+
 
 async function geocode(q){
   const u='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(q);
@@ -137,23 +187,70 @@ function makeStages(coords,m,targetKm,maxHm){
   return out;
 }
 function drawElevation(coords,m,stages){
-  const c=$('elevation'),ctx=c.getContext('2d'),W=c.width,H=c.height,p=28;
+  const c=$('elevation'),ctx=c.getContext('2d'),W=c.width,H=c.height;
+  const L=52,R=20,T=28,B=46;
   ctx.clearRect(0,0,W,H);
   const elev=coords.map(x=>x[2]).filter(Number.isFinite);
   if(!elev.length){ctx.fillText('Keine Höhendaten geliefert.',30,40);return}
-  const lo=Math.min(...elev), hi=Math.max(...elev), span=Math.max(1,hi-lo);
+  const lo=Math.min(...elev),hi=Math.max(...elev),span=Math.max(1,hi-lo);
+  const xForKm=km=>L+(W-L-R)*(km/m.totalDist);
+  const yForElev=e=>H-B-(H-T-B)*((e-lo)/span);
+
+  // kilometer axis
+  ctx.strokeStyle='#d7ddd8';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(L,H-B);ctx.lineTo(W-R,H-B);ctx.stroke();
+  const roughStep=m.totalDist<=120?20:m.totalDist<=300?50:m.totalDist<=600?100:200;
+  ctx.font='17px system-ui';ctx.fillStyle='#66736b';ctx.textAlign='center';
+  for(let km=0;km<=m.totalDist;km+=roughStep){
+    const x=xForKm(km);
+    ctx.beginPath();ctx.moveTo(x,H-B);ctx.lineTo(x,H-B+7);ctx.stroke();
+    ctx.fillText(Math.round(km)+' km',x,H-13);
+  }
+  if(m.totalDist%roughStep>roughStep*.25){
+    const x=xForKm(m.totalDist);ctx.beginPath();ctx.moveTo(x,H-B);ctx.lineTo(x,H-B+7);ctx.stroke();
+    ctx.fillText(m.totalDist.toFixed(0)+' km',x,H-13);
+  }
+
+  // profile
   ctx.beginPath();
   coords.forEach((x,i)=>{
-    const xx=p+(W-2*p)*(m.dist[i]/m.totalDist), yy=H-p-(H-2*p)*(((x[2]??lo)-lo)/span);
+    const xx=xForKm(m.dist[i]),yy=yForElev(x[2]??lo);
     i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);
-  }); ctx.strokeStyle='#1f6f4a';ctx.lineWidth=4;ctx.stroke();
-  ctx.fillStyle='#66736b';ctx.font='24px system-ui';
-  ctx.fillText(Math.round(hi)+' m',p,24);ctx.fillText(Math.round(lo)+' m',p,H-5);
-  stages.slice(0,-1).forEach(st=>{
-    const x=p+(W-2*p)*(m.dist[st.e]/m.totalDist);
-    ctx.beginPath();ctx.moveTo(x,p);ctx.lineTo(x,H-p);ctx.strokeStyle='#9aa69e';ctx.lineWidth=2;ctx.stroke();
   });
+  ctx.strokeStyle='#1f6f4a';ctx.lineWidth=4;ctx.stroke();
+
+  ctx.fillStyle='#66736b';ctx.font='20px system-ui';ctx.textAlign='left';
+  ctx.fillText(Math.round(hi)+' m',L,22);ctx.fillText(Math.round(lo)+' m',L,H-B-6);
+
+  // stage markers + labels
+  ctx.textAlign='center';
+  stages.slice(0,-1).forEach((st,si)=>{
+    const km=m.dist[st.e],x=xForKm(km);
+    ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,H-B);ctx.strokeStyle='#9aa69e';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#66736b';ctx.font='15px system-ui';ctx.fillText('Etappe '+(si+1),x,T+14);
+  });
+
+  window.__elevChart={coords,m,lo,hi,L,R,T,B,xForKm,yForElev};
 }
+function elevationPointer(ev){
+  const chart=window.__elevChart;if(!chart)return;
+  const c=$('elevation'),rect=c.getBoundingClientRect();
+  const clientX=ev.touches?.[0]?.clientX??ev.clientX;
+  if(!Number.isFinite(clientX))return;
+  const px=(clientX-rect.left)*(c.width/rect.width);
+  const {m,coords,L,R}=chart;
+  const frac=Math.max(0,Math.min(1,(px-L)/(c.width-L-R)));
+  const target=frac*m.totalDist;
+  let lo=0,hi=m.dist.length-1;
+  while(lo<hi){const mid=(lo+hi)>>1;if(m.dist[mid]<target)lo=mid+1;else hi=mid}
+  const i=Math.max(0,Math.min(coords.length-1,lo)),km=m.dist[i],e=coords[i][2];
+  const tip=$('elevTip');tip.textContent=`km ${km.toFixed(1)} · ${Math.round(e||0)} m`;
+  tip.style.left=((chart.xForKm(km)/c.width)*100)+'%';
+  tip.style.top=((chart.yForElev(e||chart.lo)/c.height)*100)+'%';
+  tip.style.display='block';
+}
+function hideElevationTip(){const t=$('elevTip');if(t)t.style.display='none'}
+
 function initMap(){
   if(map)return;
   map=L.map('map',{zoomControl:true});
@@ -271,6 +368,356 @@ function maybeStageKm(candidate,stage){
   if(!candidate||candidate.route_index==null||!window.__routeMetrics)return NaN;
   return window.__routeMetrics.dist[candidate.route_index]-window.__routeMetrics.dist[stage.s];
 }
+
+function routeLoad(stages){
+  return stages.map(s=>({km:s.km,hm:s.hm,hm100:s.km?100*s.hm/s.km:0}));
+}
+function bikeFit(stages){
+  const type=$('biketype').value,tire=+$('tire').value,profile=$('profile').value;
+  const maxLoad=Math.max(...routeLoad(stages).map(x=>x.hm100));
+  let verdict='Gut passend',notes=[];
+  if(type==='road'&&profile!=='fastbike'){verdict='Nur bedingt passend';notes.push('Rennrad + Bikepacking/Gravel-Routing kann auf unbefestigten Abschnitten unpassend sein.');}
+  if(type==='gravel'&&tire>=40)notes.push(`${tire} mm Reifen sind für einen robusten Bikepacking-Startpunkt plausibel.`);
+  else if(type==='gravel'&&tire<35)notes.push('Für rauere Abschnitte könnte mehr Reifenvolumen sinnvoll sein; Oberfläche ist noch nicht verifiziert.');
+  if(maxLoad>1500)notes.push('Hohe Kletterbelastung: leichte Übersetzung und niedrige Gänge priorisieren.');
+  notes.push('Oberfläche und technische Schwierigkeit sind noch nicht verifiziert.');
+  return {verdict,notes};
+}
+function packingPlan(){
+  const lodging=$('lodging').value;
+  if(lodging==='hotel') return {target:'ca. 7–9 kg ohne Wasser/Essen',bags:'Satteltasche + Rahmentasche + kleine Lenkertasche',items:['2–3 Trikots/Shirts','2 Bibs/Shorts','Regenjacke','leichte Abendkleidung','Tools + Ersatzschlauch/Plugs','Powerbank + Ladekabel']};
+  if(lodging==='mixed') return {target:'ca. 9–12 kg ohne Wasser/Essen',bags:'Satteltasche + Rahmentasche + Lenkertasche',items:['leichter Schlafsack/Inlet','Regen-/Wärmeschicht','Tools + Ersatzteile','Powerbank','kompakte Hygiene','Notfallverpflegung']};
+  return {target:'ca. 12–16 kg ohne Wasser/Essen',bags:'vollwertiges Bikepacking-Set, ggf. Fork Bags',items:['Zelt/Tarp','Schlafsystem','Kocher optional','Wärmeschicht','Tools + Ersatzteile','Powerbank + Licht','mehr Wasserreserve']};
+}
+function navigationPlan(){
+  return ['Bikecomputer als Primärnavigation','GPX offline gespeichert','Smartphone als Backup','Offline-Karten vor Abfahrt laden','Powerbank / Ladestrategie','Nicht auf Live-Mobilfunk verlassen'];
+}
+async function fetchStageWeather(coords,stages){
+  const date=$('tripdate').value;
+  if(!date)return {available:false,reason:'Kein Abfahrtsdatum gewählt.',results:[]};
+
+  const points=stages.map(s=>{const c=coords[s.e];return {lat:c[1],lon:c[0]}});
+
+  async function directPoint(p){
+    const u=new URL('https://api.open-meteo.com/v1/forecast');
+    u.searchParams.set('latitude',p.lat);
+    u.searchParams.set('longitude',p.lon);
+    u.searchParams.set('daily','temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max');
+    u.searchParams.set('timezone','auto');
+    u.searchParams.set('forecast_days','16');
+    const r=await fetch(u.toString(),{headers:{'Accept':'application/json'}});
+    if(!r.ok)throw new Error('weather '+r.status);
+    const j=await r.json(),d=j.daily||{},times=d.time||[];
+    if(!times.includes(date))return {available:false};
+    const i=times.indexOf(date),pick=k=>(d[k]||[])[i];
+    return {available:true,date,tmax:pick('temperature_2m_max'),tmin:pick('temperature_2m_min'),rain:pick('precipitation_probability_max'),wind:pick('wind_speed_10m_max')};
+  }
+
+  try{
+    const results=[];
+    for(const p of points){
+      results.push(await directPoint(p));
+      await new Promise(r=>setTimeout(r,250));
+    }
+    if(results.some(x=>x.available)){
+      return {available:true,results,source:'browser-open-meteo'};
+    }
+  }catch(e){
+    console.warn('Direktes Wetter fehlgeschlagen, Backend-Fallback:',e);
+  }
+
+  try{
+    const r=await fetch('https://adventure-bike-os-api.onrender.com/api/weather',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({date,points})
+    });
+    const d=await r.json();
+    d.source='backend-fallback';
+    return d;
+  }catch(e){
+    return {available:false,reason:'Wetterdienst nicht erreichbar.',results:[]};
+  }
+}
+function weatherHtml(w){
+  if(!w?.available)return `<p><strong>Wetter noch offen.</strong> ${w?.reason||'Keine verlässlichen Daten verfügbar.'}</p>`;
+  return (w.results||[]).map((x,i)=>x.available?
+    `<span class="layerTag">Tag ${i+1}: ${Math.round(x.tmin)}–${Math.round(x.tmax)} °C · Regen ${Math.round(x.rain||0)}% · Wind ${Math.round(x.wind||0)} km/h</span>`:
+    `<span class="layerTag">Tag ${i+1}: keine Daten</span>`).join('');
+}
+function clothingPlan(weather){
+  if(!weather?.available)return ['Basisschicht + Trikot','leichte Wärmeschicht','Regenjacke','Armlinge/Beinlinge je nach Saison'];
+  const vals=(weather.results||[]).filter(x=>x.available);
+  if(!vals.length)return ['Basisschicht + Trikot','leichte Wärmeschicht','Regenjacke'];
+  const tmin=Math.min(...vals.map(x=>x.tmin??99)),tmax=Math.max(...vals.map(x=>x.tmax??-99));
+  const rain=Math.max(...vals.map(x=>x.rain||0)),wind=Math.max(...vals.map(x=>x.wind||0));
+  const out=['Trikot + Bib/Shorts'];
+  if(tmin<12)out.push('Armlinge oder leichte Isolationsschicht');
+  if(tmin<7)out.push('wärmere Handschuhe / zusätzliche Schicht');
+  if(rain>=40)out.push('wasserdichte Regenjacke');
+  else out.push('leichte Wind-/Regenjacke');
+  if(wind>=30)out.push('winddichte Außenschicht');
+  if(tmax>24)out.push('Sonnenschutz + leichte Kleidung');
+  return out;
+}
+function hydrationEnergy(stages,weather){
+  const maxKm=Math.max(...stages.map(s=>s.km));
+  let temp=18;
+  const vals=(weather?.results||[]).filter(x=>x.available&&Number.isFinite(x.tmax));
+  if(vals.length)temp=Math.max(...vals.map(x=>x.tmax));
+  const water=temp>=26?'0,6–0,9 l/h':temp>=20?'0,5–0,75 l/h':'0,4–0,65 l/h';
+  const carbs=maxKm>=130?'60–90 g Kohlenhydrate/h':'45–75 g Kohlenhydrate/h';
+  return {water,carbs,note:'Startwerte für Ausdauerfahrten; individuelle Verträglichkeit und Hitzeakklimatisation beachten.'};
+}
+function setupAdvice(stages){
+  const type=$('biketype').value,tire=+$('tire').value,profile=$('profile').value;
+  const maxHm=Math.max(...stages.map(s=>s.hm));
+  const notes=[];
+  if(type==='gravel'){
+    notes.push(tire>=40?`${tire} mm: guter Ausgangspunkt für Komfort und Reserve.`:`${tire} mm: für raues Gravel eher knapp; Oberfläche ist noch nicht verifiziert.`);
+    notes.push('Tubeless sinnvoll, wenn bereits zuverlässig eingerichtet.');
+  }
+  if(maxHm>=1800)notes.push('Für lange Klettertage: leichte Übersetzung priorisieren; keine unnötig großen Gänge erzwingen.');
+  if(profile==='trekking')notes.push('Setup auf Zuverlässigkeit und Gepäckstabilität statt reine Geschwindigkeit optimieren.');
+  return notes;
+}
+function stageWarnings(stages,weather){
+  return stages.map((s,i)=>{
+    const w=weather?.results?.[i];
+    const warns=[];
+    if(s.hm>+$('hmday').value)warns.push('HM-Ziel überschritten');
+    if(s.km>+$('kmday').value*1.1)warns.push('deutlich über Ziel-km');
+    if(w?.available&&(w.rain||0)>=60)warns.push('hohe Regenwahrscheinlichkeit');
+    if(w?.available&&(w.wind||0)>=35)warns.push('starker Wind möglich');
+    return warns;
+  });
+}
+function renderAdventureLayers(stages,weather){
+  const loads=routeLoad(stages),hardest=loads.reduce((a,b)=>a.hm100>b.hm100?a:b);
+  const fit=bikeFit(stages),pack=packingPlan(),nav=navigationPlan(),clothes=clothingPlan(weather),fuel=hydrationEnergy(stages,weather),setup=setupAdvice(stages),warnings=stageWarnings(stages,weather);
+  const tech=$('tech').value,fitness=$('fitness').value;
+  let loadText=`Härteste Etappe: ${hardest.km.toFixed(0)} km / ${Math.round(hardest.hm)} HM (${Math.round(hardest.hm100)} HM je 100 km).`;
+  if(fitness==='sportlich'&&hardest.km>120)loadText+=' Das liegt oberhalb eines konservativen Tagesziels für das gewählte Profil.';
+  $('adventureLayers').innerHTML=`
+    <div class="layerBox"><h3>🚴 Bike-Fit & Setup</h3><p><strong>${fit.verdict}</strong></p>${fit.notes.concat(setup).map(x=>`<p>• ${x}</p>`).join('')}</div>
+    <div class="layerBox"><h3>⛰ Belastung & Warnungen</h3><p>${loadText}</p><p>Technik-Level: <strong>${tech==='easy'?'eher einfach':tech==='medium'?'solide Gravel-Erfahrung':'technisch erfahren'}</strong>.</p>${warnings.map((w,i)=>`<p><strong>Tag ${i+1}:</strong> ${w.length?w.join(' · '):'keine Warnung aus km/HM/Wetter'}</p>`).join('')}<p>Wegoberfläche/technische Segmente sind noch nicht verifiziert.</p></div>
+    <div class="layerBox"><h3>🌦 Wetter</h3>${weatherHtml(weather)}<p>Kurzfristwetter ist optional und blockiert die Planung nie.</p></div>
+    <div class="layerBox"><h3>🧥 Kleidung</h3>${clothes.map(x=>`<span class="layerTag">${x}</span>`).join('')}<p>Aus Temperatur, Regen und Wind abgeleitet, sofern Wetterdaten verfügbar sind.</p></div>
+    <div class="layerBox"><h3>🧳 Packplan</h3><p><strong>${pack.target}</strong></p><p>${pack.bags}</p>${pack.items.map(x=>`<span class="layerTag">${x}</span>`).join('')}</div>
+    <div class="layerBox"><h3>🧭 Navigation</h3>${nav.map(x=>`<p>✓ ${x}</p>`).join('')}</div>
+    <div class="layerBox"><h3>💧 Wasser & Energie</h3><p><strong>Trinken:</strong> ${fuel.water}</p><p><strong>Energie:</strong> ${fuel.carbs}</p><p>${fuel.note}</p><p>Konkrete Wasser-/Food-POIs folgen mit verifizierter Versorgungsquelle.</p></div>
+    <div class="layerBox"><h3>🛣 Terrain-Status</h3><p><strong>Noch nicht verifiziert.</strong> Die Route kennt Distanz und Höhe, aber noch keine belastbare Oberflächen-/Schwierigkeitsklassifikation pro Segment.</p><p>Diese Ebene ist vorbereitet und wird als Nächstes mit echten Segmentdaten befüllt.</p></div>`;
+}
+
+function stageSamplePoints(coords,stage,count=5){
+  const out=[],span=Math.max(1,stage.e-stage.s);
+  for(let i=0;i<count;i++){
+    const idx=Math.round(stage.s+span*(i/(count-1)));
+    const c=coords[Math.min(coords.length-1,idx)];
+    if(c&&!out.some(x=>x.idx===idx))out.push({idx,lat:c[1],lon:c[0]});
+  }
+  return out;
+}
+function distKmLatLon(a,b){
+  const R=6371,dLat=rad(b.lat-a.lat),dLon=rad(b.lon-a.lon);
+  const s=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(s));
+}
+async function overpassFetch(query){
+  const endpoints=[
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter'
+  ];
+  for(const url of endpoints){
+    const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),18000);
+    try{
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(query),signal:ctrl.signal});
+      clearTimeout(timer);
+      if(!r.ok)continue;
+      const j=await r.json();
+      if(j&&Array.isArray(j.elements))return {ok:true,elements:j.elements,source:url};
+    }catch(e){clearTimeout(timer)}
+  }
+  return {ok:false,elements:[],source:null};
+}
+function surfaceClass(tags){
+  const s=(tags.surface||'').toLowerCase(),track=(tags.tracktype||'').toLowerCase(),smooth=(tags.smoothness||'').toLowerCase();
+  if(['asphalt','paved','concrete','concrete:plates','paving_stones'].includes(s))return 'paved';
+  if(['gravel','fine_gravel','compacted','pebblestone'].includes(s))return 'gravel';
+  if(['ground','dirt','earth','mud','sand','rock','grass','grass_paver'].includes(s))return 'rough';
+  if(['grade3','grade4','grade5'].includes(track))return 'rough';
+  if(['very_bad','horrible','very_horrible','impassable'].includes(smooth))return 'rough';
+  if((tags.highway==='track'||tags.highway==='path')&&!s)return 'unknown_offroad';
+  return 'unknown';
+}
+function terrainDifficulty(counts,roughSignals,total){
+  if(!total)return {label:'Nicht verifiziert',level:'unknown',reason:'Keine OSM-Wegtags in der Stichprobe gefunden.'};
+  const rough=(counts.rough||0)+(counts.unknown_offroad||0)*0.5;
+  const ratio=rough/total;
+  if(roughSignals>=3||ratio>=0.35)return {label:'technisch erhöht',level:'high',reason:'Mehrere raue/Track-/Smoothness-Signale in der OSM-Stichprobe.'};
+  if(roughSignals>=1||ratio>=0.15)return {label:'gemischt',level:'medium',reason:'Einzelne Offroad-/Rauheits-Signale in der OSM-Stichprobe.'};
+  return {label:'eher gutmütig',level:'low',reason:'In der Stichprobe dominieren befestigte oder unauffällige Wegtags.'};
+}
+function poiCategory(tags){
+  if(['hotel','hostel','guest_house','motel','camp_site','alpine_hut'].includes(tags.tourism))return 'sleep';
+  if(['restaurant','cafe','fast_food','bar','pub'].includes(tags.amenity))return 'food';
+  if(tags.amenity==='drinking_water')return 'water';
+  if(['supermarket','convenience','bakery'].includes(tags.shop))return 'grocery';
+  if(tags.shop==='bicycle'||tags.amenity==='bicycle_repair_station')return 'bike';
+  return null;
+}
+async function fetchTerrainSupply(coords,stages){
+  // One combined Overpass request to keep load/rate-limits low.
+  const samples=[];
+  stages.forEach((s,si)=>stageSamplePoints(coords,s,4).forEach(p=>samples.push({...p,stage:si})));
+  const endpoints=stages.map((s,si)=>{const c=coords[s.e];return {lat:c[1],lon:c[0],stage:si}});
+  const terrainClauses=samples.slice(0,28).map(p=>`way(around:140,${p.lat},${p.lon})["highway"];`).join('');
+  const poiClauses=endpoints.slice(0,10).map(p=>`nwr(around:5000,${p.lat},${p.lon})["tourism"~"hotel|hostel|guest_house|motel|camp_site|alpine_hut"];nwr(around:5000,${p.lat},${p.lon})["amenity"~"restaurant|cafe|fast_food|bar|pub|drinking_water|bicycle_repair_station"];nwr(around:5000,${p.lat},${p.lon})["shop"~"supermarket|convenience|bakery|bicycle"];`).join('');
+  const q=`[out:json][timeout:25];(${terrainClauses}${poiClauses});out center tags;`;
+  const res=await overpassFetch(q);
+  if(!res.ok)return {available:false,reason:'OSM-Detaildienst derzeit nicht erreichbar.',stages:[]};
+
+  const intel=stages.map((s,si)=>({
+    terrain:{counts:{paved:0,gravel:0,rough:0,unknown_offroad:0,unknown:0},total:0,roughSignals:0,names:[]},
+    supply:{sleep:[],food:[],water:[],grocery:[],bike:[]}
+  }));
+  const seenWays=new Set(),seenPois=new Set();
+
+  for(const el of res.elements){
+    const t=el.tags||{},center=el.center||{},lat=el.lat??center.lat,lon=el.lon??center.lon;
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))continue;
+    const p={lat,lon};
+    const cat=poiCategory(t);
+    if(cat){
+      const key=`${el.type}-${el.id}`;
+      if(seenPois.has(key))continue; seenPois.add(key);
+      let bestStage=0,bestD=Infinity;
+      endpoints.forEach(ep=>{const d=distKmLatLon(p,ep);if(d<bestD){bestD=d;bestStage=ep.stage}});
+      if(bestD<=6){
+        const name=t.name||t['name:de']||({sleep:'Unterkunft',food:'Gastro',water:'Trinkwasser',grocery:'Einkauf',bike:'Bike-Service'}[cat]);
+        intel[bestStage].supply[cat].push({name,distance:bestD});
+      }
+      continue;
+    }
+    if(el.type==='way'&&t.highway){
+      const key=`way-${el.id}`; if(seenWays.has(key))continue; seenWays.add(key);
+      let bestStage=0,bestD=Infinity;
+      samples.forEach(sp=>{const d=distKmLatLon(p,sp);if(d<bestD){bestD=d;bestStage=sp.stage}});
+      if(bestD<=2.5){
+        const sc=surfaceClass(t),ti=intel[bestStage].terrain;
+        ti.counts[sc]=(ti.counts[sc]||0)+1; ti.total++;
+        if(sc==='rough'||['bad','very_bad','horrible','very_horrible','impassable'].includes(t.smoothness)||['grade4','grade5'].includes(t.tracktype))ti.roughSignals++;
+        if(t.name&&ti.names.length<3&&!ti.names.includes(t.name))ti.names.push(t.name);
+      }
+    }
+  }
+
+  intel.forEach(x=>{
+    Object.values(x.supply).forEach(arr=>arr.sort((a,b)=>a.distance-b.distance));
+    x.terrain.difficulty=terrainDifficulty(x.terrain.counts,x.terrain.roughSignals,x.terrain.total);
+  });
+  return {available:true,source:res.source,stages:intel};
+}
+function terrainBars(t){
+  if(!t?.total)return '<p>Keine ausreichenden OSM-Oberflächentags in der Stichprobe.</p>';
+  const c=t.counts,total=t.total;
+  const line=(label,n)=>`<p>${label}: <strong>${n}</strong> Stichproben-Treffer</p>`;
+  return line('Befestigt · OSM-Wegtreffer',c.paved||0)+line('Gravel/kompaktiert · OSM-Wegtreffer',c.gravel||0)+line('Rau/erdig · OSM-Wegtreffer',c.rough||0)+line('Track/Path ohne Surface-Tag',c.unknown_offroad||0)+line('Unbekannt · OSM-Wegtreffer',c.unknown||0);
+}
+function supplyCategory(stage,cat,label,arr){
+  const id=`poi-${stage}-${cat}`;
+  if(!arr?.length)return `<p>${label}: <strong>kein OSM-Treffer im ~5-km-Umfeld</strong></p>`;
+  const selected=window.stageSelections[selectionKey(stage,cat)];
+  return `<button type="button" class="poiToggle" onclick="togglePoiList('${id}')">${label}: ${arr.length} Treffer ▾</button>
+    <div id="${id}" class="poiList">${arr.map((x,idx)=>{
+      const isSel=selected?.name===x.name;
+      return `<div class="poiRow"><div><strong>${x.name}</strong><br><span class="tiny">${x.distance.toFixed(1)} km vom Etappenziel · OSM-Treffer, Öffnung/Verfügbarkeit nicht geprüft</span></div>
+      <button type="button" class="poiAdd ${isSel?'selected':''}" onclick="addStagePOI(${stage},'${cat}',${idx})">${isSel?'✓ Hinzugefügt':'＋ Zur Etappe'}</button></div>`;
+    }).join('')}</div>`;
+}
+function renderTerrainSupply(data,stages,names){
+  window.__terrainSupplyData=data;window.__lastStages=stages;window.__lastStageNames=names;
+  if(!data?.available){
+    $('terrainSupply').innerHTML=`<div class="intelCard"><h3>Terrain & Versorgung</h3><p><strong>Zusatzdaten derzeit nicht verfügbar.</strong></p><p>${data?.reason||'Die Route und alle übrigen Ebenen bleiben nutzbar.'}</p></div>`;
+    attachBlockActions($('terrainSupply'));return;
+  }
+  $('terrainSupply').innerHTML=data.stages.map((x,i)=>`<div class="intelCard">
+    <h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3>
+    <p><strong>Terrain-Profil:</strong> ${x.terrain.difficulty.label}</p>
+    <p>${x.terrain.difficulty.reason}</p>
+    <p class="tiny"><strong>Was bedeutet „Treffer“?</strong> Ein Treffer ist ein OSM-Wegobjekt, das in einer Stichprobe nahe deiner Route gefunden wurde. Die Zahl ist kein Kilometeranteil und keine Prozentangabe, sondern ein Indikator dafür, welche Oberflächen-Tags in den geprüften Bereichen vorkommen.</p>
+    ${terrainBars(x.terrain)}
+    ${x.terrain.names?.length?`<p class="tiny">Nahe Stichprobe: ${x.terrain.names.join(' · ')}</p>`:''}
+    <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+    ${supplyCategory(i,'sleep','🛏 Unterkunft',x.supply.sleep)}
+    ${supplyCategory(i,'food','🍽 Essen',x.supply.food)}
+    ${supplyCategory(i,'water','💧 Trinkwasser',x.supply.water)}
+    ${supplyCategory(i,'grocery','🛒 Einkauf',x.supply.grocery)}
+    ${supplyCategory(i,'bike','🔧 Bike-Service',x.supply.bike)}
+  </div>`).join('');
+  updateSelectedStops();attachBlockActions($('terrainSupply'));
+}
+
+let pdfMemory=JSON.parse(localStorage.getItem('abo-pdf-memory-v2')||'[]');
+function cleanBlockText(el){const c=el.cloneNode(true);c.querySelectorAll('.blockActions,.poiAdd,.poiToggle').forEach(x=>x.remove());c.querySelectorAll('.poiList:not(.open)').forEach(x=>x.remove());return c.innerText.replace(/\n{3,}/g,'\n\n').trim()}
+function blockId(el){if(!el.dataset.pdfId)el.dataset.pdfId='pdf-'+Math.random().toString(36).slice(2)+'-'+Date.now();return el.dataset.pdfId}
+async function copyBlock(btn){const text=cleanBlockText(btn.closest('.copyable'));try{await navigator.clipboard.writeText(text);showCopyToast('Block kopiert')}catch(e){showCopyToast('Kopieren nicht möglich')}}
+function rememberBlock(btn){
+ const el=btn.closest('.copyable'),id=blockId(el),text=cleanBlockText(el),idx=pdfMemory.findIndex(x=>x.id===id);
+ if(idx>=0){
+   pdfMemory.splice(idx,1);btn.textContent='＋ Für PDF merken';btn.classList.remove('active');showCopyToast('Aus PDF-Auswahl entfernt');
+ }else{
+   let image=null;
+   const canvas=el.querySelector('#elevation');
+   if(canvas){try{image=canvas.toDataURL('image/png')}catch(e){}}
+   pdfMemory.push({id,text,image});
+   btn.textContent='✓ Für PDF gemerkt';btn.classList.add('active');
+   showCopyToast(image?'Für PDF gemerkt – inklusive Höhenprofil-Grafik':'Für persönliche PDF gemerkt');
+ }
+ localStorage.setItem('abo-pdf-memory-v2',JSON.stringify(pdfMemory));updatePdfCount();
+}
+function updatePdfCount(){const el=$('pdfCount');if(el)el.textContent=`${pdfMemory.length} Block${pdfMemory.length===1?'':'e'} ausgewählt`}
+function syncRememberButtons(root=document){root.querySelectorAll('.copyable').forEach(el=>{const id=blockId(el),btn=el.querySelector('.rememberBtn');if(!btn)return;const active=pdfMemory.some(x=>x.id===id);btn.textContent=active?'✓ Für PDF gemerkt':'＋ Für PDF merken';btn.classList.toggle('active',active)});updatePdfCount()}
+function showCopyToast(text){const t=$('copyToast');t.textContent=text;t.style.display='block';clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>t.style.display='none',1800)}
+function attachBlockActions(root=document){root.querySelectorAll('.card,.layerBox,.intelCard,.stageCard,.summaryBox').forEach(el=>{if(el.dataset.copyReady)return;el.dataset.copyReady='1';el.classList.add('copyable');blockId(el);const bar=document.createElement('div');bar.className='blockActions noPrint';bar.innerHTML='<button class="copyBtn" type="button" onclick="copyBlock(this)">⧉ Kopieren</button><button class="rememberBtn" type="button" onclick="rememberBlock(this)">＋ Für PDF merken</button>';el.insertBefore(bar,el.firstChild)});syncRememberButtons(root)}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function createPersonalPDF(){
+ if(!pdfMemory.length){showCopyToast('Noch keine Blöcke für PDF ausgewählt');return}
+ const title=`${$('start').value.trim()} → ${$('dest').value.trim()}`,date=$('tripdate').value||'',popup=window.open('','_blank');
+ if(!popup){showCopyToast('Pop-up blockiert');return}
+ const body=pdfMemory.map((x,i)=>`<section style="padding:18px 0;border-top:1px solid #ddd;break-inside:avoid"><h3>${i+1}</h3>${x.image?`<img src="${x.image}" alt="Höhenprofil" style="display:block;width:100%;max-width:900px;height:auto;border:1px solid #ddd;border-radius:10px;margin:8px 0 14px">`:''}<pre style="white-space:pre-wrap;font:14px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">${escapeHtml(x.text)}</pre></section>`).join('');
+ popup.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:36px;color:#132019"><button onclick="window.print()" style="padding:10px 14px;background:#1f6f4a;color:#fff;border:0;border-radius:10px;font-weight:700">Als PDF speichern / drucken</button><h1>${escapeHtml(title)}</h1><div>${date?'Abfahrt '+escapeHtml(date):''}</div>${body}</body></html>`);
+ popup.document.close();
+}
+function exportMemoryText(){return pdfMemory.map(x=>x.text).join('\n\n------------------------------\n\n')}
+
+window.stageSelections={};
+function togglePoiList(id){
+  const el=document.getElementById(id);if(el)el.classList.toggle('open');
+}
+function selectionKey(stage,cat){return `${stage}:${cat}`}
+function addStagePOI(stage,cat,idx){
+  const data=window.__terrainSupplyData?.stages?.[stage]?.supply?.[cat]?.[idx];
+  if(!data)return;
+  const key=selectionKey(stage,cat);
+  if(window.stageSelections[key]?.name===data.name)delete window.stageSelections[key];
+  else window.stageSelections[key]={...data,stage,cat};
+  updateSelectedStops();
+  renderTerrainSupply(window.__terrainSupplyData,window.__lastStages,window.__lastStageNames);
+}
+function updateSelectedStops(){
+  const vals=Object.values(window.stageSelections),box=$('selectedStops');
+  if(!box)return;
+  if(!vals.length){box.innerHTML='<h3>📌 Für deine Etappen ausgewählt</h3><p class="tiny">Noch nichts ausgewählt. Öffne einen Trefferblock und füge einzelne Orte zur Etappe hinzu.</p>';return}
+  const labels={sleep:'Unterkunft',food:'Essen',water:'Trinkwasser',grocery:'Einkauf',bike:'Bike-Service'};
+  box.innerHTML='<h3>📌 Für deine Etappen ausgewählt</h3>'+vals.map(x=>`<p><strong>Etappe ${x.stage+1} · ${labels[x.cat]}:</strong> ${x.name} · ${x.distance.toFixed(1)} km vom Etappenziel</p>`).join('')+
+    '<div class="blockActions" style="justify-content:flex-start;margin:8px 0 0"><button class="copyBtn" type="button" onclick="copySelectedStops()">⧉ Auswahl kopieren</button></div>';
+}
+async function copySelectedStops(){
+  const vals=Object.values(window.stageSelections),labels={sleep:'Unterkunft',food:'Essen',water:'Trinkwasser',grocery:'Einkauf',bike:'Bike-Service'};
+  const text=vals.map(x=>`Etappe ${x.stage+1} · ${labels[x.cat]}: ${x.name} (${x.distance.toFixed(1)} km vom Etappenziel)`).join('\n');
+  if(!text)return;try{await navigator.clipboard.writeText(text)}catch(e){}showCopyToast('Etappen-Auswahl kopiert');
+}
 async function plan(){
  const btn=$('go');btn.disabled=true;$('status').className='status';
  try{
@@ -283,9 +730,9 @@ async function plan(){
   $('status').textContent='Route berechnet. Etappenkorridor wird optimiert …';
   const opt=await optimizeStages(coords,m,base,target,maxHm,$('start').value,$('dest').value,$('priority').value),stages=opt.stages;
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
-  renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
+  renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);const terrainSupply=await fetchTerrainSupply(coords,stages);renderTerrainSupply(terrainSupply,stages,opt.labels);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  $('status').textContent='Reiseplaner 5.0: Etappen nach Leistung und praktischer Reise-Eignung optimiert.';$('result').scrollIntoView({behavior:'smooth'});
+  attachBlockActions();$('status').textContent='PDF Builder 7.2.1: Route, Etappen, interaktive Treffer, Höhenprofil-Grafik und persönliche PDF-Auswahl bereit.';$('result').scrollIntoView({behavior:'smooth'});
  }catch(e){$('status').className='status error';$('status').textContent='Route konnte nicht berechnet werden: '+e.message+'.'}finally{btn.disabled=false}
 }
 $('go').addEventListener('click',plan);
