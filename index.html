@@ -27,9 +27,9 @@
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE LAYERS 6.1</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE LAYERS 6.2</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">Route und Etappen bleiben die Basis. 6.1 ergänzt belastbares Kurzfristwetter, Kleidung, Trink-/Energieplanung und konkretere Bike-Setup-Hinweise.</div>
+  <div class="sub">Route und Etappen bleiben die Basis. 6.2 ruft Kurzfristwetter primär direkt im Browser ab und nutzt das Backend nur noch als Fallback.</div>
 </header>
 <main>
   <section class="card">
@@ -94,7 +94,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">Adventure Layers 6.1: Kurzfristwetter wird robust je Etappe abgefragt und in Kleidung, Wasser/Energie und Warnungen übersetzt. Bike-Setup und Packplan werden konkreter; Terrain und Versorgung bleiben bis zur separaten Verifizierung offen.</p>
+      <p class="note">Adventure Layers 6.2: Kurzfristwetter wird primär direkt aus dem Browser geladen, damit gemeinsame Server-IP-Limits auf Render die Planung nicht blockieren. Bei Ausfall greift das Backend-Fallback. Kleidung, Wasser/Energie und Warnungen bleiben daran gekoppelt.</p>
     </div>
   </section>
 </main>
@@ -316,12 +316,50 @@ function navigationPlan(){
 }
 async function fetchStageWeather(coords,stages){
   const date=$('tripdate').value;
-  if(!date)return {available:false,reason:'Kein Abfahrtsdatum gewählt.'};
+  if(!date)return {available:false,reason:'Kein Abfahrtsdatum gewählt.',results:[]};
+
   const points=stages.map(s=>{const c=coords[s.e];return {lat:c[1],lon:c[0]}});
+
+  async function directPoint(p){
+    const u=new URL('https://api.open-meteo.com/v1/forecast');
+    u.searchParams.set('latitude',p.lat);
+    u.searchParams.set('longitude',p.lon);
+    u.searchParams.set('daily','temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max');
+    u.searchParams.set('timezone','auto');
+    u.searchParams.set('forecast_days','16');
+    const r=await fetch(u.toString(),{headers:{'Accept':'application/json'}});
+    if(!r.ok)throw new Error('weather '+r.status);
+    const j=await r.json(),d=j.daily||{},times=d.time||[];
+    if(!times.includes(date))return {available:false};
+    const i=times.indexOf(date),pick=k=>(d[k]||[])[i];
+    return {available:true,date,tmax:pick('temperature_2m_max'),tmin:pick('temperature_2m_min'),rain:pick('precipitation_probability_max'),wind:pick('wind_speed_10m_max')};
+  }
+
   try{
-    const r=await fetch('https://adventure-bike-os-api.onrender.com/api/weather',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,points})});
-    return await r.json();
-  }catch(e){return {available:false,reason:'Wetterdienst nicht erreichbar.'}}
+    const results=[];
+    for(const p of points){
+      results.push(await directPoint(p));
+      await new Promise(r=>setTimeout(r,250));
+    }
+    if(results.some(x=>x.available)){
+      return {available:true,results,source:'browser-open-meteo'};
+    }
+  }catch(e){
+    console.warn('Direktes Wetter fehlgeschlagen, Backend-Fallback:',e);
+  }
+
+  try{
+    const r=await fetch('https://adventure-bike-os-api.onrender.com/api/weather',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({date,points})
+    });
+    const d=await r.json();
+    d.source='backend-fallback';
+    return d;
+  }catch(e){
+    return {available:false,reason:'Wetterdienst nicht erreichbar.',results:[]};
+  }
 }
 function weatherHtml(w){
   if(!w?.available)return `<p><strong>Wetter noch offen.</strong> ${w?.reason||'Keine verlässlichen Daten verfügbar.'}</p>`;
@@ -406,7 +444,7 @@ async function plan(){
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
   renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  $('status').textContent='Adventure Layers 6.1: Route, Etappen, Wetter, Kleidung, Bike-Setup und Energieplanung berechnet.';$('result').scrollIntoView({behavior:'smooth'});
+  $('status').textContent='Adventure Layers 6.2: Route, Etappen, Wetter, Kleidung, Bike-Setup und Energieplanung berechnet.';$('result').scrollIntoView({behavior:'smooth'});
  }catch(e){$('status').className='status error';$('status').textContent='Route konnte nicht berechnet werden: '+e.message+'.'}finally{btn.disabled=false}
 }
 $('go').addEventListener('click',plan);
