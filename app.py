@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.21 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.22 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -134,7 +134,7 @@ def valhalla_route(a, b):
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.21-stage-name-fix-7.3.1")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.22-stage-editor-inventory-7.4")
 
 @app.get("/health")
 def health():
