@@ -36,9 +36,9 @@
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · TRIP WINDOW 7.3</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · TRIP WINDOW 7.3.1</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.3 ergänzt robuste Routing-Fallbacks, Start- und Enddatum, einen Machbarkeits-Schnellcheck sowie eine Kartenansicht pro Tagesetappe.</div>
+  <div class="sub">7.3.1 behebt generische „Etappenort“-Namen: Falls die Kandidatensuche keinen Ortsnamen liefert, wird der tatsächliche Routenschnitt zusätzlich rückwärts geokodiert.</div>
 </header>
 <main>
   <section class="card">
@@ -121,7 +121,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">Trip Window 7.3: Leere Eingaben bleiben erhalten. Start- und Enddatum liefern einen Machbarkeitscheck; Tagesetappen lassen sich einzeln auf der Karte anzeigen. Versorgung nutzt zusätzliche OSM-Fallbacks.</p>
+      <p class="note">Trip Window 7.3.1: Start- und Enddatum, Machbarkeitscheck und Tageskarten bleiben erhalten. Etappenziele bekommen jetzt auch bei Kandidaten-Ausfall einen konkreten Ortsnamen per Reverse-Geocoding.</p>
     </div>
   </section>
   <div class="pdfBar noPrint">
@@ -345,6 +345,16 @@ async function optimizeStages(coords,m,base,target,maxHm,startName,destName,prio
   labels.push(shortPlace(destName));meta.push({best:null,alternative:null});
   return{stages,labels,meta};
 }
+async function finalizeStageNames(coords,stages,labels,startName,destName){
+  const needFallback=labels.some((x,i)=>i>0&&i<labels.length-1&&(!x||x==='Etappenort'));
+  if(!needFallback)return labels;
+  const fallback=await resolveStagePlaces(coords,stages,startName,destName);
+  return labels.map((name,i)=>{
+    if(i===0)return shortPlace(startName);
+    if(i===labels.length-1)return shortPlace(destName);
+    return (!name||name==='Etappenort')?(fallback[i]||`Etappe ${i}`):name;
+  });
+}
 function renderTripSummary(stages,names,meta,target,maxHm){
   const within=stages.filter(s=>s.hm<=maxHm).length;
   const shifted=meta.filter(x=>x?.best&&x.best.route_delta_km>0.5).length;
@@ -395,6 +405,7 @@ function renderStages(stages,names,meta){
   const info=meta?.[i],best=info?.best,alt=info?.alternative;
   const hmOK=s.hm<=+$('hmday').value;
   const typeLabel={city:'Stadt',town:'Ort/Stadt',municipality:'Gemeinde',village:'Dorf',place:'Ort'}[best?.place_type]||'Ort';
+  names=names.map((n,idx)=>n&&n!=='Etappenort'?n:(idx===0?shortPlace($('start').value):idx===names.length-1?shortPlace($('dest').value):`Etappe ${idx}`));
   const move=best?.route_delta_km||0;
   let decision=i===stages.length-1?'Reiseziel erreicht.':
     best?(move<0.6?`${names[i+1]} liegt praktisch direkt am leistungsbasierten Idealpunkt.`:
@@ -806,11 +817,13 @@ async function plan(){
   const m=metrics(coords),target=+$('kmday').value,maxHm=+$('hmday').value,base=makeStages(coords,m,target,maxHm);window.__routeMetrics=m;window.__routeContext={coords,m,stages:base};$('routingSource').textContent=gj?.properties?.routing_source||'BRouter';updateQuickcheck(m,base);
   $('result').classList.remove('hidden');$('distance').textContent=m.totalDist.toFixed(1)+' km';$('ascent').textContent=Math.round(m.totalAsc)+' HM';
   $('status').textContent='Route berechnet. Etappenkorridor wird optimiert …';
-  const opt=await optimizeStages(coords,m,base,target,maxHm,$('start').value,$('dest').value,$('priority').value),stages=opt.stages;window.__routeContext={coords,m,stages};updateQuickcheck(m,stages);
+  const opt=await optimizeStages(coords,m,base,target,maxHm,$('start').value,$('dest').value,$('priority').value),stages=opt.stages;
+  opt.labels=await finalizeStageNames(coords,stages,opt.labels,$('start').value,$('dest').value);
+  window.__routeContext={coords,m,stages};updateQuickcheck(m,stages);
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
   renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);const terrainSupply=await fetchTerrainSupply(coords,stages);renderTerrainSupply(terrainSupply,stages,opt.labels);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  attachBlockActions();$('status').textContent='Trip Window 7.3: Route, Zeitfenster, Tagesetappen, robuste Versorgung und persönliche PDF-Auswahl bereit.';$('result').scrollIntoView({behavior:'smooth'});
+  attachBlockActions();$('status').textContent='Trip Window 7.3.1: Route, Zeitfenster, echte Etappenort-Namen, Tageskarten, Versorgung und PDF-Auswahl bereit.';$('result').scrollIntoView({behavior:'smooth'});
  }catch(e){$('status').className='status error';$('status').textContent='Route konnte nicht berechnet werden: '+e.message+'.'}finally{btn.disabled=false}
 }
 $('go').addEventListener('click',plan);
