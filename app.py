@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.22 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.24 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -132,9 +132,41 @@ def valhalla_route(a, b):
     }
 
 
+
+def _interp(a, b, t):
+    return {"lat": a["lat"] + (b["lat"]-a["lat"])*t, "lon": a["lon"] + (b["lon"]-a["lon"])*t}
+
+def segmented_route(a, b, profile="trekking"):
+    """Last-resort prototype fallback: split long trips into shorter routing legs."""
+    import math
+    # Haversine distance for choosing segment count.
+    lat1,lon1,lat2,lon2=map(math.radians,[a["lat"],a["lon"],b["lat"],b["lon"]])
+    h=math.sin((lat2-lat1)/2)**2+math.cos(lat1)*math.cos(lat2)*math.sin((lon2-lon1)/2)**2
+    straight=6371*2*math.asin(math.sqrt(h))
+    segments=max(2,min(6,math.ceil(straight/260)))
+    pts=[a]+[_interp(a,b,i/segments) for i in range(1,segments)]+[b]
+    merged=[]
+    sources=[]
+    for i in range(len(pts)-1):
+        leg_a,leg_b=pts[i],pts[i+1]
+        try:
+            f=brouter(leg_a,leg_b,profile)
+            feat=f["features"][0] if "features" in f else f
+            sources.append("BRouter")
+        except Exception:
+            feat=valhalla_route(leg_a,leg_b)
+            sources.append("Valhalla")
+        coords=(feat.get("geometry") or {}).get("coordinates") or []
+        if not coords:
+            raise requests.RequestException(f"Segment {i+1} lieferte keine Geometrie")
+        if merged and merged[-1][:2]==coords[0][:2]:
+            coords=coords[1:]
+        merged.extend(coords)
+    return {"type":"Feature","geometry":{"type":"LineString","coordinates":merged},"properties":{"routing_source":"Segmented "+"/".join(sorted(set(sources))),"segments":segments}}
+
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.22-stage-editor-inventory-7.4")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.24-adventure-app-7.6")
 
 @app.get("/health")
 def health():
@@ -311,8 +343,13 @@ def route():
             feature = brouter(a, b, profile)
         except Exception as primary_error:
             print(f"[ROUTE] BRouter unavailable, trying Valhalla: {primary_error}", flush=True)
-            feature = valhalla_route(a, b)
-            routing_source="Valhalla"
+            try:
+                feature = valhalla_route(a, b)
+                routing_source="Valhalla"
+            except Exception as secondary_error:
+                print(f"[ROUTE] Valhalla unavailable, trying segmented routing: {secondary_error}", flush=True)
+                feature = segmented_route(a, b, profile)
+                routing_source=(feature.get("properties") or {}).get("routing_source","Segmented fallback")
         f = feature["features"][0] if "features" in feature else feature
 
         print(f"[ROUTE] success source={routing_source}", flush=True)
