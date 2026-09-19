@@ -550,13 +550,18 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
 
 .placeSuggestion span{padding-right:4px}
 .geocoderHint{font-size:8px;color:#718078}
+
+/* 8.2.3 stage highlighting */
+.stageLegend{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.stageLegend button{border:1px solid #d8ded8;background:white;border-radius:999px;padding:4px 7px;font-size:8px;font-weight:800}
+.stageLegend button.active{background:#176b49;color:white;border-color:#176b49}
 </style>
 </head>
 <body>
 <header class="productHero">
   <div class="brandRow">
     <div>
-      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.2.2</div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.2.3</div>
       <h1>Dein Bike. Dein Abenteuer.</h1>
       <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
     </div>
@@ -666,7 +671,7 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
       <div class="routeVisualGrid">
         <div class="mapPanel">
           <div class="visualPanelHead"><span>Karte</span><button type="button" class="miniAction noPrint" onclick="showWholeRoute()">Route zentrieren</button></div>
-          <div id="map"></div>
+          <div id="map"></div><div id="stageLegend" class="stageLegend"></div>
         </div>
         <div class="elevTop">
           <div class="visualPanelHead"><span>Höhenprofil & Terrain</span><span class="tiny">km · Höhe · Etappen</span></div>
@@ -897,7 +902,7 @@ function terrainSummaryHtml(){
   const pct=k=>Math.round((acc[k]||0)/tot*100);
   return `<div class="terrainSummaryInline"><span>Asphalt ${pct('paved')}%</span><span>Gravel ${pct('gravel')}%</span><span>unbefestigt ${pct('rough')}%</span><span>Track/Path ${pct('unknown_offroad')}%</span><span>unbekannt ${pct('unknown')}%</span></div><div class="terrainCoverageWarn">OSM-Abdeckung ca. ${Math.round(t.coverage||0)}% · unbekannte Abschnitte werden nicht geraten.</div>`;
 }
-function drawElevation(coords,m,stages){
+function drawElevation(coords,m,stages,activeStage=null){
   const c=$('elevation'),ctx=c.getContext('2d'),W=c.width,H=c.height;
   const L=52,R=58,T=28,B=46;
   ctx.clearRect(0,0,W,H);
@@ -991,20 +996,68 @@ function initMap(){
   }
   addTiles('https://tile.openstreetmap.org/{z}/{x}/{y}.png','osm-org');
 }
-function showMap(coords,stages){
+
+const STAGE_COLORS=['#247BA0','#D1495B','#2A9D8F','#E9C46A','#F4A261','#8E6C88','#5B8E7D','#E76F51','#6C5B7B','#3D5A80','#B56576','#4F772D'];
+
+function stageColor(i){return STAGE_COLORS[i%STAGE_COLORS.length]}
+function stageIndexForCoord(idx,stages){
+  for(let i=0;i<stages.length;i++)if(idx>=stages[i].s&&idx<=stages[i].e)return i;
+  return Math.max(0,stages.length-1);
+}
+function highlightStage(stageIndex){
+  window.__activeStage=stageIndex;
+  const ctx=window.__routeContext;
+  if(!ctx?.coords||!ctx?.stages)return;
+  showMap(ctx.coords,ctx.stages,stageIndex);
+  if(window.__routeMetrics)drawElevation(ctx.coords,window.__routeMetrics,ctx.stages,stageIndex);
+  document.querySelectorAll('.stageLegend button').forEach((b,i)=>b.classList.toggle('active',i===stageIndex));
+}
+function showMap(coords,stages,activeStage=null){
   initMap();
-  if(routeLayer)routeLayer.remove(); stageMarkers.forEach(x=>x.remove());stageMarkers=[];
-  const latlngs=coords.map(c=>[c[1],c[0]]);
-  routeLayer=L.polyline(latlngs,{weight:5,opacity:.9}).addTo(map);
-  const bounds=routeLayer.getBounds();
+  if(routeLayer){
+    if(Array.isArray(routeLayer))routeLayer.forEach(x=>x.remove());
+    else routeLayer.remove();
+  }
+  stageMarkers.forEach(x=>x.remove());stageMarkers=[];
+  routeLayer=[];
+
+  stages.forEach((s,i)=>{
+    const seg=coords.slice(s.s,Math.min(coords.length,s.e+1)).map(c=>[c[1],c[0]]);
+    if(seg.length<2)return;
+    const layer=L.polyline(seg,{
+      weight:activeStage===null?5:(i===activeStage?8:3),
+      opacity:activeStage===null?0.9:(i===activeStage?1:0.28),
+      color:stageColor(i)
+    }).addTo(map);
+    layer.on('click',()=>highlightStage(i));
+    routeLayer.push(layer);
+  });
+
+  const all=coords.map(c=>[c[1],c[0]]);
   [0,...stages.map(x=>x.e)].forEach((idx,n)=>{
-    const marker=L.circleMarker(latlngs[idx],{radius:8,weight:3,fillOpacity:1}).addTo(map).bindTooltip(n===0?'Start':n===stages.length?'Ziel':'Etappe '+n);
+    const marker=L.circleMarker(all[idx],{
+      radius:7,weight:2,fillOpacity:1,
+      color:n===0?'#173d2b':stageColor(Math.max(0,n-1)),
+      fillColor:n===0?'#173d2b':stageColor(Math.max(0,n-1))
+    }).addTo(map).bindTooltip(n===0?'Start':n===stages.length?'Ziel':'Etappe '+n);
     stageMarkers.push(marker);
   });
+
+  const bounds=L.latLngBounds(all);
   requestAnimationFrame(()=>{
     map.invalidateSize(false);
-    if(bounds.isValid())map.fitBounds(bounds,{padding:[28,28],animate:false});
+    if(bounds.isValid() && activeStage===null)map.fitBounds(bounds,{padding:[28,28],animate:false});
+    if(activeStage!==null){
+      const s=stages[activeStage];
+      const seg=all.slice(s.s,Math.min(all.length,s.e+1));
+      if(seg.length>1)map.fitBounds(L.latLngBounds(seg),{padding:[40,40],animate:false});
+    }
   });
+
+  const legend=$('stageLegend');
+  if(legend){
+    legend.innerHTML=stages.map((s,i)=>`<button type="button" onclick="highlightStage(${i})">Etappe ${i+1}</button>`).join('');
+  }
 }
 function shortPlace(value){
   return (value||'').split(',')[0].trim() || '–';
@@ -1468,7 +1521,7 @@ function inventoryHtml(group,items){
 }
 function updateTerrainStatus(data){
   const box=$('terrainStatusBox');if(!box)return;
-  if(!data?.available){box.innerHTML='<strong>Terrain-Status:</strong> Detaildatenquelle derzeit nicht verfügbar. Die Route bleibt nutzbar, technische Bewertung ist vorläufig.';return}
+  if(!data?.supplyAvailable){box.innerHTML='<strong>Terrain-Status:</strong> Detaildatenquelle derzeit nicht verfügbar. Die Route bleibt nutzbar, technische Bewertung ist vorläufig.';return}
   const totals={paved:0,gravel:0,rough:0,unknown_offroad:0,unknown:0};
   data.stages.forEach(s=>Object.keys(totals).forEach(k=>totals[k]+=s.terrain?.counts?.[k]||0));
   const total=Object.values(totals).reduce((a,b)=>a+b,0);
@@ -2089,7 +2142,7 @@ function classifyTerrainCounts(counts){
 function currentTerrainSegments(){
   const d=window.__terrainSupplyData,ctx=window.__routeContext;
   const total=ctx?.m?.totalDist||0;
-  if(!d?.available||!ctx?.m?.dist||!total)return {segments:[{a:0,b:Math.max(1,total),kind:'unknown'}],total:Math.max(1,total),coverage:0};
+  if(!d?.terrainAvailable||!ctx?.m?.dist||!total)return {segments:[{a:0,b:Math.max(1,total),kind:'unknown'}],total:Math.max(1,total),coverage:0};
   const points=[];
   (d.stages||[]).forEach(s=>(s.terrain?.routeSamples||[]).forEach(x=>{
     if(Number.isFinite(x.idx)&&Number.isFinite(ctx.m.dist[x.idx])){
@@ -2380,98 +2433,90 @@ function terrainRouteSamples(coords,stages,m,desiredKm=10,maxPoints=72){
   return out.slice(0,maxPoints);
 }
 async function fetchTerrainSupply(coords,stages,m){
-  // One combined Overpass request to keep load/rate-limits low.
-  const samples=terrainRouteSamples(coords,stages,m,10,72);
-  const endpoints=stages.map((s,si)=>{const c=coords[s.e];return {lat:c[1],lon:c[0],stage:si}});
-  const terrainClauses=samples.slice(0,72).map(p=>`way(around:120,${p.lat},${p.lon})["highway"];`).join('');
-  const lodging=$('lodging')?.value||'hotel';
-  const sleepRegex=lodging==='camping'?'camp_site|caravan_site|camp_pitch|wilderness_hut|alpine_hut':lodging==='mixed'?'hotel|hostel|guest_house|motel|camp_site|caravan_site|camp_pitch|alpine_hut|wilderness_hut':'hotel|hostel|guest_house|motel';
-  const poiClauses=endpoints.slice(0,10).map(p=>`nwr(around:6000,${p.lat},${p.lon})["tourism"~"${sleepRegex}"];${lodging==='camping'?`nwr(around:6000,${p.lat},${p.lon})["amenity"="shelter"]["shelter_type"~"basic_hut|weather_shelter"];`:''}nwr(around:5000,${p.lat},${p.lon})["amenity"~"restaurant|cafe|fast_food|bar|pub|drinking_water|bicycle_repair_station"];nwr(around:5000,${p.lat},${p.lon})["shop"~"supermarket|convenience|bakery|bicycle"];`).join('');
-  const ferryClauses=samples.slice(0,36).map(p=>`nwr(around:900,${p.lat},${p.lon})["route"="ferry"];`).join('');
-  const q=`[out:json][timeout:25];(${terrainClauses}${poiClauses}${ferryClauses});out center tags;`;
-  let res=await overpassFetch(q);
-  let terrainAvailable=true;
-  if(!res.ok){
-    terrainAvailable=false;
-    const supplyOnly=`[out:json][timeout:20];(${poiClauses});out center tags;`;
-    res=await overpassFetch(supplyOnly);
-    if(!res.ok)return {available:false,reason:'OSM-Detaildienst derzeit nicht erreichbar.',stages:[]};
-  }
+  const samples=terrainRouteSamples(coords,stages,m).slice(0,42);
+  const endpoints=stages.map((s,i)=>{
+    const c=coords[s.e]; return {lat:c[1],lon:c[0],stage:i};
+  });
+  const lodging=$('lodging').value;
 
-  const intel=stages.map((s,si)=>({
+  const terrainPromise=fetch(`${API}/api/osm-terrain`,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({samples})
+  }).then(r=>r.json()).catch(()=>({ok:false,elements:[]}));
+
+  const supplyPromise=fetch(`${API}/api/osm-supply`,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({points:endpoints,lodging})
+  }).then(r=>r.json()).catch(()=>({ok:false,elements:[]}));
+
+  const [terrainRaw,supplyRaw]=await Promise.all([terrainPromise,supplyPromise]);
+
+  const intel=stages.map(()=>({
     terrain:{counts:{paved:0,gravel:0,rough:0,unknown_offroad:0,unknown:0},total:0,roughSignals:0,names:[],samples:[],routeSamples:[]},
     supply:{sleep:[],food:[],water:[],grocery:[],bike:[]},
     ferries:[]
   }));
-  const routeSamples=samples.map(sp=>({...sp,kind:'unknown',matchDistance:Infinity}));
-  const seenWays=new Set(),seenPois=new Set(),seenFerries=new Set();
 
-  for(const el of res.elements){
-    const t=el.tags||{},center=el.center||{},lat=el.lat??center.lat,lon=el.lon??center.lon;
-    if(!Number.isFinite(lat)||!Number.isFinite(lon))continue;
-    const p={lat,lon};
-    if(t.route==='ferry'){
-      const key=`${el.type}-${el.id}`; if(seenFerries.has(key))continue; seenFerries.add(key);
-      let bestStage=0,bestD=Infinity;
-      samples.forEach(sp=>{const d=distKmLatLon(p,sp);if(d<bestD){bestD=d;bestStage=sp.stage}});
-      if(bestD<=2.5){
-        const name=t.name||t['name:de']||t.operator||'Fährverbindung';
-        const website=normalizeExternalUrl(t.website||t['contact:website']||'');
-        const bicycle=(t.bicycle||t['vehicle:bicycle']||'').toLowerCase();
-        const reservation=(t.reservation||t['reservation:bicycle']||'').toLowerCase();
-        const duration=t.duration||'',timetable=t.opening_hours||t['service_times']||'',operator=t.operator||'';
-        const search=`https://www.google.com/search?q=${encodeURIComponent([name,operator,'Fahrplan Fahrrad Fähre'].filter(Boolean).join(' '))}`;
-        intel[bestStage].ferries.push({name,operator,website,bicycle,reservation,duration,timetable,search,distance:bestD});
-      }
-      continue;
-    }
-    const cat=poiCategory(t);
-    if(cat){
-      const key=`${el.type}-${el.id}`;
-      if(seenPois.has(key))continue; seenPois.add(key);
-      let bestStage=0,bestD=Infinity;
-      endpoints.forEach(ep=>{const d=distKmLatLon(p,ep);if(d<bestD){bestD=d;bestStage=ep.stage}});
-      if(bestD<=6){
-        const name=t.name||t['name:de']||({sleep:'Unterkunft',food:'Gastro',water:'Trinkwasser',grocery:'Einkauf',bike:'Bike-Service'}[cat]);
-        const website=normalizeExternalUrl(t.website||t['contact:website']||'');
-        const sleepType=(t.tourism==='camp_site'||t.tourism==='caravan_site'||t.tourism==='camp_pitch')?'Camping/Zeltplatz':(t.tourism==='wilderness_hut'||t.tourism==='alpine_hut'||t.amenity==='shelter')?'Hütte/Schutzplatz':'Hotel/Pension';
-        const booking=(cat==='sleep'&&sleepType==='Hotel/Pension')?`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(name)}`:'';
-        const maplink=`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=16/${lat}/${lon}`;
-        intel[bestStage].supply[cat].push({name,distance:bestD,lat,lon,website,booking,maplink,sleepType});
-      }
-      continue;
-    }
-    if(el.type==='way'&&t.highway){
-      const key=`way-${el.id}`; if(seenWays.has(key))continue; seenWays.add(key);
-      let bestStage=0,bestD=Infinity,bestSampleIndex=-1;
-      samples.forEach((sp,sidx)=>{const d=distKmLatLon(p,sp);if(d<bestD){bestD=d;bestStage=sp.stage;bestSampleIndex=sidx}});
-      if(bestD<=0.65){
-        const sc=surfaceClass(t),ti=intel[bestStage].terrain;
-        if(bestSampleIndex>=0){
-          const rs=routeSamples[bestSampleIndex];
-          const rank={rough:5,gravel:4,paved:3,unknown_offroad:2,unknown:1};
-          if(bestD<rs.matchDistance || (bestD<=rs.matchDistance*1.2 && (rank[sc]||0)>(rank[rs.kind]||0))){
-            rs.kind=sc;rs.matchDistance=bestD;rs.surface=t.surface||'';rs.highway=t.highway||'';rs.tracktype=t.tracktype||'';rs.smoothness=t.smoothness||'';
-          }
-        }
-        ti.counts[sc]=(ti.counts[sc]||0)+1; ti.total++;
-        if(ti.samples.length<30){
-          let nearestIdx=null,nearest=Infinity;
-          samples.filter(sp=>sp.stage===bestStage).forEach(sp=>{const dd=distKmLatLon(p,sp);if(dd<nearest){nearest=dd;nearestIdx=sp.idx}});
-          ti.samples.push({lat,lon,idx:nearestIdx,kind:sc,name:t.name||'',surface:t.surface||'',highway:t.highway||'',tracktype:t.tracktype||'',smoothness:t.smoothness||''});
-        }
-        if(sc==='rough'||['bad','very_bad','horrible','very_horrible','impassable'].includes(t.smoothness)||['grade4','grade5'].includes(t.tracktype))ti.roughSignals++;
-        if(t.name&&ti.names.length<3&&!ti.names.includes(t.name))ti.names.push(t.name);
+  const routeSamples=samples.map(sp=>({...sp,kind:'unknown',matchDistance:Infinity}));
+  const seenWays=new Set(),seenPois=new Set();
+
+  // Terrain can succeed independently from supply.
+  for(const el of (terrainRaw.elements||[])){
+    const t=el.tags||{};
+    const kind=terrainKind(t);
+    const p=centerOf(el);
+    if(!p)continue;
+    const key=`${el.type}-${el.id}`;
+    if(seenWays.has(key))continue;seenWays.add(key);
+
+    let best=null,bestD=Infinity;
+    routeSamples.forEach(sp=>{
+      const d=distKmLatLon(p,sp);
+      if(d<bestD){bestD=d;best=sp}
+    });
+    if(best && bestD<=0.22){
+      best.kind=kind;best.matchDistance=bestD;
+      const bucket=intel[best.stage]?.terrain;
+      if(bucket){
+        bucket.counts[kind]=(bucket.counts[kind]||0)+1;
+        bucket.total++;
+        bucket.routeSamples.push(best);
+        if(t.name && bucket.names.length<4 && !bucket.names.includes(t.name))bucket.names.push(t.name);
+        if(kind==='rough'||kind==='unknown_offroad')bucket.roughSignals++;
       }
     }
   }
 
-  intel.forEach((x,si)=>{
-    x.terrain.routeSamples=routeSamples.filter(rs=>rs.stage===si).sort((a,b)=>a.idx-b.idx);
-    Object.values(x.supply).forEach(arr=>arr.sort((a,b)=>a.distance-b.distance));
-    x.terrain.difficulty=terrainAvailable?terrainDifficulty(x.terrain.counts,x.terrain.roughSignals,x.terrain.total):{label:'nicht verfügbar',level:'unknown',reason:'Versorgung konnte geladen werden, Terrain-Stichproben jedoch nicht.'};
-  });
-  return {available:true,source:res.source,stages:intel,ferries:intel.flatMap((x,i)=>(x.ferries||[]).map(f=>({...f,stage:i})))};
+  // Supply can also succeed independently.
+  if(supplyRaw.ok){
+    const endpointPts=endpoints;
+    for(const el of (supplyRaw.elements||[])){
+      const t=el.tags||{},p=centerOf(el);if(!p)continue;
+      const cat=poiCategory(t);if(!cat)continue;
+      const key=`${el.type}-${el.id}`;if(seenPois.has(key))continue;seenPois.add(key);
+      let bestStage=0,bestD=Infinity;
+      endpointPts.forEach((sp,i)=>{const d=distKmLatLon(p,sp);if(d<bestD){bestD=d;bestStage=i}});
+      if(bestD<=7){
+        const name=t.name||t.brand||({
+          sleep:'Unterkunft',food:'Essen',water:'Trinkwasser',grocery:'Einkauf',bike:'Bike-Service'
+        }[cat]||'POI');
+        const website=normalizeExternalUrl(t.website||t['contact:website']||'');
+        const search=`https://www.google.com/search?q=${encodeURIComponent(name+' '+(window.__routeContext?.labels?.[bestStage+1]||''))}`;
+        intel[bestStage].supply[cat].push({name,lat:p.lat,lon:p.lon,distance:bestD,website,search});
+      }
+    }
+    intel.forEach(x=>Object.keys(x.supply).forEach(k=>x.supply[k].sort((a,b)=>a.distance-b.distance)));
+  }
+
+  return {
+    available:terrainRaw.ok||supplyRaw.ok,
+    terrainAvailable:!!terrainRaw.ok,
+    supplyAvailable:!!supplyRaw.ok,
+    terrainSource:terrainRaw.source||null,
+    supplySource:supplyRaw.source||null,
+    stages:intel,
+    ferries:[]
+  };
 }
 function terrainBars(t){
   if(!t?.total)return '<p>Keine ausreichenden OSM-Oberflächentags in der Stichprobe.</p>';
@@ -2736,7 +2781,7 @@ let __routeEnrichmentToken=0;
 async function enrichRouteAfterRender(coords,stages,labels,token){
   try{
     $('adventureLayers').innerHTML='<div class="layerBox"><b>Wetter wird geladen …</b><div class="tiny">Die Route bleibt vollständig bedienbar.</div></div>';
-    $('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden geladen …</b><div class="tiny">Diese Zusatzanalyse läuft im Hintergrund.</div></div>';
+    $('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain und Versorgung werden getrennt geladen …</b><div class="tiny">Terrain und POIs laufen getrennt im Hintergrund. Wenn einer der Dienste ausfällt, bleibt der andere nutzbar.</div></div>';
     const [weatherResult,terrainResult,transportResult]=await Promise.allSettled([
       fetchStageWeather(coords,stages),
       fetchTerrainSupply(coords,stages,window.__routeMetrics),
@@ -2761,7 +2806,7 @@ async function enrichRouteAfterRender(coords,stages,labels,token){
       updateTerrainStatus(terrainSupply);
       renderTerrainOnMap(terrainSupply);
       refreshJourneyMini();
-      if(window.__routeContext?.coords&&window.__routeMetrics&&window.__routeContext?.stages)drawElevation(window.__routeContext.coords,window.__routeMetrics,window.__routeContext.stages);
+      if(window.__routeContext?.coords&&window.__routeMetrics&&window.__routeContext?.stages)drawElevation(window.__routeContext.coords,window.__routeMetrics,window.__routeContext.stages,window.__activeStage??null);
     }else{
       $('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung derzeit nicht verfügbar.</b><div class="tiny">Die Route bleibt nutzbar; die Zusatzdaten können später erneut geladen werden.</div></div>';
     }

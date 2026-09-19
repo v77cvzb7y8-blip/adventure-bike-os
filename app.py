@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.72 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.73 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -611,9 +611,68 @@ def transport_nearby():
         print(f"[TRANSPORT] error {type(e).__name__}: {e}",flush=True)
         return jsonify(ok=False,points=[],warning="ÖV-Zusatzdaten derzeit nicht erreichbar."),200
 
+
+@app.post("/api/osm-terrain")
+def osm_terrain():
+    """Fast, narrow terrain-only query around sampled route points."""
+    try:
+        body=request.get_json(force=True) or {}
+        samples=(body.get("samples") or [])[:42]
+        if not samples:return jsonify(ok=False,elements=[]),400
+        clauses=[]
+        for p in samples:
+            lat=float(p["lat"]);lon=float(p["lon"])
+            clauses.append(
+                f'way(around:90,{lat},{lon})["highway"];'
+            )
+        q='[out:json][timeout:16];('+''.join(clauses)+');out tags center;'
+        for url in OVERPASS_ENDPOINTS:
+            try:
+                r=session.post(url,data={"data":q},headers={"User-Agent":UA,"Accept":"application/json"},timeout=18)
+                print(f"[OSM-TERRAIN] {url} status={r.status_code}",flush=True)
+                if r.ok:
+                    return jsonify(ok=True,elements=(r.json() or {}).get("elements") or [],source=url)
+            except Exception as e:
+                print(f"[OSM-TERRAIN] {url} failed {e}",flush=True)
+        return jsonify(ok=False,elements=[],warning="Terrain-Zusatzdaten derzeit nicht erreichbar."),200
+    except Exception as e:
+        print(f"[OSM-TERRAIN] error {type(e).__name__}: {e}",flush=True)
+        return jsonify(ok=False,elements=[],warning="Terrain-Zusatzdaten derzeit nicht erreichbar."),200
+
+@app.post("/api/osm-supply")
+def osm_supply():
+    """POI-only query around stage endpoints; deliberately separate from terrain."""
+    try:
+        body=request.get_json(force=True) or {}
+        points=(body.get("points") or [])[:12]
+        lodging=(body.get("lodging") or "hotel").lower()
+        if not points:return jsonify(ok=False,elements=[]),400
+        sleep_regex="hotel|guest_house|hostel|motel|camp_site" if lodging=="mixed" else ("camp_site|caravan_site" if lodging=="camping" else "hotel|guest_house|hostel|motel")
+        clauses=[]
+        for p in points:
+            lat=float(p["lat"]);lon=float(p["lon"])
+            clauses += [
+                f'nwr(around:5500,{lat},{lon})["tourism"~"{sleep_regex}"];',
+                f'nwr(around:4000,{lat},{lon})["amenity"~"restaurant|cafe|fast_food|drinking_water|bicycle_repair_station"];',
+                f'nwr(around:4000,{lat},{lon})["shop"~"supermarket|convenience|bakery|bicycle"];'
+            ]
+        q='[out:json][timeout:18];('+''.join(clauses)+');out center tags;'
+        for url in OVERPASS_ENDPOINTS:
+            try:
+                r=session.post(url,data={"data":q},headers={"User-Agent":UA,"Accept":"application/json"},timeout=20)
+                print(f"[OSM-SUPPLY] {url} status={r.status_code}",flush=True)
+                if r.ok:
+                    return jsonify(ok=True,elements=(r.json() or {}).get("elements") or [],source=url)
+            except Exception as e:
+                print(f"[OSM-SUPPLY] {url} failed {e}",flush=True)
+        return jsonify(ok=False,elements=[],warning="Versorgungsdaten derzeit nicht erreichbar."),200
+    except Exception as e:
+        print(f"[OSM-SUPPLY] error {type(e).__name__}: {e}",flush=True)
+        return jsonify(ok=False,elements=[],warning="Versorgungsdaten derzeit nicht erreichbar."),200
+
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.72-geocoder-fallback-8.2.2")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.73-terrain-supply-stages-8.2.3")
 
 @app.get("/health")
 def health():
