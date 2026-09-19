@@ -44,13 +44,18 @@
 .packPlannerHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
 .packPlannerHead h3{margin:0}
 .packPlannerSub{font-size:12px;color:var(--muted);margin-top:4px}
-.packPlannerGrid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(250px,.85fr);gap:14px;margin-top:14px}
-.bikeCanvas{position:relative;background:#f2efe7;border:1px solid var(--line);border-radius:16px;overflow:hidden;min-height:390px}
-.bikeCanvas img{width:100%;height:100%;min-height:390px;object-fit:cover;display:block;filter:saturate(.9)}
-.mountPoint{position:absolute;transform:translate(-50%,-50%);border:0;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.16);white-space:nowrap}
+.packPlannerGrid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(250px,.85fr);gap:14px;margin-top:14px}.packPlannerGrid>.mountLegend{grid-column:1}
+.bikeCanvas{position:relative;background:#f2efe7;border:1px solid var(--line);border-radius:16px;overflow:hidden;aspect-ratio:4/3;min-height:0;overflow-anchor:none}
+.bikeCanvas img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.9)}
+.mountPoint{position:absolute;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;padding:0;border:2px solid rgba(255,255,255,.92);font-size:10px;font-weight:900;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.22);display:grid;place-items:center;white-space:nowrap}
 .mountPoint.active{background:#176b49;color:white}
-.mountPoint.inactive{background:#fffdf7;color:#173125;border:1px solid #d9ded8}
-.mountPoint .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:currentColor}
+.mountPoint.inactive{background:#fffdf7;color:#173125;border-color:#173125}
+.mountPoint .dot{display:none}
+.mountPoint::after{content:attr(data-label);position:absolute;left:50%;top:34px;transform:translateX(-50%);background:#102b20;color:#fff;padding:5px 7px;border-radius:7px;font-size:9px;font-weight:700;white-space:nowrap;opacity:0;pointer-events:none;transition:.15s;z-index:5}
+.mountPoint:hover::after,.mountPoint:focus-visible::after{opacity:1}
+.mountLegend{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mountLegend span{font-size:9px;padding:4px 7px;border-radius:999px;border:1px solid var(--line);background:#fffdf7}
+.packPlanner,.layersGrid,#terrainSupply,#result{overflow-anchor:none}
 .packSummary{display:grid;gap:10px;align-content:start}
 .packSummaryBox{border-radius:14px;padding:12px;border:1px solid var(--line)}
 .packSummaryBox.on{background:#edf7f0}.packSummaryBox.off{background:#fff5e7}
@@ -62,7 +67,7 @@
 .packRow .add{background:#f2dfb9;color:#644c15}
 .packStats{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .packStat{padding:7px 9px;border-radius:999px;background:#f3f5f3;font-size:11px}
-@media(max-width:760px){.packPlannerGrid{grid-template-columns:1fr}.bikeCanvas{min-height:300px}.bikeCanvas img{min-height:300px}.mountPoint{font-size:9px;padding:6px 8px}}
+@media(max-width:760px){.packPlannerGrid{grid-template-columns:1fr}.packPlannerGrid>.mountLegend{grid-column:1}.bikeCanvas{aspect-ratio:4/3}.mountPoint{width:25px;height:25px;font-size:9px}.mountPoint::after{display:none}}
 .packWorkspace{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
 .packWorkspaceHead{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
 .gearFilters{display:flex;gap:6px;flex-wrap:wrap}.gearFilter{width:auto;margin:0;padding:6px 9px;border-radius:999px;background:#eef2ee;color:var(--ink);font-size:10px;border:1px solid var(--line)}.gearFilter.active{background:var(--accent);color:white}
@@ -71,15 +76,15 @@
 .packWeightBox{margin-top:10px;padding:10px;border-radius:12px;background:#edf7f0;border:1px solid #cfe5d6}.weightBar{height:8px;border-radius:999px;background:#dfe6df;overflow:hidden;margin:7px 0}.weightBar span{height:100%;display:block;background:var(--accent)}
 .packHint{font-size:11px;color:var(--muted);line-height:1.4;margin-top:8px}.campingHint{margin-top:10px;padding:9px;border-radius:10px;background:#fff5e7;border:1px solid #ead9b5;font-size:11px}
 .weatherStrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(86px,1fr));gap:6px;margin-top:8px}.weatherDay{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}.weatherDay .wxIcon{font-size:22px}.rainBar{height:5px;border-radius:999px;background:#e3e8e5;margin-top:5px;overflow:hidden}.rainBar span{display:block;height:100%;background:#5e89a5}
-@media(max-width:760px){.gearGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.packWorkspaceHead{align-items:flex-start}.bikeCanvas .mountPoint{max-width:120px;white-space:normal;line-height:1.1}}
+@media(max-width:760px){.gearGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.packWorkspaceHead{align-items:flex-start}}
 
 </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.6.5</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.6.6</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.6.5 ergänzt eine echte Packansicht: Ausrüstung lässt sich per Drag & Drop einzelnen Taschen zuweisen. Camping/Zelt priorisiert passende Übernachtungsplätze und ein vollständiges Schlafsystem.</div>
+  <div class="sub">7.6.6 macht die Packansicht ruhiger und intelligenter: kompakte Befestigungspunkte, automatische Taschenzuordnung für ausgewählte Ausrüstung und weniger Scroll-Sprünge.</div>
 </header>
 <main>
   <section class="card">
@@ -189,7 +194,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">Adventure App 7.6.5: Taschen können befestigt/entfernt werden; Ausrüstung wird per Drag & Drop einzelnen Taschen zugewiesen. Camping/Zelt sucht gezielt nach Camping-/Zeltplätzen und ergänzt Zelt, Schlafsack und Isomatte als Packelemente.</p>
+      <p class="note">Adventure App 7.6.6: kompakte Bike-Hotspots statt großer Beschriftungsleisten, automatische Taschenzuordnung für ausgewählte Kleidung/Packliste und manuelles Drag & Drop bleibt jederzeit möglich.</p>
     </div>
   </section>
   <div class="pdfBar noPrint">
@@ -690,13 +695,14 @@ function toggleInventory(group,item,cb){
   gearInventory[invKey(group,item)]=cb.checked;
   localStorage.setItem('abo-gear-inventory',JSON.stringify(gearInventory));
   const state=cb.closest('.inventoryItem').querySelector('.inventoryState');
-  state.textContent=cb.checked?'✓ vorhanden':'○ noch einplanen';
+  state.textContent=cb.checked?'✓ vorhanden & eingeplant':'○ noch einplanen';
   state.className='inventoryState '+(cb.checked?'owned':'missing');
+  syncInventoryToPack(group,item,cb.checked);
 }
 function inventoryHtml(group,items){
   return `<div class="inventoryList">${items.map(item=>{
     const owned=!!gearInventory[invKey(group,item)],enc=encodeURIComponent(item);
-    return `<div class="inventoryItem"><label><input type="checkbox" ${owned?'checked':''} onchange="toggleInventory('${group}',decodeURIComponent('${enc}'),this)"> ${item}</label><span class="inventoryState ${owned?'owned':'missing'}">${owned?'✓ vorhanden':'○ noch einplanen'}</span></div>`;
+    return `<div class="inventoryItem"><label><input type="checkbox" ${owned?'checked':''} onchange="toggleInventory('${group}',decodeURIComponent('${enc}'),this)"> ${item}</label><span class="inventoryState ${owned?'owned':'missing'}">${owned?'✓ vorhanden & eingeplant':'○ noch einplanen'}</span></div>`;
   }).join('')}</div>`;
 }
 function updateTerrainStatus(data){
@@ -737,7 +743,11 @@ const gearCatalog=[
   {id:'filter',name:'Wasserfilter',icon:'💧',kg:.4,cat:'camping',recommended:['frame','rearSideL']},
   {id:'headlamp',name:'Stirnlampe',icon:'🔦',kg:.1,cat:'tech',recommended:['top','frame']},
   {id:'cookset',name:'Kochgeschirr-Set',icon:'🥣',kg:.6,cat:'kitchen',recommended:['rearSideL','rearSideR']},
-  {id:'puffy',name:'Daunenjacke',icon:'🧥',kg:.4,cat:'clothing',recommended:['saddle','handlebar']}
+  {id:'puffy',name:'Daunenjacke',icon:'🧥',kg:.4,cat:'clothing',recommended:['saddle','handlebar']},
+  {id:'jersey',name:'Trikot + Bib/Shorts',icon:'👕',kg:.35,cat:'clothing',recommended:['saddle','frame','rearSideL','rearSideR']},
+  {id:'insulation',name:'Armlinge / Isolationsschicht',icon:'🧤',kg:.25,cat:'clothing',recommended:['saddle','handlebar','frame']},
+  {id:'windlayer',name:'Windschicht',icon:'🌬️',kg:.2,cat:'clothing',recommended:['handlebar','top','saddle']},
+  {id:'hygiene',name:'Hygiene kompakt',icon:'🧼',kg:.35,cat:'misc',recommended:['rearSideL','rearSideR','saddle']}
 ];
 let bikeBagState=JSON.parse(localStorage.getItem('abo-bike-bags-v1')||'null') || {
   saddle:true,top:false,handlebar:true,frame:true,forkL:true,forkR:false,
@@ -749,24 +759,88 @@ function saveBikeBagState(){localStorage.setItem('abo-bike-bags-v1',JSON.stringi
 function saveGearAssignments(){localStorage.setItem('abo-gear-assignments-v1',JSON.stringify(gearAssignments))}
 function toggleBikeBag(id){
   bikeBagState[id]=!bikeBagState[id];
-  if(!bikeBagState[id])Object.keys(gearAssignments).forEach(k=>{if(gearAssignments[k]===id)delete gearAssignments[k]});
-  saveBikeBagState();saveGearAssignments();renderBikePackPlanner();
+  if(!bikeBagState[id])Object.keys(gearAssignments).forEach(k=>{if(gearAssignments[k]===id){delete gearAssignments[k];delete gearAutoSource[k]}});
+  saveBikeBagState();saveGearAssignments();saveGearAutoSource();renderBikePackPlanner();
 }
 function setBikeBag(id,value){
   bikeBagState[id]=value;
-  if(!value)Object.keys(gearAssignments).forEach(k=>{if(gearAssignments[k]===id)delete gearAssignments[k]});
-  saveBikeBagState();saveGearAssignments();renderBikePackPlanner();
+  if(!value)Object.keys(gearAssignments).forEach(k=>{if(gearAssignments[k]===id){delete gearAssignments[k];delete gearAutoSource[k]}});
+  saveBikeBagState();saveGearAssignments();saveGearAutoSource();renderBikePackPlanner();
 }
 function gearById(id){return gearCatalog.find(x=>x.id===id)}
 function bagById(id){return bikeBagCatalog.find(x=>x.id===id)}
 function bagItems(id){return gearCatalog.filter(g=>gearAssignments[g.id]===id)}
 function bagWeight(id){return bagItems(id).reduce((a,g)=>a+g.kg,0)}
 function totalPackedWeight(){return gearCatalog.filter(g=>gearAssignments[g.id]).reduce((a,g)=>a+g.kg,0)}
+
+let gearAutoSource=JSON.parse(localStorage.getItem('abo-gear-auto-source-v1')||'{}');
+function saveGearAutoSource(){localStorage.setItem('abo-gear-auto-source-v1',JSON.stringify(gearAutoSource))}
+function bestBagForGear(gearId){
+  const g=gearById(gearId); if(!g)return null;
+  const preferred=(g.recommended||[]).filter(id=>bikeBagState[id] && id!=='bottles');
+  const pool=preferred.length?preferred:bikeBagCatalog.filter(b=>bikeBagState[b.id]&&b.id!=='bottles').map(b=>b.id);
+  if(!pool.length)return null;
+  return pool.map((id,idx)=>{
+    const b=bagById(id);
+    const fill=bagWeight(id)/Math.max(1,b?.capacity||1);
+    return {id,score:fill+(idx*.05)};
+  }).sort((a,b)=>a.score-b.score)[0].id;
+}
+function quickPackGear(gearId,source='manual'){
+  const bagId=bestBagForGear(gearId);
+  if(!bagId){showCopyToast('Bitte zuerst eine passende Tasche befestigen');return false}
+  gearAssignments[gearId]=bagId;
+  if(source!=='manual')gearAutoSource[gearId]=source; else delete gearAutoSource[gearId];
+  saveGearAssignments();saveGearAutoSource();
+  return true;
+}
+function inventoryGearIds(group,item){
+  const s=String(item).toLowerCase();
+  if(s.includes('trikot')||s.includes('bib/shorts'))return ['jersey'];
+  if(s.includes('armlinge')||s.includes('isolationsschicht'))return ['insulation'];
+  if(s.includes('regenjacke'))return ['rain'];
+  if(s.includes('winddichte')||s.includes('windschicht'))return ['windlayer'];
+  if(s.includes('schlafsack'))return ['sleepingbag'];
+  if(s.includes('regen-/wärmeschicht'))return ['rain','puffy'];
+  if(s.includes('tools')||s.includes('ersatzteile'))return ['tools','tube'];
+  if(s.includes('powerbank'))return ['power'];
+  if(s.includes('hygiene'))return ['hygiene'];
+  if(s.includes('notfallverpflegung'))return ['snacks'];
+  return [];
+}
+function syncInventoryToPack(group,item,checked){
+  const source=invKey(group,item);
+  const ids=inventoryGearIds(group,item);
+  let changed=false;
+  ids.forEach(id=>{
+    if(checked){
+      if(!gearAssignments[id] && quickPackGear(id,source))changed=true;
+    }else if(gearAutoSource[id]===source){
+      delete gearAssignments[id];delete gearAutoSource[id];changed=true;
+    }
+  });
+  if(changed){saveGearAssignments();saveGearAutoSource();renderBikePackPlanner()}
+}
+function syncStoredInventoryToPack(){
+  let changed=false;
+  Object.entries(gearInventory).forEach(([key,checked])=>{
+    if(!checked)return;
+    const p=key.indexOf('::'); if(p<0)return;
+    const group=key.slice(0,p),item=key.slice(p+2),source=key;
+    inventoryGearIds(group,item).forEach(id=>{
+      if(!gearAssignments[id]){
+        const bagId=bestBagForGear(id);
+        if(bagId){gearAssignments[id]=bagId;gearAutoSource[id]=source;changed=true}
+      }
+    });
+  });
+  if(changed){saveGearAssignments();saveGearAutoSource()}
+}
 function assignGear(gearId,bagId){
   if(!bikeBagState[bagId]){showCopyToast('Tasche zuerst am Bike befestigen');return}
-  gearAssignments[gearId]=bagId;saveGearAssignments();renderBikePackPlanner();
+  gearAssignments[gearId]=bagId;delete gearAutoSource[gearId];saveGearAssignments();saveGearAutoSource();renderBikePackPlanner();
 }
-function unassignGear(gearId){delete gearAssignments[gearId];saveGearAssignments();renderBikePackPlanner()}
+function unassignGear(gearId){delete gearAssignments[gearId];delete gearAutoSource[gearId];saveGearAssignments();saveGearAutoSource();renderBikePackPlanner()}
 function packDragStart(ev,id){ev.dataTransfer.setData('text/plain',id);ev.dataTransfer.effectAllowed='move'}
 function packDragOver(ev,bagId){if(!bikeBagState[bagId])return;ev.preventDefault();ev.currentTarget.classList.add('dragover')}
 function packDragLeave(ev){ev.currentTarget.classList.remove('dragover')}
@@ -793,19 +867,20 @@ function renderBikePackPlanner(){
     :lodging==='mixed'
       ?'Gemischte Übernachtung erhöht das Packvolumen. Schlafsack/Inlet und zusätzliche Reserve lassen sich gezielt auf Taschen verteilen.'
       :'Camping/Zelt: Zelt, Schlafsack und Isomatte werden als eigene Packelemente geführt. Das Zelt kann z. B. in/auf der Lenkertasche, Satteltasche oder einer Seitentasche liegen.';
-  const cats=[['all','Alle'],['camping','Camping'],['clothing','Kleidung'],['kitchen','Küche'],['tech','Technik'],['tools','Werkzeug'],['food','Verpflegung'],['safety','Sicherheit']];
+  const cats=[['all','Alle'],['camping','Camping'],['clothing','Kleidung'],['kitchen','Küche'],['tech','Technik'],['tools','Werkzeug'],['food','Verpflegung'],['safety','Sicherheit'],['misc','Sonstiges']];
   const visible=gearCatalog.filter(g=>packFilter==='all'||g.cat===packFilter);
   const total=totalPackedWeight(),pct=Math.min(100,total/20*100);
   host.innerHTML=`
     <div class="packPlannerHead">
-      <div><h3>🧳 Packansicht & Bike-Setup</h3><div class="packPlannerSub">Taschen befestigen/entfernen und Ausrüstung per Drag & Drop zuweisen. Auf Touch-Geräten: Item antippen und anschließend über die empfohlenen Taschen zuordnen.</div></div>
+      <div><h3>🧳 Packansicht & Bike-Setup</h3><div class="packPlannerSub">Die Zahlen am Bike markieren die Befestigungspunkte. Ausrüstung kann per Drag & Drop zugewiesen werden; ein Antippen packt sie automatisch in eine geeignete befestigte Tasche.</div></div>
       <div class="packStats"><span class="packStat">${active.length} Taschen befestigt</span><span class="packStat">${total.toFixed(1)} kg zugeordnet</span></div>
     </div>
     <div class="packPlannerGrid">
       <div class="bikeCanvas">
         <img src="./bike-packplan-neutral.png" alt="Neutrales Gravelbike mit Bikepacking-Ausrüstung ohne sichtbare Markenlogos">
-        ${bikeBagCatalog.map(x=>`<button type="button" class="mountPoint ${bikeBagState[x.id]?'active':'inactive'}" style="left:${x.x}%;top:${x.y}%" onclick="toggleBikeBag('${x.id}')"><span class="dot"></span>${x.name}</button>`).join('')}
+        ${bikeBagCatalog.map((x,i)=>`<button type="button" aria-label="${x.name}" title="${x.name}" data-label="${x.name}" class="mountPoint ${bikeBagState[x.id]?'active':'inactive'}" style="left:${x.x}%;top:${x.y}%" onclick="toggleBikeBag('${x.id}')">${i+1}</button>`).join('')}
       </div>
+      <div class="mountLegend">${bikeBagCatalog.map((x,i)=>`<span>${i+1} · ${x.name}</span>`).join('')}</div>
       <div class="packSummary">
         <div class="packSummaryBox on"><h4>Am Bike befestigt (${active.length})</h4>${active.length?active.map(x=>`<div class="packRow" style="display:block"><div style="display:flex;justify-content:space-between;gap:8px"><span><strong>${x.name}</strong><br><span class="tiny">${x.capacity} l · ${bagWeight(x.id).toFixed(1)} kg</span></span><button class="remove" type="button" onclick="setBikeBag('${x.id}',false)">− entfernen</button></div>${bagContentsHtml(x)}</div>`).join(''):'<div class="tiny">Noch keine Taschen befestigt.</div>'}</div>
         <div class="packSummaryBox off"><h4>Noch offen (${inactive.length})</h4>${inactive.length?inactive.map(x=>`<div class="packRow"><span>${x.name}</span><button class="add" type="button" onclick="setBikeBag('${x.id}',true)">＋ befestigen</button></div>`).join(''):'<div class="tiny">Alle Taschen sind befestigt.</div>'}</div>
@@ -815,8 +890,8 @@ function renderBikePackPlanner(){
       </div>
     </div>
     <div class="packWorkspace">
-      <div class="packWorkspaceHead"><div><strong>Deine Ausrüstung</strong><div class="tiny">Ziehe ein Item in eine befestigte Tasche.</div></div><div class="gearFilters">${cats.map(([id,n])=>`<button type="button" class="gearFilter ${packFilter===id?'active':''}" onclick="setPackFilter('${id}')">${n}</button>`).join('')}</div></div>
-      <div class="gearGrid">${visible.map(g=>{const bag=bagById(gearAssignments[g.id]);const rec=g.recommended.filter(id=>bikeBagState[id]).map(id=>bagById(id)?.name).filter(Boolean).slice(0,2).join(' / ');return `<div class="gearCard ${bag?'assigned':''}" draggable="true" ondragstart="packDragStart(event,'${g.id}')" onclick="${bag?`unassignGear('${g.id}')`:`showCopyToast('Ziehe ${g.name} in eine Tasche · empfohlen: ${rec||'Tasche befestigen'}')`}"><div class="gearIcon">${g.icon}</div><div class="gearName">${g.name}</div><div class="gearMeta">${g.kg.toFixed(1)} kg</div><div class="gearAssigned">${bag?'✓ '+bag.name:'○ noch nicht gepackt'}</div>${!bag&&rec?`<div class="tiny">empfohlen: ${rec}</div>`:''}</div>`}).join('')}</div>
+      <div class="packWorkspaceHead"><div><strong>Deine Ausrüstung</strong><div class="tiny">Antippen = automatisch in eine geeignete Tasche packen · Drag & Drop = Tasche selbst bestimmen.</div></div><div class="gearFilters">${cats.map(([id,n])=>`<button type="button" class="gearFilter ${packFilter===id?'active':''}" onclick="setPackFilter('${id}')">${n}</button>`).join('')}</div></div>
+      <div class="gearGrid">${visible.map(g=>{const bag=bagById(gearAssignments[g.id]);const rec=g.recommended.filter(id=>bikeBagState[id]).map(id=>bagById(id)?.name).filter(Boolean).slice(0,2).join(' / ');return `<div class="gearCard ${bag?'assigned':''}" draggable="true" ondragstart="packDragStart(event,'${g.id}')" onclick="${bag?`unassignGear('${g.id}')`:`if(quickPackGear('${g.id}')){renderBikePackPlanner();showCopyToast('${g.name} automatisch gepackt')}`}"><div class="gearIcon">${g.icon}</div><div class="gearName">${g.name}</div><div class="gearMeta">${g.kg.toFixed(1)} kg</div><div class="gearAssigned">${bag?'✓ '+bag.name:'○ antippen = automatisch packen'}</div>${!bag&&rec?`<div class="tiny">empfohlen: ${rec}</div>`:''}</div>`}).join('')}</div>
       <div class="campingHint"><strong>Touch-Tipp:</strong> Auf iPhone/iPad kann Drag & Drop je nach Browser unhandlich sein. Tippe ein noch ungepacktes Item an; der Hinweis nennt geeignete Taschen. Befestigte Items lassen sich durch Antippen wieder lösen.</div>
     </div>`;
   attachBlockActions(host);
@@ -831,12 +906,13 @@ function renderAdventureLayers(stages,weather){
     <div class="layerBox"><h3>🚴 Bike-Fit & Setup</h3><p><strong>${fit.verdict}</strong>${fit.model?` · ${fit.model}`:''}</p>${fit.notes.concat(setup).map(x=>`<p>• ${x}</p>`).join('')}</div>
     <div class="layerBox"><h3>⛰ Belastung & Warnungen</h3><p>${loadText}</p><p>Technik-Level: <strong>${tech==='easy'?'eher einfach':tech==='medium'?'solide Gravel-Erfahrung':'technisch erfahren'}</strong>.</p>${warnings.map((w,i)=>`<p><strong>Tag ${i+1}:</strong> ${w.length?w.join(' · '):'keine Warnung aus km/HM/Wetter'}</p>`).join('')}</div>
     <div class="layerBox"><h3>🌦 Wetter</h3>${weatherHtml(weather)}<p>Kurzfristwetter ist optional und blockiert die Planung nie.</p></div>
-    <div class="layerBox"><h3>🧥 Kleidung · Was habe ich?</h3>${inventoryHtml('clothing',clothes)}<p>Die Empfehlung wird aus Temperatur, Regen und Wind abgeleitet; Häkchen werden auf deinem Gerät gespeichert.</p></div>
+    <div class="layerBox"><h3>🧥 Kleidung · Was habe ich?</h3>${inventoryHtml('clothing',clothes)}<p>Die Empfehlung wird aus Temperatur, Regen und Wind abgeleitet. Ein Häkchen bedeutet: vorhanden und automatisch für die Reise eingeplant; Adventure Bike OS legt den passenden Packgegenstand in eine geeignete Tasche.</p></div>
     <div id="bikePackPlanner" class="packPlanner"></div>
-    <div class="layerBox"><h3>📦 Persönliche Packliste · Was habe ich?</h3><p><strong>${pack.target}</strong></p><p>${pack.bags}</p>${inventoryHtml('packing',pack.items)}</div>
+    <div class="layerBox"><h3>📦 Persönliche Packliste · Was habe ich?</h3><p><strong>${pack.target}</strong></p><p>${pack.bags}</p>${inventoryHtml('packing',pack.items)}<p class="tiny">Ausgewählte passende Gegenstände werden automatisch einer geeigneten befestigten Tasche zugeordnet. Die Zuordnung bleibt anschließend manuell änderbar.</p></div>
     <div class="layerBox"><h3>🧭 Navigation</h3>${nav.map(x=>`<p>✓ ${x}</p>`).join('')}</div>
     <div class="layerBox"><h3>💧 Wasser & Energie</h3><p><strong>Trinken:</strong> ${fuel.water}</p><p><strong>Energie:</strong> ${fuel.carbs}</p><p>${fuel.note}</p></div>
     <div class="layerBox"><h3>🛣 Terrain-Status</h3><p id="terrainStatusBox"><strong>Terrain-Status:</strong> wird nach der Versorgungs-/Terrainabfrage aktualisiert …</p></div>`;
+  syncStoredInventoryToPack();
   renderBikePackPlanner();
 }
 
@@ -1048,6 +1124,41 @@ function renderTerrainSupply(data,stages,names){
   updateSelectedStops();attachBlockActions($('terrainSupply'));
 }
 
+
+let __blockSeq=0;
+function blockId(el){
+  if(!el)return '';
+  if(el.dataset.blockId)return el.dataset.blockId;
+  const heading=(el.querySelector('h1,h2,h3,.eyebrow')?.textContent||'block').trim().toLowerCase()
+    .replace(/[^a-z0-9äöüß]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,48);
+  el.dataset.blockId=`${heading||'block'}-${++__blockSeq}`;
+  return el.dataset.blockId;
+}
+async function copyBlock(btn){
+  const el=btn?.closest('.copyable'); if(!el)return;
+  const text=cleanBlockText(el);
+  try{await navigator.clipboard.writeText(text);showCopyToast('Block kopiert');}
+  catch(e){showCopyToast('Kopieren im Browser nicht verfügbar');}
+}
+function rememberBlock(btn){
+  const el=btn?.closest('.copyable'); if(!el)return;
+  const id=blockId(el);
+  const idx=pdfMemory.findIndex(x=>x.id===id);
+  if(idx>=0){
+    pdfMemory.splice(idx,1);
+    showCopyToast('Aus PDF-Auswahl entfernt');
+  }else{
+    const isElevation=!!el.querySelector('#elevation');
+    let image=null;
+    if(isElevation){
+      try{image=el.querySelector('#elevation').toDataURL('image/png');}catch(e){}
+    }
+    pdfMemory.push({id,text:cleanBlockText(el),image});
+    showCopyToast('Für PDF gemerkt');
+  }
+  localStorage.setItem('abo-pdf-memory-v3',JSON.stringify(pdfMemory));
+  syncRememberButtons();
+}
 let pdfMemory=JSON.parse(localStorage.getItem('abo-pdf-memory-v3')||'[]');
 function cleanBlockText(el){
   const c=el.cloneNode(true);
@@ -1139,12 +1250,12 @@ async function plan(){
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
   renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);const terrainSupply=await fetchTerrainSupply(coords,stages);renderTerrainSupply(terrainSupply,stages,opt.labels);updateTerrainStatus(terrainSupply);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);renderTerrainOnMap(terrainSupply);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  attachBlockActions();$('status').textContent='Adventure App 7.6.5: Route, Zeitfenster, Routing/Höhen-Fallbacks, Camping-/Unterkunftssuche, Drag-&-Drop-Packansicht, editierbare Etappen, Terrain und persönliche Ausrüstung bereit.';$('result').scrollIntoView({behavior:'smooth'});
+  attachBlockActions();$('status').textContent='Adventure App 7.6.6: Route, Zeitfenster, Smart-Pack-Zuordnung, kompakte Bike-Ansicht, Camping-/Unterkunftssuche, editierbare Etappen, Terrain und persönliche Ausrüstung bereit.';
  }catch(e){
    $('status').className='status error';
    const msg=(e&&e.message)||'Unbekannter Fehler';
    $('status').textContent=msg==='Load failed'
-     ?'Route konnte nicht berechnet werden: Verbindung zum Routing-Server abgebrochen. Bitte erneut versuchen – 7.6.5 nutzt Routing-/Höhen-Fallbacks und trennt Packplanung, Camping-Suche und Etappenlogik voneinander.'
+     ?'Route konnte nicht berechnet werden: Verbindung zum Routing-Server abgebrochen. Bitte erneut versuchen – 7.6.6 nutzt Routing-/Höhen-Fallbacks und trennt Packplanung, Camping-Suche und Etappenlogik voneinander.'
      :'Route konnte nicht berechnet werden: '+msg+'.';
  }finally{btn.disabled=false}
 }
