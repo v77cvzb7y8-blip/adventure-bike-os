@@ -675,7 +675,7 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
 <header class="productHero">
   <div class="brandRow">
     <div>
-      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.3.5</div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.3.6</div>
       <h1>Dein Bike. Dein Abenteuer.</h1>
       <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
     </div>
@@ -2263,6 +2263,7 @@ function assignSelectedGearToBag(bagId){
 
 function preferredBagForGear(g){
   if(!g)return null;
+  const mountedBags=bikeBagCatalog.filter(b=>bikeBagState[b.id]).map(b=>b.id);
   const explicit=(g.preferredBag||g.bag||'').toString();
   if(explicit && bagById(explicit) && mountedBags.includes(explicit)) return explicit;
 
@@ -2293,7 +2294,9 @@ function bagReasonForGear(g,bagId){
 function recommendationHtml(){
   if(!selectedPackGear)return '';
   const g=gearById(selectedPackGear);if(!g)return '';
-  const bagId=preferredBagForGear(g),b=bagById(bagId);
+  let bagId=null,b=null;
+  try{bagId=preferredBagForGear(g);b=bagById(bagId)}catch(e){console.warn('Pack recommendation skipped',e)}
+
   if(!bagId||!b)return `<div class="packRecommendation"><strong>${gearLabel(g)}</strong><div class="reason">Keine montierte Tasche passt eindeutig. Bitte eine Tasche montieren oder manuell auswählen.</div></div>`;
   return `<div class="packRecommendation"><strong>${gearLabel(g)} → empfohlen: ${b.name}</strong><div class="reason">${bagReasonForGear(g,bagId)}</div><div class="actions"><button type="button" class="primary" onclick="assignSelectedGearToBag('${bagId}')">in empfohlene Tasche</button><button type="button" onclick="highlightBikeBag('${bagId}')">Tasche zeigen</button></div><div class="packNextHint">Du kannst jederzeit eine andere Tasche antippen.</div></div>`;
 }
