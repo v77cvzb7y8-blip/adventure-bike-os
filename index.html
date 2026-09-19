@@ -209,13 +209,31 @@ body.packFocus #packStandalone.card{min-height:calc(100vh - 36px)}
   .tripTabs{margin-left:-4px;margin-right:-4px}
   .stats{grid-template-columns:repeat(2,1fr)}
 }
+
+.adventureCheck{margin-top:12px;border:1px solid var(--line);border-radius:15px;background:#f8faf6;padding:12px}
+.adventureCheckHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.adventureCheckHead h3{margin:0;font-size:15px}
+.adventureCheckGrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:10px}
+.checkTile{padding:9px;border-radius:11px;background:white;border:1px solid #dde6df;min-height:86px}
+.checkTile b{display:block;font-size:12px;margin-bottom:3px}
+.checkTile .state{font-size:17px;font-weight:900}
+.checkTile.good .state{color:#1f704d}.checkTile.warn .state{color:#9a6a11}.checkTile.bad .state{color:#a23e35}.checkTile.open .state{color:#6d746f}
+.checkWhy{margin-top:10px;padding:9px 10px;border-radius:10px;background:#eef5f0;font-size:10px;color:#315443}
+.routeExportActions{display:flex;gap:7px;flex-wrap:wrap}
+.routeExportActions button,.routeExportActions a{width:auto;margin:0;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:#fffdf7;color:var(--ink);font-size:10px;font-weight:800;text-decoration:none}
+.routeExportActions .primary{background:var(--accent);color:white;border-color:var(--accent)}
+.packResearchBox{margin-top:9px;padding:10px;border-radius:11px;background:#fffaf0;border:1px solid #eadbbd;font-size:10px}
+.packResearchBox h4{margin:0 0 6px;font-size:12px}
+.packResearchBox p{margin:4px 0}
+@media(max-width:900px){.adventureCheckGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.adventureCheckGrid{grid-template-columns:1fr}.routeExportActions{width:100%}.routeExportActions>*{flex:1}}
 </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.8.0</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.8.2</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.8.0 bündelt die App in zwei klare Einstiege: Route planen oder Bike konfigurieren. Nach der Berechnung stehen Karte und Höhenprofil direkt oben; Etappen, Terrain & Wetter sowie Versorgung wechseln in kompakte Tabs.</div>
+  <div class="sub">7.8.2 übersetzt aktuelle Bikepacking-Erfahrungen in konkrete Checks: Tagesbelastung, Terrain-Vertrauen, Versorgung, Wetter entlang der Etappen, Pack-Reduktion und GPX/Strava-Handoff.</div>
 </header>
 <div class="appModeSwitch noPrint">
   <button id="modeRouteBtn" class="active" type="button" onclick="showAppMode('route')">🗺 Route planen</button>
@@ -296,7 +314,11 @@ body.packFocus #packStandalone.card{min-height:calc(100vh - 36px)}
           <h2 id="routeOverviewName">Deine Route</h2>
           <div id="routeOverviewDates" class="routeOverviewMeta"></div>
         </div>
-        <button type="button" class="stageMapBtn noPrint" onclick="showWholeRoute()">Gesamtroute anzeigen</button>
+        <div class="routeExportActions noPrint">
+          <button type="button" onclick="showWholeRoute()">Gesamtroute</button>
+          <button type="button" class="primary" onclick="downloadCurrentGPX()">GPX exportieren</button>
+          <button type="button" onclick="openStravaHandoff()">Strava öffnen</button>
+        </div>
       </div>
       <div class="stats">
         <div class="stat"><b id="distance">–</b><span>Gesamtdistanz</span></div>
@@ -305,6 +327,18 @@ body.packFocus #packStandalone.card{min-height:calc(100vh - 36px)}
         <div class="stat"><b id="avg">–</b><span>Ø km / Tag</span></div>
       </div>
       <div id="hmState" class="hmState pending">Höhendaten werden mit der Route geprüft.</div>
+      <div id="adventureCheck" class="adventureCheck">
+        <div class="adventureCheckHead"><div><h3>Adventure Check</h3><div class="tiny">Warum diese Reise realistisch – oder anspruchsvoll – wird.</div></div><span class="tiny">aktualisiert nach Route, Wetter, Terrain und Versorgung</span></div>
+        <div id="adventureCheckGrid" class="adventureCheckGrid">
+          <div class="checkTile open"><b>Tagesbelastung</b><span class="state">…</span></div>
+          <div class="checkTile open"><b>Terrain</b><span class="state">…</span></div>
+          <div class="checkTile open"><b>Versorgung</b><span class="state">…</span></div>
+          <div class="checkTile open"><b>Wetter</b><span class="state">…</span></div>
+          <div class="checkTile open"><b>Bike/Packen</b><span class="state">…</span></div>
+        </div>
+        <div id="adventureWhy" class="checkWhy">Route wird berechnet. Danach erklären wir die wichtigsten Belastungs- und Risikotreiber.</div>
+      </div>
+
       <div id="map"></div>
       <div class="elevTop">
         <h3>Höhenprofil</h3>
@@ -386,6 +420,11 @@ let routeDirty=false;
 function showAppMode(mode){
   appMode=mode;
   const route=$('routePlanner'),pack=$('packStandalone'),result=$('result');
+  if(mode==='route'){
+    document.body.classList.remove('packFocus');
+    pack?.classList.remove('packOnly');
+    packOnlyMode=false;
+  }
   $('modeRouteBtn')?.classList.toggle('active',mode==='route');
   $('modeBikeBtn')?.classList.toggle('active',mode==='bike');
   route?.classList.toggle('modeHidden',mode!=='route');
@@ -396,7 +435,13 @@ function showAppMode(mode){
     if(mode==='route'&&hasRoute)result.classList.remove('hidden');
   }
   if(mode==='bike')setTimeout(()=>renderBikePackPlanner(),30);
-  window.scrollTo({top:0,behavior:'smooth'});
+  if(mode==='route'){
+    const hasRoute=!!window.__routeContext?.coords?.length;
+    const target=hasRoute?$('routeOverview'):$('routePlanner');
+    setTimeout(()=>target?.scrollIntoView({behavior:'smooth',block:'start'}),20);
+  }else{
+    setTimeout(()=>pack?.scrollIntoView({behavior:'smooth',block:'start'}),20);
+  }
 }
 
 function showTripTab(name){
@@ -690,6 +735,109 @@ function showStageOnMap(i){
   $('status').className='status';
   $('status').textContent=`Etappe ${i+1} wird auf der Karte hervorgehoben.`;
 }
+
+function xmlEscape(s){return String(s??'').replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]))}
+function currentRouteGPX(){
+  const ctx=window.__routeContext;if(!ctx?.coords?.length)return null;
+  const name=`${shortPlace($('start').value)} → ${shortPlace($('dest').value)}`;
+  const pts=ctx.coords.map(c=>`<trkpt lat="${c[1]}" lon="${c[0]}">${Number.isFinite(c[2])?`<ele>${c[2].toFixed(1)}</ele>`:''}</trkpt>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="Adventure Bike OS" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>${xmlEscape(name)}</name></metadata><trk><name>${xmlEscape(name)}</name><trkseg>${pts}</trkseg></trk></gpx>`;
+}
+function downloadCurrentGPX(){
+  const gpx=currentRouteGPX();if(!gpx){showCopyToast('Bitte zuerst eine Route berechnen');return}
+  const blob=new Blob([gpx],{type:'application/gpx+xml'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`${shortPlace($('start').value)}-${shortPlace($('dest').value)}.gpx`.replace(/\s+/g,'-');
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  showCopyToast('GPX erstellt');
+}
+function openStravaHandoff(){
+  const gpx=currentRouteGPX();
+  if(!gpx){showCopyToast('Bitte zuerst eine Route berechnen');return}
+  downloadCurrentGPX();
+  showCopyToast('GPX gespeichert · Strava-Routenimport wird geöffnet');
+  setTimeout(()=>window.open('https://www.strava.com/routes/new','_blank','noopener'),350);
+}
+
+function researchPackCheck(){
+  const total=totalPackedWeight(),lodging=$('lodging')?.value||'hotel';
+  const assigned=id=>!!gearAssignments[id];
+  const leave=[];
+  if(lodging==='hotel'){
+    [['tent','Zelt'],['sleepingbag','Schlafsack'],['mat','Isomatte'],['stove','Kocher'],['cookset','Kochgeschirr']].forEach(([id,n])=>{if(assigned(id))leave.push(n)});
+  }
+  const target=lodging==='hotel'?9:lodging==='mixed'?12:18;
+  let cls=total<=target?'good':total<=target*1.15?'warn':'bad';
+  let label=total<=target?'passt':total<=target*1.15?'prüfen':'schwer';
+  let detail=`${total.toFixed(1)} kg gepackt · Richtwert ${target} kg ohne Tageswasser/-essen`;
+  if(leave.length)detail+=` · prüfen: ${leave.join(', ')}`;
+  return {cls,label,detail,leave,total,target};
+}
+function effortCheck(){
+  const ctx=window.__routeContext;if(!ctx?.stages?.length)return {cls:'open',label:'offen',detail:'noch keine Etappen'};
+  const target=+$('kmday').value,maxHm=+$('hmday').value;
+  const maxKm=Math.max(...ctx.stages.map(s=>s.km));
+  const maxHmSeen=window.__routeMetrics?.hasElevation?Math.max(...ctx.stages.map(s=>s.hm)):null;
+  const overKm=maxKm>target*1.1,overHm=Number.isFinite(maxHmSeen)&&maxHmSeen>maxHm*1.05;
+  const cls=(overKm||overHm)?'warn':'good';
+  return {cls,label:cls==='good'?'passend':'anspruchsvoll',detail:`härtester Tag ${maxKm.toFixed(0)} km${Number.isFinite(maxHmSeen)?' · '+Math.round(maxHmSeen)+' HM':' · HM offen'}`};
+}
+function terrainCheck(){
+  const d=window.__terrainSupplyData;
+  if(!d?.available)return {cls:'open',label:'offen',detail:'Terrain-Stichproben noch nicht verfügbar'};
+  let rough=0,off=0,total=0;
+  d.stages.forEach(s=>{const c=s.terrain?.counts||{};rough+=c.rough||0;off+=c.unknown_offroad||0;total+=s.terrain?.total||0});
+  if(!total)return {cls:'open',label:'wenig Daten',detail:'zu wenige Surface-Tags für belastbare Aussage'};
+  const ratio=(rough+off)/total;
+  const cls=ratio>=.45?'warn':ratio>=.2?'warn':'good';
+  return {cls,label:ratio>=.45?'genau prüfen':ratio>=.2?'gemischt':'ruhiger',detail:`${rough} rau · ${off} Track/Path ohne Surface · ${total} Stichproben-Treffer`};
+}
+function supplyCheck(){
+  const d=window.__terrainSupplyData;
+  if(!d?.available)return {cls:'open',label:'offen',detail:'Versorgung noch nicht verfügbar'};
+  let weak=0,zeroWater=0;
+  d.stages.forEach(s=>{
+    const sup=s.supply||{};
+    const food=(sup.food?.length||0)+(sup.grocery?.length||0);
+    if(food===0)weak++;
+    if((sup.water?.length||0)===0)zeroWater++;
+  });
+  const cls=(zeroWater||weak)?'warn':'good';
+  return {cls,label:cls==='good'?'gut abgedeckt':'Reserve planen',detail:`${zeroWater} Etappenziele ohne OSM-Trinkwasser · ${weak} ohne Essen/Einkauf im Suchumfeld`};
+}
+function weatherCheck(){
+  const w=window.__weatherData;
+  if(!w?.available)return {cls:'open',label:'offen',detail:w?.reason||'Kurzfristprognose noch nicht verfügbar'};
+  const vals=(w.results||[]).filter(x=>x.available);
+  if(!vals.length)return {cls:'open',label:'offen',detail:'keine Etappenprognosen'};
+  const rain=Math.max(...vals.map(x=>x.rain||0)),wind=Math.max(...vals.map(x=>x.wind||0));
+  const cls=(rain>=60||wind>=35)?'warn':'good';
+  return {cls,label:cls==='good'?'unauffällig':'beachten',detail:`max. Regen ${Math.round(rain)}% · Wind ${Math.round(wind)} km/h · je Etappentag geprüft`};
+}
+function renderAdventureCheck(){
+  const grid=$('adventureCheckGrid');if(!grid)return;
+  const checks=[
+    ['Tagesbelastung',effortCheck()],
+    ['Terrain',terrainCheck()],
+    ['Versorgung',supplyCheck()],
+    ['Wetter',weatherCheck()],
+    ['Bike/Packen',researchPackCheck()]
+  ];
+  grid.innerHTML=checks.map(([n,x])=>`<div class="checkTile ${x.cls}"><b>${n}</b><span class="state">${x.label}</span><div class="tiny">${x.detail}</div></div>`).join('');
+  const why=[];
+  const e=checks[0][1],t=checks[1][1],s=checks[2][1],w=checks[3][1],p=checks[4][1];
+  if(e.cls==='warn')why.push('Tagesleistung liegt nah oder über deinen Zielwerten');
+  if(t.cls==='warn')why.push('Terrain-Stichproben enthalten raue oder schlecht klassifizierte Abschnitte');
+  if(s.cls==='warn')why.push('an einzelnen Etappenzielen ist Versorgung nicht sicher belegt');
+  if(w.cls==='warn')why.push('Wetter erhöht die Belastung');
+  if(p.leave?.length)why.push('für deine Übernachtungsart ist wahrscheinlich Ausrüstung verzichtbar');
+  if(!why.length)why.push('aktuell kein einzelner Faktor fällt deutlich negativ auf');
+  $('adventureWhy').innerHTML=`<strong>Warum?</strong> ${why.join(' · ')}. Die Bewertung ist eine Planungsunterstützung; OSM-Stichproben und Wetterprognosen bleiben unvollständig bzw. veränderlich.`;
+}
+function packResearchHtml(){
+  const p=researchPackCheck();
+  return `<div class="packResearchBox"><h4>Pack-Check</h4><p><strong>${p.label}</strong> · ${p.detail}</p>${p.leave.length?`<p><strong>Kann vermutlich zuhause bleiben:</strong> ${p.leave.join(' · ')}</p>`:'<p>Keine offensichtlichen Übernachtungs-Dopplungen erkannt.</p>'}<p class="tiny">Ziel: nicht mehr mitnehmen, nur weil Platz vorhanden ist; schwere Gegenstände möglichst ans Bike und nicht in einen schweren Rucksack.</p></div>`;
+}
 function showWholeRoute(){
   const ctx=window.__routeContext;if(!ctx||!routeLayer)return;
   if(stageHighlight){stageHighlight.remove();stageHighlight=null}
@@ -809,12 +957,16 @@ function navigationPlan(){
   return ['Bikecomputer als Primärnavigation','GPX offline gespeichert','Smartphone als Backup','Offline-Karten vor Abfahrt laden','Powerbank / Ladestrategie','Nicht auf Live-Mobilfunk verlassen'];
 }
 async function fetchStageWeather(coords,stages){
-  const date=$('tripdate').value;
-  if(!date)return {available:false,reason:'Kein Abfahrtsdatum gewählt.',results:[]};
-
+  const start=$('tripdate').value;
+  if(!start)return {available:false,reason:'Kein Abfahrtsdatum gewählt.',results:[]};
+  const startDate=new Date(start+'T12:00:00');
+  const stageDates=stages.map((_,i)=>{
+    const d=new Date(startDate.getTime()+i*86400000);
+    return d.toISOString().slice(0,10);
+  });
   const points=stages.map(s=>{const c=coords[s.e];return {lat:c[1],lon:c[0]}});
 
-  async function directPoint(p){
+  async function directPoint(p,targetDate){
     const u=new URL('https://api.open-meteo.com/v1/forecast');
     u.searchParams.set('latitude',p.lat);
     u.searchParams.set('longitude',p.lon);
@@ -824,35 +976,30 @@ async function fetchStageWeather(coords,stages){
     const r=await fetch(u.toString(),{headers:{'Accept':'application/json'}});
     if(!r.ok)throw new Error('weather '+r.status);
     const j=await r.json(),d=j.daily||{},times=d.time||[];
-    if(!times.includes(date))return {available:false};
-    const i=times.indexOf(date),pick=k=>(d[k]||[])[i];
-    return {available:true,date,tmax:pick('temperature_2m_max'),tmin:pick('temperature_2m_min'),rain:pick('precipitation_probability_max'),wind:pick('wind_speed_10m_max')};
+    if(!times.includes(targetDate))return {available:false,date:targetDate};
+    const i=times.indexOf(targetDate),pick=k=>(d[k]||[])[i];
+    return {available:true,date:targetDate,tmax:pick('temperature_2m_max'),tmin:pick('temperature_2m_min'),rain:pick('precipitation_probability_max'),wind:pick('wind_speed_10m_max')};
   }
 
   try{
     const results=[];
-    for(const p of points){
-      results.push(await directPoint(p));
-      await new Promise(r=>setTimeout(r,250));
+    for(let i=0;i<points.length;i++){
+      results.push(await directPoint(points[i],stageDates[i]));
+      await new Promise(r=>setTimeout(r,220));
     }
-    if(results.some(x=>x.available)){
-      return {available:true,results,source:'browser-open-meteo'};
-    }
+    if(results.some(x=>x.available))return {available:true,results,source:'browser-open-meteo',stageDates};
   }catch(e){
     console.warn('Direktes Wetter fehlgeschlagen, Backend-Fallback:',e);
   }
 
   try{
     const r=await fetch('https://adventure-bike-os-api.onrender.com/api/weather',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({date,points})
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({date:start,dates:stageDates,points})
     });
-    const d=await r.json();
-    d.source='backend-fallback';
-    return d;
+    const d=await r.json();d.source='backend-fallback';d.stageDates=stageDates;return d;
   }catch(e){
-    return {available:false,reason:'Wetterdienst nicht erreichbar.',results:[]};
+    return {available:false,reason:'Wetterdienst nicht erreichbar.',results:[],stageDates};
   }
 }
 function weatherHtml(w){
@@ -860,7 +1007,7 @@ function weatherHtml(w){
   const cards=(w.results||[]).map((x,i)=>{
     if(!x.available)return `<div class="weatherDay"><strong>Tag ${i+1}</strong><div class="wxIcon">—</div><div class="tiny">keine Daten</div></div>`;
     const rain=Math.round(x.rain||0),wind=Math.round(x.wind||0),icon=rain>=60?'🌧️':rain>=30?'🌦️':wind>=35?'💨':'☀️';
-    return `<div class="weatherDay"><strong>Tag ${i+1}</strong><div class="wxIcon">${icon}</div><div>${Math.round(x.tmin)}–${Math.round(x.tmax)} °C</div><div class="tiny">Regen ${rain}% · Wind ${wind} km/h</div><div class="rainBar"><span style="width:${Math.min(100,rain)}%"></span></div></div>`;
+    return `<div class="weatherDay"><strong>Tag ${i+1}</strong><div class="tiny">${x.date||''}</div><div class="wxIcon">${icon}</div><div>${Math.round(x.tmin)}–${Math.round(x.tmax)} °C</div><div class="tiny">Regen ${rain}% · Wind ${wind} km/h</div><div class="rainBar"><span style="width:${Math.min(100,rain)}%"></span></div></div>`;
   }).join('');
   return `<div class="weatherStrip">${cards}</div>`;
 }
@@ -1025,16 +1172,22 @@ const categoryDefaults={
   tech:['top','frame','handlebar'],
   tools:['tools','frame'],
   food:['top','handlebar','frame'],
+  hydration:['bottles','frame'],
   safety:['frame','top'],
   misc:['rearSideL','rearSideR','saddle']
 };
 function saveCustomGear(){localStorage.setItem('abo-custom-gear-v1',JSON.stringify(customGear))}
 function setPackMode(mode){packMode=mode;localStorage.setItem('abo-pack-mode-v1',mode);renderBikePackPlanner()}
+
+
 function togglePackOnly(){
-  packOnlyMode=!packOnlyMode;
-  const sec=$('packStandalone');if(sec)sec.classList.toggle('packOnly',packOnlyMode);
-  if(packOnlyMode)sec?.scrollIntoView({behavior:'smooth',block:'start'});
-  showCopyToast(packOnlyMode?'Packansicht fokussiert':'Normale Seitenansicht');
+  const pack=$('packStandalone');
+  const on=!document.body.classList.contains('packFocus');
+  document.body.classList.toggle('packFocus',on);
+  pack?.classList.toggle('packOnly',on);
+  packOnlyMode=on;
+  if(on)setTimeout(()=>pack?.scrollIntoView({behavior:'smooth',block:'start'}),20);
+  showCopyToast(on?'Pack-Fokus aktiv':'Gesamte Seite');
 }
 function addCustomGear(){
   const name=($('customGearName')?.value||'').trim();
@@ -1044,9 +1197,10 @@ function addCustomGear(){
   const preferred=$('customGearBag')?.value||'';
   if(!name){showCopyToast('Bitte einen Namen eingeben');return}
   const id='custom-'+Date.now().toString(36);
-  const icons={camping:'⛺',clothing:'👕',kitchen:'🍲',tech:'🔋',tools:'🔧',food:'🍫',safety:'🩹',misc:'•'};
-  const recommended=preferred?[preferred,...(categoryDefaults[cat]||[])]:[...(categoryDefaults[cat]||[])];
-  const g={id,name,icon:icons[cat]||'•',kg:kg*qty,unitKg:kg,qty,cat,recommended:[...new Set(recommended)],custom:true};
+  const icons={camping:'⛺',clothing:'👕',kitchen:'🍲',tech:'🔋',tools:'🔧',food:'🍫',safety:'🩹',misc:'•',hydration:'💧'};
+  const bottleLike=/wasserflasche|trinkflasche|bidon|flasche/i.test(name);
+  const recommended=preferred?[preferred,...(categoryDefaults[cat]||[])]:[...(bottleLike?['bottles']:(categoryDefaults[cat]||[]))];
+  const g={id,name,icon:bottleLike?'💧':(icons[cat]||'•'),kg:kg*qty,unitKg:kg,qty,cat,recommended:[...new Set(recommended)],custom:true};
   customGear.push(g);gearCatalog.push(g);saveCustomGear();renderBikePackPlanner();showCopyToast(`${name} hinzugefügt`);
 }
 function removeCustomGear(id){
@@ -1057,7 +1211,7 @@ function removeCustomGear(id){
   saveCustomGear();saveGearAssignments();saveGearAutoSource();renderBikePackPlanner();
 }
 function customBagOptions(){
-  return `<option value="">automatisch</option>`+bikeBagCatalog.filter(b=>b.id!=='bottles').map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+  return `<option value="">automatisch</option>`+bikeBagCatalog.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
 }
 function gearLabel(g){return `${g.icon||'•'} ${g.name}${g.qty&&g.qty>1?` ×${g.qty}`:''}`}
 function animateGearToBag(gearId,bagId){
@@ -1143,10 +1297,16 @@ function totalPackedWeight(){return gearCatalog.filter(g=>gearAssignments[g.id])
 
 let gearAutoSource=JSON.parse(localStorage.getItem('abo-gear-auto-source-v1')||'{}');
 function saveGearAutoSource(){localStorage.setItem('abo-gear-auto-source-v1',JSON.stringify(gearAutoSource))}
+
+function isBottleLikeGear(g){
+  const s=`${g?.name||''} ${g?.cat||''}`.toLowerCase();
+  return s.includes('wasserflasche')||s.includes('trinkflasche')||s.includes('bidon')||s.includes('flasche')||g?.cat==='hydration';
+}
 function bestBagForGear(gearId){
   const g=gearById(gearId); if(!g)return null;
-  const preferred=(g.recommended||[]).filter(id=>bikeBagState[id] && id!=='bottles');
-  const pool=preferred.length?preferred:bikeBagCatalog.filter(b=>bikeBagState[b.id]&&b.id!=='bottles').map(b=>b.id);
+  if(isBottleLikeGear(g)&&bikeBagState.bottles)return 'bottles';
+  const preferred=(g.recommended||[]).filter(id=>bikeBagState[id] && (id!=='bottles'||isBottleLikeGear(g)));
+  const pool=preferred.length?preferred:bikeBagCatalog.filter(b=>bikeBagState[b.id]&&(b.id!=='bottles'||isBottleLikeGear(g))).map(b=>b.id);
   if(!pool.length)return null;
   return pool.map((id,idx)=>{
     const b=bagById(id);
@@ -1223,7 +1383,7 @@ function autoCampingPack(){
 }
 
 function bagSelectOptions(selected=''){
-  const active=bikeBagCatalog.filter(b=>bikeBagState[b.id]&&b.id!=='bottles');
+  const active=bikeBagCatalog.filter(b=>bikeBagState[b.id]);
   return `<option value="">— nicht gepackt —</option>`+active.map(b=>`<option value="${b.id}" ${selected===b.id?'selected':''}>${b.name}</option>`).join('');
 }
 function setGearBagFromSelect(gearId,value){
@@ -1246,12 +1406,7 @@ let bikeViewMode=localStorage.getItem('abo-bike-view-mode-v3')||'config';
 function setBikeViewMode(mode){
   bikeViewMode=mode;localStorage.setItem('abo-bike-view-mode-v3',mode);renderBikePackPlanner();
 }
-function togglePackOnly(){
-  document.body.classList.toggle('packFocus');
-  const on=document.body.classList.contains('packFocus');
-  if(on)$('packStandalone')?.scrollIntoView({block:'start'});
-  showCopyToast(on?'Nur Packansicht':'Gesamte Seite');
-}
+
 function svgBagShape(id,mini=false){
   if(!bikeBagState[id])return '';
   const m={
@@ -1265,15 +1420,16 @@ function svgBagShape(id,mini=false){
     frontSideR:[391,160,34,55,'front'],
     rearSideL:[103,151,44,59,'rear'],
     rearSideR:[145,151,44,59,'rear'],
-    tools:[193,103,27,21,'']
+    tools:[193,103,27,21,''],
+    bottles:[250,151,24,42,'']
   }[id];
   if(!m)return '';
   const [x,y,w,h,cls]=m;
-  const short={saddle:'S',top:'OT',handlebar:'L',frame:'R',forkL:'GL',forkR:'GR',frontSideL:'VL',frontSideR:'VR',rearSideL:'HL',rearSideR:'HR',tools:'W'}[id]||'';
+  const short={saddle:'S',top:'OT',handlebar:'L',frame:'R',forkL:'GL',forkR:'GR',frontSideL:'VL',frontSideR:'VR',rearSideL:'HL',rearSideR:'HR',tools:'W',bottles:'FL'}[id]||'';
   return `<g data-svg-bag="${id}"><rect class="configBag ${cls}" x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/><text class="configBagLabel" x="${x+w/2}" y="${y+h/2+3}" text-anchor="middle">${short}</text></g>`;
 }
 function configurationBikeSvg(mini=false){
-  const active=bikeBagCatalog.filter(b=>bikeBagState[b.id]&&b.id!=='bottles').map(b=>svgBagShape(b.id,mini)).join('');
+  const active=bikeBagCatalog.filter(b=>bikeBagState[b.id]).map(b=>svgBagShape(b.id,mini)).join('');
   return `<svg viewBox="0 0 500 250" role="img" aria-label="Bike-Konfiguration mit nur montierten Taschen">
     <rect width="500" height="250" fill="#eef1ea"/>
     <g fill="none" stroke="#1f2522" stroke-width="7">
@@ -1340,19 +1496,19 @@ function renderBikePackPlanner(){
   const active=bikeBagCatalog.filter(x=>bikeBagState[x.id]);
   const inactive=bikeBagCatalog.filter(x=>!bikeBagState[x.id]);
   const lodging=$('lodging')?.value||'hotel';
-  const cats=[['all','Alle'],['camping','Schlafen & Camping'],['clothing','Kleidung'],['kitchen','Küche'],['tech','Elektronik'],['tools','Werkzeug'],['food','Verpflegung'],['safety','Sicherheit'],['misc','Sonstiges']];
+  const cats=[['all','Alle'],['camping','Schlafen & Camping'],['clothing','Kleidung'],['kitchen','Küche'],['tech','Elektronik'],['tools','Werkzeug'],['food','Verpflegung'],['hydration','Wasser'],['safety','Sicherheit'],['misc','Sonstiges']];
   const visible=gearCatalog.filter(g=>packFilter==='all'||g.cat===packFilter);
   const total=totalPackedWeight(),pct=Math.min(100,total/20*100),bal=packBalanceStats();
   host.classList.toggle('packModePack',packMode==='pack');
   host.innerHTML=`
     <div class="packPlannerHead">
-      <div><h3>🧳 Packansicht & Bike-Setup</h3><div class="packPlannerSub">In der Konfigurationsansicht erscheinen nur tatsächlich montierte Taschen. Im Einpack-Modus bleibt ein kompakter Bike-Dock beim Scrollen sichtbar.</div></div>
+      <div><h3>🧳 Packansicht & Bike-Setup</h3><div class="packPlannerSub">Montierte Taschen und Halter erscheinen direkt am Bike. Im Einpack-Modus bleibt ein kompakter Bike-Dock beim Scrollen sichtbar.</div></div>
       <div class="packStats"><span class="packStat">${active.length} Taschen</span><span class="packStat">${total.toFixed(1)} kg gepackt</span></div>
     </div>
     <div class="packModeTabs">
       <button type="button" class="${packMode==='plan'?'active':''}" onclick="setPackMode('plan')">Packliste</button>
       <button type="button" class="${packMode==='pack'?'active':''}" onclick="setPackMode('pack')">Einpacken · Animation</button>
-      <button type="button" onclick="togglePackOnly()">Nur Packansicht anzeigen</button>
+      <button type="button" onclick="togglePackOnly()">Pack-Fokus</button>
     </div>
     <div class="packDock">${packDockHtml()}</div>
     <div class="configTabs">
@@ -1373,16 +1529,16 @@ function renderBikePackPlanner(){
         <div class="packSummaryBox on"><h4>Am Bike befestigt (${active.length})</h4>${active.length?active.map(x=>{const load=bagLoadPercent(x.id),bar=Math.min(100,load);return `<div class="packRow ${highlightedBag===x.id?'highlight':''}" data-bag-row="${x.id}" style="display:block" onclick="highlightBikeBag('${x.id}')"><div style="display:flex;justify-content:space-between;gap:8px"><span><strong>${x.name}</strong><br><span class="tiny">${x.capacity} l · ${bagWeight(x.id).toFixed(1)} kg</span></span><button class="remove" type="button" onclick="event.stopPropagation();setBikeBag('${x.id}',false)">− entfernen</button></div><div class="bagFill ${load>100?'over':''}"><span style="width:${bar}%"></span></div>${bagContentsHtml(x)}</div>`}).join(''):'<div class="tiny">Noch keine Taschen befestigt.</div>'}</div>
         <div class="packSummaryBox off"><h4>Noch offen (${inactive.length})</h4>${inactive.length?inactive.map(x=>`<div class="packRow"><span>${x.name}</span><button class="add" type="button" onclick="setBikeBag('${x.id}',true)">＋ befestigen</button></div>`).join(''):'<div class="tiny">Alle Taschen sind befestigt.</div>'}</div>
         <div class="accessoryPanel"><h4 style="margin:0 0 6px">Bike-Zubehör</h4>${bikeAccessoryCatalog.map(x=>`<div class="accessoryRow"><span>${x.icon} <strong>${x.name}</strong></span><button type="button" class="${bikeAccessoryState[x.id]?'add':'remove'}" onclick="toggleBikeAccessory('${x.id}')">${bikeAccessoryState[x.id]?'✓ montiert':'＋ montieren'}</button></div>`).join('')}</div>
-        <div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>
+        <div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>${packResearchHtml()}
       </div>
     </div>
     <div class="packWorkspace">
-      <div class="packWorkspaceHead"><div><strong>Deine Ausrüstung</strong><div class="tiny">Eigene Dinge ergänzen, automatisch platzieren oder eine Tasche direkt auswählen.</div></div><div class="gearFilters">${cats.map(([id,n])=>`<button type="button" class="gearFilter ${packFilter===id?'active':''}" onclick="setPackFilter('${id}')">${n}</button>`).join('')}</div></div>
+      <div class="packWorkspaceHead"><div><strong>Deine Ausrüstung</strong><div class="tiny">Eigene Dinge ergänzen und direkt einer Tasche oder dem Flaschenhalter zuweisen.</div></div><div class="gearFilters">${cats.map(([id,n])=>`<button type="button" class="gearFilter ${packFilter===id?'active':''}" onclick="setPackFilter('${id}')">${n}</button>`).join('')}</div></div>
       <div class="customGearForm"><label>Name<input id="customGearName" placeholder="z. B. Sandalen"></label><label>Kategorie<select id="customGearCat">${cats.filter(x=>x[0]!=='all').map(([id,n])=>`<option value="${id}">${n}</option>`).join('')}</select></label><label>Gewicht kg<input id="customGearKg" type="number" min="0" step="0.05" placeholder="0.30"></label><label>Menge<input id="customGearQty" type="number" min="1" step="1" value="1"></label><label>Bevorzugte Tasche<select id="customGearBag">${customBagOptions()}</select></label><button type="button" class="packPrimary" onclick="addCustomGear()">＋ hinzufügen</button></div>
       <div class="gearGrid">${visible.map(g=>{const bag=bagById(gearAssignments[g.id]);const rec=(g.recommended||[]).filter(id=>bikeBagState[id]).map(id=>bagById(id)?.name).filter(Boolean).slice(0,2).join(' / ');return `<div class="gearCard ${bag?'assigned':''} ${g.custom?'customGear':''}" data-gear-card="${g.id}" draggable="true" ondragstart="packDragStart(event,'${g.id}')"><div class="gearIcon">${g.icon}</div><div class="gearName">${g.name}${g.qty&&g.qty>1?` ×${g.qty}`:''}</div><div class="gearMeta">${g.kg.toFixed(2)} kg</div><div class="gearAssigned">${bag?'✓ '+bag.name:'○ noch nicht gepackt'}</div>${!bag&&rec?`<div class="tiny">empfohlen: ${rec}</div>`:''}<div class="gearControls">${bag?`<button type="button" onclick="unassignGear('${g.id}')">Aus Tasche entfernen</button>`:`<button type="button" class="packPrimary" onclick="animatedPackGear('${g.id}')">${packMode==='pack'?'Einpacken ▶':'Automatisch einpacken'}</button>`}<select aria-label="Tasche für ${g.name}" onchange="setGearBagFromSelect('${g.id}',this.value)">${bagSelectOptions(gearAssignments[g.id]||'')}</select>${g.custom?`<button type="button" class="gearDelete" onclick="removeCustomGear('${g.id}')">löschen</button>`:''}</div></div>`}).join('')}</div>
       <div class="campingHint"><strong>Einpacken:</strong> Im Animationsmodus bleibt oben ein Mini-Bike sichtbar, damit du nicht ständig zurückscrollen musst. Die Animation läuft bewusst langsamer.</div>
     </div>`;
-  attachBlockActions(host);
+  attachBlockActions(host);renderAdventureCheck();
   setTimeout(()=>{if(bikeViewMode==='3d')initLocal3D()},50);
 }
 function renderAdventureLayers(stages,weather){
@@ -1783,7 +1939,7 @@ async function plan(){
   opt.labels=await finalizeStageNames(coords,stages,opt.labels,$('start').value,$('dest').value);
   window.__routeContext={coords,m,stages,labels:opt.labels,meta:opt.meta};updateQuickcheck(m,stages);
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
-  renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);const terrainSupply=await fetchTerrainSupply(coords,stages);renderTerrainSupply(terrainSupply,stages,opt.labels);updateTerrainStatus(terrainSupply);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);renderTerrainOnMap(terrainSupply);drawElevation(coords,m,stages);
+  renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);renderAdventureCheck();$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);window.__weatherData=weather;renderAdventureLayers(stages,weather);renderAdventureCheck();const terrainSupply=await fetchTerrainSupply(coords,stages);window.__terrainSupplyData=terrainSupply;renderTerrainSupply(terrainSupply,stages,opt.labels);updateTerrainStatus(terrainSupply);renderAdventureCheck();await new Promise(r=>setTimeout(r,80));showMap(coords,stages);renderTerrainOnMap(terrainSupply);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
   attachBlockActions();$('terrainProfileState').textContent=`Routingprofil: ${$('profile').options[$('profile').selectedIndex].text} · Terrain und Versorgung wurden für diese neue Routengeometrie frisch abgefragt.`;$('routeFreshness').textContent='Aktuelle Berechnung · Etappen, Terrain und Versorgung gehören zu dieser Route.';showTripTab('etappen');$('status').textContent='Route berechnet. Karte, Höhenprofil und Etappen sind aktualisiert.';
  }catch(e){

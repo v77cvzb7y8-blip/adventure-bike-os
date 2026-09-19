@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.40 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.42 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -397,7 +397,7 @@ def osm_detail():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.40-unified-trip-planner-7.8.0")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.42-research-adventure-check-7.8.2")
 
 @app.get("/health")
 def health():
@@ -517,26 +517,33 @@ def weather():
         body=request.get_json(force=True) or {}
         points=(body.get("points") or [])[:10]
         date=(body.get("date") or "").strip()
-        if not points or not date:
+        dates=(body.get("dates") or [])[:10]
+        if not points or (not date and not dates):
             return jsonify(available=False, reason="Kein Reisedatum oder keine Etappenpunkte angegeben.", results=[])
 
         from datetime import date as _date, datetime as _dt
-        try:
-            trip_date=_dt.strptime(date,"%Y-%m-%d").date()
-        except ValueError:
-            return jsonify(available=False, reason="Ungültiges Reisedatum.", results=[])
+        def parse_date(s):
+            try:
+                return _dt.strptime(s,"%Y-%m-%d").date()
+            except Exception:
+                return None
 
         today=_date.today()
-        delta=(trip_date-today).days
-        # Open-Meteo's useful forecast window can vary. Treat near-term dates as forecast,
-        # longer horizons as planning-only rather than returning a misleading error.
-        if delta < 0:
-            return jsonify(available=False, reason="Das Reisedatum liegt in der Vergangenheit.", results=[])
-        if delta > 15:
-            return jsonify(available=False, reason="Für dieses Datum ist noch keine belastbare Kurzfristprognose verfügbar.", results=[])
+        targets=[]
+        for i,_p in enumerate(points):
+            s=(dates[i] if i < len(dates) else date) or date
+            d=parse_date(s)
+            targets.append((s,d))
+
+        if any(d is None for _s,d in targets):
+            return jsonify(available=False, reason="Ungültiges Reisedatum.", results=[])
 
         results=[]
-        for p in points:
+        for pi,p in enumerate(points):
+            target_str,target_date=targets[pi]
+            delta=(target_date-today).days
+            if delta < 0 or delta > 15:
+                results.append({"available":False,"date":target_str}); continue
             lat=float(p["lat"]); lon=float(p["lon"])
             params={
                 "latitude":lat,
@@ -546,20 +553,20 @@ def weather():
                 "forecast_days":16
             }
             r=session.get("https://api.open-meteo.com/v1/forecast",params=params,timeout=20)
-            print(f"[WEATHER] {lat},{lon} target={date} delta={delta} status={r.status_code}",flush=True)
+            print(f"[WEATHER] {lat},{lon} target={target_str} delta={delta} status={r.status_code}",flush=True)
             if not r.ok:
                 results.append({"available":False}); continue
             d=r.json().get("daily") or {}
             times=d.get("time") or []
-            if date not in times:
+            if target_str not in times:
                 results.append({"available":False}); continue
-            i=times.index(date)
+            i=times.index(target_str)
             def pick(key):
                 vals=d.get(key) or []
                 return vals[i] if i < len(vals) else None
             results.append({
                 "available":True,
-                "date":date,
+                "date":target_str,
                 "tmax":pick("temperature_2m_max"),
                 "tmin":pick("temperature_2m_min"),
                 "rain":pick("precipitation_probability_max"),
