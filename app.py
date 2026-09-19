@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.24 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.25 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -37,21 +37,14 @@ def brouter(a, b, profile="trekking"):
         "alternativeidx": 0,
         "format": "geojson"
     }
-    last_error = None
-    for attempt in range(3):
-        print(f"[BROUTER] attempt={attempt+1} profile={profile} lonlats={params['lonlats']}", flush=True)
-        try:
-            r = session.get(url, params=params, timeout=75)
-            print(f"[BROUTER] status={r.status_code} content-type={r.headers.get('content-type')}", flush=True)
-            if r.ok:
-                return r.json()
-            print(f"[BROUTER] response={r.text[:500]}", flush=True)
-            last_error = requests.HTTPError(f"BRouter HTTP {r.status_code}", response=r)
-        except (requests.RequestException, ValueError) as e:
-            last_error = e
-            print(f"[BROUTER] ERROR attempt={attempt+1}: {type(e).__name__}: {e}", flush=True)
-        time.sleep(1.2 * (attempt + 1))
-    raise last_error or requests.RequestException("BRouter failed")
+    print(f"[BROUTER] request profile={profile} lonlats={params['lonlats']}", flush=True)
+    r = requests.get(url, params=params, headers={"User-Agent":"AdventureBikeOS/0.25"}, timeout=22)
+    print(f"[BROUTER] status={r.status_code} content-type={r.headers.get('content-type')}", flush=True)
+    if not r.ok:
+        print(f"[BROUTER] response={r.text[:500]}", flush=True)
+    r.raise_for_status()
+    return r.json()
+
 
 def _decode_polyline6(encoded):
     coords=[]
@@ -87,7 +80,7 @@ def valhalla_route(a, b):
         "directions_options":{"units":"kilometers"}
     }
     print("[VALHALLA] fallback route request", flush=True)
-    r=session.post("https://valhalla1.openstreetmap.de/route",json=payload,headers=headers,timeout=75)
+    r=session.post("https://valhalla.openstreetmap.de/route",json=payload,headers=headers,timeout=22)
     print(f"[VALHALLA] route status={r.status_code}", flush=True)
     r.raise_for_status()
     data=r.json()
@@ -112,7 +105,7 @@ def valhalla_route(a, b):
         sampled.append(coords[-1])
     hreq={"shape":[{"lat":c[1],"lon":c[0]} for c in sampled],"height_precision":0}
     try:
-        hr=session.post("https://valhalla1.openstreetmap.de/height",json=hreq,headers=headers,timeout=60)
+        hr=session.post("https://valhalla.openstreetmap.de/height",json=hreq,headers=headers,timeout=18)
         print(f"[VALHALLA] height status={hr.status_code}", flush=True)
         hr.raise_for_status()
         hd=hr.json()
@@ -164,9 +157,40 @@ def segmented_route(a, b, profile="trekking"):
         merged.extend(coords)
     return {"type":"Feature","geometry":{"type":"LineString","coordinates":merged},"properties":{"routing_source":"Segmented "+"/".join(sorted(set(sources))),"segments":segments}}
 
+
+def race_route(a, b, profile="trekking"):
+    """Ask two independent routing engines in parallel and return the first successful result."""
+    from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+    pool=ThreadPoolExecutor(max_workers=2)
+    futures={
+        pool.submit(brouter,a,b,profile):"BRouter",
+        pool.submit(valhalla_route,a,b):"Valhalla"
+    }
+    errors=[]
+    try:
+        pending=set(futures)
+        while pending:
+            done,pending=wait(pending,timeout=24,return_when=FIRST_COMPLETED)
+            if not done:
+                break
+            for fut in done:
+                source=futures[fut]
+                try:
+                    feature=fut.result()
+                    print(f"[ROUTE-RACE] success source={source}",flush=True)
+                    for p in pending:
+                        p.cancel()
+                    return feature,source
+                except Exception as e:
+                    errors.append(f"{source}: {type(e).__name__}: {e}")
+                    print(f"[ROUTE-RACE] {source} failed: {e}",flush=True)
+        raise requests.RequestException(" | ".join(errors) if errors else "Routingdienste Timeout")
+    finally:
+        pool.shutdown(wait=False,cancel_futures=True)
+
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.24-adventure-app-7.6")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.25-routing-race-7.6.1")
 
 @app.get("/health")
 def health():
@@ -338,18 +362,7 @@ def route():
         b = geocode(dest)
         print(f"[ROUTE] geocoded start={a} destination={b}", flush=True)
 
-        routing_source="BRouter"
-        try:
-            feature = brouter(a, b, profile)
-        except Exception as primary_error:
-            print(f"[ROUTE] BRouter unavailable, trying Valhalla: {primary_error}", flush=True)
-            try:
-                feature = valhalla_route(a, b)
-                routing_source="Valhalla"
-            except Exception as secondary_error:
-                print(f"[ROUTE] Valhalla unavailable, trying segmented routing: {secondary_error}", flush=True)
-                feature = segmented_route(a, b, profile)
-                routing_source=(feature.get("properties") or {}).get("routing_source","Segmented fallback")
+        feature, routing_source = race_route(a, b, profile)
         f = feature["features"][0] if "features" in feature else feature
 
         print(f"[ROUTE] success source={routing_source}", flush=True)
