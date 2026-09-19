@@ -474,13 +474,39 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
   .pdfBar{padding:7px 9px!important}
   .pdfBar .pdfBuild{padding:10px 12px!important;font-size:11px}
 }
+
+/* 8.1.2 stability / iPad hardening */
+.loadingShell{min-height:260px;display:grid;place-items:center;background:#f7f6f0;border:1px dashed #d7ddd6;border-radius:14px;color:#65726b}
+#terrainSupply .poiRow strong{overflow-wrap:anywhere}
+#terrainSupply .poiRow .tiny{line-height:1.35}
+#terrainSupply a,#terrainSupply button{max-width:100%}
+@media (pointer:coarse) and (max-width:1400px){
+  .routeWorkspace{display:block!important}
+  .routeWorkspace>#routePlanner{position:static!important;width:100%!important;max-width:none!important}
+  .routeWorkspace>#result{width:100%!important;max-width:none!important;margin-top:10px!important}
+  .routeVisualGrid{grid-template-columns:1fr!important}
+  #terrainSupply{grid-template-columns:1fr!important}
+  .intelGrid,.layersGrid{grid-template-columns:1fr 1fr!important}
+  .poiRow{grid-template-columns:1fr!important}
+  .poiRow>div:last-child{justify-content:flex-start!important}
+  .poiAdd{white-space:normal!important}
+  .bikeConfiguratorGrid{grid-template-columns:1fr!important}
+  .bikeAside{grid-column:1!important}
+  .bikeAside .bagList,.bagList{grid-template-columns:1fr 1fr!important}
+  .pdfBar{position:static!important;bottom:auto!important;margin-top:10px!important}
+  .tripTabs{position:sticky!important;top:0!important;z-index:100!important}
+}
+@media (pointer:coarse) and (max-width:900px){
+  .intelGrid,.layersGrid{grid-template-columns:1fr!important}
+  .bikeAside .bagList,.bagList{grid-template-columns:1fr!important}
+}
 </style>
 </head>
 <body>
 <header class="productHero">
   <div class="brandRow">
     <div>
-      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.1.1</div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.1.2</div>
       <h1>Dein Bike. Dein Abenteuer.</h1>
       <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
     </div>
@@ -1964,30 +1990,39 @@ function classifyTerrainCounts(counts){
 function renderJourneyTerrainBand(){
   const host=$('journeyTerrainBand');if(!host)return;
   const d=window.__terrainSupplyData,ctx=window.__routeContext;
-  if(!d?.available||!ctx?.m?.cumDist){
+  if(!d?.available||!ctx?.m?.dist){
     host.innerHTML='<span class="unknown" style="width:100%"></span>';host.title='Terrain-Daten noch nicht verfügbar';return;
   }
   const points=[];
-  (d.stages||[]).forEach(s=>(s.terrain?.routeSamples||s.terrain?.samples||[]).forEach(x=>{
-    if(Number.isFinite(x.idx)&&Number.isFinite(ctx.m.cumDist[x.idx]))points.push({d:ctx.m.cumDist[x.idx],kind:x.kind||'unknown'});
+  (d.stages||[]).forEach(s=>(s.terrain?.routeSamples||[]).forEach(x=>{
+    if(Number.isFinite(x.idx)&&Number.isFinite(ctx.m.dist[x.idx]))points.push({d:ctx.m.dist[x.idx],kind:x.kind||'unknown'});
   }));
   points.sort((a,b)=>a.d-b.d);
   const total=ctx.m.totalDist||1;
   if(!points.length){host.innerHTML='<span class="unknown" style="width:100%"></span>';host.title='Keine ausreichenden OSM-Terrain-Tags';return}
-  const edges=[0];
-  for(let i=1;i<points.length;i++)edges.push((points[i-1].d+points[i].d)/2);
-  edges.push(total);
-  const segs=points.map((p,i)=>({a:Math.max(0,edges[i]),b:Math.min(total,edges[i+1]),kind:p.kind}));
+  const maxInfluence=7.5,raw=[];
+  points.forEach(p=>{
+    raw.push({a:Math.max(0,p.d-maxInfluence),b:Math.min(total,p.d+maxInfluence),kind:p.kind});
+  });
+  raw.sort((a,b)=>a.a-b.a);
+  const timeline=[];let cursor=0;
+  raw.forEach(s=>{
+    if(s.a>cursor)timeline.push({a:cursor,b:s.a,kind:'unknown'});
+    const a=Math.max(cursor,s.a);
+    if(s.b>a)timeline.push({a,b:s.b,kind:s.kind});
+    cursor=Math.max(cursor,s.b);
+  });
+  if(cursor<total)timeline.push({a:cursor,b:total,kind:'unknown'});
   const merged=[];
-  segs.forEach(s=>{
-    const last=merged[merged.length-1];
-    if(last&&last.kind===s.kind)last.b=s.b;else merged.push({...s});
+  timeline.forEach(s=>{
+    const last=merged.at(-1);
+    if(last&&last.kind===s.kind&&Math.abs(last.b-s.a)<.01)last.b=s.b;else merged.push({...s});
   });
   host.innerHTML=merged.map(s=>{
     const label={paved:'Asphalt/befestigt',gravel:'Gravel/kompakt',rough:'unbefestigt/rau',unknown_offroad:'Track/Path – Oberfläche unbekannt',unknown:'unbekannt'}[s.kind]||s.kind;
-    return `<span class="${s.kind}" title="${s.a.toFixed(0)}–${s.b.toFixed(0)} km · ${label}" style="width:${Math.max(.25,(s.b-s.a)/total*100)}%"></span>`;
+    return `<span class="${s.kind}" title="${s.a.toFixed(0)}–${s.b.toFixed(0)} km · ${label}" style="width:${Math.max(.2,(s.b-s.a)/total*100)}%"></span>`;
   }).join('');
-  host.title='Terrain-Segmente auf derselben Kilometerachse wie das Höhenprofil';
+  host.title='Terrain-Segmente auf derselben Kilometerachse wie das Höhenprofil. Unbekannte Bereiche werden nicht geraten.';
 }
 function syncRouteTerrainStrip(){
   const src=$('journeyTerrainBand'),dst=$('routeTerrainStrip');
@@ -1999,7 +2034,7 @@ function renderJourneyMiniProfile(){
   const ctx=c.getContext('2d'),route=window.__routeContext,coords=route?.coords||[];
   const w=c.width,h=c.height;ctx.clearRect(0,0,w,h);
   if(coords.length<2){return}
-  const vals=coords.map((p,i)=>({d:route?.m?.cumDist?.[i]??i,e:Number.isFinite(p[2])?p[2]:null})).filter(x=>x.e!==null);
+  const vals=coords.map((p,i)=>({d:route?.m?.dist?.[i]??i,e:Number.isFinite(p[2])?p[2]:null})).filter(x=>x.e!==null);
   if(vals.length<2){
     ctx.fillStyle='#66736c';ctx.font='12px system-ui';ctx.fillText('Höhenprofil derzeit nicht verfügbar',14,h/2);return;
   }
@@ -2014,7 +2049,7 @@ function renderJourneyMiniProfile(){
   if(route?.stages?.length){
     ctx.strokeStyle='#aab5ae';ctx.setLineDash([4,4]);
     route.stages.slice(0,-1).forEach(s=>{
-      const d=route.m?.cumDist?.[s.e];if(!Number.isFinite(d))return;
+      const d=route.m?.dist?.[s.e];if(!Number.isFinite(d))return;
       const xx=x(d);ctx.beginPath();ctx.moveTo(xx,pad.t);ctx.lineTo(xx,pad.t+ph);ctx.stroke();
     });
     ctx.setLineDash([]);
@@ -2025,7 +2060,7 @@ function renderJourneyMiniProfile(){
   ctx.fillStyle='#5f6d65';ctx.font='9px system-ui';ctx.textAlign='left';ctx.fillText(`${Math.round(maxE)} m`,2,12);ctx.fillText(`${Math.round(minE)} m`,2,pad.t+ph);
 }
 function refreshJourneyMini(){
-  requestAnimationFrame(()=>{renderJourneyMiniProfile();renderJourneyTerrainBand();syncRouteTerrainStrip();syncRouteTerrainStrip()});
+  requestAnimationFrame(()=>{renderJourneyMiniProfile();renderJourneyTerrainBand();syncRouteTerrainStrip()});
 }
 function renderBikePackPlanner(){
   const host=$('bikePackPlanner');if(!host)return;
@@ -2191,12 +2226,27 @@ function poiCategory(tags){
   if(tags.shop==='bicycle'||tags.amenity==='bicycle_repair_station')return 'bike';
   return null;
 }
-async function fetchTerrainSupply(coords,stages){
+
+function terrainRouteSamples(coords,stages,m,desiredKm=10,maxPoints=72){
+  if(!coords?.length||!m?.dist?.length)return [];
+  const total=m.totalDist||m.dist.at(-1)||0;
+  const step=Math.max(desiredKm,total/Math.max(1,maxPoints-1));
+  const targets=[];for(let d=0;d<=total+.01;d+=step)targets.push(Math.min(total,d));
+  if(targets.at(-1)!==total)targets.push(total);
+  const out=[];let idx=0;
+  targets.forEach(d=>{
+    while(idx<m.dist.length-1 && m.dist[idx]<d)idx++;
+    const c=coords[idx];if(!c)return;
+    let stage=stages.findIndex(s=>idx>=s.s&&idx<=s.e);if(stage<0)stage=Math.max(0,stages.length-1);
+    if(!out.some(x=>x.idx===idx))out.push({idx,lat:c[1],lon:c[0],stage,km:m.dist[idx]});
+  });
+  return out.slice(0,maxPoints);
+}
+async function fetchTerrainSupply(coords,stages,m){
   // One combined Overpass request to keep load/rate-limits low.
-  const samples=[];
-  stages.forEach((s,si)=>stageSamplePoints(coords,s,6).forEach(p=>samples.push({...p,stage:si})));
+  const samples=terrainRouteSamples(coords,stages,m,10,72);
   const endpoints=stages.map((s,si)=>{const c=coords[s.e];return {lat:c[1],lon:c[0],stage:si}});
-  const terrainClauses=samples.slice(0,40).map(p=>`way(around:220,${p.lat},${p.lon})["highway"];`).join('');
+  const terrainClauses=samples.slice(0,72).map(p=>`way(around:120,${p.lat},${p.lon})["highway"];`).join('');
   const lodging=$('lodging')?.value||'hotel';
   const sleepRegex=lodging==='camping'?'camp_site|caravan_site|camp_pitch|wilderness_hut|alpine_hut':lodging==='mixed'?'hotel|hostel|guest_house|motel|camp_site|caravan_site|camp_pitch|alpine_hut|wilderness_hut':'hotel|hostel|guest_house|motel';
   const poiClauses=endpoints.slice(0,10).map(p=>`nwr(around:6000,${p.lat},${p.lon})["tourism"~"${sleepRegex}"];${lodging==='camping'?`nwr(around:6000,${p.lat},${p.lon})["amenity"="shelter"]["shelter_type"~"basic_hut|weather_shelter"];`:''}nwr(around:5000,${p.lat},${p.lon})["amenity"~"restaurant|cafe|fast_food|bar|pub|drinking_water|bicycle_repair_station"];nwr(around:5000,${p.lat},${p.lon})["shop"~"supermarket|convenience|bakery|bicycle"];`).join('');
@@ -2241,7 +2291,7 @@ async function fetchTerrainSupply(coords,stages){
       const key=`way-${el.id}`; if(seenWays.has(key))continue; seenWays.add(key);
       let bestStage=0,bestD=Infinity,bestSampleIndex=-1;
       samples.forEach((sp,sidx)=>{const d=distKmLatLon(p,sp);if(d<bestD){bestD=d;bestStage=sp.stage;bestSampleIndex=sidx}});
-      if(bestD<=2.5){
+      if(bestD<=0.65){
         const sc=surfaceClass(t),ti=intel[bestStage].terrain;
         if(bestSampleIndex>=0){
           const rs=routeSamples[bestSampleIndex];
@@ -2525,8 +2575,44 @@ function clearCurrentRouteResult(){
   $('quickFeasibility').textContent='Noch offen';
   $('quickFeasibility').className='';
 }
+
+let __routeEnrichmentToken=0;
+async function enrichRouteAfterRender(coords,stages,labels,token){
+  try{
+    $('adventureLayers').innerHTML='<div class="layerBox"><b>Wetter wird geladen …</b><div class="tiny">Die Route bleibt vollständig bedienbar.</div></div>';
+    $('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden geladen …</b><div class="tiny">Diese Zusatzanalyse läuft im Hintergrund.</div></div>';
+    const [weatherResult,terrainResult]=await Promise.allSettled([
+      fetchStageWeather(coords,stages),
+      fetchTerrainSupply(coords,stages,window.__routeMetrics)
+    ]);
+    if(token!==__routeEnrichmentToken)return;
+
+    if(weatherResult.status==='fulfilled'){
+      window.__weatherData=weatherResult.value;
+      renderAdventureLayers(stages,weatherResult.value);
+    }else{
+      $('adventureLayers').innerHTML='<div class="layerBox"><b>Wetter derzeit nicht verfügbar.</b><div class="tiny">Route und Etappen bleiben gültig.</div></div>';
+    }
+
+    if(terrainResult.status==='fulfilled'){
+      const terrainSupply=terrainResult.value;
+      window.__terrainSupplyData=terrainSupply;
+      renderTerrainSupply(terrainSupply,stages,labels);
+      updateTerrainStatus(terrainSupply);
+      renderTerrainOnMap(terrainSupply);
+      refreshJourneyMini();
+    }else{
+      $('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung derzeit nicht verfügbar.</b><div class="tiny">Die Route bleibt nutzbar; die Zusatzdaten können später erneut geladen werden.</div></div>';
+    }
+    renderAdventureCheck();
+    attachBlockActions();
+  }catch(e){
+    if(token!==__routeEnrichmentToken)return;
+    $('terrainSupply').innerHTML='<div class="intelCard"><b>Zusatzanalyse unterbrochen.</b><div class="tiny">Route, Karte, Etappen und Höhenprofil bleiben nutzbar.</div></div>';
+  }
+}
 async function plan(){
- const btn=$('go');btn.disabled=true;$('status').className='status';
+ const btn=$('go');btn.disabled=true;++__routeEnrichmentToken;$('status').className='status';
  const startVal=$('start').value.trim(),destVal=$('dest').value.trim();
  if(!startVal||!destVal){$('status').textContent='Bitte Start und Ziel eingeben.';$('status').className='status error';btn.disabled=false;return}
  if(!$('kmday').value||!$('hmday').value){$('status').textContent='Bitte Ziel-km pro Tag und max. Höhenmeter pro Tag eingeben.';$('status').className='status error';btn.disabled=false;return}
@@ -2565,9 +2651,16 @@ async function plan(){
   opt.labels=await finalizeStageNames(coords,stages,opt.labels,$('start').value,$('dest').value);
   window.__routeContext={coords,m,stages,labels:opt.labels,meta:opt.meta};updateQuickcheck(m,stages);
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
-  renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);renderAdventureCheck();$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);window.__weatherData=weather;renderAdventureLayers(stages,weather);renderAdventureCheck();const terrainSupply=await fetchTerrainSupply(coords,stages);window.__terrainSupplyData=terrainSupply;renderTerrainSupply(terrainSupply,stages,opt.labels);updateTerrainStatus(terrainSupply);renderAdventureCheck();refreshJourneyMini();await new Promise(r=>setTimeout(r,80));showMap(coords,stages);renderTerrainOnMap(terrainSupply);drawElevation(coords,m,stages);
+  renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);renderAdventureCheck();
+  showMap(coords,stages);drawElevation(coords,m,stages);refreshJourneyMini();
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  attachBlockActions();$('terrainProfileState').textContent=`Routingprofil: ${$('profile').options[$('profile').selectedIndex].text} · Terrain und Versorgung wurden für diese neue Routengeometrie frisch abgefragt.`;$('routeFreshness').textContent='Aktuelle Berechnung · Etappen, Terrain und Versorgung gehören zu dieser Route.';showTripTab('etappen');renderBikePackPlanner();$('status').textContent='Route berechnet. Karte, Höhenprofil, Etappen und Setup-Vorschlag sind aktualisiert.';
+  attachBlockActions();
+  $('terrainProfileState').textContent=`Routingprofil: ${$('profile').options[$('profile').selectedIndex].text} · Terrain und Versorgung laden separat im Hintergrund.`;
+  $('routeFreshness').textContent='Aktuelle Berechnung · Route, Karte und Etappen sind bereit.';
+  showTripTab('etappen');renderBikePackPlanner();
+  $('status').textContent='Route bereit. Terrain, Wetter und Versorgung werden im Hintergrund ergänzt …';
+  const enrichToken=++__routeEnrichmentToken;
+  void enrichRouteAfterRender(coords,stages,opt.labels,enrichToken);
  }catch(e){
    clearCurrentRouteResult();
    window.__routeContext=null;window.__routeMetrics=null;
