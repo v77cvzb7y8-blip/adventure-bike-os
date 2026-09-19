@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.26 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.29 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -168,20 +168,51 @@ def _sample_for_height(coords, limit=450):
         out.append(coords[-1])
     return out
 
+
+def add_open_meteo_height(coords):
+    """Enrich a 2D route with terrain elevation using Open-Meteo's elevation API."""
+    sampled=_sample_for_height(coords, limit=600)
+    out=[]
+    try:
+        for i in range(0,len(sampled),100):
+            batch=sampled[i:i+100]
+            params={
+                "latitude": ",".join(f"{c[1]:.6f}" for c in batch),
+                "longitude": ",".join(f"{c[0]:.6f}" for c in batch)
+            }
+            r=requests.get(
+                "https://api.open-meteo.com/v1/elevation",
+                params=params,
+                headers={"User-Agent":"AdventureBikeOS/0.27"},
+                timeout=18
+            )
+            print(f"[ELEVATION-OPENMETEO] batch={i//100+1} status={r.status_code}",flush=True)
+            r.raise_for_status()
+            elev=(r.json() or {}).get("elevation") or []
+            if len(elev)!=len(batch):
+                raise ValueError("Open-Meteo returned incomplete elevation batch")
+            out.extend([[c[0],c[1],float(elev[j]) if elev[j] is not None else 0] for j,c in enumerate(batch)])
+        if len(out)>=2:
+            return out,"Open-Meteo"
+    except Exception as e:
+        print(f"[ELEVATION-OPENMETEO] failed: {type(e).__name__}: {e}",flush=True)
+    return None,None
+
 def add_valhalla_height(coords):
-    """Try to enrich a 2D route with elevation. Failure is non-fatal."""
-    sampled=_sample_for_height(coords)
+    """Secondary elevation fallback. Failure is non-fatal."""
+    sampled=_sample_for_height(coords, limit=450)
     req={"shape":[{"lat":c[1],"lon":c[0]} for c in sampled],"height_precision":0}
     try:
         r=requests.post("https://valhalla.openstreetmap.de/height",json=req,headers={"X-Client-Id":"adventure-bike-os-prototype"},timeout=15)
-        print(f"[HEIGHT] status={r.status_code}",flush=True)
+        print(f"[HEIGHT-VALHALLA] status={r.status_code}",flush=True)
         r.raise_for_status()
         heights=(r.json() or {}).get("height") or []
         if len(heights)==len(sampled):
-            return [[c[0],c[1],heights[i] if heights[i] is not None else 0] for i,c in enumerate(sampled)]
+            return [[c[0],c[1],heights[i] if heights[i] is not None else 0] for i,c in enumerate(sampled)],"Valhalla height"
     except Exception as e:
-        print(f"[HEIGHT] unavailable: {e}",flush=True)
-    return [[c[0],c[1],0] for c in sampled]
+        print(f"[HEIGHT-VALHALLA] unavailable: {e}",flush=True)
+    return None,None
+
 
 def osrm_bike_route(a,b):
     """Third routing fallback via OSM Deutschland's OSRM bicycle demo service."""
@@ -198,12 +229,36 @@ def osrm_bike_route(a,b):
     coords=(routes[0].get("geometry") or {}).get("coordinates") or []
     if len(coords)<2:
         raise ValueError("OSRM Bike returned no usable geometry")
-    coords3=add_valhalla_height(coords)
+    coords3,height_source=add_open_meteo_height(coords)
+    if not coords3:
+        coords3,height_source=add_valhalla_height(coords)
+    if not coords3:
+        coords3=[[c[0],c[1]] for c in _sample_for_height(coords,limit=600)]
+        height_source="unavailable"
     return {
         "type":"Feature",
         "geometry":{"type":"LineString","coordinates":coords3},
-        "properties":{"routing_source":"OSRM Bike fallback","distance_m":routes[0].get("distance")}
+        "properties":{"routing_source":"OSRM Bike fallback","distance_m":routes[0].get("distance"),"height_source":height_source}
     }
+
+
+def ensure_route_elevation(feature):
+    geom=(feature.get("geometry") or {})
+    coords=geom.get("coordinates") or []
+    if len(coords)<2:
+        return feature
+    z=[c[2] for c in coords if len(c)>2 and isinstance(c[2],(int,float))]
+    useful=len(z)>=2 and (max(z)-min(z)>3 or max(z)>10)
+    if useful:
+        feature.setdefault("properties",{})["height_source"]=feature.get("properties",{}).get("height_source","routing engine")
+        return feature
+    enriched,source=add_open_meteo_height(coords)
+    if enriched:
+        feature["geometry"]={"type":"LineString","coordinates":enriched}
+        feature.setdefault("properties",{})["height_source"]=source
+    else:
+        feature.setdefault("properties",{})["height_source"]="unavailable"
+    return feature
 
 def race_route(a, b, profile="trekking"):
     """Race BRouter and Valhalla; if both fail, use OSRM Bike as a third independent fallback."""
@@ -227,7 +282,7 @@ def race_route(a, b, profile="trekking"):
                     print(f"[ROUTE-RACE] success source={source}",flush=True)
                     for p in pending:
                         p.cancel()
-                    return feature,source
+                    return ensure_route_elevation(feature),source
                 except Exception as e:
                     errors.append(f"{source}: {type(e).__name__}: {e}")
                     print(f"[ROUTE-RACE] {source} failed: {e}",flush=True)
@@ -238,7 +293,7 @@ def race_route(a, b, profile="trekking"):
     try:
         feature=osrm_bike_route(a,b)
         print("[ROUTE-RACE] success source=OSRM Bike",flush=True)
-        return feature,"OSRM Bike"
+        return ensure_route_elevation(feature),"OSRM Bike"
     except Exception as e:
         errors.append(f"OSRM Bike: {type(e).__name__}: {e}")
         print(f"[ROUTE-RACE] OSRM Bike failed: {e}",flush=True)
@@ -247,7 +302,7 @@ def race_route(a, b, profile="trekking"):
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.26-routing-fallback-7.6.2")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.29-dragdrop-camping-7.6.5")
 
 @app.get("/health")
 def health():
