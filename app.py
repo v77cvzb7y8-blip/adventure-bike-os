@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.36 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.40 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -397,13 +397,36 @@ def osm_detail():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.36-pack-animation-custom-items-7.7.2")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.40-unified-trip-planner-7.8.0")
 
 @app.get("/health")
 def health():
     return jsonify(status="ok")
 
 
+
+
+@app.post("/api/elevation")
+def elevation():
+    """Retry elevation independently from routing, so a valid route does not lose HM just because the first height lookup failed."""
+    try:
+        body=request.get_json(force=True) or {}
+        coords=body.get("coordinates") or []
+        if len(coords)<2:
+            return jsonify(ok=False,error="Zu wenige Routenpunkte."),400
+        clean=[]
+        for c in coords[:5000]:
+            if isinstance(c,(list,tuple)) and len(c)>=2:
+                clean.append([float(c[0]),float(c[1])])
+        enriched,source=add_open_meteo_height(clean)
+        if not enriched:
+            enriched,source=add_valhalla_height(clean)
+        if not enriched:
+            return jsonify(ok=False,coordinates=clean,height_source="unavailable"),200
+        return jsonify(ok=True,coordinates=enriched,height_source=source or "elevation fallback")
+    except Exception as e:
+        print(f"[ELEVATION-RETRY] failed: {type(e).__name__}: {e}",flush=True)
+        return jsonify(ok=False,error="Höhendaten derzeit nicht verfügbar.",height_source="unavailable"),200
 
 @app.post("/api/stage-candidates")
 def stage_candidates():
