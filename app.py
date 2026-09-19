@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.31 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.33 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -300,9 +300,44 @@ def race_route(a, b, profile="trekking"):
         raise requests.RequestException(" | ".join(errors))
 
 
+
+OVERPASS_ENDPOINTS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+]
+
+@app.post("/api/osm-detail")
+def osm_detail():
+    """Server-side Overpass proxy with failover so Safari/iPad never has to call Overpass directly."""
+    body=request.get_json(force=True) or {}
+    query=(body.get("query") or "").strip()
+    if not query or len(query)>120000:
+        return jsonify(ok=False,elements=[],warning="Ungültige OSM-Abfrage."),400
+    errors=[]
+    for url in OVERPASS_ENDPOINTS:
+        try:
+            print(f"[OVERPASS] trying {url}",flush=True)
+            r=requests.post(
+                url,
+                data={"data":query},
+                headers={"User-Agent":UA,"Accept":"application/json"},
+                timeout=28
+            )
+            print(f"[OVERPASS] {url} status={r.status_code}",flush=True)
+            if r.ok:
+                data=r.json()
+                elements=data.get("elements") or []
+                return jsonify(ok=True,elements=elements,source=url)
+            errors.append(f"{url}: HTTP {r.status_code}")
+        except Exception as ex:
+            errors.append(f"{url}: {type(ex).__name__}")
+            print(f"[OVERPASS] failed {url}: {ex}",flush=True)
+    return jsonify(ok=False,elements=[],warning="OSM-Zusatzdaten derzeit nicht erreichbar.",errors=errors),200
+
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.31-bikeview-links-7.6.7")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.33-true3d-bike-7.6.9")
 
 @app.get("/health")
 def health():
