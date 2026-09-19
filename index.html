@@ -336,13 +336,21 @@ body.packFocus .focusExplainer{display:block}
 .miniTerrainLegend i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:3px}
 .miniTerrainLegend .a i{background:#7e8c86}.miniTerrainLegend .g i{background:#b38a55}.miniTerrainLegend .r i{background:#7b5f45}.miniTerrainLegend .u i{background:#d6d2c7}
 .profileUnavailable{display:grid;place-items:center;height:100%;font-size:10px;color:var(--muted)}
+
+.gearThumb.semantic{font-size:30px;line-height:1}
+.gearThumb.semantic small{display:block;font-size:8px;color:var(--muted);font-weight:700;margin-top:4px}
+.bikeIdentity{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#eef6f0;border:1px solid #d5e5da}
+.bikeIdentity h4{margin:0 0 3px;font-size:13px}.bikeIdentity .tiny{max-width:620px}
+.compatBadge{padding:5px 8px;border-radius:999px;background:#fff;border:1px solid #dce7df;font-size:9px;font-weight:800}
+.mountHint{font-size:8px;color:var(--muted);margin-top:2px}
+.bikeStageName{position:absolute;left:12px;top:12px;z-index:3;padding:6px 8px;border-radius:9px;background:rgba(255,253,247,.92);font-size:9px;font-weight:900;color:#1d3c2e;border:1px solid #d7e2da}
 </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.9.2</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 8.0.0</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.9.2 ersetzt die dekorativen Reise-Balken durch echte Routendaten: Mini-Höhenprofil, Kilometerachse, Etappengrenzen und ein Terrain-Band für Asphalt, Gravel, unbefestigt und unbekannt.</div>
+  <div class="sub">8.0.0 verbindet Route, Terrain und Bike-Setup enger: verständlichere Taschenpositionen, Bike-Profil aus deinen Eingaben, passendere Ausrüstungs-Icons und ein segmentiertes Terrain-Band entlang der tatsächlichen Route.</div>
 </header>
 <div class="appModeSwitch noPrint">
   <button id="modeRouteBtn" class="active" type="button" onclick="showAppMode('route')">🗺️ Route planen</button>
@@ -1201,10 +1209,10 @@ const bikeBagCatalog=[
   {id:'frame',name:'Rahmentasche',x:49,y:49,capacity:9},
   {id:'forkL',name:'Gabeltasche links',x:73,y:58,capacity:5},
   {id:'forkR',name:'Gabeltasche rechts',x:81,y:58,capacity:5},
-  {id:'frontSideL',name:'Vorne links (Lowrider)',x:72,y:67,capacity:10,zone:'front'},
-  {id:'frontSideR',name:'Vorne rechts (Lowrider)',x:84,y:67,capacity:10,zone:'front'},
-  {id:'rearSideL',name:'Hinten links',x:17,y:59,capacity:14,zone:'rear'},
-  {id:'rearSideR',name:'Hinten rechts',x:29,y:59,capacity:14,zone:'rear'},
+  {id:'frontSideL',name:'Front-Seitentasche links',x:72,y:67,capacity:10,zone:'front'},
+  {id:'frontSideR',name:'Front-Seitentasche rechts',x:84,y:67,capacity:10,zone:'front'},
+  {id:'rearSideL',name:'Heck-Seitentasche links',x:17,y:59,capacity:14,zone:'rear'},
+  {id:'rearSideR',name:'Heck-Seitentasche rechts',x:29,y:59,capacity:14,zone:'rear'},
   {id:'bottles',name:'Flaschenhalter / Flaschen',x:53,y:66,capacity:3},
   {id:'tools',name:'Werkzeugtasche',x:33,y:40,capacity:2}
 ];
@@ -1230,8 +1238,8 @@ function accessoryHtml(){
 }
 function bagSlotHtml(){
   const slots=[
-    ['rearSideL','HL','Hinten links',17,59,'rear'],
-    ['rearSideR','HR','Hinten rechts',29,59,'rear'],
+    ['rearSideL','HL','Heck-Seitentasche links',17,59,'rear'],
+    ['rearSideR','HR','Heck-Seitentasche rechts',29,59,'rear'],
     ['frontSideL','VL','Vorne links',72,67,'front'],
     ['frontSideR','VR','Vorne rechts',84,67,'front']
   ];
@@ -1657,8 +1665,63 @@ function journeyCardHtml(){
     </div>
   </div>`;
 }
+
+function semanticGearIcon(g){
+  const n=(g?.name||'').toLowerCase();
+  if(/trinkflasche|wasserflasche|bidon|flasche/.test(n))return ['🥤','Trinkflasche'];
+  if(/zelt/.test(n))return ['⛺','Zelt'];
+  if(/schlafsack/.test(n))return ['🛏️','Schlafsack'];
+  if(/isomatte|matte/.test(n))return ['🟨','Isomatte'];
+  if(/kocher/.test(n))return ['🔥','Kocher'];
+  if(/kochgeschirr|topf|geschirr/.test(n))return ['🍲','Kochset'];
+  if(/werkzeug|multitool/.test(n))return ['🔧','Werkzeug'];
+  if(/pumpe/.test(n))return ['🛠️','Pumpe'];
+  if(/erste hilfe|first aid/.test(n))return ['🩹','Erste Hilfe'];
+  if(/powerbank|akku/.test(n))return ['🔋','Powerbank'];
+  if(/regenjacke|jacke/.test(n))return ['🧥','Jacke'];
+  if(/trikot|shirt|shorts|hose/.test(n))return ['👕','Kleidung'];
+  if(/snack|riegel|essen/.test(n))return ['🍫','Verpflegung'];
+  if(/hygiene|zahnb/.test(n))return ['🧼','Hygiene'];
+  if(/stirnlampe|licht|lampe/.test(n))return ['🔦','Licht'];
+  if(/sandalen|schuhe/.test(n))return ['👟','Schuhe'];
+  return [g?.icon||'•',g?.cat||'Ausrüstung'];
+}
+function gearIconHtml(g){
+  const [ico,label]=semanticGearIcon(g);
+  return `<div class="gearThumb semantic"><span>${ico}</span><small>${label}</small></div>`;
+}
+function bagMountHint(id){
+  return ({
+    forkL:'kleine Cargo-/Gabeltasche · geeignete Gabelaufnahme nötig',
+    forkR:'kleine Cargo-/Gabeltasche · geeignete Gabelaufnahme nötig',
+    frontSideL:'Front-Pannier · Front-/Lowrider-Träger nötig',
+    frontSideR:'Front-Pannier · Front-/Lowrider-Träger nötig',
+    rearSideL:'Heck-Pannier · Heckgepäckträger nötig',
+    rearSideR:'Heck-Pannier · Heckgepäckträger nötig',
+    saddle:'direkt an Sattel/Sattelstütze',
+    top:'auf dem Oberrohr',
+    frame:'im Rahmendreieck',
+    handlebar:'am Lenker',
+    bottles:'Flaschenhalter / Cage',
+    tools:'kleine Werkzeugtasche'
+  })[id]||'Montagepunkt am Bike';
+}
+function currentBikeIdentity(){
+  const brand=($('bikeBrand')?.value||'').trim();
+  const model=($('bikeModel')?.value||'').trim();
+  const year=($('bikeYear')?.value||'').trim();
+  const type=$('bikeType')?.options[$('bikeType').selectedIndex]?.text||'Bike';
+  const full=[brand,model,year].filter(Boolean).join(' · ');
+  return {brand,model,year,type,label:full||type};
+}
+function bikeIdentityHtml(){
+  const b=currentBikeIdentity(),exact=!!(b.brand&&b.model);
+  return `<div class="bikeIdentity"><div><h4>${b.label}</h4><div class="tiny">${exact?'Deine Angaben steuern Bike-Typ und Montagehinweise. Die Grafik ist derzeit modellnah und schematisch – keine exakte Hersteller-CAD-Geometrie.':'Marke und Modell eintragen, damit die Ansicht und Kompatibilitätsprüfung gezielter werden.'}</div></div><span class="compatBadge">${exact?'Modellprofil Beta':'generisches Bike-Profil'}</span></div>`;
+}
 function guidedBikeSvg(){
   const on=id=>!!bikeBagState[id];
+  const bt=($('bikeType')?.value||'gravel').toLowerCase();
+  const flat=bt.includes('mtb')||bt.includes('mountain');
   const tag=(id,x,y,w,h,label,cls='')=>on(id)
     ?`<g class="bikeMountTag on" data-bag-target="${id}" onclick="toggleBagFromBike('${id}')"><rect class="bagBody" x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="#304c3e" stroke="#fff" stroke-width="3"/><text x="${x+w/2}" y="${y+h/2+5}" text-anchor="middle" font-size="15" font-weight="900" fill="#fff">${label}</text></g>`
     :`<g class="bikeMountTag bikeMountPlus" data-bag-target="${id}" onclick="toggleBagFromBike('${id}')"><circle cx="${x+w/2}" cy="${y+h/2}" r="14"/><text x="${x+w/2}" y="${y+h/2+5}" text-anchor="middle">+</text></g>`;
@@ -1675,7 +1738,7 @@ function guidedBikeSvg(){
     </g>
     <g stroke="#1d2521" stroke-width="13" stroke-linecap="round">
       <line x1="290" y1="175" x2="282" y2="128"/><line x1="248" y1="124" x2="310" y2="124"/>
-      <line x1="505" y1="185" x2="524" y2="132"/><line x1="505" y1="128" x2="560" y2="128"/>
+      <line x1="505" y1="185" x2="524" y2="132"/>${flat?'<line x1="488" y1="128" x2="572" y2="128"/>':'<path d="M505 128 H548 Q565 130 555 150" fill="none"/>'}
     </g>
     <circle cx="360" cy="340" r="19" fill="#1d2521"/>
     ${tag('saddle',220,92,108,58,'S')}
@@ -1751,18 +1814,28 @@ function classifyTerrainCounts(counts){
 }
 function renderJourneyTerrainBand(){
   const host=$('journeyTerrainBand');if(!host)return;
-  const d=window.__terrainSupplyData;
-  if(!d?.available||!Array.isArray(d.stages)||!d.stages.length){
-    host.innerHTML='<span class="unknown" style="width:100%"></span>';return;
+  const d=window.__terrainSupplyData,ctx=window.__routeContext;
+  if(!d?.available||!Array.isArray(d.stages)||!d.stages.length||!ctx?.m?.cumDist){
+    host.innerHTML='<span class="unknown" style="width:100%"></span>';host.title='Terrain-Daten noch nicht verfügbar';return;
   }
-  let sum={asphalt:0,gravel:0,rough:0,unknown:0,total:0};
-  d.stages.forEach(s=>{
-    const c=classifyTerrainCounts(s.terrain?.counts||{});
-    sum.asphalt+=c.asphalt;sum.gravel+=c.gravel;sum.rough+=c.rough;sum.unknown+=c.unknown;sum.total+=c.total;
+  const points=[];
+  d.stages.forEach(s=>(s.terrain?.samples||[]).forEach(x=>{
+    if(Number.isFinite(x.idx)&&Number.isFinite(ctx.m.cumDist[x.idx]))points.push({d:ctx.m.cumDist[x.idx],kind:x.kind||'unknown'});
+  }));
+  points.sort((a,b)=>a.d-b.d);
+  const total=ctx.m.totalDist||1;
+  if(!points.length){host.innerHTML='<span class="unknown" style="width:100%"></span>';host.title='Keine ausreichenden OSM-Terrain-Tags';return}
+  const segs=[];let cursor=0;
+  points.forEach((p,i)=>{
+    const left=i===0?0:(points[i-1].d+p.d)/2;
+    const right=i===points.length-1?total:(p.d+points[i+1].d)/2;
+    if(left>cursor+0.5)segs.push({a:cursor,b:left,kind:'unknown'});
+    segs.push({a:left,b:right,kind:p.kind});cursor=right;
   });
-  if(!sum.total){host.innerHTML='<span class="unknown" style="width:100%"></span>';return}
-  const parts=[['asphalt',sum.asphalt],['gravel',sum.gravel],['rough',sum.rough],['unknown',sum.unknown]];
-  host.innerHTML=parts.filter(([,v])=>v>0).map(([k,v])=>`<span class="${k}" style="width:${(v/sum.total*100).toFixed(2)}%"></span>`).join('');
+  if(cursor<total)segs.push({a:cursor,b:total,kind:'unknown'});
+  const merged=[];
+  segs.forEach(s=>{const last=merged[merged.length-1];if(last&&last.kind===s.kind&&Math.abs(last.b-s.a)<1)last.b=s.b;else merged.push({...s})});
+  host.innerHTML=merged.map(s=>`<span class="${s.kind}" title="${s.a.toFixed(0)}–${s.b.toFixed(0)} km · ${s.kind}" style="width:${Math.max(.3,(s.b-s.a)/total*100)}%"></span>`).join('');
 }
 function renderJourneyMiniProfile(){
   const c=$('journeyMiniProfile');if(!c)return;
@@ -1820,15 +1893,16 @@ function renderBikePackPlanner(){
     </div>
 
     <div class="stepPanel ${packWizardStep===1?'active':''}">
+      ${bikeIdentityHtml()}
       <div class="bikeConfiguratorGrid">
         <div>
-          <div class="bikeStage">${guidedBikeSvg()}<div class="bikeStageLegend">${bikeBagCatalog.map(b=>`<button type="button" class="${bikeBagState[b.id]?'on':''}" onclick="toggleBagFromBike('${b.id}')">${bikeBagState[b.id]?'✓':'＋'} ${b.name}</button>`).join('')}</div></div>
+          <div class="bikeStage"><div class="bikeStageName">${currentBikeIdentity().label}</div>${guidedBikeSvg()}<div class="bikeStageLegend">${bikeBagCatalog.map(b=>`<button type="button" class="${bikeBagState[b.id]?'on':''}" onclick="toggleBagFromBike('${b.id}')">${bikeBagState[b.id]?'✓':'＋'} ${b.name}</button>`).join('')}</div></div>
           <div class="directionNote"><strong>Direkt am Bike antippen:</strong> Tasche montieren oder entfernen. Links/rechts = Fahrerperspektive.</div>${active.length===0?'<div class="emptyBikeHint">Dein Bike ist noch leer. Die kleinen + markieren mögliche Montagepunkte – noch ist nichts ausgewählt.</div>':''}
           <details class="moreViews"><summary>Weitere Ansichten</summary><div class="configTabs"><button type="button" onclick="setBikeViewMode('photo')">Foto-Referenz</button><button type="button" onclick="setBikeViewMode('3d')">3D Beta</button></div></details>
         </div>
         <div class="bikeAside">
-          <div class="bagPanel"><h4>Am Bike befestigt (${active.length})</h4><div class="bagList">${active.map(b=>`<div class="bagLine"><div><strong>${b.name}</strong><div class="meta">${b.capacity} l · ${bagWeight(b.id).toFixed(1)} kg</div></div><button type="button" onclick="setBikeBag('${b.id}',false)">− entfernen</button></div>`).join('')||'<div class="tiny">Noch keine Taschen montiert.</div>'}</div></div>
-          <div class="bagPanel" style="background:#fff8e9"><h4>Noch offen (${inactive.length})</h4><div class="bagList">${inactive.map(b=>`<div class="bagLine open"><div><strong>${b.name}</strong><div class="meta">${b.capacity} l</div></div><button type="button" onclick="setBikeBag('${b.id}',true)">＋ montieren</button></div>`).join('')}</div></div>
+          <div class="bagPanel"><h4>Am Bike befestigt (${active.length})</h4><div class="bagList">${active.map(b=>`<div class="bagLine"><div><strong>${b.name}</strong><div class="meta">${b.capacity} l · ${bagWeight(b.id).toFixed(1)} kg</div><div class="mountHint">${bagMountHint(b.id)}</div></div><button type="button" onclick="setBikeBag('${b.id}',false)">− entfernen</button></div>`).join('')||'<div class="tiny">Noch keine Taschen montiert.</div>'}</div></div>
+          <div class="bagPanel" style="background:#fff8e9"><h4>Noch offen (${inactive.length})</h4><div class="bagList">${inactive.map(b=>`<div class="bagLine open"><div><strong>${b.name}</strong><div class="meta">${b.capacity} l</div><div class="mountHint">${bagMountHint(b.id)}</div></div><button type="button" onclick="setBikeBag('${b.id}',true)">＋ montieren</button></div>`).join('')}</div></div>
           <div class="accessoryPanel"><h4 style="margin:0 0 6px">Bike-Zubehör</h4>${bikeAccessoryCatalog.map(x=>`<div class="accessoryRow"><span>${x.icon} <strong>${x.name}</strong></span><button type="button" class="${bikeAccessoryState[x.id]?'add':'remove'}" onclick="toggleBikeAccessory('${x.id}')">${bikeAccessoryState[x.id]?'✓ montiert':'＋ montieren'}</button></div>`).join('')}</div>
           <button type="button" onclick="setPackWizardStep(2)">Weiter zu Ausrüstung →</button>
         </div>
@@ -1839,7 +1913,7 @@ function renderBikePackPlanner(){
       <div class="gearSectionTitle"><div><h3 style="margin:0">Ausrüstung wählen</h3><div class="tiny">Eigene Dinge ergänzen oder vorhandene Ausrüstung einer Tasche zuweisen.</div></div><input class="gearSearch" placeholder="Ausrüstung suchen …" value="${gearSearchTerm}" oninput="setGearSearch(this.value)"></div>
       <div class="gearFilters">${cats.map(([id,n])=>`<button type="button" class="gearFilter ${packFilter===id?'active':''}" onclick="setPackFilter('${id}')">${n}</button>`).join('')}</div>
       <div class="customGearForm"><label>Name<input id="customGearName" placeholder="z. B. Sandalen"></label><label>Kategorie<select id="customGearCat">${cats.filter(x=>x[0]!=='all').map(([id,n])=>`<option value="${id}">${n}</option>`).join('')}</select></label><label>Gewicht kg<input id="customGearKg" type="number" min="0" step="0.05" placeholder="0.30"></label><label>Menge<input id="customGearQty" type="number" min="1" value="1"></label><label>Bevorzugte Tasche<select id="customGearBag">${customBagOptions()}</select></label><button type="button" class="packPrimary" onclick="addCustomGear()">＋ hinzufügen</button></div>
-      <div class="gearGrid">${visible.map(g=>{const bag=bagById(gearAssignments[g.id]);return `<div class="gearCard compact ${bag?'assigned':''} ${g.custom?'customGear':''}" data-gear-card="${g.id}"><div class="gearThumb">${g.icon}</div><div class="gearName">${g.name}${g.qty&&g.qty>1?` ×${g.qty}`:''}</div><div class="gearMeta">${g.kg.toFixed(2)} kg</div><div class="gearAssigned">${bag?'✓ '+bag.name:'○ noch nicht gepackt'}</div><div class="gearControls"><select aria-label="Tasche für ${g.name}" onchange="setGearBagFromSelect('${g.id}',this.value)">${bagSelectOptions(gearAssignments[g.id]||'')}</select>${bag?`<button type="button" onclick="unassignGear('${g.id}')">Aus Tasche entfernen</button>`:`<button type="button" class="packPrimary" onclick="animatedPackGear('${g.id}')">In passende Tasche legen</button>`}${g.custom?`<button type="button" class="gearDelete" onclick="removeCustomGear('${g.id}')">löschen</button>`:''}</div></div>`}).join('')}</div>
+      <div class="gearGrid">${visible.map(g=>{const bag=bagById(gearAssignments[g.id]);return `<div class="gearCard compact ${bag?'assigned':''} ${g.custom?'customGear':''}" data-gear-card="${g.id}">${gearIconHtml(g)}<div class="gearName">${g.name}${g.qty&&g.qty>1?` ×${g.qty}`:''}</div><div class="gearMeta">${g.kg.toFixed(2)} kg</div><div class="gearAssigned">${bag?'✓ '+bag.name:'○ noch nicht gepackt'}</div><div class="gearControls"><select aria-label="Tasche für ${g.name}" onchange="setGearBagFromSelect('${g.id}',this.value)">${bagSelectOptions(gearAssignments[g.id]||'')}</select>${bag?`<button type="button" onclick="unassignGear('${g.id}')">Aus Tasche entfernen</button>`:`<button type="button" class="packPrimary" onclick="animatedPackGear('${g.id}')">In passende Tasche legen</button>`}${g.custom?`<button type="button" class="gearDelete" onclick="removeCustomGear('${g.id}')">löschen</button>`:''}</div></div>`}).join('')}</div>
       <div style="display:flex;justify-content:flex-end;margin-top:10px"><button type="button" style="width:auto" onclick="setPackWizardStep(3)">Weiter zum Einpacken →</button></div>
     </div>
 
@@ -1848,7 +1922,7 @@ function renderBikePackPlanner(){
       <div class="packModeTabs"><button type="button" class="${packMode==='plan'?'active':''}" onclick="setPackMode('plan')">Übersicht</button><button type="button" class="${packMode==='pack'?'active':''}" onclick="setPackMode('pack')">Einpacken · Animation</button><button type="button" onclick="animatedPackAll()">✨ Alles automatisch einpacken</button><button type="button" onclick="togglePackOnly()">Pack-Fokus · Vollbild</button></div>
       <div class="packDock">${packDockHtml()}</div>
       <div class="bikeConfiguratorGrid">
-        <div><div class="bikeStage">${guidedBikeSvg()}</div><div class="directionNote">Tippe auf eine Tasche am Bike, um sie zu montieren oder zu entfernen. Gepackte Inhalte stehen rechts.</div></div>
+        <div>${bikeIdentityHtml()}<div class="bikeStage"><div class="bikeStageName">${currentBikeIdentity().label}</div>${guidedBikeSvg()}</div><div class="directionNote">Tippe auf eine Tasche am Bike, um sie zu montieren oder zu entfernen. Gepackte Inhalte stehen rechts.</div></div>
         <div class="bikeAside">
           <div class="bagPanel"><h4>Gepackte Taschen</h4><div class="bagList">${active.map(b=>`<div class="bagLine"><div><strong>${b.name}</strong><div class="meta">${bagWeight(b.id).toFixed(1)} kg · ${gearCatalog.filter(g=>gearAssignments[g.id]===b.id).length} Gegenstände</div></div><button type="button" onclick="highlightBikeBag('${b.id}')">anzeigen</button></div>${bagContentsHtml(b)}`).join('')}</div></div>
           <div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>
@@ -1931,13 +2005,16 @@ async function overpassFetch(query){
   return {ok:false,elements:[],source:null};
 }
 function surfaceClass(tags){
-  const s=(tags.surface||'').toLowerCase(),track=(tags.tracktype||'').toLowerCase(),smooth=(tags.smoothness||'').toLowerCase();
-  if(['asphalt','paved','concrete','concrete:plates','paving_stones'].includes(s))return 'paved';
-  if(['gravel','fine_gravel','compacted','pebblestone'].includes(s))return 'gravel';
-  if(['ground','dirt','earth','mud','sand','rock','grass','grass_paver'].includes(s))return 'rough';
+  const s=(tags.surface||'').toLowerCase(),track=(tags.tracktype||'').toLowerCase(),smooth=(tags.smoothness||'').toLowerCase(),h=(tags.highway||'').toLowerCase();
+  if(['asphalt','paved','concrete','concrete:plates','paving_stones','sett'].includes(s))return 'paved';
+  if(['gravel','fine_gravel','compacted','pebblestone','chipseal'].includes(s))return 'gravel';
+  if(['ground','dirt','earth','mud','sand','rock','grass','grass_paver','unpaved'].includes(s))return 'rough';
+  if(['grade1','grade2'].includes(track))return 'gravel';
   if(['grade3','grade4','grade5'].includes(track))return 'rough';
-  if(['very_bad','horrible','very_horrible','impassable'].includes(smooth))return 'rough';
-  if((tags.highway==='track'||tags.highway==='path')&&!s)return 'unknown_offroad';
+  if(['bad','very_bad','horrible','very_horrible','impassable'].includes(smooth))return 'rough';
+  if(!s&&['motorway','trunk','primary','secondary','tertiary','residential','living_street','service','cycleway'].includes(h))return 'paved';
+  if(!s&&h==='track')return track?(['grade1','grade2'].includes(track)?'gravel':'rough'):'unknown_offroad';
+  if(!s&&['path','bridleway'].includes(h))return 'unknown_offroad';
   return 'unknown';
 }
 function terrainDifficulty(counts,roughSignals,total){
@@ -1960,9 +2037,9 @@ function poiCategory(tags){
 async function fetchTerrainSupply(coords,stages){
   // One combined Overpass request to keep load/rate-limits low.
   const samples=[];
-  stages.forEach((s,si)=>stageSamplePoints(coords,s,4).forEach(p=>samples.push({...p,stage:si})));
+  stages.forEach((s,si)=>stageSamplePoints(coords,s,6).forEach(p=>samples.push({...p,stage:si})));
   const endpoints=stages.map((s,si)=>{const c=coords[s.e];return {lat:c[1],lon:c[0],stage:si}});
-  const terrainClauses=samples.slice(0,28).map(p=>`way(around:140,${p.lat},${p.lon})["highway"];`).join('');
+  const terrainClauses=samples.slice(0,40).map(p=>`way(around:220,${p.lat},${p.lon})["highway"];`).join('');
   const lodging=$('lodging')?.value||'hotel';
   const sleepRegex=lodging==='camping'?'camp_site|caravan_site|camp_pitch|wilderness_hut|alpine_hut':lodging==='mixed'?'hotel|hostel|guest_house|motel|camp_site|caravan_site|camp_pitch|alpine_hut|wilderness_hut':'hotel|hostel|guest_house|motel';
   const poiClauses=endpoints.slice(0,10).map(p=>`nwr(around:6000,${p.lat},${p.lon})["tourism"~"${sleepRegex}"];${lodging==='camping'?`nwr(around:6000,${p.lat},${p.lon})["amenity"="shelter"]["shelter_type"~"basic_hut|weather_shelter"];`:''}nwr(around:5000,${p.lat},${p.lon})["amenity"~"restaurant|cafe|fast_food|bar|pub|drinking_water|bicycle_repair_station"];nwr(around:5000,${p.lat},${p.lon})["shop"~"supermarket|convenience|bakery|bicycle"];`).join('');
@@ -2009,7 +2086,11 @@ async function fetchTerrainSupply(coords,stages){
       if(bestD<=2.5){
         const sc=surfaceClass(t),ti=intel[bestStage].terrain;
         ti.counts[sc]=(ti.counts[sc]||0)+1; ti.total++;
-        if(ti.samples.length<30)ti.samples.push({lat,lon,kind:sc,name:t.name||'',surface:t.surface||'',highway:t.highway||'',tracktype:t.tracktype||'',smoothness:t.smoothness||''});
+        if(ti.samples.length<30){
+          let nearestIdx=null,nearest=Infinity;
+          samples.filter(sp=>sp.stage===bestStage).forEach(sp=>{const dd=distKmLatLon(p,sp);if(dd<nearest){nearest=dd;nearestIdx=sp.idx}});
+          ti.samples.push({lat,lon,idx:nearestIdx,kind:sc,name:t.name||'',surface:t.surface||'',highway:t.highway||'',tracktype:t.tracktype||'',smoothness:t.smoothness||''});
+        }
         if(sc==='rough'||['bad','very_bad','horrible','very_horrible','impassable'].includes(t.smoothness)||['grade4','grade5'].includes(t.tracktype))ti.roughSignals++;
         if(t.name&&ti.names.length<3&&!ti.names.includes(t.name))ti.names.push(t.name);
       }
