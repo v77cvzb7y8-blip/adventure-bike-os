@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.80 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.82 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -638,30 +638,54 @@ def osm_terrain():
 @app.post("/api/osm-supply-stage")
 def osm_supply_stage():
     try:
+        import time
         body=request.get_json(force=True) or {}
         lat=float(body.get("lat"))
         lon=float(body.get("lon"))
         lodging=(body.get("lodging") or "hotel").lower()
+        key=(round(lat,3),round(lon,3),lodging)
+        cached=SUPPLY_CACHE.get(key)
+        if cached and time.time()-cached["ts"] < SUPPLY_CACHE_TTL:
+            return jsonify(ok=True,elements=cached["elements"],source="cache",cached=True)
+
         sleep_regex="hotel|guest_house|hostel|motel|camp_site" if lodging=="mixed" else ("camp_site|caravan_site" if lodging=="camping" else "hotel|guest_house|hostel|motel")
-        q=(
-            f'[out:json][timeout:13];('
-            f'nwr(around:5000,{lat},{lon})["tourism"~"{sleep_regex}"];'
-            f'nwr(around:3500,{lat},{lon})["amenity"~"restaurant|cafe|fast_food|drinking_water|bicycle_repair_station"];'
-            f'nwr(around:3500,{lat},{lon})["shop"~"supermarket|convenience|bakery|bicycle"];'
-            f');out center tags;'
-        )
-        for url in OVERPASS_ENDPOINTS:
-            try:
-                r=session.post(url,data={"data":q},headers={"User-Agent":UA,"Accept":"application/json"},timeout=16)
-                print(f"[OSM-SUPPLY-STAGE] {url} status={r.status_code}",flush=True)
-                if r.ok:
-                    return jsonify(ok=True,elements=(r.json() or {}).get("elements") or [],source=url)
-            except Exception as e:
-                print(f"[OSM-SUPPLY-STAGE] {url} failed {e}",flush=True)
+
+        # Smaller search radii and compact queries: show useful partial results quickly.
+        queries=[
+            (
+                f'[out:json][timeout:8];('
+                f'nwr(around:3200,{lat},{lon})["tourism"~"{sleep_regex}"];'
+                f'nwr(around:2200,{lat},{lon})["amenity"~"drinking_water|restaurant|cafe|fast_food|bicycle_repair_station"];'
+                f'nwr(around:2200,{lat},{lon})["shop"~"supermarket|convenience|bakery|bicycle"];'
+                f');out center tags 80;'
+            ),
+            # Fallback: essentials only, even smaller radius.
+            (
+                f'[out:json][timeout:6];('
+                f'nwr(around:2500,{lat},{lon})["tourism"~"{sleep_regex}"];'
+                f'nwr(around:1800,{lat},{lon})["amenity"="drinking_water"];'
+                f'nwr(around:1800,{lat},{lon})["shop"~"supermarket|convenience"];'
+                f');out center tags 50;'
+            )
+        ]
+
+        for qidx,q in enumerate(queries):
+            for url in OVERPASS_ENDPOINTS:
+                try:
+                    r=session.post(url,data={"data":q},headers={"User-Agent":UA,"Accept":"application/json"},timeout=10 if qidx==0 else 8)
+                    print(f"[OSM-SUPPLY-STAGE] q={qidx} {url} status={r.status_code}",flush=True)
+                    if r.ok:
+                        els=(r.json() or {}).get("elements") or []
+                        SUPPLY_CACHE[key]={"ts":time.time(),"elements":els}
+                        return jsonify(ok=True,elements=els,source=url,partial=(qidx>0))
+                except Exception as e:
+                    print(f"[OSM-SUPPLY-STAGE] q={qidx} {url} failed {e}",flush=True)
+
         return jsonify(ok=False,elements=[],warning="Versorgungsdaten für diese Etappe derzeit nicht erreichbar."),200
     except Exception as e:
         print(f"[OSM-SUPPLY-STAGE] error {type(e).__name__}: {e}",flush=True)
         return jsonify(ok=False,elements=[],warning="Versorgungsdaten derzeit nicht erreichbar."),200
+
 
 @app.post("/api/osm-supply")
 def osm_supply():
@@ -696,7 +720,7 @@ def osm_supply():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.80-terrain-progressive-pack-8.3.0")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.82-stability-8.3.2")
 
 @app.get("/health")
 def health():

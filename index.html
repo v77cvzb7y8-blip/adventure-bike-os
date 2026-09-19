@@ -578,13 +578,51 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
 .bike3dHint{position:absolute;left:12px;bottom:10px;background:rgba(255,255,255,.9);padding:6px 8px;border-radius:8px;font-size:8px}
 .packFly{transition:left .8s cubic-bezier(.18,.8,.2,1),top .8s cubic-bezier(.18,.8,.2,1),transform .8s ease,opacity .8s ease!important}
 @media(max-width:900px){.packWorkbench{grid-template-columns:1fr}.packWorkbenchBike{position:relative;top:auto}}
+
+/* ===== 8.3.1 fixes ===== */
+.stageLegend{display:none!important;height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
+#map + .stageLegend{margin-bottom:0!important}
+.mapCard,.mapWrap,.routeMapCard{padding-bottom:6px!important}
+.elevationWrap,.elevationCard{margin-top:6px!important}
+.packFly{
+  position:fixed!important;
+  z-index:99999!important;
+  pointer-events:none!important;
+  transform:translate(-50%,-50%)!important;
+  background:#fff8e7!important;
+  border:2px solid #1d7a55!important;
+  color:#173d2b!important;
+  font-weight:850!important;
+  font-size:12px!important;
+  padding:8px 11px!important;
+  border-radius:999px!important;
+  box-shadow:0 10px 28px rgba(18,56,39,.24)!important;
+  white-space:nowrap!important;
+}
+.packBagCard{cursor:pointer}
+.packBagLoad{height:7px;border-radius:999px;background:#e2e8e3;overflow:hidden;margin:7px 0 5px}
+.packBagLoad span{display:block;height:100%;border-radius:999px}
+.packBagHint{font-size:8px;color:#67736c;margin-top:4px}
+.bike3dWrap{min-height:440px}
+.bike3dWrap canvas{display:block;width:100%!important;height:440px!important}
+.terrainLegendStrong{display:flex;gap:10px;flex-wrap:wrap;margin:7px 0}
+.terrainLegendStrong span{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:750}
+.terrainLegendStrong i{width:18px;height:7px;border-radius:999px;display:inline-block}
+
+/* ===== 8.3.2 stabilization ===== */
+.stageLegend,.stageLegendRow,.mapStageRows{display:none!important;height:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}
+#map{margin-bottom:0!important}
+#mapPanel,.mapPanel,.mapCard,.routeMapCard{margin-bottom:4px!important;padding-bottom:4px!important}
+.elevationCard,.elevationWrap,#elevationWrap{margin-top:4px!important}
+.supplyFallbackActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.supplyFallbackActions button{width:auto!important}
 </style>
 </head>
 <body>
 <header class="productHero">
   <div class="brandRow">
     <div>
-      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.3.0</div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.3.2</div>
       <h1>Dein Bike. Dein Abenteuer.</h1>
       <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
     </div>
@@ -957,7 +995,7 @@ function drawElevation(coords,m,stages,activeStage=null){
 
   // terrain strip on the exact same km axis as the profile
   const terrain=currentTerrainSegments();
-  const terrainY=H-B+11,terrainH=9;
+  const terrainY=H-B+8,terrainH=15;
   const terrainColors={paved:'#648675',gravel:'#b58b54',rough:'#795b42',unknown_offroad:'#998773',unknown:'#d4d2ca'};
   terrain.segments.forEach(seg=>{
     const x1=xForKm(seg.a),x2=xForKm(seg.b);
@@ -967,7 +1005,7 @@ function drawElevation(coords,m,stages,activeStage=null){
 
   // profile, colored by terrain on the exact same km axis
   const profileColors={paved:'#648675',gravel:'#b58b54',rough:'#795b42',unknown_offroad:'#998773',unknown:'#1f6f4a'};
-  ctx.lineWidth=4;
+  ctx.lineWidth=6;
   for(let i=1;i<coords.length;i++){
     const x1=xForKm(m.dist[i-1]),y1=yForElev(coords[i-1][2]??lo),x2=xForKm(m.dist[i]),y2=yForElev(coords[i][2]??lo);
     ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
@@ -1375,7 +1413,8 @@ async function adjustStageBoundary(i,deltaKm){
   showMap(ctx.coords,stages);drawElevation(ctx.coords,m,stages);
   $('terrainSupply').innerHTML='<div class="intelCard"><b>Versorgung wird für die geänderten Etappen neu geprüft …</b></div>';
   const weather=await fetchStageWeather(ctx.coords,stages);renderAdventureLayers(stages,weather);
-  const terrainSupply=await fetchTerrainSupply(ctx.coords,stages);renderTerrainSupply(terrainSupply,stages,ctx.labels);updateTerrainStatus(terrainSupply);renderTerrainOnMap(terrainSupply);
+  const terrainSupply=await fetchTerrainSupply(ctx.coords,stages);renderTerrainSupply(terrainSupply,stages,ctx.labels);updateTerrainStatus(terrainSupply);
+      drawElevation(coords,m,stages,window.__activeStage??null);refreshJourneyMini();renderTerrainOnMap(terrainSupply);
   attachBlockActions();
   showCopyToast(`Etappengrenze ${deltaKm>0?'verlängert':'verkürzt'}`);
 }
@@ -1698,19 +1737,45 @@ function customBagOptions(){
   return `<option value="">automatisch</option>`+bikeBagCatalog.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
 }
 function gearLabel(g){return `${g.icon||'•'} ${g.name}${g.qty&&g.qty>1?` ×${g.qty}`:''}`}
+function elementScreenCenter(el){
+  if(!el)return null;
+  try{
+    const shape=el.matches?.('rect,circle,path')?el:el.querySelector?.('rect,circle,path');
+    if(shape?.getBoundingClientRect){
+      const r=shape.getBoundingClientRect();
+      if(r.width||r.height)return {x:r.left+r.width/2,y:r.top+r.height/2};
+    }
+    const r=el.getBoundingClientRect?.();
+    if(r&&(r.width||r.height))return {x:r.left+r.width/2,y:r.top+r.height/2};
+  }catch(e){}
+  return null;
+}
 function animateGearToBag(gearId,bagId){
   return new Promise(resolve=>{
     const g=gearById(gearId),b=bagById(bagId);if(!g||!b){resolve();return}
-    const card=document.querySelector(`[data-gear-card="${gearId}"]`);
+    const source=document.querySelector(`[data-gear-card="${gearId}"]`)||document.querySelector('[data-next-pack-source="1"]');
     const target=document.querySelector(`.stepPanel.active [data-bag-target="${bagId}"]`)||document.querySelector(`[data-bag-target="${bagId}"]`);
     const bagCard=document.querySelector(`[data-pack-bag-card="${bagId}"]`);
-    const sr=card?.getBoundingClientRect()||{left:window.innerWidth*.72,top:window.innerHeight*.72,width:40,height:40};
-    const tr=target?.getBoundingClientRect()||bagCard?.getBoundingClientRect();
+    const sc=elementScreenCenter(source)||{x:window.innerWidth*.68,y:window.innerHeight*.62};
+    const tc=elementScreenCenter(target)||elementScreenCenter(bagCard)||{x:window.innerWidth*.42,y:window.innerHeight*.42};
+
     const ghost=document.createElement('div');ghost.className='packFly';ghost.textContent=gearLabel(g);
-    ghost.style.left=`${sr.left+sr.width/2}px`;ghost.style.top=`${sr.top+sr.height/2}px`;ghost.style.transform='translate(-50%,-50%)';document.body.appendChild(ghost);
+    ghost.style.left=`${Math.max(18,Math.min(window.innerWidth-18,sc.x))}px`;
+    ghost.style.top=`${Math.max(18,Math.min(window.innerHeight-18,sc.y))}px`;
+    ghost.style.opacity='1';ghost.style.transition='none';document.body.appendChild(ghost);
     target?.classList.add('packTargetFlash');bagCard?.classList.add('active');
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{ghost.style.left=`${tr?tr.left+tr.width/2:window.innerWidth/2}px`;ghost.style.top=`${tr?tr.top+tr.height/2:window.innerHeight*.35}px`;ghost.style.transform='translate(-50%,-50%) scale(.65)';ghost.style.opacity='.12'}));
-    setTimeout(()=>{ghost.remove();target?.classList.remove('packTargetFlash');bagCard?.classList.remove('active');resolve()},900);
+    const safeX=Math.max(24,Math.min(window.innerWidth-24,tc.x));
+    const safeY=Math.max(24,Math.min(window.innerHeight-24,tc.y));
+    requestAnimationFrame(()=>{
+      ghost.getBoundingClientRect();
+      ghost.style.transition='left .72s cubic-bezier(.18,.8,.2,1), top .72s cubic-bezier(.18,.8,.2,1), transform .72s ease, opacity .72s ease';
+      requestAnimationFrame(()=>{
+        ghost.style.left=`${safeX}px`;ghost.style.top=`${safeY}px`;ghost.style.transform='translate(-50%,-50%) scale(.62)';ghost.style.opacity='.16';
+      });
+    });
+    setTimeout(()=>{
+      ghost.remove();target?.classList.remove('packTargetFlash');bagCard?.classList.remove('active');resolve();
+    },900);
   });
 }
 async function animatedPackGear(gearId){
@@ -1892,7 +1957,14 @@ function bagContentsHtml(bag){
 
 let bikeViewMode=localStorage.getItem('abo-bike-view-mode-v3')||'config';
 function setBikeViewMode(mode){
-  bikeViewMode=mode;localStorage.setItem('abo-bike-view-mode-v3',mode);renderBikePackPlanner();
+  bikeViewMode=mode;
+  localStorage.setItem('abo-bike-view-mode-v3',mode);
+  if(mode==='3d'){local3d.yaw=.28;local3d.pitch=-.08}
+  renderBikePackPlanner();
+  if(mode==='3d'){
+    requestAnimationFrame(()=>requestAnimationFrame(()=>initLocal3D()));
+    setTimeout(()=>initLocal3D(),180);
+  }
 }
 
 function svgBagShape(id,mini=false){
@@ -1948,36 +2020,67 @@ function packDockHtml(){
 let local3d={yaw:.25,pitch:-.08,drag:false,x:0,y:0,raf:null};
 function initLocal3D(){
   const c=$('bike3dLocal');if(!c||bikeViewMode!=='3d')return;
-  const ctx=c.getContext('2d');
-  const dpr=Math.min(window.devicePixelRatio||1,2);
-  function resize(){const r=c.getBoundingClientRect();c.width=Math.max(1,r.width*dpr);c.height=Math.max(1,r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
-  resize();
-  const pts={
-    rear:[-1.5,0,0],front:[1.5,0,0],bb:[-.15,.2,0],seat:[-.65,1.15,0],head:[.9,1.08,0],head2:[1.0,.62,0],
-    bar:[.95,1.45,0],saddle:[-.72,1.43,0]
-  };
-  const edges=[['rear','bb'],['rear','seat'],['bb','seat'],['seat','head'],['bb','head2'],['head','head2'],['head2','front'],['head','front'],['seat','saddle'],['head','bar']];
+  if(local3d.raf)cancelAnimationFrame(local3d.raf);
+  const ctx=c.getContext('2d'),dpr=Math.min(window.devicePixelRatio||1,2);
+  function resize(){
+    const r=c.getBoundingClientRect(),w=Math.max(320,r.width),h=Math.max(360,r.height||440);
+    c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);draw();
+  }
+  const pts={rear:[-1.55,0,0],front:[1.55,0,0],bb:[-.12,.18,0],seat:[-.68,1.12,0],head:[.9,1.04,0],head2:[1.03,.58,0],bar:[1.02,1.42,0],saddle:[-.76,1.42,0]};
+  const edges=[['rear','bb'],['rear','seat'],['bb','seat'],['seat','head'],['bb','head2'],['head','head2'],['head2','front'],['seat','saddle'],['head','bar']];
   function rot(p){
     let [x,y,z]=p,cy=Math.cos(local3d.yaw),sy=Math.sin(local3d.yaw),cp=Math.cos(local3d.pitch),sp=Math.sin(local3d.pitch);
-    let x1=x*cy-z*sy,z1=x*sy+z*cy,y1=y;
-    return [x1,y1*cp-z1*sp,y1*sp+z1*cp];
+    const x1=x*cy-z*sy,z1=x*sy+z*cy;
+    return [x1,y*cp-z1*sp,y*sp+z1*cp];
   }
-  function proj(p,w,h){const [x,y,z]=rot(p),s=118/(3.8+z);return [w/2+x*s,h*.72-y*s,s]}
-  function line(a,b,w,h,width=5,color='#7d704f'){const A=proj(a,w,h),B=proj(b,w,h);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.stroke()}
-  function wheel(center,w,h){const C=proj(center,w,h);ctx.strokeStyle='#1c211f';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(C[0],C[1],58,58*Math.max(.18,Math.abs(Math.cos(local3d.yaw))),0,0,Math.PI*2);ctx.stroke()}
-  function box(id,pos,size,w,h,label){if(!bikeBagState[id])return;const P=proj(pos,w,h),sx=size[0]*P[2],sy=size[1]*P[2];ctx.fillStyle=id.includes('rear')?'#6e5938':id.includes('front')?'#496e58':'#294e3e';ctx.fillRect(P[0]-sx/2,P[1]-sy/2,sx,sy);ctx.fillStyle='#fff';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.fillText(label,P[0],P[1]+3)}
+  function project(p,w,h){
+    const [x,y,z]=rot(p),base=Math.min(w/4.25,h/2.65),pers=3.6/(3.6+z*.45),s=base*pers;
+    return [w/2+x*s,h*.70-y*s,s];
+  }
+  function line(a,b,w,h,width=8,color='#8d7a57'){
+    const A=project(a,w,h),B=project(b,w,h);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.stroke()
+  }
+  function wheel(center,w,h){
+    const C=project(center,w,h),base=Math.min(w/4.25,h/2.65),rx=.73*base,ry=rx*Math.max(.18,Math.abs(Math.cos(local3d.yaw)));
+    ctx.strokeStyle='#1c211f';ctx.lineWidth=8;ctx.beginPath();ctx.ellipse(C[0],C[1],rx,ry,0,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle='#9aa59f';ctx.lineWidth=1.2;
+    for(let i=0;i<12;i++){const a=i*Math.PI/6;ctx.beginPath();ctx.moveTo(C[0],C[1]);ctx.lineTo(C[0]+rx*Math.cos(a),C[1]+ry*Math.sin(a));ctx.stroke()}
+  }
+  function box(id,pos,size,w,h,label){
+    if(!bikeBagState[id])return;
+    const P=project(pos,w,h),sx=Math.max(26,size[0]*P[2]),sy=Math.max(18,size[1]*P[2]);
+    ctx.fillStyle=bagLoadColor(id);ctx.strokeStyle='#f7f1e3';ctx.lineWidth=3;
+    ctx.beginPath();ctx.roundRect(P[0]-sx/2,P[1]-sy/2,sx,sy,8);ctx.fill();ctx.stroke();
+    const pct=Math.min(100,bagLoadPercent(id));
+    ctx.fillStyle='rgba(255,255,255,.88)';ctx.fillRect(P[0]-sx/2+5,P[1]+sy/2-8,(sx-10)*pct/100,4);
+    ctx.fillStyle='#fff';ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillText(label,P[0],P[1]+4);
+  }
   function draw(){
-    const r=c.getBoundingClientRect(),w=r.width,h=r.height;ctx.clearRect(0,0,w,h);
-    wheel(pts.rear,w,h);wheel(pts.front,w,h);edges.forEach(([a,b])=>line(pts[a],pts[b],w,h));
-    box('frame',[.05,.72,.08],[1.0,.42,.2],w,h,'R');box('saddle',[-.98,1.25,.08],[.55,.26,.2],w,h,'S');box('handlebar',[1.08,1.28,.08],[.45,.35,.4],w,h,'L');
-    box('rearSideL',[-1.25,.48,.32],[.5,.6,.25],w,h,'HL');box('rearSideR',[-1.25,.48,-.32],[.5,.6,.25],w,h,'HR');
-    box('frontSideL',[1.28,.45,.30],[.4,.55,.22],w,h,'VL');box('frontSideR',[1.28,.45,-.30],[.4,.55,.22],w,h,'VR');
-    local3d.raf=requestAnimationFrame(draw);
+    const r=c.getBoundingClientRect(),w=Math.max(320,r.width),h=Math.max(360,r.height||440);
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='#eef3ee';ctx.fillRect(0,0,w,h);
+    wheel(pts.rear,w,h);wheel(pts.front,w,h);
+    edges.forEach(([a,b])=>line(pts[a],pts[b],w,h));
+    line(pts.seat,pts.saddle,w,h,8,'#222925');line(pts.head,pts.bar,w,h,8,'#222925');
+    box('frame',[.02,.72,.04],[1.05,.48,.24],w,h,'R');
+    box('top',[.18,1.03,.08],[.62,.18,.20],w,h,'OT');
+    box('saddle',[-.95,1.27,.08],[.66,.30,.22],w,h,'S');
+    box('handlebar',[1.10,1.27,.08],[.55,.42,.38],w,h,'L');
+    box('tools',[-.55,.77,.12],[.30,.32,.20],w,h,'W');
+    box('bottles',[.12,.35,.10],[.28,.46,.18],w,h,'FL');
+    box('rearSideL',[-1.22,.50,.34],[.56,.72,.28],w,h,'HL');
+    box('rearSideR',[-1.22,.50,-.34],[.56,.72,.28],w,h,'HR');
+    box('frontSideL',[1.25,.48,.31],[.48,.68,.24],w,h,'VL');
+    box('frontSideR',[1.25,.48,-.31],[.48,.68,.24],w,h,'VR');
+    box('forkL',[1.06,.62,.28],[.30,.56,.20],w,h,'GL');
+    box('forkR',[1.06,.62,-.28],[.30,.56,.20],w,h,'GR');
   }
   c.onpointerdown=e=>{local3d.drag=true;local3d.x=e.clientX;local3d.y=e.clientY;c.setPointerCapture?.(e.pointerId)};
-  c.onpointermove=e=>{if(!local3d.drag)return;local3d.yaw+=(e.clientX-local3d.x)*.012;local3d.pitch=Math.max(-.45,Math.min(.35,local3d.pitch+(e.clientY-local3d.y)*.006));local3d.x=e.clientX;local3d.y=e.clientY};
-  c.onpointerup=c.onpointercancel=()=>local3d.drag=false;
-  draw();
+  c.onpointermove=e=>{if(!local3d.drag)return;local3d.yaw+=(e.clientX-local3d.x)*.012;local3d.pitch=Math.max(-.42,Math.min(.30,local3d.pitch+(e.clientY-local3d.y)*.006));local3d.x=e.clientX;local3d.y=e.clientY;draw()};
+  c.onpointerup=c.onpointercancel=()=>{local3d.drag=false};
+  if('ResizeObserver' in window){new ResizeObserver(resize).observe(c)}
+  window.addEventListener('resize',resize,{passive:true});
+  resize();setTimeout(resize,120);
 }
 
 let packWizardStep=1;
@@ -2062,10 +2165,21 @@ function bikeIdentityHtml(){
   const b=currentBikeIdentity(),exact=!!(b.brand&&b.model);
   return `<div class="bikeIdentity"><div><h4>${b.label}</h4><div class="tiny">${exact?'Deine Angaben steuern Bike-Typ und Montagehinweise. Die Grafik ist derzeit modellnah und schematisch – keine exakte Hersteller-CAD-Geometrie.':'Marke und Modell eintragen, damit die Ansicht und Kompatibilitätsprüfung gezielter werden.'}</div></div><span class="compatBadge">${exact?'Modellprofil Beta':'generisches Bike-Profil'}</span></div>`;
 }
+
+function bagLoadColor(id){
+  const p=bagLoadPercent(id);
+  if(p>=90)return '#b94a3f';
+  if(p>=65)return '#c58a34';
+  return '#2f7657';
+}
+function compactBagItemsHtml(id){
+  const items=bagItems(id);
+  return items.length?items.map(g=>`<span>${gearLabel(g)}</span>`).join(''):'<span>leer</span>';
+}
 function guidedBikeSvg(){
   if(bikeViewMode==='3d')return `<div class="bike3dWrap"><canvas id="bike3dLocal"></canvas><div class="bike3dHint">Ziehen = drehen · hoch/runter = kippen</div></div>`;
   const on=id=>!!bikeBagState[id];
-  const bag=(id,x,y,w,h,label,cls='')=>on(id)?`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="${cls==='rear'?'#536b5a':'#284b3b'}" stroke="#f8f4e9" stroke-width="3"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" fill="#fff" font-size="13" font-weight="900">${label}</text></g>`:`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><circle cx="${x+w/2}" cy="${y+h/2}" r="12" fill="#fff" stroke="#1f6f4a" stroke-width="2" stroke-dasharray="3 3"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" fill="#1f6f4a" font-weight="900">+</text></g>`;
+  const bag=(id,x,y,w,h,label,cls='')=>{const pct=Math.min(100,bagLoadPercent(id));return on(id)?`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="${bagLoadColor(id)}" stroke="#f8f4e9" stroke-width="3"/><rect x="${x+4}" y="${y+h-8}" width="${Math.max(0,(w-8)*pct/100)}" height="4" rx="2" fill="#fff" opacity=".88"/><text x="${x+w/2}" y="${y+h/2+2}" text-anchor="middle" fill="#fff" font-size="13" font-weight="900">${label}</text><text x="${x+w/2}" y="${y+h/2+16}" text-anchor="middle" fill="#fff" font-size="8" font-weight="800">${pct}%</text></g>`:`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><circle cx="${x+w/2}" cy="${y+h/2}" r="12" fill="#fff" stroke="#1f6f4a" stroke-width="2" stroke-dasharray="3 3"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" fill="#1f6f4a" font-weight="900">+</text></g>`};
   const spokes=Array.from({length:16},(_,i)=>{const a=i*Math.PI/8;return `<line x1="175" y1="330" x2="${(175+106*Math.cos(a)).toFixed(1)}" y2="${(330+106*Math.sin(a)).toFixed(1)}"/><line x1="635" y1="330" x2="${(635+106*Math.cos(a)).toFixed(1)}" y2="${(330+106*Math.sin(a)).toFixed(1)}"/>`}).join('');
   return `<svg viewBox="0 0 820 470" role="img" aria-label="Gravelbike mit Taschen"><rect width="820" height="470" fill="#eef3ee"/><g fill="none" stroke="#1e2421" stroke-width="12"><circle cx="175" cy="330" r="112"/><circle cx="635" cy="330" r="112"/></g><g stroke="#65716a" stroke-width="2" opacity=".55">${spokes}</g><g fill="none" stroke="#8d7a57" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"><path d="M175 330 L382 330 L305 160 Z"/><path d="M305 160 L535 175 L382 330 Z"/><path d="M535 175 L635 330"/><path d="M175 330 L305 160"/></g><g fill="none" stroke="#1e2421" stroke-width="10" stroke-linecap="round"><path d="M305 160 L294 112"/><path d="M258 107 H326"/><path d="M535 175 L558 116"/><path d="M550 112 C584 108 602 113 594 133 C589 145 600 153 612 149"/></g><circle cx="382" cy="330" r="20" fill="#1e2421"/><path d="M382 330 C330 340 255 341 190 330" fill="none" stroke="#2c302d" stroke-width="3"/>${bag('saddle',232,74,118,54,'S')}${bag('top',385,145,92,30,'OT')}${bag('frame',335,194,142,88,'R')}${bag('handlebar',548,72,118,82,'L')}${bag('tools',286,206,42,52,'W')}${bag('rearSideL',78,244,82,112,'HL','rear')}${bag('rearSideR',153,250,82,112,'HR','rear')}${bag('frontSideL',568,248,72,110,'VL')}${bag('frontSideR',638,250,72,110,'VR')}${bag('forkL',532,230,44,92,'GL')}${bag('forkR',697,231,44,92,'GR')}${bag('bottles',392,284,40,74,'FL')}${bikeAccessoryState.rearLight?'<circle cx="240" cy="108" r="9" fill="#d73a31"/>':''}${bikeAccessoryState.frontLight?'<circle cx="605" cy="120" r="10" fill="#f0cf47"/>':''}${bikeAccessoryState.computer?'<rect x="566" y="94" width="33" height="21" rx="4" fill="#26312c"/>':''}</svg>`;
 }
@@ -2137,22 +2251,18 @@ function currentTerrainSegments(){
   points.sort((a,b)=>a.d-b.d);
   if(!points.length)return {segments:[{a:0,b:total,kind:'unknown'}],total,coverage:0};
 
-  // Each sample represents only its local interval. Unknown gaps stay unknown.
-  const influence=Math.min(6,Math.max(2.5,total/Math.max(1,points.length)*0.55));
-  const raw=points.map(p=>({a:Math.max(0,p.d-influence),b:Math.min(total,p.d+influence),kind:p.matched?p.kind:'unknown'})).sort((a,b)=>a.a-b.a);
-  const timeline=[];let cursor=0;
-  raw.forEach(s=>{
-    if(s.a>cursor)timeline.push({a:cursor,b:s.a,kind:'unknown'});
-    const a=Math.max(cursor,s.a);
-    if(s.b>a)timeline.push({a,b:s.b,kind:s.kind});
-    cursor=Math.max(cursor,s.b);
+  // Each classified point owns the interval halfway to its neighbours.
+  // This is deliberately shown as a sample-based terrain estimate, not metre-perfect surface data.
+  const segments=points.map((p,i)=>{
+    const prev=points[i-1],next=points[i+1];
+    const a=i===0?0:(prev.d+p.d)/2;
+    const b=i===points.length-1?total:(p.d+next.d)/2;
+    return {a,b,kind:p.matched?p.kind:'unknown'};
   });
-  if(cursor<total)timeline.push({a:cursor,b:total,kind:'unknown'});
-
   const merged=[];
-  timeline.forEach(s=>{
+  segments.forEach(s=>{
     const last=merged.at(-1);
-    if(last&&last.kind===s.kind&&Math.abs(last.b-s.a)<.02)last.b=s.b;
+    if(last&&last.kind===s.kind&&Math.abs(last.b-s.a)<.05)last.b=s.b;
     else merged.push({...s});
   });
   const known=merged.filter(s=>s.kind!=='unknown').reduce((n,s)=>n+(s.b-s.a),0);
@@ -2166,7 +2276,7 @@ function renderJourneyTerrainBand(){
     return `<span class="${s.kind}" title="${s.a.toFixed(0)}–${s.b.toFixed(0)} km · ${label}" style="width:${Math.max(.2,(s.b-s.a)/total*100)}%"></span>`;
   }).join('');
   host.title=`Terrain entlang der Route · Datenabdeckung ca. ${Math.round(coverage)}%`;
-  const note=$('elevNote');if(note)note.innerHTML=`Terrain liegt direkt auf dem Höhenprofil und derselben km-Achse.${terrainSummaryHtml()}`;
+  const note=$('elevNote');if(note)note.innerHTML=`Terrain-Schätzung aus OSM-Stichproben liegt direkt auf dem Höhenprofil und derselben km-Achse.${terrainSummaryHtml()}`;
 }
 function syncRouteTerrainStrip(){
   const src=$('journeyTerrainBand'),dst=$('routeTerrainStrip');
@@ -2259,7 +2369,7 @@ function renderBikePackPlanner(){
       <div class="packDock">${packDockHtml()}</div>
       <div class="packWorkbench">
         <div class="packWorkbenchBike">${bikeIdentityHtml()}<div class="bikeViewTabs"><button type="button" class="${bikeViewMode!=='3d'?'active':''}" onclick="setBikeViewMode('config')">Seitenansicht</button><button type="button" class="${bikeViewMode==='3d'?'active':''}" onclick="setBikeViewMode('3d')">3D drehen</button></div><div class="bikeStage"><div class="bikeStageName">${currentBikeIdentity().label}</div>${guidedBikeSvg()}</div><div class="directionNote"><strong>Packen direkt am Bike:</strong> Zieltasche leuchtet auf; Inhalte stehen unmittelbar daneben.</div></div>
-        <div class="packWorkbenchAside">${(()=>{const next=gearCatalog.find(g=>!gearAssignments[g.id]);return next?`<div class="packNextItem"><strong>Nächster Gegenstand: ${gearLabel(next)}</strong><div class="tiny">Empfehlung: ${bagById(bestBagForGear(next.id))?.name||'erst passende Tasche montieren'}</div><button type="button" onclick="animatedPackGear('${next.id}')">in passende Tasche packen</button></div>`:''})()}${active.map(b=>`<div class="packBagCard" data-pack-bag-card="${b.id}"><strong>${b.name}</strong><div class="tiny">${bagWeight(b.id).toFixed(1)} kg · ${bagLoadPercent(b.id)}% Richtwert</div><div class="packBagItems">${bagItems(b.id).length?bagItems(b.id).map(g=>`<span>${gearLabel(g)}</span>`).join(''):'<span>leer</span>'}</div>${bagContentsHtml(b)}</div>`).join('')}<div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>${packResearchHtml()}</div>
+        <div class="packWorkbenchAside">${(()=>{const next=gearCatalog.find(g=>!gearAssignments[g.id]);return next?`<div class="packNextItem" data-next-pack-source="1"><strong>Nächster Gegenstand: ${gearLabel(next)}</strong><div class="tiny">Empfehlung: ${bagById(bestBagForGear(next.id))?.name||'erst passende Tasche montieren'}</div><button type="button" onclick="animatedPackGear('${next.id}')">in passende Tasche packen</button></div>`:''})()}${active.map(b=>`<div class="packBagCard" data-pack-bag-card="${b.id}" onclick="highlightBikeBag('${b.id}')"><strong>${b.name}</strong><div class="tiny">${bagWeight(b.id).toFixed(1)} kg · ${bagLoadPercent(b.id)}% Richtwert</div><div class="packBagLoad"><span style="width:${Math.min(100,bagLoadPercent(b.id))}%;background:${bagLoadColor(b.id)}"></span></div><div class="packBagItems">${compactBagItemsHtml(b.id)}</div><div class="packBagHint">Diese Tasche ist am Bike farblich gleich markiert.</div></div>`).join('')}<div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>${packResearchHtml()}</div>
       </div>
     </div>
 
@@ -2420,12 +2530,23 @@ function wayGeometryPoints(el){
   const c=centerOf(el);return c?[c]:[];
 }
 function nearestDistanceToWay(sample,el){
+  const pts=wayGeometryPoints(el);if(!pts.length)return Infinity;
+  const lat0=sample.lat*Math.PI/180,kmLat=111.32,kmLon=111.32*Math.cos(lat0);
+  const sx=0,sy=0;
   let best=Infinity;
-  for(const p of wayGeometryPoints(el)){const d=distKmLatLon(sample,p);if(d<best)best=d}
+  const xy=p=>({x:(p.lon-sample.lon)*kmLon,y:(p.lat-sample.lat)*kmLat});
+  if(pts.length===1){const p=xy(pts[0]);return Math.hypot(p.x,p.y)}
+  for(let i=1;i<pts.length;i++){
+    const a=xy(pts[i-1]),b=xy(pts[i]);
+    const vx=b.x-a.x,vy=b.y-a.y,den=vx*vx+vy*vy;
+    let t=den?(-a.x*vx-a.y*vy)/den:0;t=Math.max(0,Math.min(1,t));
+    const px=a.x+t*vx,py=a.y+t*vy;
+    best=Math.min(best,Math.hypot(px,py));
+  }
   return best;
 }
 async function fetchTerrainSupply(coords,stages,m){
-  const samples=terrainRouteSamples(coords,stages,m,Math.max(8,(m?.totalDist||0)/32),34);
+  const samples=terrainRouteSamples(coords,stages,m,Math.max(7,(m?.totalDist||0)/52),54);
   const terrainRaw=await fetch(`${API}/api/osm-terrain`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({samples})})
     .then(r=>r.json()).catch(()=>({ok:false,elements:[]}));
   const intel=stages.map(()=>({terrain:{counts:{paved:0,gravel:0,rough:0,unknown_offroad:0,unknown:0},total:0,roughSignals:0,names:[],samples:[],routeSamples:[]},supply:{sleep:[],food:[],water:[],grocery:[],bike:[]},ferries:[]}));
@@ -2434,9 +2555,12 @@ async function fetchTerrainSupply(coords,stages,m){
     routeSamples.forEach(sp=>{
       let bestEl=null,bestD=Infinity;
       for(const el of (terrainRaw.elements||[])){const d=nearestDistanceToWay(sp,el);if(d<bestD){bestD=d;bestEl=el}}
-      if(bestEl&&bestD<=0.16){
-        const t=bestEl.tags||{},kind=terrainKind(t);sp.kind=kind;sp.matchDistance=bestD;
-        const b=intel[sp.stage]?.terrain;if(b){b.counts[kind]=(b.counts[kind]||0)+1;b.total++;b.routeSamples.push({...sp});if(t.name&&!b.names.includes(t.name)&&b.names.length<4)b.names.push(t.name)}
+      if(bestEl&&bestD<=0.24){
+        try{
+          const t=bestEl.tags||{},kind=surfaceClass(t);sp.kind=kind;sp.matchDistance=bestD;
+          const b=intel[sp.stage]?.terrain;
+          if(b){b.counts[kind]=(b.counts[kind]||0)+1;b.total++;b.routeSamples.push({...sp});if(t.name&&!b.names.includes(t.name)&&b.names.length<4)b.names.push(t.name)}
+        }catch(e){console.warn('Terrain sample skipped',e)}
       }
     });
   }
@@ -2461,7 +2585,7 @@ function renderSupplyProgress(stages,names,status=[]){
   $('terrainSupply').innerHTML=`<div class="supplyProgress">${stages.map((x,i)=>{
     const st=status[i]||{state:'loading'};
     if(st.state==='loading')return `<div class="supplyStageCard loading"><h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3><div class="tiny">Versorgung wird geladen …</div><div class="supplySkeleton"></div><div class="supplySkeleton"></div></div>`;
-    if(st.state==='error')return `<div class="supplyStageCard"><h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3><div class="tiny">Daten für diese Etappe gerade nicht erreichbar.</div><button type="button" onclick="retrySupplyStage(${i})">erneut laden</button></div>`;
+    if(st.state==='error')return `<div class="supplyStageCard"><h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3><div class="tiny">OSM-Zusatzdaten für diese Etappe gerade nicht erreichbar. Die Route bleibt vollständig nutzbar.</div><div class="supplyFallbackActions"><button type="button" onclick="retrySupplyStage(${i})">erneut laden</button><button type="button" onclick="openStageSupplySearch(${i},'hotel')">Unterkunft suchen</button><button type="button" onclick="openStageSupplySearch(${i},'food')">Essen / Einkauf</button></div></div>`;
     const s=x.supply||emptySupplyStage();
     return `<div class="supplyStageCard"><h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3>${supplyCategory(i,'sleep',lodgingLabel,s.sleep,true)}${supplyCategory(i,'food','🍽 Essen',s.food,true)}${supplyCategory(i,'water','💧 Trinkwasser',s.water,true)}${supplyCategory(i,'grocery','🛒 Einkauf',s.grocery,true)}${supplyCategory(i,'bike','🔧 Bike-Service',s.bike,true)}</div>`;
   }).join('')}</div>`;
@@ -2470,18 +2594,30 @@ function renderSupplyProgress(stages,names,status=[]){
 async function loadSupplyProgressively(coords,stages,names,token){
   const d=window.__terrainSupplyData;if(!d?.stages)return;
   __supplyProgressState=stages.map(()=>({state:'loading'}));renderSupplyProgress(d.stages,names,__supplyProgressState);
+  const watchdog=setTimeout(()=>{
+    if(token!==__routeEnrichmentToken)return;
+    let changed=false;
+    __supplyProgressState.forEach((x,j)=>{if(x.state==='loading'){__supplyProgressState[j]={state:'error'};changed=true}});
+    if(changed)renderSupplyProgress(d.stages,names,__supplyProgressState);
+  },14000);
   const lodging=$('lodging').value;
   const jobs=stages.map((s,i)=>async()=>{
     const c=coords[s.e],label=names[i+1]||`Etappe ${i+1}`;
     try{
-      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000);
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),11500);
       const r=await fetch(`${API}/api/osm-supply-stage`,{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({lat:c[1],lon:c[0],lodging})});
       clearTimeout(timer);const raw=await r.json();if(token!==__routeEnrichmentToken)return;
       if(raw.ok){d.stages[i].supply=parseSupplyElements(raw.elements,{lat:c[1],lon:c[0]},label);__supplyProgressState[i]={state:'done'}}else __supplyProgressState[i]={state:'error'};
     }catch(e){if(token===__routeEnrichmentToken)__supplyProgressState[i]={state:'error'}}
     if(token===__routeEnrichmentToken){d.supplyAvailable=__supplyProgressState.some(x=>x.state==='done');renderSupplyProgress(d.stages,names,__supplyProgressState);renderJourneyCheck()}
   });
-  let next=0;async function worker(){while(next<jobs.length){const i=next++;await jobs[i]()}}await Promise.all([worker(),worker()]);
+  let next=0;async function worker(){while(next<jobs.length){const i=next++;await jobs[i]()}}await worker();clearTimeout(watchdog);
+}
+function openStageSupplySearch(i,kind){
+  const ctx=window.__routeContext;if(!ctx?.stages?.[i])return;
+  const s=ctx.stages[i],c=ctx.coords[s.e],label=ctx.labels?.[i+1]||'Etappenziel';
+  const q=kind==='hotel'?`Hotel Pension Camping ${label}`:`Restaurant Supermarkt Trinkwasser ${label}`;
+  window.open(`https://www.google.com/maps/search/${encodeURIComponent(q)}/@${c[1]},${c[0]},13z`,'_blank','noopener');
 }
 async function retrySupplyStage(i){
   const ctx=window.__routeContext;if(!ctx?.coords?.length)return;__supplyProgressState[i]={state:'loading'};renderSupplyProgress(window.__terrainSupplyData.stages,ctx.labels,__supplyProgressState);
