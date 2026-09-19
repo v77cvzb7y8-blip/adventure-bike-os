@@ -532,13 +532,28 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
 .supplyUnavailableCompact h3{margin:0 0 5px}
 .supplyUnavailableCompact button{width:auto;padding:7px 9px;font-size:9px}
 @media(max-width:820px){.journeyCheckGrid{grid-template-columns:1fr}}
+
+/* 8.2.1 routing start stability */
+.placeInputWrap{position:relative}
+.placeSuggest{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:300;background:#fff;border:1px solid #d8ded8;border-radius:10px;box-shadow:0 12px 30px rgba(15,45,30,.13);overflow:hidden}
+.placeSuggest.open{display:block}
+.placeSuggestion{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #edf0ec;background:#fff;padding:8px 9px;color:#15271d}
+.placeSuggestion:last-child{border-bottom:0}
+.placeSuggestion b{display:block;font-size:10px}.placeSuggestion span{display:block;font-size:8px;color:#718078;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.routeCacheBadge{display:inline-block;padding:3px 6px;border-radius:999px;background:#edf5ef;color:#176b49;font-size:8px;font-weight:800;margin-left:5px}
+.transportList{display:grid;gap:6px;margin-top:7px}
+.transportRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px;border:1px solid #e0e5df;border-radius:9px;background:white}
+.transportRow b{font-size:10px}.transportRow .tiny{font-size:8px}
+.transportRow a{font-size:8px;text-decoration:none;background:#176b49;color:white;padding:6px 7px;border-radius:8px;font-weight:800}
+.routingWarmState{margin-top:6px;font-size:8px;color:#66746d}
+@media(max-width:820px){.transportRow{grid-template-columns:1fr}.transportRow a{justify-self:start}}
 </style>
 </head>
 <body>
 <header class="productHero">
   <div class="brandRow">
     <div>
-      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.2.0</div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.2.1</div>
       <h1>Dein Bike. Dein Abenteuer.</h1>
       <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
     </div>
@@ -555,8 +570,8 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
     <div class="formGroup" style="margin-top:0">
       <h3><span>1</span> Deine Reise</h3>
       <div class="grid">
-        <div><label>Start</label><input id="start" placeholder="z. B. Innsbruck"></div>
-        <div><label>Ziel</label><input id="dest" placeholder="z. B. Hamburg"></div>
+        <div><label>Start</label><div class="placeInputWrap"><input id="start" autocomplete="off" placeholder="z. B. Innsbruck"><div id="startSuggest" class="placeSuggest"></div></div></div>
+        <div><label>Ziel</label><div class="placeInputWrap"><input id="dest" autocomplete="off" placeholder="z. B. Hamburg"><div id="destSuggest" class="placeSuggest"></div></div></div>
       </div>
       <div class="grid" style="margin-top:14px">
         <div><label>Startdatum</label><input id="tripdate" type="date"></div>
@@ -606,7 +621,7 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
       <div class="summaryBox"><b id="quickFeasibility">Noch offen</b><span>Machbarkeit</span></div>
     </div>
     <button id="go">ROUTE BERECHNEN</button>
-    <div id="status" class="status">Start, Ziel und Reisedaten eingeben – Adventure Bike OS baut daraus die Reise.</div>
+    <div id="status" class="status">Start und Ziel eingeben – Orte werden erkannt. Bereits bekannte Grundrouten können sofort aus dem Cache geladen werden.</div>
   </section>
 
   
@@ -2249,7 +2264,10 @@ function renderJourneyCheck(){
   const ctx=window.__routeContext,terrain=window.__terrainSupplyData,weather=window.__weatherData;
   if(!ctx?.stages?.length){host.innerHTML='<div class="journeyCheckCard open"><h3>Reise-Check</h3><div class="state">noch offen</div><p>Zuerst eine Route berechnen.</p></div>';return}
   const nav=navigationPlan(),h=weather?.horizon||weatherHorizon(),ferries=terrain?.ferries||[];
+  const transport=window.__transportData||{ok:false,points:[]};
   const selectedCount=Object.keys(window.stageSelections||{}).length;
+  const transportRows=(transport.points||[]).flatMap(p=>(p.options||[]).filter(x=>x.kind==='train'||x.kind==='bus').slice(0,3).map(x=>({...x,point:p.label})));
+  const transportHtml=transportRows.length?`<div class="transportList">${transportRows.slice(0,8).map(x=>`<div class="transportRow"><div><b>${x.kind==='train'?'🚆':'🚌'} ${escapeHtml(x.name)}</b><div class="tiny">${escapeHtml(x.point)} · ${x.distance_km} km entfernt${x.operator?' · '+escapeHtml(x.operator):''}</div></div><a href="${x.search}" target="_blank" rel="noopener">Verbindung prüfen</a></div>`).join('')}</div>`:'<p>Noch keine geeigneten Bahnhöfe/Busanschlüsse im Suchkorridor gefunden.</p>';
   const ferryHtml=ferries.length?ferries.map(f=>{
     const bike=f.bicycle==='yes'?'Fahrradmitnahme ✓':f.bicycle==='no'?'Fahrradmitnahme ✕':'Fahrradmitnahme prüfen';
     const reserve=f.reservation==='yes'?'Reservierung laut OSM erforderlich':f.reservation==='no'?'Reservierung laut OSM nicht erforderlich':'Reservierung prüfen';
@@ -2259,6 +2277,7 @@ function renderJourneyCheck(){
     <div class="journeyCheckCard good"><h3>🧭 Navigation</h3><div class="state">bereit</div>${nav.map(x=>`<p>✓ ${x}</p>`).join('')}</div>
     <div class="journeyCheckCard ${h.mode==='short'||h.mode==='week'?'good':'open'}"><h3>🌦 Wetterfenster</h3><div class="state">${h.label}</div><p>${h.detail}</p></div>
     <div class="journeyCheckCard ${selectedCount?'good':'open'}"><h3>🛏 Reservierungen</h3><div class="state">${selectedCount?selectedCount+' ausgewählt':'noch offen'}</div><p>Unterkünfte und Versorgung gelten erst als verbindlich, wenn du sie aktiv auswählst bzw. extern reservierst.</p></div>
+    <div class="journeyCheckCard ${transportRows.length?'good':'open'}"><h3>🚆 Zug & Bus</h3><div class="state">${transportRows.length?transportRows.length+' Optionen':'potentielle Anschlüsse'}</div>${transportHtml}<p class="tiny">Beta: zeigt nahe Bahnhöfe und Busanschlüsse. Fahrplan, Fahrradmitnahme und Buchbarkeit werden beim Betreiber geprüft.</p></div>
     <div class="journeyCheckCard ${ferries.length?'warn':'good'}"><h3>⛴️ Fähren & Transfers</h3><div class="state">${ferries.length?ferries.length+' erkannt':'keine erkannt'}</div>${ferryHtml}<p class="tiny">Beta: Fähren werden aus OSM erkannt. Live-Fahrplan, Buchbarkeit und garantierte Fahrradmitnahme benötigen später einen Fahrplan-/Betreiber-Connector.</p></div>
     <div class="journeyCheckCard good"><h3>🔋 Strom & Licht</h3><div class="state">prüfen</div><p>Fahrradcomputer ${bikeAccessoryState.computer?'✓':'○'} · Frontlicht ${bikeAccessoryState.frontLight?'✓':'○'} · Rücklicht ${bikeAccessoryState.rearLight?'✓':'○'}</p><p>Powerbank / Ladeplan vor Abfahrt bestätigen.</p></div>
     <div class="journeyCheckCard open"><h3>📄 Reise-PDF</h3><div class="state">${pdfMemory.length} Blöcke</div><p>Nur die von dir markierten Blöcke werden in den Reiseplan übernommen.</p></div>`;
@@ -2715,9 +2734,10 @@ async function enrichRouteAfterRender(coords,stages,labels,token){
   try{
     $('adventureLayers').innerHTML='<div class="layerBox"><b>Wetter wird geladen …</b><div class="tiny">Die Route bleibt vollständig bedienbar.</div></div>';
     $('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden geladen …</b><div class="tiny">Diese Zusatzanalyse läuft im Hintergrund.</div></div>';
-    const [weatherResult,terrainResult]=await Promise.allSettled([
+    const [weatherResult,terrainResult,transportResult]=await Promise.allSettled([
       fetchStageWeather(coords,stages),
-      fetchTerrainSupply(coords,stages,window.__routeMetrics)
+      fetchTerrainSupply(coords,stages,window.__routeMetrics),
+      fetchTransportOptions(coords,stages,labels)
     ]);
     if(token!==__routeEnrichmentToken)return;
 
@@ -2727,6 +2747,9 @@ async function enrichRouteAfterRender(coords,stages,labels,token){
     }else{
       $('adventureLayers').innerHTML='<div class="layerBox"><b>Wetter derzeit nicht verfügbar.</b><div class="tiny">Route und Etappen bleiben gültig.</div></div>';
     }
+
+    if(transportResult.status==='fulfilled')window.__transportData=transportResult.value;
+    else window.__transportData={ok:false,points:[]};
 
     if(terrainResult.status==='fulfilled'){
       const terrainSupply=terrainResult.value;
@@ -2746,6 +2769,85 @@ async function enrichRouteAfterRender(coords,stages,labels,token){
     $('terrainSupply').innerHTML='<div class="intelCard"><b>Zusatzanalyse unterbrochen.</b><div class="tiny">Route, Karte, Etappen und Höhenprofil bleiben nutzbar.</div></div>';
   }
 }
+
+const API='https://adventure-bike-os-api.onrender.com';
+const placeState={start:null,dest:null};
+const PLACE_DEBOUNCE={};
+
+function normalizeRouteText(v){return (v||'').trim().toLocaleLowerCase().replace(/\s+/g,' ')}
+function baseRouteKey(){
+  return [normalizeRouteText($('start').value),normalizeRouteText($('dest').value),$('profile').value].join('|');
+}
+function readLocalRouteCache(){
+  try{
+    const x=JSON.parse(localStorage.getItem('abo-route-cache-v1')||'null');
+    if(!x||Date.now()-x.ts>24*3600*1000)return null;
+    return x;
+  }catch(e){return null}
+}
+function saveLocalRouteCache(key,data){
+  try{localStorage.setItem('abo-route-cache-v1',JSON.stringify({key,ts:Date.now(),data}))}catch(e){}
+}
+function selectedPlacePayload(){
+  const p={};
+  if(placeState.start){p.start_lat=placeState.start.lat;p.start_lon=placeState.start.lon;p.start_name=placeState.start.display_name||placeState.start.name}
+  if(placeState.dest){p.destination_lat=placeState.dest.lat;p.destination_lon=placeState.dest.lon;p.destination_name=placeState.dest.display_name||placeState.dest.name}
+  return p;
+}
+function closePlaceSuggest(id){const h=$(id+'Suggest');if(h)h.classList.remove('open')}
+async function loadPlaceSuggestions(id){
+  const input=$(id),host=$(id+'Suggest'),q=input.value.trim();
+  placeState[id]=null;input.dataset.lat='';input.dataset.lon='';
+  if(q.length<2){host.innerHTML='';host.classList.remove('open');return}
+  try{
+    const r=await fetch(`${API}/api/place-suggest?q=${encodeURIComponent(q)}`);
+    const d=await r.json();const rows=d.results||[];
+    if(input.value.trim()!==q)return;
+    host.innerHTML=rows.map((x,i)=>`<button type="button" class="placeSuggestion" data-i="${i}"><b>${escapeHtml(x.name||x.display_name)}</b><span>${escapeHtml(x.display_name||'')}</span></button>`).join('');
+    host.classList.toggle('open',!!rows.length);
+    [...host.querySelectorAll('.placeSuggestion')].forEach((b,i)=>b.onclick=()=>{
+      const x=rows[i];placeState[id]=x;input.value=x.name||x.display_name;
+      input.dataset.lat=x.lat;input.dataset.lon=x.lon;input.title=x.display_name||'';
+      host.classList.remove('open');
+      updateQuickcheck();
+    });
+  }catch(e){host.classList.remove('open')}
+}
+['start','dest'].forEach(id=>{
+  $(id)?.addEventListener('input',()=>{
+    clearTimeout(PLACE_DEBOUNCE[id]);PLACE_DEBOUNCE[id]=setTimeout(()=>loadPlaceSuggestions(id),520);
+  });
+  $(id)?.addEventListener('blur',()=>setTimeout(()=>closePlaceSuggest(id),180));
+  $(id)?.addEventListener('focus',()=>{if($(id+'Suggest')?.innerHTML)$(id+'Suggest').classList.add('open')});
+});
+
+async function getRouteDataStable(){
+  const key=baseRouteKey(),cached=readLocalRouteCache();
+  if(cached?.key===key){
+    return {data:cached.data,source:'local-cache'};
+  }
+  const payload={start:$('start').value.trim(),destination:$('dest').value.trim(),profile:$('profile').value,...selectedPlacePayload()};
+  try{
+    const routed=await fetchRouteWithRetry(payload);
+    saveLocalRouteCache(key,routed.data);
+    return {data:routed.data,source:routed.data?.properties?.cached?'server-cache':'live'};
+  }catch(e){
+    if(cached?.key===key)return {data:cached.data,source:'local-fallback'};
+    throw e;
+  }
+}
+
+async function fetchTransportOptions(coords,stages,labels){
+  try{
+    const points=[];
+    const add=(idx,label)=>{const c=coords[idx];if(c)points.push({lat:c[1],lon:c[0],label})};
+    add(0,labels?.[0]||shortPlace($('start').value));
+    stages.forEach((s,i)=>add(s.e,labels?.[i+1]||`Etappe ${i+1}`));
+    const r=await fetch(`${API}/api/transport-nearby`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({points})});
+    const d=await r.json().catch(()=>({ok:false,points:[]}));
+    return d;
+  }catch(e){return {ok:false,points:[],warning:'ÖV-Zusatzdaten derzeit nicht erreichbar.'}}
+}
 async function plan(){
  const btn=$('go');btn.disabled=true;++__routeEnrichmentToken;$('status').className='status';
  const startVal=$('start').value.trim(),destVal=$('dest').value.trim();
@@ -2753,15 +2855,16 @@ async function plan(){
  if(!$('kmday').value||!$('hmday').value){$('status').textContent='Bitte Ziel-km pro Tag und max. Höhenmeter pro Tag eingeben.';$('status').className='status error';btn.disabled=false;return}
  if(($('tripdate').value&&!$('enddate').value)||(!$('tripdate').value&&$('enddate').value)){$('status').textContent='Bitte Start- und Enddatum gemeinsam eingeben.';$('status').className='status error';btn.disabled=false;return}
  if($('tripdate').value&&$('enddate').value&&new Date($('enddate').value)<new Date($('tripdate').value)){$('status').textContent='Das Enddatum muss am oder nach dem Startdatum liegen.';$('status').className='status error';btn.disabled=false;return}
- // A newly calculated trip starts clean: no stale route may remain visible after a failed request.
- clearCurrentRouteResult();
- window.__routeContext=null;window.__routeMetrics=null;
- pdfMemory=[];localStorage.setItem('abo-pdf-memory-v3','[]');updatePdfCount();
- window.stageSelections={};updateSelectedStops();
+ // Keep a valid current route visible until a replacement is actually available.
+ const previousContext=window.__routeContext,previousMetrics=window.__routeMetrics;
  try{
-  $('status').textContent='Server berechnet Fahrradroute …';
-  const routed=await fetchRouteWithRetry({start:$('start').value.trim(),destination:$('dest').value.trim(),profile:$('profile').value});
-  const rr=routed.response,gj=routed.data;
+  $('status').textContent='Route wird vorbereitet … Ortsdaten und Routing-Cache werden geprüft.';
+  const routed=await getRouteDataStable();
+  const gj=routed.data;
+  if(!gj?.geometry?.coordinates?.length)throw new Error('Keine Route erhalten');
+  clearCurrentRouteResult();
+  pdfMemory=[];localStorage.setItem('abo-pdf-memory-v3','[]');updatePdfCount();
+  window.stageSelections={};updateSelectedStops();
   let coords=gj?.geometry?.coordinates;if(!coords?.length)throw new Error('Keine Route erhalten');
   let m=metrics(coords),heightSource=gj?.properties?.height_source||null;
   if(!m.hasElevation){
@@ -2770,7 +2873,7 @@ async function plan(){
   }
   const target=+$('kmday').value,maxHm=+$('hmday').value,base=makeStages(coords,m,target,maxHm);
   window.__routeMetrics=m;window.__routeContext={coords,m,stages:base};routeDirty=false;
-  $('routingSource').textContent=(gj?.properties?.routing_source||'BRouter')+(heightSource?' · Höhe: '+heightSource:'');
+  $('routingSource').innerHTML=(gj?.properties?.routing_source||'Routing')+(routed.source&&routed.source!=='live'?` <span class="routeCacheBadge">${routed.source==='local-cache'?'Cache':routed.source==='server-cache'?'Server-Cache':'Fallback-Cache'}</span>`:'')+(heightSource?' · Höhe: '+heightSource:'');
   updateQuickcheck(m,base);
   $('result').classList.remove('hidden');$('result').classList.remove('modeHidden');
   $('distance').textContent=m.totalDist.toFixed(1)+' km';$('ascent').textContent=m.hasElevation?Math.round(m.totalAsc)+' HM':'HM offen';
@@ -2797,14 +2900,22 @@ async function plan(){
   const enrichToken=++__routeEnrichmentToken;
   void enrichRouteAfterRender(coords,stages,opt.labels,enrichToken);
  }catch(e){
-   clearCurrentRouteResult();
-   window.__routeContext=null;window.__routeMetrics=null;
+   if(previousContext?.coords?.length){
+     window.__routeContext=previousContext;window.__routeMetrics=previousMetrics;
+     $('result').classList.remove('hidden');
+   }
    $('status').className='status error';
    const msg=(e&&e.name==='AbortError')?'Zeitüberschreitung beim Routing':((e&&e.message)||'Unbekannter Fehler');
-   $('status').textContent='Route konnte diesmal nicht berechnet werden: '+msg+'. Es wird bewusst keine alte Route mehr als aktuelles Ergebnis angezeigt. Bike- und Packplanung bleiben nutzbar.';
+   $('status').textContent=(previousContext?.coords?.length?'Die letzte gültige Route bleibt sichtbar. ':'')+'Neue Route konnte nicht geladen werden: '+msg+'. Bitte erneut versuchen.';
  }finally{btn.disabled=false}
 }
-$('lodging').addEventListener('change',()=>{if($('bikePackPlanner'))renderBikePackPlanner()});
+$('lodging').addEventListener('change',()=>{
+  if($('bikePackPlanner'))renderBikePackPlanner();
+  if(window.__routeContext?.coords?.length){
+    renderRoutePackRecommendations(window.__routeContext.stages,window.__weatherData);
+    $('status').className='status';$('status').textContent='Grundroute bleibt erhalten. Übernachtung und Packempfehlungen wurden angepasst.';
+  }
+});
 ['start','dest','tripdate','enddate','kmday','hmday','fitness','tech','profile','priority'].forEach(id=>$(id)?.addEventListener('change',()=>markRouteDirty()));
 $('go').addEventListener('click',plan);
 

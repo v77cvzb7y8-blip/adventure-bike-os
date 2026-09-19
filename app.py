@@ -1,4 +1,4 @@
-import os, time
+import os, time, threading, copy
 import requests
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -10,24 +10,75 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.70 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.71 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
-def geocode(q):
-    url = "https://nominatim.openstreetmap.org/search"
-    print(f"[GEOCODE] {q}", flush=True)
-    r = session.get(url, params={"q": q, "format": "jsonv2", "limit": 1}, timeout=20)
-    print(f"[GEOCODE] status={r.status_code}", flush=True)
+CACHE_TTL_ROUTE = 6 * 3600
+CACHE_TTL_PLACE = 24 * 3600
+CACHE_TTL_TRANSPORT = 2 * 3600
+_route_cache = {}
+_place_cache = {}
+_transport_cache = {}
+_cache_lock = threading.Lock()
+_nominatim_lock = threading.Lock()
+_last_nominatim_request = 0.0
+
+def _cache_get(store, key, ttl):
+    now=time.time()
+    with _cache_lock:
+        item=store.get(key)
+        if not item: return None
+        ts,value=item
+        if now-ts>ttl:
+            store.pop(key,None); return None
+        return copy.deepcopy(value)
+
+def _cache_set(store, key, value):
+    with _cache_lock:
+        store[key]=(time.time(), copy.deepcopy(value))
+
+def _nominatim_get(params, timeout=14):
+    """Respect the public Nominatim cadence and centralise all place lookups."""
+    global _last_nominatim_request
+    with _nominatim_lock:
+        wait=max(0.0,1.05-(time.time()-_last_nominatim_request))
+        if wait: time.sleep(wait)
+        r=session.get("https://nominatim.openstreetmap.org/search",params=params,timeout=timeout)
+        _last_nominatim_request=time.time()
     r.raise_for_status()
-    data = r.json()
-    if not data:
-        raise ValueError(f"Ort nicht gefunden: {q}")
-    return {
-        "lat": float(data[0]["lat"]),
-        "lon": float(data[0]["lon"]),
-        "name": data[0].get("display_name", q)
-    }
+    return r
+
+def place_suggestions(q, limit=5):
+    q=(q or "").strip()
+    if len(q)<2: return []
+    key=(q.casefold(), int(limit))
+    cached=_cache_get(_place_cache,key,CACHE_TTL_PLACE)
+    if cached is not None: return cached
+    print(f"[PLACE] {q}",flush=True)
+    r=_nominatim_get({
+        "q":q,"format":"jsonv2","limit":max(1,min(int(limit),6)),
+        "addressdetails":1,"featuretype":"settlement"
+    })
+    rows=[]
+    for x in r.json():
+        a=x.get("address") or {}
+        label=x.get("display_name") or q
+        short=a.get("city") or a.get("town") or a.get("village") or a.get("municipality") or x.get("name") or label.split(",")[0]
+        rows.append({
+            "lat":float(x["lat"]),"lon":float(x["lon"]),
+            "name":short,"display_name":label,
+            "country":a.get("country"),"country_code":a.get("country_code"),
+            "type":x.get("type"),"importance":float(x.get("importance") or 0)
+        })
+    _cache_set(_place_cache,key,rows)
+    return rows
+
+def geocode(q):
+    rows=place_suggestions(q,limit=1)
+    if not rows: raise ValueError(f"Ort nicht gefunden: {q}")
+    x=rows[0]
+    return {"lat":x["lat"],"lon":x["lon"],"name":x["display_name"]}
 
 def brouter(a, b, profile="trekking"):
     url = "https://brouter.de/brouter"
@@ -311,54 +362,77 @@ def ensure_route_elevation(feature):
         feature.setdefault("properties",{})["height_source"]="unavailable"
     return feature
 
+def valhalla_route_fast(a,b):
+    """Geometry-first Valhalla route. Elevation is deliberately fetched later."""
+    headers={"X-Client-Id":"adventure-bike-os-prototype"}
+    payload={
+        "locations":[{"lat":a["lat"],"lon":a["lon"]},{"lat":b["lat"],"lon":b["lon"]}],
+        "costing":"bicycle","units":"kilometers",
+        "directions_options":{"units":"kilometers"}
+    }
+    r=session.post("https://valhalla1.openstreetmap.de/route",json=payload,headers=headers,timeout=19)
+    print(f"[VALHALLA-FAST] status={r.status_code}",flush=True)
+    r.raise_for_status()
+    data=r.json(); legs=(data.get("trip") or {}).get("legs") or []
+    coords=[]
+    for leg in legs:
+        shape=leg.get("shape")
+        if not shape: continue
+        pts=_decode_polyline6(shape)
+        if coords and pts and coords[-1]==pts[0]: pts=pts[1:]
+        coords.extend(pts)
+    if len(coords)<2: raise ValueError("Valhalla returned no usable geometry")
+    step=max(1,len(coords)//900); sampled=coords[::step]
+    if sampled[-1]!=coords[-1]: sampled.append(coords[-1])
+    return {"type":"Feature","geometry":{"type":"LineString","coordinates":sampled},"properties":{"routing_source":"Valhalla"}}
+
+def osrm_bike_route_fast(a,b):
+    """Geometry-first OSM bicycle route. Elevation is deliberately fetched later."""
+    url=f"https://routing.openstreetmap.de/routed-bike/route/v1/driving/{a['lon']},{a['lat']};{b['lon']},{b['lat']}"
+    r=session.get(url,params={"overview":"full","geometries":"geojson","steps":"false"},timeout=18)
+    print(f"[OSRM-BIKE-FAST] status={r.status_code}",flush=True)
+    r.raise_for_status()
+    data=r.json(); routes=data.get("routes") or []
+    if not routes: raise ValueError("OSRM Bike returned no route")
+    coords=(routes[0].get("geometry") or {}).get("coordinates") or []
+    if len(coords)<2: raise ValueError("OSRM Bike returned no usable geometry")
+    step=max(1,len(coords)//900); sampled=coords[::step]
+    if sampled[-1]!=coords[-1]: sampled.append(coords[-1])
+    return {"type":"Feature","geometry":{"type":"LineString","coordinates":sampled},
+            "properties":{"routing_source":"OSRM Bike","distance_m":routes[0].get("distance")}}
+
 def race_route(a, b, profile="trekking"):
-    """Race BRouter and Valhalla; if both fail, use OSRM Bike as a third independent fallback."""
+    """Race three independent public routing engines and return the first valid geometry."""
     from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
-    pool=ThreadPoolExecutor(max_workers=2)
+    errors=[]
+    pool=ThreadPoolExecutor(max_workers=3)
     futures={
         pool.submit(brouter,a,b,profile):"BRouter",
-        pool.submit(valhalla_route,a,b):"Valhalla"
+        pool.submit(valhalla_route_fast,a,b):"Valhalla",
+        pool.submit(osrm_bike_route_fast,a,b):"OSRM Bike"
     }
-    errors=[]
     try:
         pending=set(futures)
-        while pending:
-            done,pending=wait(pending,timeout=24,return_when=FIRST_COMPLETED)
-            if not done:
-                break
+        deadline=time.time()+21
+        while pending and time.time()<deadline:
+            done,pending=wait(pending,timeout=max(0.1,deadline-time.time()),return_when=FIRST_COMPLETED)
+            if not done: break
             for fut in done:
                 source=futures[fut]
                 try:
                     feature=fut.result()
+                    f=feature["features"][0] if isinstance(feature,dict) and "features" in feature else feature
+                    coords=((f or {}).get("geometry") or {}).get("coordinates") or []
+                    if len(coords)<2: raise ValueError("keine nutzbare Geometrie")
                     print(f"[ROUTE-RACE] success source={source}",flush=True)
-                    for p in pending:
-                        p.cancel()
-                    return ensure_route_elevation(feature),source
+                    for p in pending: p.cancel()
+                    return f,source
                 except Exception as e:
                     errors.append(f"{source}: {type(e).__name__}: {e}")
                     print(f"[ROUTE-RACE] {source} failed: {e}",flush=True)
     finally:
         pool.shutdown(wait=False,cancel_futures=True)
-
-    print(f"[ROUTE-RACE] primary engines failed, trying OSRM Bike. errors={errors}",flush=True)
-    try:
-        feature=osrm_bike_route(a,b)
-        print("[ROUTE-RACE] success source=OSRM Bike",flush=True)
-        return ensure_route_elevation(feature),"OSRM Bike"
-    except Exception as e:
-        errors.append(f"OSRM Bike: {type(e).__name__}: {e}")
-        print(f"[ROUTE-RACE] OSRM Bike failed: {e}",flush=True)
-
-    print("[ROUTE-RACE] trying segmented OSRM Bike fallback",flush=True)
-    try:
-        feature=osrm_bike_segmented(a,b)
-        print("[ROUTE-RACE] success source=OSRM Bike segmented",flush=True)
-        return ensure_route_elevation(feature),"OSRM Bike segmented"
-    except Exception as e:
-        errors.append(f"OSRM Bike segmented: {type(e).__name__}: {e}")
-        print(f"[ROUTE-RACE] segmented OSRM failed: {e}",flush=True)
-        raise requests.RequestException(" | ".join(errors))
-
+    raise requests.RequestException(" | ".join(errors) or "Alle Routingdienste ohne Antwort")
 
 
 OVERPASS_ENDPOINTS = [
@@ -395,9 +469,99 @@ def osm_detail():
             print(f"[OVERPASS] failed {url}: {ex}",flush=True)
     return jsonify(ok=False,elements=[],warning="OSM-Zusatzdaten derzeit nicht erreichbar.",errors=errors),200
 
+
+@app.get("/api/place-suggest")
+def place_suggest():
+    try:
+        q=(request.args.get("q") or "").strip()
+        if len(q)<2:return jsonify(results=[])
+        return jsonify(results=place_suggestions(q,limit=5))
+    except requests.RequestException as e:
+        print(f"[PLACE] unavailable: {e}",flush=True)
+        return jsonify(results=[],warning="Ortssuche derzeit nicht verfügbar."),200
+
+@app.post("/api/transport-nearby")
+def transport_nearby():
+    """Potential rail/bus/ferry access near route/stage points. Not a live timetable."""
+    try:
+        body=request.get_json(force=True) or {}
+        points=(body.get("points") or [])[:12]
+        if not points:return jsonify(ok=False,points=[]),400
+        key=tuple((round(float(p["lat"]),3),round(float(p["lon"]),3),str(p.get("label") or "")) for p in points)
+        cached=_cache_get(_transport_cache,key,CACHE_TTL_TRANSPORT)
+        if cached is not None:return jsonify(**cached,cached=True)
+
+        clauses=[]
+        for p in points:
+            lat=float(p["lat"]);lon=float(p["lon"])
+            clauses += [
+                f'nwr(around:6500,{lat},{lon})["railway"~"station|halt"];',
+                f'nwr(around:4500,{lat},{lon})["amenity"="bus_station"];',
+                f'nwr(around:2500,{lat},{lon})["highway"="bus_stop"];',
+                f'nwr(around:6500,{lat},{lon})["amenity"="ferry_terminal"];'
+            ]
+        q='[out:json][timeout:22];('+''.join(clauses)+');out center tags;'
+        elements=[];source=None
+        for url in OVERPASS_ENDPOINTS:
+            try:
+                r=session.post(url,data={"data":q},headers={"User-Agent":UA,"Accept":"application/json"},timeout=25)
+                print(f"[TRANSPORT] {url} status={r.status_code}",flush=True)
+                if r.ok:
+                    elements=(r.json() or {}).get("elements") or [];source=url;break
+            except Exception as e:
+                print(f"[TRANSPORT] {url} failed {e}",flush=True)
+        if source is None:
+            return jsonify(ok=False,points=[],warning="ÖV-Zusatzdaten derzeit nicht erreichbar."),200
+
+        import math
+        def dist(lat1,lon1,lat2,lon2):
+            R=6371
+            p1,p2=math.radians(lat1),math.radians(lat2)
+            dp=math.radians(lat2-lat1);dl=math.radians(lon2-lon1)
+            a=math.sin(dp/2)**2+math.cos(p1)*math.cos(p2)*math.sin(dl/2)**2
+            return 2*R*math.asin(math.sqrt(a))
+        parsed=[]
+        seen=set()
+        for el in elements:
+            t=el.get("tags") or {}
+            lat=el.get("lat") or (el.get("center") or {}).get("lat")
+            lon=el.get("lon") or (el.get("center") or {}).get("lon")
+            if lat is None or lon is None: continue
+            kind="train" if t.get("railway") in ("station","halt") else ("bus" if t.get("amenity")=="bus_station" or t.get("highway")=="bus_stop" else ("ferry" if t.get("amenity")=="ferry_terminal" else None))
+            if not kind: continue
+            name=t.get("name") or t.get("ref") or {"train":"Bahnhof","bus":"Bushaltestelle","ferry":"Fährterminal"}[kind]
+            sk=(kind,name,round(float(lat),4),round(float(lon),4))
+            if sk in seen: continue
+            seen.add(sk)
+            parsed.append({"kind":kind,"name":name,"lat":float(lat),"lon":float(lon),"operator":t.get("operator") or "",
+                           "network":t.get("network") or "","bicycle":t.get("bicycle") or "","website":t.get("website") or t.get("contact:website") or ""})
+        out=[]
+        for p in points:
+            lat=float(p["lat"]);lon=float(p["lon"]);label=str(p.get("label") or "Punkt")
+            arr=[]
+            for x in parsed:
+                d=dist(lat,lon,x["lat"],x["lon"])
+                if d<=7:
+                    y=dict(x);y["distance_km"]=round(d,1)
+                    query=f'{x["name"]} {label} {x["kind"]} Fahrrad Fahrplan'
+                    y["search"]="https://www.google.com/search?q="+requests.utils.quote(query)
+                    arr.append(y)
+            arr.sort(key=lambda x:x["distance_km"])
+            # keep useful variety
+            chosen=[]
+            for kind in ("train","bus","ferry"):
+                chosen += [x for x in arr if x["kind"]==kind][:3]
+            out.append({"label":label,"options":chosen[:7]})
+        result={"ok":True,"points":out,"source":source}
+        _cache_set(_transport_cache,key,result)
+        return jsonify(**result,cached=False)
+    except Exception as e:
+        print(f"[TRANSPORT] error {type(e).__name__}: {e}",flush=True)
+        return jsonify(ok=False,points=[],warning="ÖV-Zusatzdaten derzeit nicht erreichbar."),200
+
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.70-journey-check-ferries-weather-8.2.0")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.71-routing-cache-autocomplete-transit-8.2.1")
 
 @app.get("/health")
 def health():
@@ -584,47 +748,52 @@ def weather():
 @app.post("/api/route")
 def route():
     try:
-        body = request.get_json(force=True) or {}
-        start = (body.get("start") or "").strip()
-        dest = (body.get("destination") or "").strip()
-        profile = body.get("profile") or "trekking"
+        body=request.get_json(force=True) or {}
+        start=(body.get("start") or "").strip();dest=(body.get("destination") or "").strip()
+        profile=body.get("profile") or "trekking"
+        if not start or not dest:return jsonify(error="Start und Ziel sind erforderlich."),400
 
-        print(f"[ROUTE] start={start!r} destination={dest!r} profile={profile!r}", flush=True)
+        def provided(prefix,text):
+            try:
+                lat=body.get(prefix+"_lat");lon=body.get(prefix+"_lon")
+                if lat is None or lon is None:return None
+                return {"lat":float(lat),"lon":float(lon),"name":body.get(prefix+"_name") or text}
+            except Exception:return None
 
-        if not start or not dest:
-            return jsonify(error="Start und Ziel sind erforderlich."), 400
+        a=provided("start",start);b=provided("destination",dest)
+        # Text route cache can survive temporary geocoder problems.
+        text_key=(start.casefold(),dest.casefold(),profile)
+        cached_text=_cache_get(_route_cache,("text",)+text_key,CACHE_TTL_ROUTE)
+        if cached_text is not None and not (a and b):
+            cached_text["properties"]["cached"]=True
+            cached_text["properties"]["cache_reason"]="same start/destination/profile"
+            return jsonify(cached_text)
 
-        a = geocode(start)
-        time.sleep(1.05)
-        b = geocode(dest)
-        print(f"[ROUTE] geocoded start={a} destination={b}", flush=True)
+        if a is None:a=geocode(start)
+        if b is None:b=geocode(dest)
+        coord_key=("coords",round(a["lat"],5),round(a["lon"],5),round(b["lat"],5),round(b["lon"],5),profile)
+        cached=_cache_get(_route_cache,coord_key,CACHE_TTL_ROUTE)
+        if cached is not None:
+            cached["properties"]["cached"]=True
+            return jsonify(cached)
 
-        feature, routing_source = race_route(a, b, profile)
-        f = feature["features"][0] if "features" in feature else feature
-
-        print(f"[ROUTE] success source={routing_source}", flush=True)
-        return jsonify({
-            "start": a,
-            "destination": b,
-            "geometry": f.get("geometry"),
-            "properties": {**f.get("properties", {}), "routing_source": routing_source}
-        })
-
+        print(f"[ROUTE] {start!r}->{dest!r} profile={profile} coords-ready",flush=True)
+        feature,routing_source=race_route(a,b,profile)
+        f=feature["features"][0] if "features" in feature else feature
+        result={"start":a,"destination":b,"geometry":f.get("geometry"),
+                "properties":{**f.get("properties",{}),"routing_source":routing_source,"cached":False}}
+        _cache_set(_route_cache,coord_key,result)
+        _cache_set(_route_cache,("text",)+text_key,result)
+        return jsonify(result)
     except ValueError as e:
-        print(f"[ROUTE] VALUE ERROR: {e}", flush=True)
-        return jsonify(error=str(e)), 404
+        return jsonify(error=str(e)),404
     except requests.RequestException as e:
-        print(f"[ROUTE] EXTERNAL ERROR: {type(e).__name__}: {e}", flush=True)
-        return jsonify(
-            error="Externer Routingdienst derzeit nicht erreichbar.",
-            detail=f"{type(e).__name__}: {str(e)[:500]}"
-        ), 502
+        print(f"[ROUTE] EXTERNAL ERROR: {type(e).__name__}: {e}",flush=True)
+        return jsonify(error="Routingdienste antworten gerade nicht.",detail=str(e)[:800]),502
     except Exception as e:
-        print(f"[ROUTE] INTERNAL ERROR: {type(e).__name__}: {e}", flush=True)
-        return jsonify(
-            error="Route konnte nicht berechnet werden.",
-            detail=f"{type(e).__name__}: {str(e)[:500]}"
-        ), 500
+        print(f"[ROUTE] INTERNAL ERROR: {type(e).__name__}: {e}",flush=True)
+        return jsonify(error="Route konnte nicht berechnet werden.",detail=f"{type(e).__name__}: {str(e)[:500]}"),500
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
