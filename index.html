@@ -128,9 +128,9 @@
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.6.9</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.7.0</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.6.9 ergänzt ein echtes freigestelltes 3D-Bike-Modul (Beta): Das Bike steht ohne Fotohintergrund im Viewer, lässt sich frei drehen und zeigt Taschen, Licht und Fahrradcomputer als eigene 3D-Objekte.</div>
+  <div class="sub">7.7.0 entkoppelt Packplanung und Routing: Das 3D-Bike ist schon vor der Routenberechnung nutzbar, Three.js läuft über eine kompatible Version und lange Strecken erhalten einen segmentierten OSRM-Fallback.</div>
 </header>
 <main>
   <section class="card">
@@ -191,7 +191,15 @@
     <div id="status" class="status">Start, Ziel und Reisedaten eingeben – Adventure Bike OS baut daraus die Reise.</div>
   </section>
 
-  <section id="result" class="hidden">
+  
+<section id="packStandalone" class="card">
+  <div class="eyebrow">PACKPLAN & BIKE-SETUP</div>
+  <h2>Bike konfigurieren – unabhängig von der Route</h2>
+  <p class="note">Die Packplanung und 3D-Ansicht funktionieren auch dann, wenn ein externer Routingdienst gerade nicht antwortet.</p>
+  <div id="bikePackPlanner" class="packPlanner"></div>
+</section>
+
+<section id="result" class="hidden">
     <div class="card">
       <div class="eyebrow">DEINE ROUTE</div>
       <div class="stats">
@@ -250,7 +258,7 @@
 </main>
 <div id="copyToast" class="copyToast">Kopiert</div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -260,7 +268,7 @@ $('elevation').addEventListener('mousemove',elevationPointer);
 $('elevation').addEventListener('mouseleave',hideElevationTip);
 $('elevation').addEventListener('touchstart',e=>{elevationPointer(e)},{passive:true});
 $('elevation').addEventListener('touchmove',e=>{elevationPointer(e)},{passive:true});
-setTimeout(()=>{attachBlockActions();updatePdfCount()},0);
+setTimeout(()=>{attachBlockActions();updatePdfCount();renderBikePackPlanner()},120);
 
 
 async function geocode(q){
@@ -1174,14 +1182,13 @@ function renderAdventureLayers(stages,weather){
     <div class="layerBox"><h3>⛰ Belastung & Warnungen</h3><p>${loadText}</p><p>Technik-Level: <strong>${tech==='easy'?'eher einfach':tech==='medium'?'solide Gravel-Erfahrung':'technisch erfahren'}</strong>.</p>${warnings.map((w,i)=>`<p><strong>Tag ${i+1}:</strong> ${w.length?w.join(' · '):'keine Warnung aus km/HM/Wetter'}</p>`).join('')}</div>
     <div class="layerBox"><h3>🌦 Wetter</h3>${weatherHtml(weather)}<p>Kurzfristwetter ist optional und blockiert die Planung nie.</p></div>
     <div class="layerBox"><h3>🧥 Kleidung · Was habe ich?</h3>${inventoryHtml('clothing',clothes)}<p>Die Empfehlung wird aus Temperatur, Regen und Wind abgeleitet. Ein Häkchen bedeutet: vorhanden und automatisch für die Reise eingeplant; Adventure Bike OS legt den passenden Packgegenstand in eine geeignete Tasche.</p></div>
-    <div id="bikePackPlanner" class="packPlanner"></div>
     <div class="layerBox"><h3>📦 Persönliche Packliste · Was habe ich?</h3><p><strong>${pack.target}</strong></p><p>${pack.bags}</p>${inventoryHtml('packing',pack.items)}<p class="tiny">Ausgewählte passende Gegenstände werden automatisch einer geeigneten befestigten Tasche zugeordnet. Die Zuordnung bleibt anschließend manuell änderbar.</p></div>
     <div class="layerBox"><h3>🧭 Navigation</h3>${nav.map(x=>`<p>✓ ${x}</p>`).join('')}</div>
     <div class="layerBox"><h3>💧 Wasser & Energie</h3><p><strong>Trinken:</strong> ${fuel.water}</p><p><strong>Energie:</strong> ${fuel.carbs}</p><p>${fuel.note}</p></div>
     <div class="layerBox"><h3>🛣 Terrain-Status</h3><p id="terrainStatusBox"><strong>Terrain-Status:</strong> wird nach der Versorgungs-/Terrainabfrage aktualisiert …</p></div>`;
   syncStoredInventoryToPack();
-  renderBikePackPlanner();
 }
+
 
 function stageSamplePoints(coords,stage,count=5){
   const out=[],span=Math.max(1,stage.e-stage.s);
@@ -1550,13 +1557,13 @@ async function plan(){
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
   renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);const terrainSupply=await fetchTerrainSupply(coords,stages);renderTerrainSupply(terrainSupply,stages,opt.labels);updateTerrainStatus(terrainSupply);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);renderTerrainOnMap(terrainSupply);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  attachBlockActions();$('status').textContent='Adventure App 7.6.9: Route, Backend-OSM-Fallback, zuverlässiges Packen und ein freigestelltes, frei drehbares 3D-Bike-Modul mit eigenen Taschen/Lichtern/Fahrradcomputer bereit.';
+  attachBlockActions();$('status').textContent='Adventure App 7.7.0: Packplanung und 3D-Bike laufen unabhängig vom Routing; lange Strecken erhalten zusätzlich einen segmentierten OSRM-Bike-Fallback.';
  }catch(e){
    $('status').className='status error';
    const msg=(e&&e.message)||'Unbekannter Fehler';
    $('status').textContent=msg==='Load failed'
      ?'Route konnte nicht berechnet werden: Verbindung zum Routing-Server abgebrochen. Bitte erneut versuchen – 7.6.6 nutzt Routing-/Höhen-Fallbacks und trennt Packplanung, Camping-Suche und Etappenlogik voneinander.'
-     :'Route konnte nicht berechnet werden: '+msg+'.';
+     :'Route konnte aktuell nicht berechnet werden: '+msg+'. Packplanung und 3D-Bike bleiben trotzdem nutzbar.';
  }finally{btn.disabled=false}
 }
 $('lodging').addEventListener('change',()=>{if($('bikePackPlanner'))renderBikePackPlanner()});

@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.33 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.34 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -242,6 +242,57 @@ def osrm_bike_route(a,b):
     }
 
 
+
+def osrm_bike_segmented(a,b):
+    """Last-resort long-distance fallback: split the trip into shorter OSRM-bike legs and merge them."""
+    import math
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    lat1,lon1,lat2,lon2=map(math.radians,[a["lat"],a["lon"],b["lat"],b["lon"]])
+    h=math.sin((lat2-lat1)/2)**2+math.cos(lat1)*math.cos(lat2)*math.sin((lon2-lon1)/2)**2
+    straight=6371*2*math.asin(math.sqrt(h))
+    segments=max(3,min(6,math.ceil(straight/180)))
+    pts=[a]+[_interp(a,b,i/segments) for i in range(1,segments)]+[b]
+
+    def one_leg(i):
+        aa,bb=pts[i],pts[i+1]
+        url=f"https://routing.openstreetmap.de/routed-bike/route/v1/driving/{aa['lon']},{aa['lat']};{bb['lon']},{bb['lat']}"
+        params={"overview":"full","geometries":"geojson","steps":"false"}
+        r=requests.get(url,params=params,headers={"User-Agent":"AdventureBikeOS/0.34"},timeout=18)
+        print(f"[OSRM-SEG] leg={i+1}/{segments} status={r.status_code}",flush=True)
+        r.raise_for_status()
+        routes=(r.json() or {}).get("routes") or []
+        if not routes:
+            raise ValueError(f"OSRM segment {i+1} ohne Route")
+        coords=(routes[0].get("geometry") or {}).get("coordinates") or []
+        if len(coords)<2:
+            raise ValueError(f"OSRM segment {i+1} ohne Geometrie")
+        return i,coords
+
+    results=[None]*segments
+    with ThreadPoolExecutor(max_workers=min(segments,4)) as pool:
+        futures=[pool.submit(one_leg,i) for i in range(segments)]
+        for fut in as_completed(futures):
+            i,coords=fut.result()
+            results[i]=coords
+
+    merged=[]
+    for coords in results:
+        if not coords:
+            raise ValueError("Segmentierter OSRM-Fallback unvollständig")
+        if merged and merged[-1][:2]==coords[0][:2]:
+            coords=coords[1:]
+        merged.extend(coords)
+
+    coords3,height_source=add_open_meteo_height(merged)
+    if not coords3:
+        coords3=[[c[0],c[1]] for c in _sample_for_height(merged,limit=700)]
+        height_source="unavailable"
+    return {
+        "type":"Feature",
+        "geometry":{"type":"LineString","coordinates":coords3},
+        "properties":{"routing_source":"OSRM Bike segmented fallback","segments":segments,"height_source":height_source}
+    }
+
 def ensure_route_elevation(feature):
     geom=(feature.get("geometry") or {})
     coords=geom.get("coordinates") or []
@@ -297,6 +348,15 @@ def race_route(a, b, profile="trekking"):
     except Exception as e:
         errors.append(f"OSRM Bike: {type(e).__name__}: {e}")
         print(f"[ROUTE-RACE] OSRM Bike failed: {e}",flush=True)
+
+    print("[ROUTE-RACE] trying segmented OSRM Bike fallback",flush=True)
+    try:
+        feature=osrm_bike_segmented(a,b)
+        print("[ROUTE-RACE] success source=OSRM Bike segmented",flush=True)
+        return ensure_route_elevation(feature),"OSRM Bike segmented"
+    except Exception as e:
+        errors.append(f"OSRM Bike segmented: {type(e).__name__}: {e}")
+        print(f"[ROUTE-RACE] segmented OSRM failed: {e}",flush=True)
         raise requests.RequestException(" | ".join(errors))
 
 
@@ -337,7 +397,7 @@ def osm_detail():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.33-true3d-bike-7.6.9")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.34-independent-pack-route-7.7.0")
 
 @app.get("/health")
 def health():
