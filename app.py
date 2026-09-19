@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.42 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.50 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -80,7 +80,7 @@ def valhalla_route(a, b):
         "directions_options":{"units":"kilometers"}
     }
     print("[VALHALLA] fallback route request", flush=True)
-    r=session.post("https://valhalla.openstreetmap.de/route",json=payload,headers=headers,timeout=22)
+    r=session.post("https://valhalla1.openstreetmap.de/route",json=payload,headers=headers,timeout=32)
     print(f"[VALHALLA] route status={r.status_code}", flush=True)
     r.raise_for_status()
     data=r.json()
@@ -105,7 +105,7 @@ def valhalla_route(a, b):
         sampled.append(coords[-1])
     hreq={"shape":[{"lat":c[1],"lon":c[0]} for c in sampled],"height_precision":0}
     try:
-        hr=session.post("https://valhalla.openstreetmap.de/height",json=hreq,headers=headers,timeout=18)
+        hr=session.post("https://valhalla1.openstreetmap.de/height",json=hreq,headers=headers,timeout=18)
         print(f"[VALHALLA] height status={hr.status_code}", flush=True)
         hr.raise_for_status()
         hd=hr.json()
@@ -203,7 +203,7 @@ def add_valhalla_height(coords):
     sampled=_sample_for_height(coords, limit=450)
     req={"shape":[{"lat":c[1],"lon":c[0]} for c in sampled],"height_precision":0}
     try:
-        r=requests.post("https://valhalla.openstreetmap.de/height",json=req,headers={"X-Client-Id":"adventure-bike-os-prototype"},timeout=15)
+        r=requests.post("https://valhalla1.openstreetmap.de/height",json=req,headers={"X-Client-Id":"adventure-bike-os-prototype"},timeout=15)
         print(f"[HEIGHT-VALHALLA] status={r.status_code}",flush=True)
         r.raise_for_status()
         heights=(r.json() or {}).get("height") or []
@@ -250,7 +250,7 @@ def osrm_bike_segmented(a,b):
     lat1,lon1,lat2,lon2=map(math.radians,[a["lat"],a["lon"],b["lat"],b["lon"]])
     h=math.sin((lat2-lat1)/2)**2+math.cos(lat1)*math.cos(lat2)*math.sin((lon2-lon1)/2)**2
     straight=6371*2*math.asin(math.sqrt(h))
-    segments=max(3,min(6,math.ceil(straight/180)))
+    segments=max(3,min(10,math.ceil(straight/130)))
     pts=[a]+[_interp(a,b,i/segments) for i in range(1,segments)]+[b]
 
     def one_leg(i):
@@ -269,7 +269,7 @@ def osrm_bike_segmented(a,b):
         return i,coords
 
     results=[None]*segments
-    with ThreadPoolExecutor(max_workers=min(segments,4)) as pool:
+    with ThreadPoolExecutor(max_workers=min(segments,3)) as pool:
         futures=[pool.submit(one_leg,i) for i in range(segments)]
         for fut in as_completed(futures):
             i,coords=fut.result()
@@ -397,7 +397,7 @@ def osm_detail():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.42-research-adventure-check-7.8.2")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.50-guided-bike-config-7.9.0")
 
 @app.get("/health")
 def health():

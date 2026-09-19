@@ -227,16 +227,89 @@ body.packFocus #packStandalone.card{min-height:calc(100vh - 36px)}
 .packResearchBox p{margin:4px 0}
 @media(max-width:900px){.adventureCheckGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.adventureCheckGrid{grid-template-columns:1fr}.routeExportActions{width:100%}.routeExportActions>*{flex:1}}
+
+body.packFocus{overflow:hidden!important}
+body.packFocus #packStandalone{
+  position:fixed!important;inset:0!important;z-index:5000!important;
+  max-width:none!important;width:100vw!important;height:100vh!important;
+  margin:0!important;padding:18px!important;overflow:auto!important;
+  border-radius:0!important;background:var(--paper)!important
+}
+body.packFocus #packStandalone>.eyebrow,
+body.packFocus #packStandalone>h2,
+body.packFocus #packStandalone>p.note{display:none!important}
+body.packFocus .pdfBar{display:none!important}
+.packFocusExit{display:none;position:sticky;top:4px;z-index:5100;margin:0 0 10px auto!important;width:auto!important;background:#102b20!important;color:white!important;padding:9px 13px!important}
+body.packFocus .packFocusExit{display:block!important}
+body.packFocus .packPlanner{max-width:1380px;margin:0 auto}
+body.packFocus .packPlannerGrid{grid-template-columns:minmax(0,1.4fr) minmax(330px,.8fr)}
+@media(max-width:820px){
+  body.packFocus #packStandalone{padding:8px!important}
+  body.packFocus .packPlannerGrid{grid-template-columns:1fr}
+}
+
+/* 7.9.0 Guided Bike Config */
+.bikeJourneyCard{margin:0 0 12px;padding:14px;border:1px solid var(--line);border-radius:15px;background:#fbfaf4}
+.bikeJourneyGrid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;align-items:center}
+.bikeJourneyTitle{font-size:18px;font-weight:900}
+.bikeJourneyMeta{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;color:var(--muted);font-size:10px}
+.bikeMiniProfile{height:70px;border-radius:10px;background:#eef4ef;display:flex;align-items:end;gap:2px;padding:8px}
+.bikeMiniProfile span{flex:1;background:#37775a;border-radius:3px 3px 0 0;min-height:5px;opacity:.82}
+.packSteps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px}
+.packStep{display:flex;gap:9px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#f7f7f2;cursor:pointer}
+.packStep.active{background:#e8f2ec;border-color:#9ec3ae}
+.packStepNum{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#dce7df;font-weight:900}
+.packStep.active .packStepNum{background:#176b49;color:#fff}
+.packStep b{display:block;font-size:11px}.packStep span{font-size:9px;color:var(--muted)}
+.bikeConfiguratorGrid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.75fr);gap:12px}
+.bikeStage{position:relative;min-height:520px;border-radius:16px;border:1px solid var(--line);background:linear-gradient(#f4f6f2,#e9eee9);overflow:hidden}
+.bikeStage svg{width:100%;height:100%;min-height:520px;display:block}
+.bikeMountTag{cursor:pointer}
+.bikeMountTag .bagBody{transition:opacity .15s ease,transform .15s ease;transform-origin:center}
+.bikeMountTag.off .bagBody{opacity:.10}
+.bikeMountTag:hover .bagBody{opacity:.88}
+.bikeMountTag text{pointer-events:none}
+.bikeStageLegend{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border-top:1px solid #d9e1db;background:rgba(255,255,255,.78)}
+.bikeStageLegend button{width:auto;margin:0;padding:5px 7px;border-radius:999px;background:white;color:var(--ink);border:1px solid var(--line);font-size:9px}
+.bikeStageLegend button.on{background:#176b49;color:white;border-color:#176b49}
+.bikeAside{display:grid;align-content:start;gap:10px}
+.bagPanel{border:1px solid #dfe7e1;border-radius:14px;background:#eef7f1;padding:10px}
+.bagPanel h4{margin:0 0 8px;font-size:13px}
+.bagList{display:grid;gap:6px}
+.bagLine{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:7px;border-radius:9px;background:rgba(255,255,255,.72)}
+.bagLine .meta{font-size:9px;color:var(--muted)}
+.bagLine button{width:auto;margin:0;padding:6px 8px;border-radius:8px;font-size:9px}
+.bagLine.open{background:#fff8e9}
+.stepPanel{display:none}.stepPanel.active{display:block}
+.gearSectionTitle{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 8px}
+.gearSearch{min-width:220px;max-width:340px}
+.gearCard .gearThumb{height:70px;border-radius:10px;background:#f5f5ef;display:grid;place-items:center;font-size:34px;margin-bottom:7px}
+.gearCard.compact .gearControls{display:grid;grid-template-columns:1fr;gap:6px}
+.packBottomBar{position:sticky;bottom:8px;z-index:80;margin-top:14px;display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:rgba(252,250,244,.96);border:1px solid var(--line);box-shadow:0 8px 24px rgba(12,42,29,.16);backdrop-filter:blur(10px)}
+.packBottomMetric b{display:block;font-size:12px}.packBottomMetric span{font-size:9px;color:var(--muted)}
+.packBottomBar button{width:auto;margin:0;padding:9px 12px}
+.packProgress{height:7px;border-radius:999px;background:#dfe6e0;overflow:hidden;margin-top:4px}
+.packProgress i{display:block;height:100%;background:#176b49;border-radius:999px}
+.moreViews{margin-top:8px}
+.moreViews summary{cursor:pointer;font-size:10px;font-weight:800;color:#315443}
+.moreViews .configTabs{margin-top:8px}
+@media(max-width:860px){
+  .bikeJourneyGrid,.bikeConfiguratorGrid{grid-template-columns:1fr}
+  .bikeStage{min-height:390px}.bikeStage svg{min-height:390px}
+  .packSteps{grid-template-columns:1fr}
+  .packBottomBar{grid-template-columns:1fr 1fr}
+  .packBottomBar button{grid-column:1/-1}
+}
 </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.8.2</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.9.0</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.8.2 übersetzt aktuelle Bikepacking-Erfahrungen in konkrete Checks: Tagesbelastung, Terrain-Vertrauen, Versorgung, Wetter entlang der Etappen, Pack-Reduktion und GPX/Strava-Handoff.</div>
+  <div class="sub">7.9.0 ordnet Bike & Packen neu: drei klare Schritte, eine größere Bike-Grafik mit montierbaren Taschen, Ausrüstung direkt darunter und ein permanenter Pack-Fortschritt statt vieler verstreuter Schalter.</div>
 </header>
 <div class="appModeSwitch noPrint">
-  <button id="modeRouteBtn" class="active" type="button" onclick="showAppMode('route')">🗺 Route planen</button>
+  <button id="modeRouteBtn" class="active" type="button" onclick="showAppMode('route')">🗺️ Route planen</button>
   <button id="modeBikeBtn" type="button" onclick="showAppMode('bike')">🚲 Bike konfigurieren</button>
 </div>
 <main>
@@ -303,6 +376,7 @@ body.packFocus #packStandalone.card{min-height:calc(100vh - 36px)}
   <div class="eyebrow">PACKPLAN & BIKE-SETUP</div>
   <h2>Bike konfigurieren – unabhängig von der Route</h2>
   <p class="note">Die Packplanung und 3D-Ansicht funktionieren auch dann, wenn ein externer Routingdienst gerade nicht antwortet.</p>
+  <button type="button" class="packFocusExit" onclick="togglePackOnly()">← Pack-Fokus beenden</button>
   <div id="bikePackPlanner" class="packPlanner"></div>
 </section>
 
@@ -422,6 +496,7 @@ function showAppMode(mode){
   const route=$('routePlanner'),pack=$('packStandalone'),result=$('result');
   if(mode==='route'){
     document.body.classList.remove('packFocus');
+    document.body.style.overflow='';
     pack?.classList.remove('packOnly');
     packOnlyMode=false;
   }
@@ -1186,8 +1261,13 @@ function togglePackOnly(){
   document.body.classList.toggle('packFocus',on);
   pack?.classList.toggle('packOnly',on);
   packOnlyMode=on;
-  if(on)setTimeout(()=>pack?.scrollIntoView({behavior:'smooth',block:'start'}),20);
-  showCopyToast(on?'Pack-Fokus aktiv':'Gesamte Seite');
+  if(on){
+    requestAnimationFrame(()=>{pack?.scrollTo({top:0,behavior:'auto'});});
+    showCopyToast('Pack-Fokus aktiv');
+  }else{
+    document.body.style.overflow='';
+    showCopyToast('Pack-Fokus beendet');
+  }
 }
 function addCustomGear(){
   const name=($('customGearName')?.value||'').trim();
@@ -1491,56 +1571,137 @@ function initLocal3D(){
   c.onpointerup=c.onpointercancel=()=>local3d.drag=false;
   draw();
 }
+
+let packWizardStep=1;
+let gearSearchTerm='';
+function setPackWizardStep(n){packWizardStep=n;renderBikePackPlanner();setTimeout(()=>document.querySelector('.packSteps')?.scrollIntoView({behavior:'smooth',block:'start'}),20)}
+function setGearSearch(v){gearSearchTerm=(v||'').toLowerCase();renderBikePackPlanner()}
+function toggleBagFromBike(id){setBikeBag(id,!bikeBagState[id])}
+function journeyCardHtml(){
+  const has=!!window.__routeContext?.coords?.length;
+  const start=shortPlace($('start')?.value||'Start'),dest=shortPlace($('dest')?.value||'Ziel');
+  const m=window.__routeMetrics;
+  const days=travelDays()||window.__routeContext?.stages?.length||null;
+  const bars=[18,24,31,22,38,46,28,52,34,42,26,19,14,22,18,12];
+  return `<div class="bikeJourneyCard">
+    <div class="bikeJourneyGrid">
+      <div>
+        <div class="eyebrow">${has?'AKTUELLE REISE':'BIKE-SETUP'}</div>
+        <div class="bikeJourneyTitle">${has?`${start} → ${dest}`:'Bike konfigurieren – unabhängig von der Route'}</div>
+        <div class="bikeJourneyMeta">
+          ${has&&m?`<span>${m.totalDist.toFixed(0)} km</span><span>${m.hasElevation?Math.round(m.totalAsc)+' HM':'HM offen'}</span>`:''}
+          ${days?`<span>${days} Tage</span>`:''}
+          <span>${$('lodging')?.options[$('lodging').selectedIndex]?.text||'Übernachtung offen'}</span>
+        </div>
+      </div>
+      <div class="bikeMiniProfile">${bars.map(h=>`<span style="height:${h}px"></span>`).join('')}</div>
+    </div>
+  </div>`;
+}
+function guidedBikeSvg(){
+  const on=id=>!!bikeBagState[id];
+  const tag=(id,x,y,w,h,label,cls='')=>`<g class="bikeMountTag ${on(id)?'on':'off'}" onclick="toggleBagFromBike('${id}')">
+    <rect class="bagBody" x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="${on(id)?'#304c3e':'#aebbb2'}" stroke="#fff" stroke-width="3"/>
+    <text x="${x+w/2}" y="${y+h/2+5}" text-anchor="middle" font-size="15" font-weight="900" fill="#fff">${label}</text>
+  </g>`;
+  return `<svg viewBox="0 0 760 500" role="img" aria-label="Bike mit anklickbaren Taschenpositionen">
+    <rect width="760" height="500" fill="#eef3ee"/>
+    <g fill="none" stroke="#1d2521" stroke-width="14">
+      <circle cx="170" cy="340" r="105"/><circle cx="590" cy="340" r="105"/>
+    </g>
+    <g stroke="#8d7a57" stroke-width="15" stroke-linecap="round" fill="none">
+      <path d="M170 340 L360 340 L290 175 Z"/>
+      <path d="M290 175 L505 185 L360 340"/>
+      <path d="M505 185 L590 340"/>
+      <path d="M170 340 L290 175"/>
+    </g>
+    <g stroke="#1d2521" stroke-width="13" stroke-linecap="round">
+      <line x1="290" y1="175" x2="282" y2="128"/><line x1="248" y1="124" x2="310" y2="124"/>
+      <line x1="505" y1="185" x2="524" y2="132"/><line x1="505" y1="128" x2="560" y2="128"/>
+    </g>
+    <circle cx="360" cy="340" r="19" fill="#1d2521"/>
+    ${tag('saddle',220,92,108,58,'S')}
+    ${tag('top',365,148,92,34,'OT')}
+    ${tag('frame',310,205,145,92,'R')}
+    ${tag('handlebar',515,92,110,96,'L')}
+    ${tag('tools',265,205,48,58,'W')}
+    ${tag('rearSideL',95,245,92,122,'HL')}
+    ${tag('rearSideR',185,255,92,122,'HR')}
+    ${tag('frontSideL',535,250,82,122,'VL')}
+    ${tag('frontSideR',612,260,82,122,'VR')}
+    ${tag('forkL',510,235,55,95,'GL')}
+    ${tag('forkR',665,235,55,95,'GR')}
+    ${tag('bottles',385,300,42,78,'FL')}
+    ${bikeAccessoryState.rearLight?'<circle cx="225" cy="120" r="10" fill="#d43a31"/>':''}
+    ${bikeAccessoryState.frontLight?'<circle cx="570" cy="142" r="12" fill="#f3d44f"/>':''}
+    ${bikeAccessoryState.computer?'<rect x="520" y="105" width="35" height="22" rx="5" fill="#25332c"/>':''}
+  </svg>`;
+}
 function renderBikePackPlanner(){
   const host=$('bikePackPlanner');if(!host)return;
   const active=bikeBagCatalog.filter(x=>bikeBagState[x.id]);
   const inactive=bikeBagCatalog.filter(x=>!bikeBagState[x.id]);
-  const lodging=$('lodging')?.value||'hotel';
   const cats=[['all','Alle'],['camping','Schlafen & Camping'],['clothing','Kleidung'],['kitchen','Küche'],['tech','Elektronik'],['tools','Werkzeug'],['food','Verpflegung'],['hydration','Wasser'],['safety','Sicherheit'],['misc','Sonstiges']];
-  const visible=gearCatalog.filter(g=>packFilter==='all'||g.cat===packFilter);
-  const total=totalPackedWeight(),pct=Math.min(100,total/20*100),bal=packBalanceStats();
+  const visible=gearCatalog.filter(g=>(packFilter==='all'||g.cat===packFilter) && (!gearSearchTerm||g.name.toLowerCase().includes(gearSearchTerm)));
+  const total=totalPackedWeight(),packed=gearCatalog.filter(g=>gearAssignments[g.id]).length,pct=Math.min(100,total/20*100);
   host.classList.toggle('packModePack',packMode==='pack');
   host.innerHTML=`
+    ${journeyCardHtml()}
     <div class="packPlannerHead">
-      <div><h3>🧳 Packansicht & Bike-Setup</h3><div class="packPlannerSub">Montierte Taschen und Halter erscheinen direkt am Bike. Im Einpack-Modus bleibt ein kompakter Bike-Dock beim Scrollen sichtbar.</div></div>
+      <div><h3>🚲 Bike konfigurieren</h3><div class="packPlannerSub">Montiere zuerst die Taschen, wähle danach deine Ausrüstung und packe sie ein.</div></div>
       <div class="packStats"><span class="packStat">${active.length} Taschen</span><span class="packStat">${total.toFixed(1)} kg gepackt</span></div>
     </div>
-    <div class="packModeTabs">
-      <button type="button" class="${packMode==='plan'?'active':''}" onclick="setPackMode('plan')">Packliste</button>
-      <button type="button" class="${packMode==='pack'?'active':''}" onclick="setPackMode('pack')">Einpacken · Animation</button>
-      <button type="button" onclick="togglePackOnly()">Pack-Fokus</button>
+
+    <div class="packSteps">
+      <div class="packStep ${packWizardStep===1?'active':''}" onclick="setPackWizardStep(1)"><div class="packStepNum">1</div><div><b>Taschen montieren</b><span>Positionen direkt am Bike wählen</span></div></div>
+      <div class="packStep ${packWizardStep===2?'active':''}" onclick="setPackWizardStep(2)"><div class="packStepNum">2</div><div><b>Ausrüstung wählen</b><span>Eigene Dinge hinzufügen oder auswählen</span></div></div>
+      <div class="packStep ${packWizardStep===3?'active':''}" onclick="setPackWizardStep(3)"><div class="packStepNum">3</div><div><b>Einpacken</b><span>Taschen, Gewicht und Verteilung prüfen</span></div></div>
     </div>
-    <div class="packDock">${packDockHtml()}</div>
-    <div class="configTabs">
-      <button type="button" class="${bikeViewMode==='config'?'active':''}" onclick="setBikeViewMode('config')">Konfiguration</button>
-      <button type="button" class="${bikeViewMode==='photo'?'active':''}" onclick="setBikeViewMode('photo')">Foto-Referenz</button>
-      <button type="button" class="${bikeViewMode==='3d'?'active':''}" onclick="setBikeViewMode('3d')">3D Beta</button>
-    </div>
-    <div class="packActionRow"><button type="button" class="stageMapBtn" onclick="animatedPackAll()">✨ Alles automatisch einpacken</button>${lodging==='camping'?`<button type="button" class="stageMapBtn" onclick="autoCampingPack()">⛺ Camping-Grundsetup</button>`:''}</div>
-    <div class="packPlannerGrid">
-      <div>
-        ${bikeViewMode==='config'?`<div class="configBike">${configurationBikeSvg(false)}</div>`:''}
-        ${bikeViewMode==='photo'?`<div class="photoRef"><img src="./bike-packplan-neutral.png" alt="Foto-Referenz eines Bikepacking-Rads"></div><div class="tiny" style="margin-top:6px">Foto nur als Referenz: Taschen im Foto sind nicht dynamisch entfernbar.</div>`:''}
-        ${bikeViewMode==='3d'?`<div class="canvas3dWrap"><canvas id="bike3dLocal"></canvas><div class="canvas3dHint">lokaler 3D-Viewer · ziehen = drehen/kippen · keine externe Bibliothek</div></div>`:''}
-        <div class="directionNote"><strong>Links / rechts = Fahrerperspektive.</strong> HL hinten links · HR hinten rechts · VL vorne links · VR vorne rechts.</div>
-        <div class="packBalance"><div><strong>${bal.front}%</strong>vorne</div><div><strong>${bal.center}%</strong>Mitte</div><div><strong>${bal.rear}%</strong>hinten</div><div><strong>${bal.left.toFixed(1)} kg</strong>links</div><div><strong>${bal.right.toFixed(1)} kg</strong>rechts</div></div>
-      </div>
-      <div class="packSummary">
-        <div class="packSummaryBox on"><h4>Am Bike befestigt (${active.length})</h4>${active.length?active.map(x=>{const load=bagLoadPercent(x.id),bar=Math.min(100,load);return `<div class="packRow ${highlightedBag===x.id?'highlight':''}" data-bag-row="${x.id}" style="display:block" onclick="highlightBikeBag('${x.id}')"><div style="display:flex;justify-content:space-between;gap:8px"><span><strong>${x.name}</strong><br><span class="tiny">${x.capacity} l · ${bagWeight(x.id).toFixed(1)} kg</span></span><button class="remove" type="button" onclick="event.stopPropagation();setBikeBag('${x.id}',false)">− entfernen</button></div><div class="bagFill ${load>100?'over':''}"><span style="width:${bar}%"></span></div>${bagContentsHtml(x)}</div>`}).join(''):'<div class="tiny">Noch keine Taschen befestigt.</div>'}</div>
-        <div class="packSummaryBox off"><h4>Noch offen (${inactive.length})</h4>${inactive.length?inactive.map(x=>`<div class="packRow"><span>${x.name}</span><button class="add" type="button" onclick="setBikeBag('${x.id}',true)">＋ befestigen</button></div>`).join(''):'<div class="tiny">Alle Taschen sind befestigt.</div>'}</div>
-        <div class="accessoryPanel"><h4 style="margin:0 0 6px">Bike-Zubehör</h4>${bikeAccessoryCatalog.map(x=>`<div class="accessoryRow"><span>${x.icon} <strong>${x.name}</strong></span><button type="button" class="${bikeAccessoryState[x.id]?'add':'remove'}" onclick="toggleBikeAccessory('${x.id}')">${bikeAccessoryState[x.id]?'✓ montiert':'＋ montieren'}</button></div>`).join('')}</div>
-        <div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>${packResearchHtml()}
+
+    <div class="stepPanel ${packWizardStep===1?'active':''}">
+      <div class="bikeConfiguratorGrid">
+        <div>
+          <div class="bikeStage">${guidedBikeSvg()}<div class="bikeStageLegend">${bikeBagCatalog.map(b=>`<button type="button" class="${bikeBagState[b.id]?'on':''}" onclick="toggleBagFromBike('${b.id}')">${bikeBagState[b.id]?'✓':'＋'} ${b.name}</button>`).join('')}</div></div>
+          <div class="directionNote"><strong>Direkt am Bike antippen:</strong> Tasche montieren oder entfernen. Links/rechts = Fahrerperspektive.</div>
+          <details class="moreViews"><summary>Weitere Ansichten</summary><div class="configTabs"><button type="button" onclick="setBikeViewMode('photo')">Foto-Referenz</button><button type="button" onclick="setBikeViewMode('3d')">3D Beta</button></div></details>
+        </div>
+        <div class="bikeAside">
+          <div class="bagPanel"><h4>Am Bike befestigt (${active.length})</h4><div class="bagList">${active.map(b=>`<div class="bagLine"><div><strong>${b.name}</strong><div class="meta">${b.capacity} l · ${bagWeight(b.id).toFixed(1)} kg</div></div><button type="button" onclick="setBikeBag('${b.id}',false)">− entfernen</button></div>`).join('')||'<div class="tiny">Noch keine Taschen montiert.</div>'}</div></div>
+          <div class="bagPanel" style="background:#fff8e9"><h4>Noch offen (${inactive.length})</h4><div class="bagList">${inactive.map(b=>`<div class="bagLine open"><div><strong>${b.name}</strong><div class="meta">${b.capacity} l</div></div><button type="button" onclick="setBikeBag('${b.id}',true)">＋ montieren</button></div>`).join('')}</div></div>
+          <div class="accessoryPanel"><h4 style="margin:0 0 6px">Bike-Zubehör</h4>${bikeAccessoryCatalog.map(x=>`<div class="accessoryRow"><span>${x.icon} <strong>${x.name}</strong></span><button type="button" class="${bikeAccessoryState[x.id]?'add':'remove'}" onclick="toggleBikeAccessory('${x.id}')">${bikeAccessoryState[x.id]?'✓ montiert':'＋ montieren'}</button></div>`).join('')}</div>
+          <button type="button" onclick="setPackWizardStep(2)">Weiter zu Ausrüstung →</button>
+        </div>
       </div>
     </div>
-    <div class="packWorkspace">
-      <div class="packWorkspaceHead"><div><strong>Deine Ausrüstung</strong><div class="tiny">Eigene Dinge ergänzen und direkt einer Tasche oder dem Flaschenhalter zuweisen.</div></div><div class="gearFilters">${cats.map(([id,n])=>`<button type="button" class="gearFilter ${packFilter===id?'active':''}" onclick="setPackFilter('${id}')">${n}</button>`).join('')}</div></div>
-      <div class="customGearForm"><label>Name<input id="customGearName" placeholder="z. B. Sandalen"></label><label>Kategorie<select id="customGearCat">${cats.filter(x=>x[0]!=='all').map(([id,n])=>`<option value="${id}">${n}</option>`).join('')}</select></label><label>Gewicht kg<input id="customGearKg" type="number" min="0" step="0.05" placeholder="0.30"></label><label>Menge<input id="customGearQty" type="number" min="1" step="1" value="1"></label><label>Bevorzugte Tasche<select id="customGearBag">${customBagOptions()}</select></label><button type="button" class="packPrimary" onclick="addCustomGear()">＋ hinzufügen</button></div>
-      <div class="gearGrid">${visible.map(g=>{const bag=bagById(gearAssignments[g.id]);const rec=(g.recommended||[]).filter(id=>bikeBagState[id]).map(id=>bagById(id)?.name).filter(Boolean).slice(0,2).join(' / ');return `<div class="gearCard ${bag?'assigned':''} ${g.custom?'customGear':''}" data-gear-card="${g.id}" draggable="true" ondragstart="packDragStart(event,'${g.id}')"><div class="gearIcon">${g.icon}</div><div class="gearName">${g.name}${g.qty&&g.qty>1?` ×${g.qty}`:''}</div><div class="gearMeta">${g.kg.toFixed(2)} kg</div><div class="gearAssigned">${bag?'✓ '+bag.name:'○ noch nicht gepackt'}</div>${!bag&&rec?`<div class="tiny">empfohlen: ${rec}</div>`:''}<div class="gearControls">${bag?`<button type="button" onclick="unassignGear('${g.id}')">Aus Tasche entfernen</button>`:`<button type="button" class="packPrimary" onclick="animatedPackGear('${g.id}')">${packMode==='pack'?'Einpacken ▶':'Automatisch einpacken'}</button>`}<select aria-label="Tasche für ${g.name}" onchange="setGearBagFromSelect('${g.id}',this.value)">${bagSelectOptions(gearAssignments[g.id]||'')}</select>${g.custom?`<button type="button" class="gearDelete" onclick="removeCustomGear('${g.id}')">löschen</button>`:''}</div></div>`}).join('')}</div>
-      <div class="campingHint"><strong>Einpacken:</strong> Im Animationsmodus bleibt oben ein Mini-Bike sichtbar, damit du nicht ständig zurückscrollen musst. Die Animation läuft bewusst langsamer.</div>
+
+    <div class="stepPanel ${packWizardStep===2?'active':''}">
+      <div class="gearSectionTitle"><div><h3 style="margin:0">Ausrüstung wählen</h3><div class="tiny">Eigene Dinge ergänzen oder vorhandene Ausrüstung einer Tasche zuweisen.</div></div><input class="gearSearch" placeholder="Ausrüstung suchen …" value="${gearSearchTerm}" oninput="setGearSearch(this.value)"></div>
+      <div class="gearFilters">${cats.map(([id,n])=>`<button type="button" class="gearFilter ${packFilter===id?'active':''}" onclick="setPackFilter('${id}')">${n}</button>`).join('')}</div>
+      <div class="customGearForm"><label>Name<input id="customGearName" placeholder="z. B. Sandalen"></label><label>Kategorie<select id="customGearCat">${cats.filter(x=>x[0]!=='all').map(([id,n])=>`<option value="${id}">${n}</option>`).join('')}</select></label><label>Gewicht kg<input id="customGearKg" type="number" min="0" step="0.05" placeholder="0.30"></label><label>Menge<input id="customGearQty" type="number" min="1" value="1"></label><label>Bevorzugte Tasche<select id="customGearBag">${customBagOptions()}</select></label><button type="button" class="packPrimary" onclick="addCustomGear()">＋ hinzufügen</button></div>
+      <div class="gearGrid">${visible.map(g=>{const bag=bagById(gearAssignments[g.id]);return `<div class="gearCard compact ${bag?'assigned':''} ${g.custom?'customGear':''}" data-gear-card="${g.id}"><div class="gearThumb">${g.icon}</div><div class="gearName">${g.name}${g.qty&&g.qty>1?` ×${g.qty}`:''}</div><div class="gearMeta">${g.kg.toFixed(2)} kg</div><div class="gearAssigned">${bag?'✓ '+bag.name:'○ noch nicht gepackt'}</div><div class="gearControls"><select aria-label="Tasche für ${g.name}" onchange="setGearBagFromSelect('${g.id}',this.value)">${bagSelectOptions(gearAssignments[g.id]||'')}</select>${bag?`<button type="button" onclick="unassignGear('${g.id}')">Aus Tasche entfernen</button>`:`<button type="button" class="packPrimary" onclick="animatedPackGear('${g.id}')">In passende Tasche legen</button>`}${g.custom?`<button type="button" class="gearDelete" onclick="removeCustomGear('${g.id}')">löschen</button>`:''}</div></div>`}).join('')}</div>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px"><button type="button" style="width:auto" onclick="setPackWizardStep(3)">Weiter zum Einpacken →</button></div>
+    </div>
+
+    <div class="stepPanel ${packWizardStep===3?'active':''}">
+      <div class="packModeTabs"><button type="button" class="${packMode==='plan'?'active':''}" onclick="setPackMode('plan')">Übersicht</button><button type="button" class="${packMode==='pack'?'active':''}" onclick="setPackMode('pack')">Einpacken · Animation</button><button type="button" onclick="animatedPackAll()">✨ Alles automatisch einpacken</button><button type="button" onclick="togglePackOnly()">Pack-Fokus</button></div>
+      <div class="packDock">${packDockHtml()}</div>
+      <div class="bikeConfiguratorGrid">
+        <div><div class="bikeStage">${guidedBikeSvg()}</div><div class="directionNote">Tippe auf eine Tasche am Bike, um sie zu montieren oder zu entfernen. Gepackte Inhalte stehen rechts.</div></div>
+        <div class="bikeAside">
+          <div class="bagPanel"><h4>Gepackte Taschen</h4><div class="bagList">${active.map(b=>`<div class="bagLine"><div><strong>${b.name}</strong><div class="meta">${bagWeight(b.id).toFixed(1)} kg · ${gearCatalog.filter(g=>gearAssignments[g.id]===b.id).length} Gegenstände</div></div><button type="button" onclick="highlightBikeBag('${b.id}')">anzeigen</button></div>${bagContentsHtml(b)}`).join('')}</div></div>
+          <div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>
+          ${packResearchHtml()}
+        </div>
+      </div>
+    </div>
+
+    <div class="packBottomBar">
+      <div class="packBottomMetric"><b>${total.toFixed(1)} kg</b><span>Gesamtgewicht</span><div class="packProgress"><i style="width:${pct}%"></i></div></div>
+      <div class="packBottomMetric"><b>${packed} / ${gearCatalog.length}</b><span>Gegenstände gepackt</span><div class="packProgress"><i style="width:${Math.round(packed/Math.max(1,gearCatalog.length)*100)}%"></i></div></div>
+      <button type="button" onclick="setPackWizardStep(Math.min(3,packWizardStep+1))">${packWizardStep<3?'Weiter →':'Packplan prüfen'}</button>
     </div>`;
-  attachBlockActions(host);renderAdventureCheck();
-  setTimeout(()=>{if(bikeViewMode==='3d')initLocal3D()},50);
-}
+  attachBlockActions(host);
+} 
 function renderAdventureLayers(stages,weather){
   const loads=routeLoad(stages),hardest=loads.reduce((a,b)=>a.hm100>b.hm100?a:b);
   const fit=bikeFit(stages),pack=packingPlan(),nav=navigationPlan(),clothes=clothingPlan(weather),fuel=hydrationEnergy(stages,weather),setup=setupAdvice(stages),warnings=stageWarnings(stages,weather);
@@ -1903,6 +2064,46 @@ async function copySelectedStops(){
   const text=vals.map(x=>`Etappe ${x.stage+1} · ${labels[x.cat]}: ${x.name} (${x.distance.toFixed(1)} km vom Etappenziel)`).join('\n');
   if(!text)return;try{await navigator.clipboard.writeText(text)}catch(e){}showCopyToast('Etappen-Auswahl kopiert');
 }
+
+async function fetchRouteWithRetry(payload){
+  const url='https://adventure-bike-os-api.onrender.com/api/route';
+  let last=null;
+  for(let attempt=1;attempt<=2;attempt++){
+    try{
+      const ctrl=new AbortController();
+      const timer=setTimeout(()=>ctrl.abort(),attempt===1?52000:65000);
+      const r=await fetch(url,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload),
+        signal:ctrl.signal
+      });
+      clearTimeout(timer);
+      const data=await r.json().catch(()=>({}));
+      if(r.ok)return {response:r,data,attempt};
+      last=new Error(data.error||`Server antwortet mit ${r.status}`);
+    }catch(e){
+      last=e;
+    }
+    if(attempt===1){
+      $('status').textContent='Routingdienst war beim ersten Versuch nicht verfügbar. Zweiter Versuch läuft …';
+      await new Promise(r=>setTimeout(r,1800));
+    }
+  }
+  throw last||new Error('Externer Routingdienst derzeit nicht erreichbar.');
+}
+function clearCurrentRouteResult(){
+  window.__weatherData=null;
+  window.__terrainSupplyData=null;
+  routeDirty=false;
+  if(routeLayer){try{routeLayer.remove()}catch(e){} routeLayer=null}
+  stageMarkers.forEach(m=>{try{m.remove()}catch(e){}});stageMarkers=[];
+  const result=$('result');
+  if(result){result.classList.add('hidden');result.classList.remove('modeHidden')}
+  $('quickDistance').textContent='– km';
+  $('quickFeasibility').textContent='Noch offen';
+  $('quickFeasibility').className='';
+}
 async function plan(){
  const btn=$('go');btn.disabled=true;$('status').className='status';
  const startVal=$('start').value.trim(),destVal=$('dest').value.trim();
@@ -1910,13 +2111,15 @@ async function plan(){
  if(!$('kmday').value||!$('hmday').value){$('status').textContent='Bitte Ziel-km pro Tag und max. Höhenmeter pro Tag eingeben.';$('status').className='status error';btn.disabled=false;return}
  if(($('tripdate').value&&!$('enddate').value)||(!$('tripdate').value&&$('enddate').value)){$('status').textContent='Bitte Start- und Enddatum gemeinsam eingeben.';$('status').className='status error';btn.disabled=false;return}
  if($('tripdate').value&&$('enddate').value&&new Date($('enddate').value)<new Date($('tripdate').value)){$('status').textContent='Das Enddatum muss am oder nach dem Startdatum liegen.';$('status').className='status error';btn.disabled=false;return}
- // A newly calculated trip starts with a clean personal PDF selection.
+ // A newly calculated trip starts clean: no stale route may remain visible after a failed request.
+ clearCurrentRouteResult();
+ window.__routeContext=null;window.__routeMetrics=null;
  pdfMemory=[];localStorage.setItem('abo-pdf-memory-v3','[]');updatePdfCount();
  window.stageSelections={};updateSelectedStops();
  try{
   $('status').textContent='Server berechnet Fahrradroute …';
-  const rr=await fetch('https://adventure-bike-os-api.onrender.com/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:$('start').value.trim(),destination:$('dest').value.trim(),profile:$('profile').value})});
-  const gj=await rr.json().catch(()=>({}));if(!rr.ok)throw new Error(gj.error||('Server antwortet mit '+rr.status));
+  const routed=await fetchRouteWithRetry({start:$('start').value.trim(),destination:$('dest').value.trim(),profile:$('profile').value});
+  const rr=routed.response,gj=routed.data;
   let coords=gj?.geometry?.coordinates;if(!coords?.length)throw new Error('Keine Route erhalten');
   let m=metrics(coords),heightSource=gj?.properties?.height_source||null;
   if(!m.hasElevation){
@@ -1943,11 +2146,11 @@ async function plan(){
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
   attachBlockActions();$('terrainProfileState').textContent=`Routingprofil: ${$('profile').options[$('profile').selectedIndex].text} · Terrain und Versorgung wurden für diese neue Routengeometrie frisch abgefragt.`;$('routeFreshness').textContent='Aktuelle Berechnung · Etappen, Terrain und Versorgung gehören zu dieser Route.';showTripTab('etappen');$('status').textContent='Route berechnet. Karte, Höhenprofil und Etappen sind aktualisiert.';
  }catch(e){
+   clearCurrentRouteResult();
+   window.__routeContext=null;window.__routeMetrics=null;
    $('status').className='status error';
-   const msg=(e&&e.message)||'Unbekannter Fehler';
-   $('status').textContent=msg==='Load failed'
-     ?'Route konnte nicht berechnet werden: Verbindung zum Routing-Server abgebrochen. Bitte erneut versuchen – 7.6.6 nutzt Routing-/Höhen-Fallbacks und trennt Packplanung, Camping-Suche und Etappenlogik voneinander.'
-     :'Route konnte aktuell nicht berechnet werden: '+msg+'. Packplanung und 3D-Bike bleiben trotzdem nutzbar.';
+   const msg=(e&&e.name==='AbortError')?'Zeitüberschreitung beim Routing':((e&&e.message)||'Unbekannter Fehler');
+   $('status').textContent='Route konnte diesmal nicht berechnet werden: '+msg+'. Es wird bewusst keine alte Route mehr als aktuelles Ergebnis angezeigt. Bike- und Packplanung bleiben nutzbar.';
  }finally{btn.disabled=false}
 }
 $('lodging').addEventListener('change',()=>{if($('bikePackPlanner'))renderBikePackPlanner()});
