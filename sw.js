@@ -1,4 +1,4 @@
-const CACHE='abo-7-7-1-v1';
+const CACHE='abo-7-7-2-v1';
 const CORE=['./','./index.html','./manifest.webmanifest','./bike-packplan-neutral.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)))});
 self.addEventListener('activate',e=>{e.waitUntil(Promise.all([
