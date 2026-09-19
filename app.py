@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.25 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.26 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -158,8 +158,55 @@ def segmented_route(a, b, profile="trekking"):
     return {"type":"Feature","geometry":{"type":"LineString","coordinates":merged},"properties":{"routing_source":"Segmented "+"/".join(sorted(set(sources))),"segments":segments}}
 
 
+
+def _sample_for_height(coords, limit=450):
+    if len(coords) <= limit:
+        return coords
+    step=max(1,len(coords)//limit)
+    out=coords[::step]
+    if out[-1]!=coords[-1]:
+        out.append(coords[-1])
+    return out
+
+def add_valhalla_height(coords):
+    """Try to enrich a 2D route with elevation. Failure is non-fatal."""
+    sampled=_sample_for_height(coords)
+    req={"shape":[{"lat":c[1],"lon":c[0]} for c in sampled],"height_precision":0}
+    try:
+        r=requests.post("https://valhalla.openstreetmap.de/height",json=req,headers={"X-Client-Id":"adventure-bike-os-prototype"},timeout=15)
+        print(f"[HEIGHT] status={r.status_code}",flush=True)
+        r.raise_for_status()
+        heights=(r.json() or {}).get("height") or []
+        if len(heights)==len(sampled):
+            return [[c[0],c[1],heights[i] if heights[i] is not None else 0] for i,c in enumerate(sampled)]
+    except Exception as e:
+        print(f"[HEIGHT] unavailable: {e}",flush=True)
+    return [[c[0],c[1],0] for c in sampled]
+
+def osrm_bike_route(a,b):
+    """Third routing fallback via OSM Deutschland's OSRM bicycle demo service."""
+    url=f"https://routing.openstreetmap.de/routed-bike/route/v1/driving/{a['lon']},{a['lat']};{b['lon']},{b['lat']}"
+    params={"overview":"full","geometries":"geojson","steps":"false"}
+    print("[OSRM-BIKE] request",flush=True)
+    r=requests.get(url,params=params,headers={"User-Agent":"AdventureBikeOS/0.26"},timeout=24)
+    print(f"[OSRM-BIKE] status={r.status_code}",flush=True)
+    r.raise_for_status()
+    data=r.json()
+    routes=data.get("routes") or []
+    if not routes:
+        raise ValueError("OSRM Bike returned no route")
+    coords=(routes[0].get("geometry") or {}).get("coordinates") or []
+    if len(coords)<2:
+        raise ValueError("OSRM Bike returned no usable geometry")
+    coords3=add_valhalla_height(coords)
+    return {
+        "type":"Feature",
+        "geometry":{"type":"LineString","coordinates":coords3},
+        "properties":{"routing_source":"OSRM Bike fallback","distance_m":routes[0].get("distance")}
+    }
+
 def race_route(a, b, profile="trekking"):
-    """Ask two independent routing engines in parallel and return the first successful result."""
+    """Race BRouter and Valhalla; if both fail, use OSRM Bike as a third independent fallback."""
     from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
     pool=ThreadPoolExecutor(max_workers=2)
     futures={
@@ -184,13 +231,23 @@ def race_route(a, b, profile="trekking"):
                 except Exception as e:
                     errors.append(f"{source}: {type(e).__name__}: {e}")
                     print(f"[ROUTE-RACE] {source} failed: {e}",flush=True)
-        raise requests.RequestException(" | ".join(errors) if errors else "Routingdienste Timeout")
     finally:
         pool.shutdown(wait=False,cancel_futures=True)
 
+    print(f"[ROUTE-RACE] primary engines failed, trying OSRM Bike. errors={errors}",flush=True)
+    try:
+        feature=osrm_bike_route(a,b)
+        print("[ROUTE-RACE] success source=OSRM Bike",flush=True)
+        return feature,"OSRM Bike"
+    except Exception as e:
+        errors.append(f"OSRM Bike: {type(e).__name__}: {e}")
+        print(f"[ROUTE-RACE] OSRM Bike failed: {e}",flush=True)
+        raise requests.RequestException(" | ".join(errors))
+
+
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.25-routing-race-7.6.1")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.26-routing-fallback-7.6.2")
 
 @app.get("/health")
 def health():

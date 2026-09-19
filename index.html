@@ -43,9 +43,9 @@
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.6.1</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.6.2</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.6.1 behebt lange Routing-Timeouts: BRouter und Valhalla werden parallel angefragt, damit auch lange Reisen schneller und robuster berechnet werden.</div>
+  <div class="sub">7.6.2 ergänzt einen dritten unabhängigen Fahrrad-Routing-Fallback (OSRM Bike) und nutzt ihn automatisch, wenn BRouter und Valhalla ausfallen.</div>
 </header>
 <main>
   <section class="card">
@@ -155,7 +155,7 @@
       <div class="eyebrow">AUTOMATISCHE ETAPPEN</div>
       <h2 id="stageTitle">Etappenplan</h2>
       <div id="stages"></div>
-      <p class="note">Adventure App 7.6.1: Lange Routen werden robuster berechnet, weil BRouter und Valhalla parallel laufen. Der erste erfolgreiche Routendienst gewinnt; dadurch vermeiden wir lange serielle Timeouts.</p>
+      <p class="note">Adventure App 7.6.2: BRouter und Valhalla laufen parallel. Falls beide ausfallen, wird automatisch OSRM Bike als dritter unabhängiger Fallback verwendet.</p>
     </div>
   </section>
   <div class="pdfBar noPrint">
@@ -965,12 +965,12 @@ async function plan(){
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
   renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);const terrainSupply=await fetchTerrainSupply(coords,stages);renderTerrainSupply(terrainSupply,stages,opt.labels);updateTerrainStatus(terrainSupply);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);renderTerrainOnMap(terrainSupply);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  attachBlockActions();$('status').textContent='Adventure App 7.6.1: Route, Zeitfenster, paralleles Routing, editierbare Etappen, Unterkunftslinks, Bike-Setup, Terrain und persönliche Ausrüstung bereit.';$('result').scrollIntoView({behavior:'smooth'});
+  attachBlockActions();$('status').textContent='Adventure App 7.6.2: Route, Zeitfenster, dreifaches Routing-Fallback, editierbare Etappen, Unterkunftslinks, Bike-Setup, Terrain und persönliche Ausrüstung bereit.';$('result').scrollIntoView({behavior:'smooth'});
  }catch(e){
    $('status').className='status error';
    const msg=(e&&e.message)||'Unbekannter Fehler';
    $('status').textContent=msg==='Load failed'
-     ?'Route konnte nicht berechnet werden: Verbindung zum Routing-Server abgebrochen. Bitte erneut versuchen – 7.6.1 fragt zwei Routingdienste parallel an.'
+     ?'Route konnte nicht berechnet werden: Verbindung zum Routing-Server abgebrochen. Bitte erneut versuchen – 7.6.2 nutzt zusätzlich einen dritten Fahrrad-Routingdienst als Fallback.'
      :'Route konnte nicht berechnet werden: '+msg+'.';
  }finally{btn.disabled=false}
 }
