@@ -547,13 +547,16 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
 .transportRow a{font-size:8px;text-decoration:none;background:#176b49;color:white;padding:6px 7px;border-radius:8px;font-weight:800}
 .routingWarmState{margin-top:6px;font-size:8px;color:#66746d}
 @media(max-width:820px){.transportRow{grid-template-columns:1fr}.transportRow a{justify-self:start}}
+
+.placeSuggestion span{padding-right:4px}
+.geocoderHint{font-size:8px;color:#718078}
 </style>
 </head>
 <body>
 <header class="productHero">
   <div class="brandRow">
     <div>
-      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.2.1</div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.2.2</div>
       <h1>Dein Bike. Dein Abenteuer.</h1>
       <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
     </div>
@@ -621,7 +624,7 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
       <div class="summaryBox"><b id="quickFeasibility">Noch offen</b><span>Machbarkeit</span></div>
     </div>
     <button id="go">ROUTE BERECHNEN</button>
-    <div id="status" class="status">Start und Ziel eingeben – Orte werden erkannt. Bereits bekannte Grundrouten können sofort aus dem Cache geladen werden.</div>
+    <div id="status" class="status">Start und Ziel eingeben – Orte werden erkannt. Du musst keinen Vorschlag auswählen; bei Rate-Limits weicht die App automatisch auf einen zweiten Ortsdienst aus.</div>
   </section>
 
   
@@ -2803,7 +2806,7 @@ async function loadPlaceSuggestions(id){
     const r=await fetch(`${API}/api/place-suggest?q=${encodeURIComponent(q)}`);
     const d=await r.json();const rows=d.results||[];
     if(input.value.trim()!==q)return;
-    host.innerHTML=rows.map((x,i)=>`<button type="button" class="placeSuggestion" data-i="${i}"><b>${escapeHtml(x.name||x.display_name)}</b><span>${escapeHtml(x.display_name||'')}</span></button>`).join('');
+    host.innerHTML=rows.map((x,i)=>`<button type="button" class="placeSuggestion" data-i="${i}"><b>${escapeHtml(x.name||x.display_name)}</b><span>${escapeHtml(x.display_name||'')}${x.source?` · ${escapeHtml(x.source)}`:''}</span></button>`).join('');
     host.classList.toggle('open',!!rows.length);
     [...host.querySelectorAll('.placeSuggestion')].forEach((b,i)=>b.onclick=()=>{
       const x=rows[i];placeState[id]=x;input.value=x.name||x.display_name;
@@ -2815,7 +2818,7 @@ async function loadPlaceSuggestions(id){
 }
 ['start','dest'].forEach(id=>{
   $(id)?.addEventListener('input',()=>{
-    clearTimeout(PLACE_DEBOUNCE[id]);PLACE_DEBOUNCE[id]=setTimeout(()=>loadPlaceSuggestions(id),520);
+    clearTimeout(PLACE_DEBOUNCE[id]);PLACE_DEBOUNCE[id]=setTimeout(()=>loadPlaceSuggestions(id),700);
   });
   $(id)?.addEventListener('blur',()=>setTimeout(()=>closePlaceSuggest(id),180));
   $(id)?.addEventListener('focus',()=>{if($(id+'Suggest')?.innerHTML)$(id+'Suggest').classList.add('open')});

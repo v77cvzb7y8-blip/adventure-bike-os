@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.71 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.72 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -49,13 +49,35 @@ def _nominatim_get(params, timeout=14):
     r.raise_for_status()
     return r
 
-def place_suggestions(q, limit=5):
-    q=(q or "").strip()
-    if len(q)<2: return []
-    key=(q.casefold(), int(limit))
-    cached=_cache_get(_place_cache,key,CACHE_TTL_PLACE)
-    if cached is not None: return cached
-    print(f"[PLACE] {q}",flush=True)
+
+def _photon_search(q, limit=5):
+    """Primary geocoder for interactive place lookup; keeps Nominatim out of the hot path."""
+    r=session.get(
+        "https://photon.komoot.io/api/",
+        params={"q":q,"limit":max(1,min(int(limit),6)),"lang":"de"},
+        timeout=10
+    )
+    print(f"[PHOTON] {q!r} status={r.status_code}",flush=True)
+    r.raise_for_status()
+    rows=[]
+    for f in (r.json() or {}).get("features") or []:
+        g=f.get("geometry") or {}; c=g.get("coordinates") or []
+        p=f.get("properties") or {}
+        if len(c)<2: continue
+        name=p.get("name") or p.get("city") or p.get("town") or p.get("village") or q
+        parts=[name,p.get("state"),p.get("country")]
+        label=", ".join(str(x) for x in parts if x)
+        rows.append({
+            "lat":float(c[1]),"lon":float(c[0]),
+            "name":name,"display_name":label or name,
+            "country":p.get("country"),"country_code":p.get("countrycode"),
+            "type":p.get("type") or p.get("osm_key") or "",
+            "importance":float(p.get("importance") or 0),
+            "source":"Photon"
+        })
+    return rows
+
+def _nominatim_search_rows(q, limit=5):
     r=_nominatim_get({
         "q":q,"format":"jsonv2","limit":max(1,min(int(limit),6)),
         "addressdetails":1,"featuretype":"settlement"
@@ -69,8 +91,38 @@ def place_suggestions(q, limit=5):
             "lat":float(x["lat"]),"lon":float(x["lon"]),
             "name":short,"display_name":label,
             "country":a.get("country"),"country_code":a.get("country_code"),
-            "type":x.get("type"),"importance":float(x.get("importance") or 0)
+            "type":x.get("type"),"importance":float(x.get("importance") or 0),
+            "source":"Nominatim"
         })
+    return rows
+
+def place_suggestions(q, limit=5):
+    q=(q or "").strip()
+    if len(q)<2: return []
+    key=(q.casefold(), int(limit))
+    cached=_cache_get(_place_cache,key,CACHE_TTL_PLACE)
+    if cached is not None:
+        print(f"[PLACE-CACHE] {q}",flush=True)
+        return cached
+
+    rows=[]
+    photon_error=None
+    try:
+        rows=_photon_search(q,limit=limit)
+    except Exception as e:
+        photon_error=e
+        print(f"[PHOTON] failed {type(e).__name__}: {e}",flush=True)
+
+    # Nominatim is only a fallback now. A 429 here must never break routing.
+    if not rows:
+        try:
+            rows=_nominatim_search_rows(q,limit=limit)
+        except Exception as e:
+            print(f"[NOMINATIM-FALLBACK] failed {type(e).__name__}: {e}",flush=True)
+
+    if not rows and photon_error:
+        raise requests.RequestException(f"Ortssuche nicht erreichbar: {photon_error}")
+
     _cache_set(_place_cache,key,rows)
     return rows
 
@@ -478,7 +530,7 @@ def place_suggest():
         return jsonify(results=place_suggestions(q,limit=5))
     except requests.RequestException as e:
         print(f"[PLACE] unavailable: {e}",flush=True)
-        return jsonify(results=[],warning="Ortssuche derzeit nicht verfügbar."),200
+        return jsonify(results=[],warning="Ortssuche gerade nicht erreichbar. Du kannst den Ortsnamen trotzdem eingeben und die Route starten."),200
 
 @app.post("/api/transport-nearby")
 def transport_nearby():
@@ -561,7 +613,7 @@ def transport_nearby():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.71-routing-cache-autocomplete-transit-8.2.1")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.72-geocoder-fallback-8.2.2")
 
 @app.get("/health")
 def health():
@@ -769,8 +821,12 @@ def route():
             cached_text["properties"]["cache_reason"]="same start/destination/profile"
             return jsonify(cached_text)
 
-        if a is None:a=geocode(start)
-        if b is None:b=geocode(dest)
+        if a is None:
+            a=geocode(start)
+            print(f"[ROUTE-GEOCODE] start via cached/Photon fallback: {a['name']}",flush=True)
+        if b is None:
+            b=geocode(dest)
+            print(f"[ROUTE-GEOCODE] destination via cached/Photon fallback: {b['name']}",flush=True)
         coord_key=("coords",round(a["lat"],5),round(a["lon"],5),round(b["lat"],5),round(b["lon"],5),profile)
         cached=_cache_get(_route_cache,coord_key,CACHE_TTL_ROUTE)
         if cached is not None:
@@ -789,7 +845,7 @@ def route():
         return jsonify(error=str(e)),404
     except requests.RequestException as e:
         print(f"[ROUTE] EXTERNAL ERROR: {type(e).__name__}: {e}",flush=True)
-        return jsonify(error="Routingdienste antworten gerade nicht.",detail=str(e)[:800]),502
+        return jsonify(error="Externer Dienst antwortet gerade nicht.",detail=str(e)[:800]),502
     except Exception as e:
         print(f"[ROUTE] INTERNAL ERROR: {type(e).__name__}: {e}",flush=True)
         return jsonify(error="Route konnte nicht berechnet werden.",detail=f"{type(e).__name__}: {str(e)[:500]}"),500
