@@ -500,13 +500,19 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
   .intelGrid,.layersGrid{grid-template-columns:1fr!important}
   .bikeAside .bagList,.bagList{grid-template-columns:1fr!important}
 }
+
+/* 8.1.3 map & terrain alignment */
+#routeOverview .routeTerrainStrip{display:none}
+#routeOverview .routeTerrainLegend{margin-top:7px}
+.mapPanel:after{content:"Scrollen bewegt die Seite · Zoom über + / – oder Pinch";display:block;margin-top:5px;font-size:8px;color:var(--muted)}
+.leaflet-container{touch-action:pan-x pan-y pinch-zoom}
 </style>
 </head>
 <body>
 <header class="productHero">
   <div class="brandRow">
     <div>
-      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.1.2</div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.1.3</div>
       <h1>Dein Bike. Dein Abenteuer.</h1>
       <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
     </div>
@@ -852,6 +858,16 @@ function drawElevation(coords,m,stages){
     ctx.textAlign='right';ctx.fillText(m.totalDist.toFixed(0)+' km',W-6,H-13);ctx.textAlign='center';
   }
 
+  // terrain strip on the exact same km axis as the profile
+  const terrain=currentTerrainSegments();
+  const terrainY=H-B+11,terrainH=9;
+  const terrainColors={paved:'#648675',gravel:'#b58b54',rough:'#795b42',unknown_offroad:'#998773',unknown:'#d4d2ca'};
+  terrain.segments.forEach(seg=>{
+    const x1=xForKm(seg.a),x2=xForKm(seg.b);
+    ctx.fillStyle=terrainColors[seg.kind]||terrainColors.unknown;
+    ctx.fillRect(x1,terrainY,Math.max(1,x2-x1),terrainH);
+  });
+
   // profile
   ctx.beginPath();
   coords.forEach((x,i)=>{
@@ -895,7 +911,8 @@ function hideElevationTip(){const t=$('elevTip');if(t)t.style.display='none'}
 let baseTileLayer=null,tileErrors=0;
 function initMap(){
   if(map)return;
-  map=L.map('map',{zoomControl:true});
+  map=L.map('map',{zoomControl:true,scrollWheelZoom:false});
+  map.scrollWheelZoom.disable();
   function addTiles(url,label){
     if(baseTileLayer)baseTileLayer.remove();
     tileErrors=0;
@@ -919,10 +936,10 @@ function showMap(coords,stages){
     const marker=L.circleMarker(latlngs[idx],{radius:8,weight:3,fillOpacity:1}).addTo(map).bindTooltip(n===0?'Start':n===stages.length?'Ziel':'Etappe '+n);
     stageMarkers.push(marker);
   });
-  map.invalidateSize(true);
-  map.fitBounds(bounds,{padding:[28,28]});
-  requestAnimationFrame(()=>{map.invalidateSize(true);map.fitBounds(bounds,{padding:[28,28]})});
-  setTimeout(()=>{map.invalidateSize(true);map.fitBounds(bounds,{padding:[28,28]})},250);
+  requestAnimationFrame(()=>{
+    map.invalidateSize(false);
+    if(bounds.isValid())map.fitBounds(bounds,{padding:[28,28],animate:false});
+  });
 }
 function shortPlace(value){
   return (value||'').split(',')[0].trim() || '–';
@@ -1987,24 +2004,23 @@ function classifyTerrainCounts(counts){
   const total=asphalt+gravel+rough+unknown;
   return {asphalt,gravel,rough,unknown,total};
 }
-function renderJourneyTerrainBand(){
-  const host=$('journeyTerrainBand');if(!host)return;
+
+function currentTerrainSegments(){
   const d=window.__terrainSupplyData,ctx=window.__routeContext;
-  if(!d?.available||!ctx?.m?.dist){
-    host.innerHTML='<span class="unknown" style="width:100%"></span>';host.title='Terrain-Daten noch nicht verfügbar';return;
-  }
+  const total=ctx?.m?.totalDist||0;
+  if(!d?.available||!ctx?.m?.dist||!total)return {segments:[{a:0,b:Math.max(1,total),kind:'unknown'}],total:Math.max(1,total),coverage:0};
   const points=[];
   (d.stages||[]).forEach(s=>(s.terrain?.routeSamples||[]).forEach(x=>{
-    if(Number.isFinite(x.idx)&&Number.isFinite(ctx.m.dist[x.idx]))points.push({d:ctx.m.dist[x.idx],kind:x.kind||'unknown'});
+    if(Number.isFinite(x.idx)&&Number.isFinite(ctx.m.dist[x.idx])){
+      points.push({d:ctx.m.dist[x.idx],kind:x.kind||'unknown',matched:Number.isFinite(x.matchDistance)&&x.matchDistance<Infinity});
+    }
   }));
   points.sort((a,b)=>a.d-b.d);
-  const total=ctx.m.totalDist||1;
-  if(!points.length){host.innerHTML='<span class="unknown" style="width:100%"></span>';host.title='Keine ausreichenden OSM-Terrain-Tags';return}
-  const maxInfluence=7.5,raw=[];
-  points.forEach(p=>{
-    raw.push({a:Math.max(0,p.d-maxInfluence),b:Math.min(total,p.d+maxInfluence),kind:p.kind});
-  });
-  raw.sort((a,b)=>a.a-b.a);
+  if(!points.length)return {segments:[{a:0,b:total,kind:'unknown'}],total,coverage:0};
+
+  // Each sample represents only its local interval. Unknown gaps stay unknown.
+  const influence=Math.min(6,Math.max(2.5,total/Math.max(1,points.length)*0.55));
+  const raw=points.map(p=>({a:Math.max(0,p.d-influence),b:Math.min(total,p.d+influence),kind:p.matched?p.kind:'unknown'})).sort((a,b)=>a.a-b.a);
   const timeline=[];let cursor=0;
   raw.forEach(s=>{
     if(s.a>cursor)timeline.push({a:cursor,b:s.a,kind:'unknown'});
@@ -2013,16 +2029,25 @@ function renderJourneyTerrainBand(){
     cursor=Math.max(cursor,s.b);
   });
   if(cursor<total)timeline.push({a:cursor,b:total,kind:'unknown'});
+
   const merged=[];
   timeline.forEach(s=>{
     const last=merged.at(-1);
-    if(last&&last.kind===s.kind&&Math.abs(last.b-s.a)<.01)last.b=s.b;else merged.push({...s});
+    if(last&&last.kind===s.kind&&Math.abs(last.b-s.a)<.02)last.b=s.b;
+    else merged.push({...s});
   });
-  host.innerHTML=merged.map(s=>{
+  const known=merged.filter(s=>s.kind!=='unknown').reduce((n,s)=>n+(s.b-s.a),0);
+  return {segments:merged,total,coverage:Math.max(0,Math.min(100,known/total*100))};
+}
+function renderJourneyTerrainBand(){
+  const host=$('journeyTerrainBand');if(!host)return;
+  const {segments,total,coverage}=currentTerrainSegments();
+  host.innerHTML=segments.map(s=>{
     const label={paved:'Asphalt/befestigt',gravel:'Gravel/kompakt',rough:'unbefestigt/rau',unknown_offroad:'Track/Path – Oberfläche unbekannt',unknown:'unbekannt'}[s.kind]||s.kind;
     return `<span class="${s.kind}" title="${s.a.toFixed(0)}–${s.b.toFixed(0)} km · ${label}" style="width:${Math.max(.2,(s.b-s.a)/total*100)}%"></span>`;
   }).join('');
-  host.title='Terrain-Segmente auf derselben Kilometerachse wie das Höhenprofil. Unbekannte Bereiche werden nicht geraten.';
+  host.title=`Terrain entlang der Route · Datenabdeckung ca. ${Math.round(coverage)}%`;
+  const note=$('elevNote');if(note)note.textContent=`Terrain liegt auf derselben km-Achse wie das Höhenprofil · OSM-Datenabdeckung ca. ${Math.round(coverage)}% · Unbekannt wird nicht geraten.`;
 }
 function syncRouteTerrainStrip(){
   const src=$('journeyTerrainBand'),dst=$('routeTerrainStrip');
@@ -2601,6 +2626,7 @@ async function enrichRouteAfterRender(coords,stages,labels,token){
       updateTerrainStatus(terrainSupply);
       renderTerrainOnMap(terrainSupply);
       refreshJourneyMini();
+      if(window.__routeContext?.coords&&window.__routeMetrics&&window.__routeContext?.stages)drawElevation(window.__routeContext.coords,window.__routeMetrics,window.__routeContext.stages);
     }else{
       $('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung derzeit nicht verfügbar.</b><div class="tiny">Die Route bleibt nutzbar; die Zusatzdaten können später erneut geladen werden.</div></div>';
     }
