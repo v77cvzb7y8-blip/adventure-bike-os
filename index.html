@@ -616,13 +616,25 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
 .elevationCard,.elevationWrap,#elevationWrap{margin-top:4px!important}
 .supplyFallbackActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
 .supplyFallbackActions button{width:auto!important}
+
+/* ===== 8.3.3 stabilization ===== */
+.packGuideOverlay{position:fixed;inset:0;z-index:99998;pointer-events:none}
+.packGuideLabel{position:fixed;z-index:99999;background:#173d2b;color:#fff;border-radius:999px;padding:8px 12px;font-weight:850;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);pointer-events:none}
+.packTargetFlash{filter:drop-shadow(0 0 8px rgba(32,133,89,.9))}
+.packBagLoadDual{display:grid;gap:3px;margin:7px 0 5px}
+.packBagLoadDual .free,.packBagLoadDual .filled{height:7px;border-radius:999px;overflow:hidden;background:#e6ebe7;position:relative}
+.packBagLoadDual .free span{display:block;height:100%;background:#bdd5c6}
+.packBagLoadDual .filled span{display:block;height:100%}
+.packBagLoadLabels{display:flex;justify-content:space-between;font-size:8px;color:#66736b}
+.bike3dControls{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}
+.bike3dControls button{width:auto!important;padding:5px 8px!important;font-size:8px!important}
 </style>
 </head>
 <body>
 <header class="productHero">
   <div class="brandRow">
     <div>
-      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.3.2</div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.3.3</div>
       <h1>Dein Bike. Dein Abenteuer.</h1>
       <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
     </div>
@@ -1758,24 +1770,14 @@ function animateGearToBag(gearId,bagId){
     const bagCard=document.querySelector(`[data-pack-bag-card="${bagId}"]`);
     const sc=elementScreenCenter(source)||{x:window.innerWidth*.68,y:window.innerHeight*.62};
     const tc=elementScreenCenter(target)||elementScreenCenter(bagCard)||{x:window.innerWidth*.42,y:window.innerHeight*.42};
-
-    const ghost=document.createElement('div');ghost.className='packFly';ghost.textContent=gearLabel(g);
-    ghost.style.left=`${Math.max(18,Math.min(window.innerWidth-18,sc.x))}px`;
-    ghost.style.top=`${Math.max(18,Math.min(window.innerHeight-18,sc.y))}px`;
-    ghost.style.opacity='1';ghost.style.transition='none';document.body.appendChild(ghost);
-    target?.classList.add('packTargetFlash');bagCard?.classList.add('active');
-    const safeX=Math.max(24,Math.min(window.innerWidth-24,tc.x));
-    const safeY=Math.max(24,Math.min(window.innerHeight-24,tc.y));
-    requestAnimationFrame(()=>{
-      ghost.getBoundingClientRect();
-      ghost.style.transition='left .72s cubic-bezier(.18,.8,.2,1), top .72s cubic-bezier(.18,.8,.2,1), transform .72s ease, opacity .72s ease';
-      requestAnimationFrame(()=>{
-        ghost.style.left=`${safeX}px`;ghost.style.top=`${safeY}px`;ghost.style.transform='translate(-50%,-50%) scale(.62)';ghost.style.opacity='.16';
-      });
-    });
-    setTimeout(()=>{
-      ghost.remove();target?.classList.remove('packTargetFlash');bagCard?.classList.remove('active');resolve();
-    },900);
+    const x1=Math.max(20,Math.min(window.innerWidth-20,sc.x)),y1=Math.max(20,Math.min(window.innerHeight-20,sc.y));
+    const x2=Math.max(20,Math.min(window.innerWidth-20,tc.x)),y2=Math.max(20,Math.min(window.innerHeight-20,tc.y));
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','packGuideOverlay');svg.setAttribute('viewBox',`0 0 ${window.innerWidth} ${window.innerHeight}`);
+    svg.innerHTML=`<defs><marker id="packArrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#1d7a55"/></marker></defs><path d="M${x1},${y1} C${x1},${(y1+y2)/2} ${x2},${(y1+y2)/2} ${x2},${y2}" fill="none" stroke="#1d7a55" stroke-width="5" stroke-linecap="round" marker-end="url(#packArrow)" stroke-dasharray="9 7"><animate attributeName="stroke-dashoffset" from="32" to="0" dur=".7s" repeatCount="1"/></path>`;
+    const label=document.createElement('div');label.className='packGuideLabel';label.textContent=`${gearLabel(g)} → ${b.name}`;
+    label.style.left=`${Math.max(20,Math.min(window.innerWidth-220,(x1+x2)/2-90))}px`;label.style.top=`${Math.max(20,Math.min(window.innerHeight-50,(y1+y2)/2-20))}px`;
+    document.body.append(svg,label);target?.classList.add('packTargetFlash');bagCard?.classList.add('active');
+    setTimeout(()=>{svg.remove();label.remove();target?.classList.remove('packTargetFlash');bagCard?.classList.remove('active');resolve()},1050);
   });
 }
 async function animatedPackGear(gearId){
@@ -2076,11 +2078,12 @@ function initLocal3D(){
     box('forkR',[1.06,.62,-.28],[.30,.56,.20],w,h,'GR');
   }
   c.onpointerdown=e=>{local3d.drag=true;local3d.x=e.clientX;local3d.y=e.clientY;c.setPointerCapture?.(e.pointerId)};
-  c.onpointermove=e=>{if(!local3d.drag)return;local3d.yaw+=(e.clientX-local3d.x)*.012;local3d.pitch=Math.max(-.42,Math.min(.30,local3d.pitch+(e.clientY-local3d.y)*.006));local3d.x=e.clientX;local3d.y=e.clientY;draw()};
+  c.onpointermove=e=>{if(!local3d.drag)return;local3d.yaw=Math.max(-.68,Math.min(.68,local3d.yaw+(e.clientX-local3d.x)*.008));local3d.pitch=Math.max(-.16,Math.min(.16,local3d.pitch+(e.clientY-local3d.y)*.004));local3d.x=e.clientX;local3d.y=e.clientY;draw()};
   c.onpointerup=c.onpointercancel=()=>{local3d.drag=false};
   if('ResizeObserver' in window){new ResizeObserver(resize).observe(c)}
   window.addEventListener('resize',resize,{passive:true});
   resize();setTimeout(resize,120);
+  window.__resetBike3D=()=>{local3d.yaw=.22;local3d.pitch=-.05;draw()};
 }
 
 let packWizardStep=1;
@@ -2177,9 +2180,9 @@ function compactBagItemsHtml(id){
   return items.length?items.map(g=>`<span>${gearLabel(g)}</span>`).join(''):'<span>leer</span>';
 }
 function guidedBikeSvg(){
-  if(bikeViewMode==='3d')return `<div class="bike3dWrap"><canvas id="bike3dLocal"></canvas><div class="bike3dHint">Ziehen = drehen · hoch/runter = kippen</div></div>`;
+  if(bikeViewMode==='3d')return `<div class="bike3dWrap"><canvas id="bike3dLocal"></canvas><div class="bike3dHint">Ziehen = drehen · Perspektive bewusst begrenzt</div></div><div class="bike3dControls"><button type="button" onclick="window.__resetBike3D?.()">Ansicht zurücksetzen</button></div>`;
   const on=id=>!!bikeBagState[id];
-  const bag=(id,x,y,w,h,label,cls='')=>{const pct=Math.min(100,bagLoadPercent(id));return on(id)?`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="${bagLoadColor(id)}" stroke="#f8f4e9" stroke-width="3"/><rect x="${x+4}" y="${y+h-8}" width="${Math.max(0,(w-8)*pct/100)}" height="4" rx="2" fill="#fff" opacity=".88"/><text x="${x+w/2}" y="${y+h/2+2}" text-anchor="middle" fill="#fff" font-size="13" font-weight="900">${label}</text><text x="${x+w/2}" y="${y+h/2+16}" text-anchor="middle" fill="#fff" font-size="8" font-weight="800">${pct}%</text></g>`:`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><circle cx="${x+w/2}" cy="${y+h/2}" r="12" fill="#fff" stroke="#1f6f4a" stroke-width="2" stroke-dasharray="3 3"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" fill="#1f6f4a" font-weight="900">+</text></g>`};
+  const bag=(id,x,y,w,h,label,cls='')=>{const pct=Math.min(100,bagLoadPercent(id)),free=100-pct,fillH=Math.max(0,(h-6)*pct/100),fillY=y+h-3-fillH;return on(id)?`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="#dcebe1" stroke="#f8f4e9" stroke-width="3"/><rect x="${x+3}" y="${fillY}" width="${w-6}" height="${fillH}" rx="7" fill="${bagLoadColor(id)}"/><text x="${x+w/2}" y="${y+14}" text-anchor="middle" fill="#244437" font-size="8" font-weight="800">${free}% frei</text><text x="${x+w/2}" y="${y+h-8}" text-anchor="middle" fill="${pct>55?'#fff':'#244437'}" font-size="8" font-weight="900">${pct}% gefüllt</text><text x="${x+w/2}" y="${y+h/2+3}" text-anchor="middle" fill="${pct>45?'#fff':'#244437'}" font-size="13" font-weight="900">${label}</text></g>`:`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><circle cx="${x+w/2}" cy="${y+h/2}" r="12" fill="#fff" stroke="#1f6f4a" stroke-width="2" stroke-dasharray="3 3"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" fill="#1f6f4a" font-weight="900">+</text></g>`};
   const spokes=Array.from({length:16},(_,i)=>{const a=i*Math.PI/8;return `<line x1="175" y1="330" x2="${(175+106*Math.cos(a)).toFixed(1)}" y2="${(330+106*Math.sin(a)).toFixed(1)}"/><line x1="635" y1="330" x2="${(635+106*Math.cos(a)).toFixed(1)}" y2="${(330+106*Math.sin(a)).toFixed(1)}"/>`}).join('');
   return `<svg viewBox="0 0 820 470" role="img" aria-label="Gravelbike mit Taschen"><rect width="820" height="470" fill="#eef3ee"/><g fill="none" stroke="#1e2421" stroke-width="12"><circle cx="175" cy="330" r="112"/><circle cx="635" cy="330" r="112"/></g><g stroke="#65716a" stroke-width="2" opacity=".55">${spokes}</g><g fill="none" stroke="#8d7a57" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"><path d="M175 330 L382 330 L305 160 Z"/><path d="M305 160 L535 175 L382 330 Z"/><path d="M535 175 L635 330"/><path d="M175 330 L305 160"/></g><g fill="none" stroke="#1e2421" stroke-width="10" stroke-linecap="round"><path d="M305 160 L294 112"/><path d="M258 107 H326"/><path d="M535 175 L558 116"/><path d="M550 112 C584 108 602 113 594 133 C589 145 600 153 612 149"/></g><circle cx="382" cy="330" r="20" fill="#1e2421"/><path d="M382 330 C330 340 255 341 190 330" fill="none" stroke="#2c302d" stroke-width="3"/>${bag('saddle',232,74,118,54,'S')}${bag('top',385,145,92,30,'OT')}${bag('frame',335,194,142,88,'R')}${bag('handlebar',548,72,118,82,'L')}${bag('tools',286,206,42,52,'W')}${bag('rearSideL',78,244,82,112,'HL','rear')}${bag('rearSideR',153,250,82,112,'HR','rear')}${bag('frontSideL',568,248,72,110,'VL')}${bag('frontSideR',638,250,72,110,'VR')}${bag('forkL',532,230,44,92,'GL')}${bag('forkR',697,231,44,92,'GR')}${bag('bottles',392,284,40,74,'FL')}${bikeAccessoryState.rearLight?'<circle cx="240" cy="108" r="9" fill="#d73a31"/>':''}${bikeAccessoryState.frontLight?'<circle cx="605" cy="120" r="10" fill="#f0cf47"/>':''}${bikeAccessoryState.computer?'<rect x="566" y="94" width="33" height="21" rx="4" fill="#26312c"/>':''}</svg>`;
 }
@@ -2369,7 +2372,7 @@ function renderBikePackPlanner(){
       <div class="packDock">${packDockHtml()}</div>
       <div class="packWorkbench">
         <div class="packWorkbenchBike">${bikeIdentityHtml()}<div class="bikeViewTabs"><button type="button" class="${bikeViewMode!=='3d'?'active':''}" onclick="setBikeViewMode('config')">Seitenansicht</button><button type="button" class="${bikeViewMode==='3d'?'active':''}" onclick="setBikeViewMode('3d')">3D drehen</button></div><div class="bikeStage"><div class="bikeStageName">${currentBikeIdentity().label}</div>${guidedBikeSvg()}</div><div class="directionNote"><strong>Packen direkt am Bike:</strong> Zieltasche leuchtet auf; Inhalte stehen unmittelbar daneben.</div></div>
-        <div class="packWorkbenchAside">${(()=>{const next=gearCatalog.find(g=>!gearAssignments[g.id]);return next?`<div class="packNextItem" data-next-pack-source="1"><strong>Nächster Gegenstand: ${gearLabel(next)}</strong><div class="tiny">Empfehlung: ${bagById(bestBagForGear(next.id))?.name||'erst passende Tasche montieren'}</div><button type="button" onclick="animatedPackGear('${next.id}')">in passende Tasche packen</button></div>`:''})()}${active.map(b=>`<div class="packBagCard" data-pack-bag-card="${b.id}" onclick="highlightBikeBag('${b.id}')"><strong>${b.name}</strong><div class="tiny">${bagWeight(b.id).toFixed(1)} kg · ${bagLoadPercent(b.id)}% Richtwert</div><div class="packBagLoad"><span style="width:${Math.min(100,bagLoadPercent(b.id))}%;background:${bagLoadColor(b.id)}"></span></div><div class="packBagItems">${compactBagItemsHtml(b.id)}</div><div class="packBagHint">Diese Tasche ist am Bike farblich gleich markiert.</div></div>`).join('')}<div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>${packResearchHtml()}</div>
+        <div class="packWorkbenchAside">${(()=>{const next=gearCatalog.find(g=>!gearAssignments[g.id]);return next?`<div class="packNextItem" data-next-pack-source="1"><strong>Nächster Gegenstand: ${gearLabel(next)}</strong><div class="tiny">Empfehlung: ${bagById(bestBagForGear(next.id))?.name||'erst passende Tasche montieren'}</div><button type="button" onclick="animatedPackGear('${next.id}')">in passende Tasche packen</button></div>`:''})()}${active.map(b=>`<div class="packBagCard" data-pack-bag-card="${b.id}" onclick="highlightBikeBag('${b.id}')"><strong>${b.name}</strong><div class="tiny">${bagWeight(b.id).toFixed(1)} kg · ${bagLoadPercent(b.id)}% Richtwert</div><div class="packBagLoadDual"><div class="packBagLoadLabels"><span>${Math.max(0,100-Math.min(100,bagLoadPercent(b.id)))}% frei</span><span>${Math.min(100,bagLoadPercent(b.id))}% gefüllt</span></div><div class="free"><span style="width:${Math.max(0,100-Math.min(100,bagLoadPercent(b.id)))}%"></span></div><div class="filled"><span style="width:${Math.min(100,bagLoadPercent(b.id))}%;background:${bagLoadColor(b.id)}"></span></div></div><div class="packBagItems">${compactBagItemsHtml(b.id)}</div><div class="packBagHint">Diese Tasche ist am Bike farblich gleich markiert.</div></div>`).join('')}<div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>${packResearchHtml()}</div>
       </div>
     </div>
 
@@ -2546,25 +2549,31 @@ function nearestDistanceToWay(sample,el){
   return best;
 }
 async function fetchTerrainSupply(coords,stages,m){
-  const samples=terrainRouteSamples(coords,stages,m,Math.max(7,(m?.totalDist||0)/52),54);
-  const terrainRaw=await fetch(`${API}/api/osm-terrain`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({samples})})
-    .then(r=>r.json()).catch(()=>({ok:false,elements:[]}));
+  const samples=terrainRouteSamples(coords,stages,m,Math.max(6,(m?.totalDist||0)/70),70);
   const intel=stages.map(()=>({terrain:{counts:{paved:0,gravel:0,rough:0,unknown_offroad:0,unknown:0},total:0,roughSignals:0,names:[],samples:[],routeSamples:[]},supply:{sleep:[],food:[],water:[],grocery:[],bike:[]},ferries:[]}));
   const routeSamples=samples.map(sp=>({...sp,kind:'unknown',matchDistance:Infinity}));
-  if(terrainRaw.ok){
+  let allEls=[],terrainOk=false,source=null;
+  for(let i=0;i<samples.length;i+=12){
+    const chunk=samples.slice(i,i+12);
+    try{
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9500);
+      const r=await fetch(`${API}/api/osm-terrain-batch`,{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({samples:chunk})});
+      clearTimeout(timer);const raw=await r.json();
+      if(raw.ok){terrainOk=true;source=source||raw.source;allEls.push(...(raw.elements||[]))}
+    }catch(e){}
+  }
+  const unique=new Map();allEls.forEach(el=>unique.set(`${el.type}-${el.id}`,el));allEls=[...unique.values()];
+  if(terrainOk){
     routeSamples.forEach(sp=>{
       let bestEl=null,bestD=Infinity;
-      for(const el of (terrainRaw.elements||[])){const d=nearestDistanceToWay(sp,el);if(d<bestD){bestD=d;bestEl=el}}
-      if(bestEl&&bestD<=0.24){
-        try{
-          const t=bestEl.tags||{},kind=surfaceClass(t);sp.kind=kind;sp.matchDistance=bestD;
-          const b=intel[sp.stage]?.terrain;
-          if(b){b.counts[kind]=(b.counts[kind]||0)+1;b.total++;b.routeSamples.push({...sp});if(t.name&&!b.names.includes(t.name)&&b.names.length<4)b.names.push(t.name)}
-        }catch(e){console.warn('Terrain sample skipped',e)}
+      for(const el of allEls){const d=nearestDistanceToWay(sp,el);if(d<bestD){bestD=d;bestEl=el}}
+      if(bestEl&&bestD<=0.26){
+        const t=bestEl.tags||{},kind=surfaceClass(t);sp.kind=kind;sp.matchDistance=bestD;
+        const b=intel[sp.stage]?.terrain;if(b){b.counts[kind]=(b.counts[kind]||0)+1;b.total++;b.routeSamples.push({...sp})}
       }
     });
   }
-  return {available:!!terrainRaw.ok,terrainAvailable:!!terrainRaw.ok,supplyAvailable:false,terrainSource:terrainRaw.source||null,supplySource:null,stages:intel,ferries:[]};
+  return {available:terrainOk,terrainAvailable:terrainOk,supplyAvailable:false,terrainSource:source,supplySource:null,stages:intel,ferries:[]};
 }
 
 function emptySupplyStage(){return {sleep:[],food:[],water:[],grocery:[],bike:[]}}
@@ -2594,24 +2603,23 @@ function renderSupplyProgress(stages,names,status=[]){
 async function loadSupplyProgressively(coords,stages,names,token){
   const d=window.__terrainSupplyData;if(!d?.stages)return;
   __supplyProgressState=stages.map(()=>({state:'loading'}));renderSupplyProgress(d.stages,names,__supplyProgressState);
-  const watchdog=setTimeout(()=>{
-    if(token!==__routeEnrichmentToken)return;
-    let changed=false;
-    __supplyProgressState.forEach((x,j)=>{if(x.state==='loading'){__supplyProgressState[j]={state:'error'};changed=true}});
-    if(changed)renderSupplyProgress(d.stages,names,__supplyProgressState);
-  },14000);
   const lodging=$('lodging').value;
-  const jobs=stages.map((s,i)=>async()=>{
-    const c=coords[s.e],label=names[i+1]||`Etappe ${i+1}`;
-    try{
-      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),11500);
-      const r=await fetch(`${API}/api/osm-supply-stage`,{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({lat:c[1],lon:c[0],lodging})});
-      clearTimeout(timer);const raw=await r.json();if(token!==__routeEnrichmentToken)return;
-      if(raw.ok){d.stages[i].supply=parseSupplyElements(raw.elements,{lat:c[1],lon:c[0]},label);__supplyProgressState[i]={state:'done'}}else __supplyProgressState[i]={state:'error'};
-    }catch(e){if(token===__routeEnrichmentToken)__supplyProgressState[i]={state:'error'}}
-    if(token===__routeEnrichmentToken){d.supplyAvailable=__supplyProgressState.some(x=>x.state==='done');renderSupplyProgress(d.stages,names,__supplyProgressState);renderJourneyCheck()}
-  });
-  let next=0;async function worker(){while(next<jobs.length){const i=next++;await jobs[i]()}}await worker();clearTimeout(watchdog);
+  const points=stages.map((s,i)=>({lat:coords[s.e][1],lon:coords[s.e][0],i}));
+  try{
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+    const r=await fetch(`${API}/api/osm-supply-batch`,{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({points,lodging})});
+    clearTimeout(timer);const raw=await r.json();if(token!==__routeEnrichmentToken)return;
+    if(raw.ok){
+      stages.forEach((s,i)=>{
+        const c=coords[s.e],label=names[i+1]||`Etappe ${i+1}`;
+        d.stages[i].supply=parseSupplyElements(raw.elements,{lat:c[1],lon:c[0]},label);
+        __supplyProgressState[i]={state:'done'};
+      });
+      d.supplyAvailable=true;renderSupplyProgress(d.stages,names,__supplyProgressState);renderJourneyCheck();return;
+    }
+  }catch(e){}
+  if(token!==__routeEnrichmentToken)return;
+  __supplyProgressState=stages.map(()=>({state:'error'}));renderSupplyProgress(d.stages,names,__supplyProgressState);
 }
 function openStageSupplySearch(i,kind){
   const ctx=window.__routeContext;if(!ctx?.stages?.[i])return;

@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.82 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.83 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -612,6 +612,28 @@ def transport_nearby():
         return jsonify(ok=False,points=[],warning="ÖV-Zusatzdaten derzeit nicht erreichbar."),200
 
 
+@app.post("/api/osm-terrain-batch")
+def osm_terrain_batch():
+    try:
+        body=request.get_json(force=True) or {}
+        samples=(body.get("samples") or [])[:16]
+        if not samples:
+            return jsonify(ok=False,elements=[]),400
+        clauses=[f'way(around:140,{float(p["lat"])},{float(p["lon"])})["highway"];' for p in samples]
+        q='[out:json][timeout:10];('+''.join(clauses)+');out tags geom qt;'
+        for url in OVERPASS_ENDPOINTS:
+            try:
+                r=session.post(url,data={"data":q},headers={"User-Agent":UA,"Accept":"application/json"},timeout=12)
+                print(f"[OSM-TERRAIN-BATCH] {url} status={r.status_code}",flush=True)
+                if r.ok:
+                    return jsonify(ok=True,elements=(r.json() or {}).get("elements") or [],source=url)
+            except Exception as e:
+                print(f"[OSM-TERRAIN-BATCH] {url} failed {e}",flush=True)
+        return jsonify(ok=False,elements=[],warning="Terrain-Batch derzeit nicht erreichbar."),200
+    except Exception as e:
+        print(f"[OSM-TERRAIN-BATCH] error {type(e).__name__}: {e}",flush=True)
+        return jsonify(ok=False,elements=[],warning="Terrain-Batch derzeit nicht erreichbar."),200
+
 @app.post("/api/osm-terrain")
 def osm_terrain():
     try:
@@ -634,6 +656,37 @@ def osm_terrain():
         print(f"[OSM-TERRAIN] error {type(e).__name__}: {e}",flush=True)
         return jsonify(ok=False,elements=[],warning="Terrain-Zusatzdaten derzeit nicht erreichbar."),200
 
+
+@app.post("/api/osm-supply-batch")
+def osm_supply_batch():
+    try:
+        body=request.get_json(force=True) or {}
+        pts=(body.get("points") or [])[:12]
+        lodging=(body.get("lodging") or "hotel").lower()
+        if not pts:
+            return jsonify(ok=False,elements=[]),400
+        sleep_regex="hotel|guest_house|hostel|motel|camp_site" if lodging=="mixed" else ("camp_site|caravan_site" if lodging=="camping" else "hotel|guest_house|hostel|motel")
+        clauses=[]
+        for p in pts:
+            lat=float(p["lat"]);lon=float(p["lon"])
+            clauses += [
+                f'nwr(around:3500,{lat},{lon})["tourism"~"{sleep_regex}"];',
+                f'nwr(around:2200,{lat},{lon})["amenity"~"restaurant|cafe|fast_food|drinking_water|bicycle_repair_station"];',
+                f'nwr(around:2200,{lat},{lon})["shop"~"supermarket|convenience|bakery|bicycle"];'
+            ]
+        q='[out:json][timeout:14];('+''.join(clauses)+');out center tags 250;'
+        for url in OVERPASS_ENDPOINTS:
+            try:
+                r=session.post(url,data={"data":q},headers={"User-Agent":UA,"Accept":"application/json"},timeout=17)
+                print(f"[OSM-SUPPLY-BATCH] {url} status={r.status_code}",flush=True)
+                if r.ok:
+                    return jsonify(ok=True,elements=(r.json() or {}).get("elements") or [],source=url)
+            except Exception as e:
+                print(f"[OSM-SUPPLY-BATCH] {url} failed {e}",flush=True)
+        return jsonify(ok=False,elements=[],warning="Versorgungs-Batch derzeit nicht erreichbar."),200
+    except Exception as e:
+        print(f"[OSM-SUPPLY-BATCH] error {type(e).__name__}: {e}",flush=True)
+        return jsonify(ok=False,elements=[],warning="Versorgungs-Batch derzeit nicht erreichbar."),200
 
 @app.post("/api/osm-supply-stage")
 def osm_supply_stage():
@@ -720,7 +773,7 @@ def osm_supply():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.82-stability-8.3.2")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.83-stability-batch-8.3.3")
 
 @app.get("/health")
 def health():
