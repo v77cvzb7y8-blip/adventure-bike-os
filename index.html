@@ -656,13 +656,26 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
 #bikePackPlanner .packGearPanel{order:4}
 #bikePackPlanner .packBottomBar{order:5}
 #bikePackPlanner .bikeJourneyCard,#bikePackPlanner .routeSetupProposal{order:0}
+
+/* ===== 8.3.5 pack recommendation ===== */
+.packRecommendation{background:#eef7f1;border:1px solid #c8dfd1;border-radius:14px;padding:10px 12px;margin:8px 0 10px}
+.packRecommendation strong{display:block;color:#173d2b;font-size:11px;margin-bottom:3px}
+.packRecommendation .reason{font-size:9px;color:#5b6a61;line-height:1.35}
+.packRecommendation .actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.packRecommendation .actions button{width:auto!important}
+.packRecommendation .primary{background:#1c7a54!important;color:#fff!important}
+.packGearChip.recommended{box-shadow:0 0 0 3px rgba(30,133,90,.18)}
+.packBagCard.recommendedBag{outline:3px solid #1d8a5e;outline-offset:2px;background:#f3fbf5}
+[data-bag-target].recommendedBag{filter:drop-shadow(0 0 10px rgba(29,138,94,.95))}
+.packNextHint{margin-top:7px;font-size:9px;color:#4e6257}
+.externalFallbackNote{background:#fff7e8;border:1px solid #ead8aa;border-radius:12px;padding:9px 11px;margin-top:9px;font-size:9px;color:#6c5a2b}
 </style>
 </head>
 <body>
 <header class="productHero">
   <div class="brandRow">
     <div>
-      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.3.4</div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.3.5</div>
       <h1>Dein Bike. Dein Abenteuer.</h1>
       <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
     </div>
@@ -2234,16 +2247,61 @@ let selectedPackGear=null;
 function selectPackGear(id){
   selectedPackGear=(selectedPackGear===id?null:id);
   renderBikePackPlanner();
+  if(selectedPackGear){
+    const bagId=preferredBagForGear(gearById(selectedPackGear));
+    setTimeout(()=>{document.querySelector(`[data-bag-target="${bagId}"]`)?.classList.add('recommendedBag')},30);
+  }
 }
 function assignSelectedGearToBag(bagId){
   if(!selectedPackGear){highlightBikeBag(bagId);return}
-  const id=selectedPackGear;selectedPackGear=null;assignGear(id,bagId);
+  const id=selectedPackGear;assignGear(id,bagId);
+  const next=gearCatalog.find(g=>!gearAssignments[g.id]&&g.id!==id);
+  selectedPackGear=next?.id||null;
+  renderBikePackPlanner();
   showCopyToast(`${gearById(id)?.name||'Ausrüstung'} → ${bagById(bagId)?.name||'Tasche'}`);
+}
+
+function preferredBagForGear(g){
+  if(!g)return null;
+  const explicit=(g.preferredBag||g.bag||'').toString();
+  if(explicit && bagById(explicit) && mountedBags.includes(explicit)) return explicit;
+
+  const n=(g.name||'').toLowerCase(),cat=(g.category||'').toLowerCase();
+  const mounted=(id)=>mountedBags.includes(id);
+  const first=(ids)=>ids.find(mounted)||mountedBags[0]||null;
+
+  if(/wasser|flasche|trink/.test(n)) return first(['bottle','frame','handlebar']);
+  if(/werkzeug|pumpe|ersatzschlauch|tool|multitool|flick/.test(n)) return first(['tool','frame','top']);
+  if(/powerbank|akku|kabel|elektronik|lampe|stirn/.test(n)||cat.includes('elektr')) return first(['frame','top','handlebar']);
+  if(/regenjacke|wind|arminge|handschuh|mütze/.test(n)) return first(['handlebar','top','saddle']);
+  if(/schlafsack|isomatte|daune|kleidung|trikot|short|shirt|hygiene|sandalen/.test(n)||cat.includes('kleidung')||cat.includes('schlafen')) return first(['saddle','handlebar','frame']);
+  if(/zelt|kocher|kochgeschirr|topf/.test(n)||cat.includes('camping')||cat.includes('küche')) return first(['handlebar','saddle','frame']);
+  if(/snack|essen|riegel|verpflegung/.test(n)||cat.includes('verpflegung')) return first(['top','handlebar','frame']);
+  return first(['frame','saddle','handlebar','top','tool','bottle']);
+}
+function bagReasonForGear(g,bagId){
+  if(!g||!bagId)return '';
+  const n=(g.name||'').toLowerCase();
+  if(bagId==='saddle') return /daune|schlaf|kleidung|hygiene|sandalen/.test(n)?'leicht bzw. voluminös und während der Fahrt selten nötig':'viel Volumen, gut für weniger häufig benötigte Dinge';
+  if(bagId==='handlebar') return /regen|wind|zelt|kocher/.test(n)?'gut erreichbar und passend für leichtes bzw. voluminöses Gepäck':'gute Reserve für leichtes Gepäck';
+  if(bagId==='frame') return /werkzeug|power|erste|elektr/.test(n)?'zentral und tief am Bike – sinnvoll für kompakte, dichtere Gegenstände':'zentraler Schwerpunkt und gute Gewichtsverteilung';
+  if(bagId==='top') return 'schneller Zugriff während der Fahrt';
+  if(bagId==='tool') return 'klein, schwer und direkt bei Reparaturmaterial';
+  if(bagId==='bottle') return 'gehört direkt an den Flaschenhalter';
+  return 'passt gut zu Gewicht, Zugriff und Volumen';
+}
+function recommendationHtml(){
+  if(!selectedPackGear)return '';
+  const g=gearById(selectedPackGear);if(!g)return '';
+  const bagId=preferredBagForGear(g),b=bagById(bagId);
+  if(!bagId||!b)return `<div class="packRecommendation"><strong>${gearLabel(g)}</strong><div class="reason">Keine montierte Tasche passt eindeutig. Bitte eine Tasche montieren oder manuell auswählen.</div></div>`;
+  return `<div class="packRecommendation"><strong>${gearLabel(g)} → empfohlen: ${b.name}</strong><div class="reason">${bagReasonForGear(g,bagId)}</div><div class="actions"><button type="button" class="primary" onclick="assignSelectedGearToBag('${bagId}')">in empfohlene Tasche</button><button type="button" onclick="highlightBikeBag('${bagId}')">Tasche zeigen</button></div><div class="packNextHint">Du kannst jederzeit eine andere Tasche antippen.</div></div>`;
 }
 function packGearTrayHtml(){
   const unassigned=gearCatalog.filter(g=>!gearAssignments[g.id]);
   if(!unassigned.length)return '<div class="tiny">Alle ausgewählten Gegenstände sind bereits gepackt.</div>';
-  return `<div class="packAssignmentBar"><div class="state">${selectedPackGear?`Ausgewählt: ${gearLabel(gearById(selectedPackGear))} → jetzt Tasche antippen`:'Gegenstand antippen, danach Tasche auswählen'}</div><button type="button" onclick="selectedPackGear=null;renderBikePackPlanner()">Auswahl lösen</button></div><div class="packGearTray">${unassigned.map(g=>`<button type="button" class="packGearChip ${selectedPackGear===g.id?'selected':''}" onclick="selectPackGear('${g.id}')">${gearLabel(g)} · ${g.kg.toFixed(2)} kg</button>`).join('')}</div>`;
+  const recBag=selectedPackGear?preferredBagForGear(gearById(selectedPackGear)):null;
+  return `<div class="packAssignmentBar"><div class="state">${selectedPackGear?`Ausgewählt: ${gearLabel(gearById(selectedPackGear))}`:'Gegenstand antippen – Empfehlung erscheint sofort'}</div><button type="button" onclick="selectedPackGear=null;renderBikePackPlanner()">Auswahl lösen</button></div>${recommendationHtml()}<div class="packGearTray">${unassigned.map(g=>{const rb=preferredBagForGear(g);return `<button type="button" class="packGearChip ${selectedPackGear===g.id?'selected':''} ${rb&&rb===recBag?'recommended':''}" onclick="selectPackGear('${g.id}')">${gearLabel(g)} · ${g.kg.toFixed(2)} kg</button>`}).join('')}</div>`;
 }
 function compactBagItemsHtml(id){
   const items=bagItems(id);
@@ -2252,7 +2310,7 @@ function compactBagItemsHtml(id){
 function guidedBikeSvg(){
   if(bikeViewMode==='3d')return `<div class="bike3dWrap"><canvas id="bike3dLocal"></canvas><div class="bike3dHint">Ziehen = drehen · Perspektive bewusst begrenzt</div></div><div class="bike3dControls"><button type="button" onclick="window.__resetBike3D?.()">Ansicht zurücksetzen</button></div>`;
   const on=id=>!!bikeBagState[id];
-  const bag=(id,x,y,w,h,label,cls='')=>{const pct=Math.min(100,bagLoadPercent(id)),free=100-pct,fillH=Math.max(0,(h-6)*pct/100),fillY=y+h-3-fillH;return on(id)?`<g data-bag-target="${id}" onclick="${packWizardStep===2?`assignSelectedGearToBag('${id}')`:`toggleBagFromBike('${id}')`}" style="cursor:pointer"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="#dcebe1" stroke="#f8f4e9" stroke-width="3"/><rect x="${x+3}" y="${fillY}" width="${w-6}" height="${fillH}" rx="7" fill="${bagLoadColor(id)}"/><text x="${x+w/2}" y="${y+14}" text-anchor="middle" fill="#244437" font-size="8" font-weight="800">${free}% frei</text><text x="${x+w/2}" y="${y+h-8}" text-anchor="middle" fill="${pct>55?'#fff':'#244437'}" font-size="8" font-weight="900">${pct}% gefüllt</text><text x="${x+w/2}" y="${y+h/2+3}" text-anchor="middle" fill="${pct>45?'#fff':'#244437'}" font-size="13" font-weight="900">${label}</text></g>`:`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><circle cx="${x+w/2}" cy="${y+h/2}" r="12" fill="#fff" stroke="#1f6f4a" stroke-width="2" stroke-dasharray="3 3"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" fill="#1f6f4a" font-weight="900">+</text></g>`};
+  const bag=(id,x,y,w,h,label,cls='')=>{const pct=Math.min(100,bagLoadPercent(id)),free=100-pct,fillH=Math.max(0,(h-6)*pct/100),fillY=y+h-3-fillH;return on(id)?`<g class="${selectedPackGear&&preferredBagForGear(gearById(selectedPackGear))===id?'recommendedBag':''}" data-bag-target="${id}" onclick="${packWizardStep===2?`assignSelectedGearToBag('${id}')`:`toggleBagFromBike('${id}')`}" style="cursor:pointer"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="#dcebe1" stroke="#f8f4e9" stroke-width="3"/><rect x="${x+3}" y="${fillY}" width="${w-6}" height="${fillH}" rx="7" fill="${bagLoadColor(id)}"/><text x="${x+w/2}" y="${y+14}" text-anchor="middle" fill="#244437" font-size="8" font-weight="800">${free}% frei</text><text x="${x+w/2}" y="${y+h-8}" text-anchor="middle" fill="${pct>55?'#fff':'#244437'}" font-size="8" font-weight="900">${pct}% gefüllt</text><text x="${x+w/2}" y="${y+h/2+3}" text-anchor="middle" fill="${pct>45?'#fff':'#244437'}" font-size="13" font-weight="900">${label}</text></g>`:`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><circle cx="${x+w/2}" cy="${y+h/2}" r="12" fill="#fff" stroke="#1f6f4a" stroke-width="2" stroke-dasharray="3 3"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" fill="#1f6f4a" font-weight="900">+</text></g>`};
   const spokes=Array.from({length:16},(_,i)=>{const a=i*Math.PI/8;return `<line x1="175" y1="330" x2="${(175+106*Math.cos(a)).toFixed(1)}" y2="${(330+106*Math.sin(a)).toFixed(1)}"/><line x1="635" y1="330" x2="${(635+106*Math.cos(a)).toFixed(1)}" y2="${(330+106*Math.sin(a)).toFixed(1)}"/>`}).join('');
   return `<svg viewBox="0 0 820 470" role="img" aria-label="Gravelbike mit Taschen"><rect width="820" height="470" fill="#eef3ee"/><g fill="none" stroke="#1e2421" stroke-width="12"><circle cx="175" cy="330" r="112"/><circle cx="635" cy="330" r="112"/></g><g stroke="#65716a" stroke-width="2" opacity=".55">${spokes}</g><g fill="none" stroke="#8d7a57" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"><path d="M175 330 L382 330 L305 160 Z"/><path d="M305 160 L535 175 L382 330 Z"/><path d="M535 175 L635 330"/><path d="M175 330 L305 160"/></g><g fill="none" stroke="#1e2421" stroke-width="10" stroke-linecap="round"><path d="M305 160 L294 112"/><path d="M258 107 H326"/><path d="M535 175 L558 116"/><path d="M550 112 C584 108 602 113 594 133 C589 145 600 153 612 149"/></g><circle cx="382" cy="330" r="20" fill="#1e2421"/><path d="M382 330 C330 340 255 341 190 330" fill="none" stroke="#2c302d" stroke-width="3"/>${bag('saddle',232,74,118,54,'S')}${bag('top',385,145,92,30,'OT')}${bag('frame',335,194,142,88,'R')}${bag('handlebar',548,72,118,82,'L')}${bag('tools',286,206,42,52,'W')}${bag('rearSideL',78,244,82,112,'HL','rear')}${bag('rearSideR',153,250,82,112,'HR','rear')}${bag('frontSideL',568,248,72,110,'VL')}${bag('frontSideR',638,250,72,110,'VR')}${bag('forkL',532,230,44,92,'GL')}${bag('forkR',697,231,44,92,'GR')}${bag('bottles',392,284,40,74,'FL')}${bikeAccessoryState.rearLight?'<circle cx="240" cy="108" r="9" fill="#d73a31"/>':''}${bikeAccessoryState.frontLight?'<circle cx="605" cy="120" r="10" fill="#f0cf47"/>':''}${bikeAccessoryState.computer?'<rect x="566" y="94" width="33" height="21" rx="4" fill="#26312c"/>':''}</svg>`;
 }
@@ -2436,10 +2494,10 @@ function renderBikePackPlanner(){
     </div>
 
     <div class="stepPanel packWorkbenchPanel ${packWizardStep===2?'active':''}">
-      <div class="packUnifiedHint"><strong>Direkt packen:</strong> Wähle unten einen Gegenstand. Danach eine Tasche rechts oder direkt am Bike antippen. Ein Klick auf × entfernt den Gegenstand wieder.</div>
+      <div class="packUnifiedHint"><strong>Direkt packen:</strong> Gegenstand antippen → empfohlene Tasche erscheint sofort und leuchtet am Bike auf. Empfehlung übernehmen oder eine andere Tasche wählen. Ein Klick auf × entfernt den Gegenstand wieder.</div>
       <div class="packWorkbench">
         <div class="packWorkbenchBike">${bikeIdentityHtml()}<div class="bikeViewTabs"><button type="button" class="active" onclick="setBikeViewMode('config')">Seitenansicht</button><button type="button" disabled title="Echtes WebGL-3D folgt nach Stabilisierung">3D folgt</button></div><div class="bikeStage"><div class="bikeStageName">${currentBikeIdentity().label}</div>${guidedBikeSvg()}</div><div class="directionNote"><strong>Packen direkt am Bike:</strong> Zieltasche leuchtet auf; Inhalte stehen unmittelbar daneben.</div></div>
-        <div class="packWorkbenchAside">${packGearTrayHtml()}${(()=>{const next=gearCatalog.find(g=>!gearAssignments[g.id]);return next?`<div class="packNextItem" data-next-pack-source="1"><strong>Nächster Gegenstand: ${gearLabel(next)}</strong><div class="tiny">Empfehlung: ${bagById(bestBagForGear(next.id))?.name||'erst passende Tasche montieren'}</div><button type="button" onclick="animatedPackGear('${next.id}')">automatisch zuweisen</button></div>`:''})()}${active.map(b=>`<div class="packBagCard ${selectedPackGear?'selectedTarget':''}" data-pack-bag-card="${b.id}" onclick="assignSelectedGearToBag('${b.id}')"><strong>${b.name}</strong><div class="tiny">${bagWeight(b.id).toFixed(1)} kg · ${bagLoadPercent(b.id)}% Richtwert</div><div class="packBagLoadDual"><div class="packBagLoadLabels"><span>${Math.max(0,100-Math.min(100,bagLoadPercent(b.id)))}% frei</span><span>${Math.min(100,bagLoadPercent(b.id))}% gefüllt</span></div><div class="free"><span style="width:${Math.max(0,100-Math.min(100,bagLoadPercent(b.id)))}%"></span></div><div class="filled"><span style="width:${Math.min(100,bagLoadPercent(b.id))}%;background:${bagLoadColor(b.id)}"></span></div></div><div class="packBagItems">${compactBagItemsHtml(b.id)}</div><div class="packBagHint">Diese Tasche ist am Bike farblich gleich markiert.</div></div>`).join('')}<div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>${packResearchHtml()}</div>
+        <div class="packWorkbenchAside">${packGearTrayHtml()}${(()=>{const next=gearCatalog.find(g=>!gearAssignments[g.id]);return next?`<div class="packNextItem" data-next-pack-source="1"><strong>Nächster Gegenstand: ${gearLabel(next)}</strong><div class="tiny">Empfehlung: ${bagById(bestBagForGear(next.id))?.name||'erst passende Tasche montieren'}</div><button type="button" onclick="animatedPackGear('${next.id}')">automatisch zuweisen</button></div>`:''})()}${active.map(b=>`<div class="packBagCard ${selectedPackGear?'selectedTarget':''} ${selectedPackGear&&preferredBagForGear(gearById(selectedPackGear))===b.id?'recommendedBag':''}" data-pack-bag-card="${b.id}" onclick="assignSelectedGearToBag('${b.id}')"><strong>${b.name}</strong><div class="tiny">${bagWeight(b.id).toFixed(1)} kg · ${bagLoadPercent(b.id)}% Richtwert</div><div class="packBagLoadDual"><div class="packBagLoadLabels"><span>${Math.max(0,100-Math.min(100,bagLoadPercent(b.id)))}% frei</span><span>${Math.min(100,bagLoadPercent(b.id))}% gefüllt</span></div><div class="free"><span style="width:${Math.max(0,100-Math.min(100,bagLoadPercent(b.id)))}%"></span></div><div class="filled"><span style="width:${Math.min(100,bagLoadPercent(b.id))}%;background:${bagLoadColor(b.id)}"></span></div></div><div class="packBagItems">${compactBagItemsHtml(b.id)}</div><div class="packBagHint">Diese Tasche ist am Bike farblich gleich markiert.</div></div>`).join('')}<div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>${packResearchHtml()}</div>
       </div>
     </div>
 
@@ -2660,7 +2718,7 @@ function renderSupplyProgress(stages,names,status=[]){
   const lodgingLabel=$('lodging')?.value==='camping'?'⛺ Camping / Zeltplatz':$('lodging')?.value==='mixed'?'🛏 Unterkunft / Camping':'🛏 Hotel / Pension';
   $('terrainSupply').innerHTML=`<div class="supplyProgress">${stages.map((x,i)=>{
     const st=status[i]||{state:'idle'};
-    if(st.state==='idle')return `<div class="supplyStageCard"><h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3><div class="tiny">Versorgung ist optional und blockiert die Route nicht.</div><div class="supplyFallbackActions"><button type="button" onclick="retrySupplyStage(${i})">OSM-Treffer laden</button><button type="button" onclick="openStageSupplySearch(${i},'hotel')">Unterkunft suchen</button><button type="button" onclick="openStageSupplySearch(${i},'food')">Essen / Einkauf</button></div></div>`;
+    if(st.state==='idle')return `<div class="supplyStageCard"><h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3><div class="tiny">Versorgung ist optional. OSM-Treffer können ausfallen; externe Suche bleibt der verlässliche Fallback.</div><div class="supplyFallbackActions"><button type="button" onclick="retrySupplyStage(${i})">OSM optional laden</button><button type="button" onclick="openStageSupplySearch(${i},'hotel')">Unterkunft extern suchen</button><button type="button" onclick="openStageSupplySearch(${i},'food')">Essen / Einkauf extern</button></div><div class="externalFallbackNote">Für den MVP sind diese Suchen bewusst externe Fallbacks. Eine schnellere eigene POI-/Places-Datenquelle ist für die Mobile-Version vorgesehen.</div></div>`;
     if(st.state==='loading')return `<div class="supplyStageCard loading"><h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3><div class="tiny">Versorgung wird geladen …</div><div class="supplySkeleton"></div><div class="supplySkeleton"></div></div>`;
     if(st.state==='error')return `<div class="supplyStageCard"><h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3><div class="tiny">OSM-Zusatzdaten für diese Etappe gerade nicht erreichbar. Die Route bleibt vollständig nutzbar.</div><div class="supplyFallbackActions"><button type="button" onclick="retrySupplyStage(${i})">erneut laden</button><button type="button" onclick="openStageSupplySearch(${i},'hotel')">Unterkunft suchen</button><button type="button" onclick="openStageSupplySearch(${i},'food')">Essen / Einkauf</button></div></div>`;
     const s=x.supply||emptySupplyStage();
