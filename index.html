@@ -106,31 +106,29 @@
 .packPrimary{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
 .dataSourceNote{margin-top:7px;padding:8px 10px;border-radius:10px;background:#eef5f0;font-size:10px;color:#315443}
 
-.true3dWrap{position:relative;height:480px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:
- radial-gradient(circle at 50% 35%,rgba(255,255,255,.98),rgba(241,238,227,.95) 52%,rgba(226,232,225,.9) 100%);touch-action:pan-y}
-#bike3dCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.true3dOverlay{position:absolute;left:10px;top:10px;display:flex;gap:6px;flex-wrap:wrap;z-index:3}
-.true3dOverlay button{width:auto;margin:0;padding:7px 9px;border-radius:9px;font-size:10px;background:rgba(255,253,247,.92);color:var(--ink);border:1px solid var(--line)}
-.true3dOverlay button.active{background:var(--accent);color:#fff}
-.true3dInfo{position:absolute;left:12px;bottom:12px;right:12px;display:flex;justify-content:space-between;gap:8px;align-items:flex-end;pointer-events:none;z-index:3}
-.true3dInfo .pill{background:rgba(18,58,43,.88);color:#fff;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:750;max-width:75%}
-.true3dInfo .hint{background:rgba(255,253,247,.93);color:var(--muted);border-radius:10px;padding:7px 9px;font-size:9px}
-.bikeViewerTabs{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 10px}
-.bikeViewerTabs button{width:auto;margin:0;padding:8px 11px;border-radius:9px;background:#fffdf7;color:var(--ink);border:1px solid var(--line);font-size:11px}
-.bikeViewerTabs button.active{background:var(--accent);color:white}
-.photoViewer{position:relative;aspect-ratio:4/3;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#f2efe7}
-.photoViewer img{width:100%;height:100%;object-fit:cover;display:block}
-.threeUnavailable{display:grid;place-items:center;height:100%;padding:30px;text-align:center;color:var(--muted);font-size:13px}
-.viewerLegend{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.viewerLegend span{font-size:9px;padding:4px 7px;border-radius:999px;background:#fffdf7;border:1px solid var(--line)}
-@media(max-width:760px){.true3dWrap{height:340px}.true3dInfo{flex-direction:column;align-items:flex-start}.true3dInfo .pill{max-width:100%}}
+
+.bikePhotoStage{position:relative;aspect-ratio:4/3;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#f2efe7}
+.bikePhotoStage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.bagSlot{position:absolute;transform:translate(-50%,-50%);width:36px;height:36px;border-radius:10px;border:2px solid rgba(255,255,255,.95);display:grid;place-items:center;padding:0;z-index:4;box-shadow:0 4px 12px rgba(0,0,0,.24);cursor:pointer}
+.bagSlot span{font-size:10px;font-weight:900}
+.bagSlot.active{background:#176b49;color:#fff}
+.bagSlot.inactive{background:#fffdf7;color:#173125;border-color:#173125}
+.bagSlot.front{outline:2px solid rgba(53,119,88,.18)}
+.bagSlot.rear{outline:2px solid rgba(165,115,49,.16)}
+.bagSlot.highlight{transform:translate(-50%,-50%) scale(1.18);box-shadow:0 0 0 5px rgba(240,188,63,.45),0 5px 16px rgba(0,0,0,.28)}
+.packRow.highlight{background:#fff4c7;border-radius:10px;padding:7px}
+.sideLegend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
+.sideLegend div{background:#fffdf7;border:1px solid var(--line);border-radius:10px;padding:7px 9px;font-size:10px}
+.sideLegend strong{display:block}
+.directionNote{margin-top:8px;padding:8px 10px;border-radius:10px;background:#eef5f0;color:#315443;font-size:10px}
+@media(max-width:760px){.bagSlot{width:32px;height:32px}.sideLegend{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 <header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.7.0</div>
+  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 7.7.1</div>
   <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">7.7.0 entkoppelt Packplanung und Routing: Das 3D-Bike ist schon vor der Routenberechnung nutzbar, Three.js läuft über eine kompatible Version und lange Strecken erhalten einen segmentierten OSRM-Fallback.</div>
+  <div class="sub">7.7.1 bringt die übersichtlichere Bike-Ansicht aus früheren Versionen zurück und ordnet Front-/Hecktaschen eindeutig nach Fahrerperspektive links/rechts zu.</div>
 </header>
 <main>
   <section class="card">
@@ -258,7 +256,6 @@
 </main>
 <div id="copyToast" class="copyToast">Kopiert</div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -770,178 +767,52 @@ function updateTerrainStatus(data){
 }
 
 const bikeBagCatalog=[
-  {id:'saddle',name:'Satteltasche',x:21,y:25,capacity:14},
-  {id:'top',name:'Oberrohrtasche',x:55,y:29,capacity:2},
-  {id:'handlebar',name:'Lenkertasche',x:79,y:28,capacity:10},
-  {id:'frame',name:'Rahmentasche',x:49,y:48,capacity:9},
-  {id:'forkL',name:'Gabeltasche links',x:72,y:55,capacity:5},
-  {id:'forkR',name:'Gabeltasche rechts',x:80,y:55,capacity:5},
-  {id:'frontSideL',name:'Lowrider vorne links',x:72,y:67,capacity:10,zone:'front'},
-  {id:'frontSideR',name:'Lowrider vorne rechts',x:84,y:67,capacity:10,zone:'front'},
-  {id:'rearSideL',name:'Seitentasche hinten links',x:16,y:59,capacity:14,zone:'rear'},
-  {id:'rearSideR',name:'Seitentasche hinten rechts',x:29,y:59,capacity:14,zone:'rear'},
+  {id:'saddle',name:'Satteltasche',x:22,y:26,capacity:14},
+  {id:'top',name:'Oberrohrtasche',x:54,y:31,capacity:2},
+  {id:'handlebar',name:'Lenkertasche',x:78,y:29,capacity:10},
+  {id:'frame',name:'Rahmentasche',x:49,y:49,capacity:9},
+  {id:'forkL',name:'Gabeltasche links',x:73,y:58,capacity:5},
+  {id:'forkR',name:'Gabeltasche rechts',x:81,y:58,capacity:5},
+  {id:'frontSideL',name:'Vorne links (Lowrider)',x:72,y:67,capacity:10,zone:'front'},
+  {id:'frontSideR',name:'Vorne rechts (Lowrider)',x:84,y:67,capacity:10,zone:'front'},
+  {id:'rearSideL',name:'Hinten links',x:17,y:59,capacity:14,zone:'rear'},
+  {id:'rearSideR',name:'Hinten rechts',x:29,y:59,capacity:14,zone:'rear'},
   {id:'bottles',name:'Flaschenhalter / Flaschen',x:53,y:66,capacity:3},
-  {id:'tools',name:'Werkzeugtasche',x:34,y:40,capacity:2}
+  {id:'tools',name:'Werkzeugtasche',x:33,y:40,capacity:2}
 ];
+
 
 
 const bikeAccessoryCatalog=[
-  {id:'computer',name:'Fahrradcomputer',icon:'▣',detail:'am Lenker / Vorbau'},
-  {id:'frontLight',name:'Frontlicht',icon:'☀',detail:'vorne am Lenker / Gabelkopf'},
-  {id:'rearLight',name:'Rücklicht',icon:'●',detail:'hinten gut sichtbar'}
+  {id:'computer',name:'Fahrradcomputer',icon:'▣',x:70,y:18,detail:'am Lenker / Vorbau'},
+  {id:'frontLight',name:'Frontlicht',icon:'☀',x:88,y:36,detail:'vorne am Lenker / Gabelkopf'},
+  {id:'rearLight',name:'Rücklicht',icon:'●',x:11,y:30,detail:'hinten gut sichtbar'}
 ];
 let bikeAccessoryState=JSON.parse(localStorage.getItem('abo-bike-accessories-v1')||'null') || {computer:true,frontLight:true,rearLight:true};
-let bikeViewerMode=localStorage.getItem('abo-bike-viewer-mode-v1')||'3d';
-let bike3d={renderer:null,scene:null,camera:null,root:null,raf:null,meshes:[],drag:false,moved:false,x:0,y:0,yaw:0.35,pitch:-0.05,zoom:5.5,selected:null};
-
+let highlightedBag=null;
 function saveBikeAccessoryState(){localStorage.setItem('abo-bike-accessories-v1',JSON.stringify(bikeAccessoryState))}
 function toggleBikeAccessory(id){bikeAccessoryState[id]=!bikeAccessoryState[id];saveBikeAccessoryState();renderBikePackPlanner()}
-function setBikeViewerMode(mode){
-  bikeViewerMode=mode;localStorage.setItem('abo-bike-viewer-mode-v1',mode);renderBikePackPlanner();
+function highlightBikeBag(id){
+  highlightedBag=highlightedBag===id?null:id;
+  document.querySelectorAll('[data-bag-slot]').forEach(el=>el.classList.toggle('highlight',el.dataset.bagSlot===highlightedBag));
+  document.querySelectorAll('[data-bag-row]').forEach(el=>el.classList.toggle('highlight',el.dataset.bagRow===highlightedBag));
 }
-function disposeBike3D(){
-  if(bike3d.raf)cancelAnimationFrame(bike3d.raf);
-  bike3d.raf=null;
-  if(bike3d.renderer){
-    try{bike3d.renderer.dispose()}catch(e){}
-    const c=bike3d.renderer.domElement;if(c&&c.parentNode)c.parentNode.removeChild(c);
-  }
-  bike3d.renderer=bike3d.scene=bike3d.camera=bike3d.root=null;bike3d.meshes=[];
+function accessoryHtml(){
+  return bikeAccessoryCatalog.map(x=>`<button type="button" class="accessoryPoint ${bikeAccessoryState[x.id]?'active':'inactive'} ${x.id}" style="left:${x.x}%;top:${x.y}%" title="${x.name} · ${x.detail}" onclick="event.stopPropagation();toggleBikeAccessory('${x.id}')">${x.icon}</button>`).join('');
 }
-function tube3D(a,b,r,mat){
-  const THREE=window.THREE;
-  const va=new THREE.Vector3(...a),vb=new THREE.Vector3(...b);
-  const dir=new THREE.Vector3().subVectors(vb,va),len=dir.length(),mid=new THREE.Vector3().addVectors(va,vb).multiplyScalar(.5);
-  const g=new THREE.CylinderGeometry(r,r,len,12);
-  const m=new THREE.Mesh(g,mat);m.position.copy(mid);
-  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
-  return m;
+function bagSlotHtml(){
+  const slots=[
+    ['rearSideL','HL','Hinten links',17,59,'rear'],
+    ['rearSideR','HR','Hinten rechts',29,59,'rear'],
+    ['frontSideL','VL','Vorne links',72,67,'front'],
+    ['frontSideR','VR','Vorne rechts',84,67,'front']
+  ];
+  return slots.map(([id,abbr,label,x,y,zone])=>{
+    const active=!!bikeBagState[id];
+    return `<button type="button" data-bag-slot="${id}" class="bagSlot ${zone} ${active?'active':'inactive'} ${highlightedBag===id?'highlight':''}" style="left:${x}%;top:${y}%" title="${label} · links/rechts aus Sicht des Fahrers" onclick="event.stopPropagation();highlightBikeBag('${id}')"><span>${abbr}</span></button>`;
+  }).join('');
 }
-function box3D(name,pos,size,mat,meta={}){
-  const THREE=window.THREE;
-  const m=new THREE.Mesh(new THREE.BoxGeometry(...size),mat);m.position.set(...pos);m.name=name;Object.assign(m.userData,meta);return m;
-}
-function bagMat(active=true){
-  const THREE=window.THREE;
-  return new THREE.MeshStandardMaterial({color:active?0x24352d:0x9ba49f,roughness:.88,metalness:.02,transparent:!active,opacity:active?1:.25});
-}
-function buildBike3D(){
-  const THREE=window.THREE,root=new THREE.Group();root.rotation.order='YXZ';
-  const frameMat=new THREE.MeshStandardMaterial({color:0x9b8a67,roughness:.55,metalness:.45});
-  const dark=new THREE.MeshStandardMaterial({color:0x171b19,roughness:.72,metalness:.18});
-  const rubber=new THREE.MeshStandardMaterial({color:0x171717,roughness:.95});
-  const silver=new THREE.MeshStandardMaterial({color:0x9fa5a2,roughness:.45,metalness:.7});
-  const wheelR=.82,wheelTube=.055;
-  for(const x of [-1.45,1.45]){
-    const tire=new THREE.Mesh(new THREE.TorusGeometry(wheelR,wheelTube,12,48),rubber);tire.position.set(x,0,0);root.add(tire);
-    const rim=new THREE.Mesh(new THREE.TorusGeometry(wheelR-.07,.018,8,48),silver);rim.position.set(x,0,0);root.add(rim);
-    for(let i=0;i<14;i++){
-      const a=(Math.PI*2*i)/14,rr=wheelR-.09;
-      root.add(tube3D([x,0,0],[x+Math.cos(a)*rr,Math.sin(a)*rr,0],.006,silver));
-    }
-  }
-  const rear=[-1.45,0,0],front=[1.45,0,0],bb=[-.12,.18,0],seat=[-.62,1.18,0],headTop=[.86,1.16,0],headLow=[.97,.68,0];
-  [[rear,bb],[rear,seat],[bb,seat],[seat,headTop],[bb,headLow],[headTop,headLow],[headLow,front],[headTop,front]].forEach(p=>root.add(tube3D(p[0],p[1],.045,frameMat)));
-  root.add(tube3D([-.62,1.18,0],[-.62,1.43,0],.035,dark));
-  const saddle=box3D('Sattel',[-.68,1.48,0],[.48,.08,.18],dark);saddle.rotation.z=-.04;root.add(saddle);
-  root.add(tube3D([.86,1.16,0],[.86,1.46,0],.028,dark));
-  root.add(tube3D([.65,1.46,0],[1.05,1.46,0],.025,dark));
-  root.add(tube3D([1.0,1.46,-.18],[1.0,1.46,.18],.023,dark));
-  const crank=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,.035,24),dark);crank.rotation.x=Math.PI/2;crank.position.set(...bb);root.add(crank);
 
-  function addBag(id,name,pos,size){
-    if(!bikeBagState[id])return;
-    const m=box3D(name,pos,size,bagMat(true),{kind:'bag',id});root.add(m);bike3d.meshes.push(m);
-  }
-  addBag('frame','Rahmentasche',[.05,.78,0],[1.15,.48,.22]);
-  addBag('top','Oberrohrtasche',[.22,1.22,0],[.68,.16,.18]);
-  addBag('saddle','Satteltasche',[-.96,1.28,0],[.72,.34,.34]);
-  addBag('handlebar','Lenkertasche',[1.05,1.34,0],[.48,.38,.52]);
-  addBag('tools','Werkzeugtasche',[-.78,.92,.20],[.24,.34,.18]);
-  addBag('forkL','Gabeltasche links',[1.18,.52,.21],[.24,.48,.19]);
-  addBag('forkR','Gabeltasche rechts',[1.18,.52,-.21],[.24,.48,.19]);
-  addBag('frontSideL','Lowrider vorne links',[1.35,.43,.34],[.40,.58,.22]);
-  addBag('frontSideR','Lowrider vorne rechts',[1.35,.43,-.34],[.40,.58,.22]);
-  addBag('rearSideL','Seitentasche hinten links',[-1.30,.48,.36],[.48,.68,.24]);
-  addBag('rearSideR','Seitentasche hinten rechts',[-1.30,.48,-.36],[.48,.68,.24]);
-
-  if(bikeAccessoryState.computer){
-    const m=box3D('Fahrradcomputer',[.84,1.54,0],[.16,.08,.11],new THREE.MeshStandardMaterial({color:0x253238}),{kind:'accessory',id:'computer'});root.add(m);bike3d.meshes.push(m);
-  }
-  if(bikeAccessoryState.frontLight){
-    const mat=new THREE.MeshStandardMaterial({color:0xffe07a,emissive:0xffcc44,emissiveIntensity:1.2});
-    const m=new THREE.Mesh(new THREE.SphereGeometry(.07,16,12),mat);m.position.set(1.05,1.32,-.10);m.userData={kind:'accessory',id:'frontLight'};m.name='Frontlicht';root.add(m);bike3d.meshes.push(m);
-  }
-  if(bikeAccessoryState.rearLight){
-    const mat=new THREE.MeshStandardMaterial({color:0xb9271d,emissive:0xff2211,emissiveIntensity:.9});
-    const m=new THREE.Mesh(new THREE.SphereGeometry(.065,16,12),mat);m.position.set(-.83,1.34,0);m.userData={kind:'accessory',id:'rearLight'};m.name='Rücklicht';root.add(m);bike3d.meshes.push(m);
-  }
-  const ground=new THREE.Mesh(new THREE.CircleGeometry(2.6,64),new THREE.MeshStandardMaterial({color:0xdedfd7,roughness:1,transparent:true,opacity:.42}));
-  ground.rotation.x=-Math.PI/2;ground.position.y=-.83;root.add(ground);
-  return root;
-}
-function update3DLabel(text){
-  const el=$('bike3dSelection');if(el)el.textContent=text||'Bike frei drehen · Tasche anklicken für Details';
-}
-function presetBike3D(yaw,pitch=-.05){bike3d.yaw=yaw;bike3d.pitch=pitch}
-function initBike3D(){
-  disposeBike3D();
-  const host=$('bike3dHost');if(!host||bikeViewerMode!=='3d')return;
-  if(!window.THREE){host.innerHTML='<div class="threeUnavailable"><div><strong>3D-Modul konnte nicht geladen werden.</strong><br>Bitte die Fotoansicht verwenden oder Seite neu laden.</div></div>';return}
-  const THREE=window.THREE;
-  const scene=new THREE.Scene();scene.background=null;
-  const camera=new THREE.PerspectiveCamera(34,1,.1,100);camera.position.set(0,.55,bike3d.zoom);
-  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));renderer.setClearColor(0x000000,0);
-  host.appendChild(renderer.domElement);renderer.domElement.id='bike3dCanvas';
-  renderer.domElement.style.touchAction='pan-y';
-  bike3d.scene=scene;bike3d.camera=camera;bike3d.renderer=renderer;
-  scene.add(new THREE.HemisphereLight(0xffffff,0x6b766f,2.1));
-  const key=new THREE.DirectionalLight(0xffffff,2.4);key.position.set(3,5,4);scene.add(key);
-  const fill=new THREE.DirectionalLight(0xc9e1ff,1.1);fill.position.set(-4,2,-3);scene.add(fill);
-  const root=buildBike3D();bike3d.root=root;scene.add(root);
-
-  function resize(){
-    const r=host.getBoundingClientRect();if(!r.width||!r.height)return;
-    renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();
-  }
-  resize();
-  const ro=new ResizeObserver(resize);ro.observe(host);renderer.domElement._ro=ro;
-
-  let downX=0,downY=0,lastX=0,lastY=0;
-  renderer.domElement.addEventListener('pointerdown',e=>{bike3d.drag=true;bike3d.moved=false;downX=lastX=e.clientX;downY=lastY=e.clientY;renderer.domElement.setPointerCapture?.(e.pointerId)});
-  renderer.domElement.addEventListener('pointermove',e=>{
-    if(!bike3d.drag)return;
-    const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;
-    if(Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY)>5)bike3d.moved=true;
-    bike3d.yaw+=dx*.012;bike3d.pitch=Math.max(-.42,Math.min(.32,bike3d.pitch+dy*.006));
-  });
-  renderer.domElement.addEventListener('pointerup',e=>{
-    if(!bike3d.drag)return;bike3d.drag=false;
-    if(!bike3d.moved){
-      const rect=renderer.domElement.getBoundingClientRect();
-      const mouse=new THREE.Vector2(((e.clientX-rect.left)/rect.width)*2-1,-((e.clientY-rect.top)/rect.height)*2+1);
-      const ray=new THREE.Raycaster();ray.setFromCamera(mouse,camera);
-      const hit=ray.intersectObjects(bike3d.meshes,false)[0];
-      if(hit){
-        const o=hit.object,meta=o.userData||{};
-        if(meta.kind==='bag'){
-          const b=bagById(meta.id);update3DLabel(`${b?.name||o.name} · ${bagWeight(meta.id).toFixed(1)} kg · anklicken/zuordnen rechts`);
-        }else if(meta.kind==='accessory'){
-          const a=bikeAccessoryCatalog.find(x=>x.id===meta.id);update3DLabel(`${a?.name||o.name} · ${a?.detail||''}`);
-        }
-      }
-    }
-  });
-  renderer.domElement.addEventListener('pointercancel',()=>bike3d.drag=false);
-  renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();bike3d.zoom=Math.max(3.6,Math.min(8,bike3d.zoom+Math.sign(e.deltaY)*.35));camera.position.z=bike3d.zoom},{passive:false});
-
-  const animate=()=>{
-    bike3d.raf=requestAnimationFrame(animate);
-    if(root){root.rotation.y=bike3d.yaw;root.rotation.x=bike3d.pitch}
-    camera.position.z=bike3d.zoom;renderer.render(scene,camera);
-  };
-  animate();update3DLabel();
-}
 function activeZoneHtml(){
   return bikeBagCatalog.filter(x=>x.zone&&bikeBagState[x.id]).map(x=>{
     const side=x.id.endsWith('L')?'L':'R',cls=x.zone==='front'?'front':'rear';
@@ -1112,39 +983,27 @@ function renderBikePackPlanner(){
   const total=totalPackedWeight(),pct=Math.min(100,total/20*100);
   host.innerHTML=`
     <div class="packPlannerHead">
-      <div><h3>🧳 Packansicht & Bike-Setup</h3><div class="packPlannerSub">Im 3D-Modell sind Bike, Taschen, Front-/Rücklicht und Fahrradcomputer voneinander getrennte Objekte. Taschen bleiben über die Liste rechts befestig-/entfernbar und die Packinhalte frei zuordenbar.</div></div>
+      <div><h3>🧳 Packansicht & Bike-Setup</h3><div class="packPlannerSub">Bike-Ansicht wieder wie in den früheren Versionen: großes reales Referenzbild, klare Taschenpositionen und eindeutige Fahrerperspektive links/rechts.</div></div>
       <div class="packStats"><span class="packStat">${active.length} Taschen befestigt</span><span class="packStat">${total.toFixed(1)} kg zugeordnet</span></div>
-    </div>
-    <div class="bikeViewerTabs">
-      <button type="button" class="${bikeViewerMode==='3d'?'active':''}" onclick="setBikeViewerMode('3d')">3D-Modell (Beta)</button>
-      <button type="button" class="${bikeViewerMode==='photo'?'active':''}" onclick="setBikeViewerMode('photo')">Fotoansicht</button>
     </div>
     <div class="packPlannerGrid">
       <div>
-        ${bikeViewerMode==='3d'?`
-        <div class="true3dWrap">
-          <div id="bike3dHost" style="position:absolute;inset:0"></div>
-          <div class="true3dOverlay">
-            <button type="button" onclick="presetBike3D(0)">Seite</button>
-            <button type="button" onclick="presetBike3D(Math.PI/2)">Front</button>
-            <button type="button" onclick="presetBike3D(Math.PI)">andere Seite</button>
-            <button type="button" onclick="presetBike3D(-Math.PI/2)">Heck</button>
-            <button type="button" onclick="presetBike3D(.6,-.08)">↺ 3/4</button>
-          </div>
-          <div class="true3dInfo">
-            <div id="bike3dSelection" class="pill">Bike frei drehen · Tasche anklicken für Details</div>
-            <div class="hint">horizontal/vertikal ziehen · Mausrad = Zoom</div>
-          </div>
+        <div class="bikePhotoStage">
+          <img src="./bike-packplan-neutral.png" alt="Neutrales Gravelbike mit Bikepacking-Ausrüstung ohne sichtbare Markenlogos">
+          ${bagSlotHtml()}
+          ${bikeBagCatalog.filter(x=>!x.zone).map((x,i)=>`<button type="button" aria-label="${x.name}" title="${x.name}" data-label="${x.name}" class="mountPoint ${bikeBagState[x.id]?'active':'inactive'}" style="left:${x.x}%;top:${x.y}%" onclick="event.stopPropagation();highlightBikeBag('${x.id}')">${i+1}</button>`).join('')}
+          ${accessoryHtml()}
         </div>
-        <div class="bike3dNote"><strong>Echtes 3D-Modul (Beta):</strong> Das neutrale Bike wird aus 3D-Geometrie aufgebaut und steht unabhängig vom Hintergrund. Es ist noch kein fotorealistisches Modell deines konkreten Bikes.</div>
-        `:`
-        <div class="photoViewer"><img src="./bike-packplan-neutral.png" alt="Neutrales Gravelbike mit Bikepacking-Ausrüstung ohne sichtbare Markenlogos"></div>
-        <div class="bike3dNote">Fotoansicht als Referenz für eine realistische Bikepacking-Konfiguration.</div>
-        `}
-        <div class="viewerLegend">${bikeBagCatalog.map(x=>`<span>${bikeBagState[x.id]?'✓':'○'} ${x.name}</span>`).join('')}</div>
+        <div class="directionNote"><strong>Links / rechts = immer aus Sicht des Fahrers in Fahrtrichtung.</strong> HL = hinten links · HR = hinten rechts · VL = vorne links · VR = vorne rechts.</div>
+        <div class="sideLegend">
+          <div><strong>HL · Hinten links</strong> linke Gepäckträgerseite aus Fahrerperspektive</div>
+          <div><strong>HR · Hinten rechts</strong> rechte Gepäckträgerseite aus Fahrerperspektive</div>
+          <div><strong>VL · Vorne links</strong> linker Lowrider aus Fahrerperspektive</div>
+          <div><strong>VR · Vorne rechts</strong> rechter Lowrider aus Fahrerperspektive</div>
+        </div>
       </div>
       <div class="packSummary">
-        <div class="packSummaryBox on"><h4>Am Bike befestigt (${active.length})</h4>${active.length?active.map(x=>`<div class="packRow" style="display:block"><div style="display:flex;justify-content:space-between;gap:8px"><span><strong>${x.name}</strong><br><span class="tiny">${x.capacity} l · ${bagWeight(x.id).toFixed(1)} kg</span></span><button class="remove" type="button" onclick="setBikeBag('${x.id}',false)">− entfernen</button></div>${bagContentsHtml(x)}</div>`).join(''):'<div class="tiny">Noch keine Taschen befestigt.</div>'}</div>
+        <div class="packSummaryBox on"><h4>Am Bike befestigt (${active.length})</h4>${active.length?active.map(x=>`<div class="packRow ${highlightedBag===x.id?'highlight':''}" data-bag-row="${x.id}" style="display:block" onclick="highlightBikeBag('${x.id}')"><div style="display:flex;justify-content:space-between;gap:8px"><span><strong>${x.name}</strong><br><span class="tiny">${x.capacity} l · ${bagWeight(x.id).toFixed(1)} kg</span></span><button class="remove" type="button" onclick="event.stopPropagation();setBikeBag('${x.id}',false)">− entfernen</button></div>${bagContentsHtml(x)}</div>`).join(''):'<div class="tiny">Noch keine Taschen befestigt.</div>'}</div>
         <div class="packSummaryBox off"><h4>Noch offen (${inactive.length})</h4>${inactive.length?inactive.map(x=>`<div class="packRow"><span>${x.name}</span><button class="add" type="button" onclick="setBikeBag('${x.id}',true)">＋ befestigen</button></div>`).join(''):'<div class="tiny">Alle Taschen sind befestigt.</div>'}</div>
         <div class="accessoryPanel"><h4 style="margin:0 0 6px">Bike-Zubehör am Rad</h4>${bikeAccessoryCatalog.map(x=>`<div class="accessoryRow"><span>${x.icon} <strong>${x.name}</strong><br><span class="tiny">${x.detail}</span></span><button type="button" class="${bikeAccessoryState[x.id]?'add':'remove'}" onclick="toggleBikeAccessory('${x.id}')">${bikeAccessoryState[x.id]?'✓ montiert':'＋ montieren'}</button></div>`).join('')}</div>
         <div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div><div class="tiny">Nur zugeordnete Ausrüstung; Wasser/Essen können das reale Gewicht erhöhen.</div></div>
@@ -1169,7 +1028,8 @@ function renderBikePackPlanner(){
       }).join('')}</div>
       <div class="campingHint"><strong>Touch-Tipp:</strong> Auf iPad/iPhone am zuverlässigsten über „Automatisch einpacken“ oder das Taschen-Auswahlfeld. Drag & Drop ist nur noch eine zusätzliche Option.</div>
     </div>`;
-  attachBlockActions(host);setTimeout(()=>{if(bikeViewerMode==='3d')initBike3D();else disposeBike3D()},0);
+  attachBlockActions(host);
+  setTimeout(()=>{if(highlightedBag)highlightBikeBag(highlightedBag)},0);
 }
 function renderAdventureLayers(stages,weather){
   const loads=routeLoad(stages),hardest=loads.reduce((a,b)=>a.hm100>b.hm100?a:b);
@@ -1557,7 +1417,7 @@ async function plan(){
   $('days').textContent=stages.length;$('avg').textContent=(m.totalDist/stages.length).toFixed(1)+' km';$('stageTitle').textContent=`${stages.length} optimierte Etappen · ${$('start').value} → ${$('dest').value}`;
   renderStages(stages,opt.labels,opt.meta);renderTripSummary(stages,opt.labels,opt.meta,target,maxHm);$('adventureLayers').innerHTML='<div class="layerBox"><b>Adventure Layers werden berechnet …</b></div>';$('terrainSupply').innerHTML='<div class="intelCard"><b>Terrain & Versorgung werden analysiert …</b></div>';const weather=await fetchStageWeather(coords,stages);renderAdventureLayers(stages,weather);const terrainSupply=await fetchTerrainSupply(coords,stages);renderTerrainSupply(terrainSupply,stages,opt.labels);updateTerrainStatus(terrainSupply);await new Promise(r=>setTimeout(r,80));showMap(coords,stages);renderTerrainOnMap(terrainSupply);drawElevation(coords,m,stages);
   stageMarkers.forEach((marker,n)=>marker.bindTooltip(n===0?opt.labels[0]:n===stageMarkers.length-1?opt.labels.at(-1):'Etappenziel: '+opt.labels[n]));
-  attachBlockActions();$('status').textContent='Adventure App 7.7.0: Packplanung und 3D-Bike laufen unabhängig vom Routing; lange Strecken erhalten zusätzlich einen segmentierten OSRM-Bike-Fallback.';
+  attachBlockActions();$('status').textContent='Adventure App 7.7.1: Packplanung bleibt unabhängig vom Routing; die frühere große Bike-Ansicht ist zurück und Front-/Hecktaschen sind eindeutig nach Fahrerperspektive links/rechts zugeordnet.';
  }catch(e){
    $('status').className='status error';
    const msg=(e&&e.message)||'Unbekannter Fehler';
