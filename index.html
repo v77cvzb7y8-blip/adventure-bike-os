@@ -414,7 +414,7 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
 .packBottomBar{border-radius:13px}
 .pdfBar{max-width:1180px;margin:12px auto 0;border-radius:14px}
 .siteFooter{max-width:1180px;margin:8px auto 0;padding:20px 22px 30px;color:rgba(255,255,255,.82);display:flex;justify-content:space-between;gap:20px;align-items:center;font-size:9px}.footerBrand{font-size:11px}.footerLinks{display:flex;gap:18px;flex-wrap:wrap}
-@media(max-width:940px){
+@media(max-width:1120px){
   .routeWorkspace{grid-template-columns:1fr}.routeWorkspace>#routePlanner{position:static}
   .routeVisualGrid{grid-template-columns:1fr 1fr}
   .appModeSwitch{grid-template-columns:1fr 1fr}.appModeSwitch button:last-child{grid-column:1/-1}
@@ -431,13 +431,56 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
   .bikeJourneyGrid{grid-template-columns:1fr}.gearGrid{grid-template-columns:repeat(2,1fr)}
   .siteFooter{padding:18px 14px 30px;display:block}.footerLinks{margin-top:10px}
 }
+
+/* =====================================================
+   8.1.1 TABLET / TERRAIN / PDF POLISH
+   ===================================================== */
+.poiRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px;border:1px solid #dfe6df;border-radius:11px;background:#fff}
+.poiList{display:grid;gap:7px}
+.supplyStatus{border-radius:11px;padding:9px 10px;margin:7px 0;background:#f7f8f4;border:1px solid #e0e4dc}
+.supplyStatus.ok{background:#eef6f0}.supplyStatus.warn{background:#fff7e8}
+.poiToggle{width:100%;text-align:left;padding:7px 9px;border-radius:9px;font-size:10px}
+.poiAdd{font-size:9px!important;padding:7px 8px!important;border-radius:8px!important}
+.intelCard{padding:12px!important}
+#terrainSupply{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+#terrainSupply .intelCard{margin:0!important}
+.bikeStage{min-height:390px}.bikeStage svg{min-height:390px}
+.bagList{grid-template-columns:repeat(2,minmax(0,1fr))}
+.bagPanel .bagList .bagLine{min-width:0}
+.tripTabs{overflow-x:auto;white-space:nowrap;scrollbar-width:none}
+.tripTabs::-webkit-scrollbar{display:none}
+.tripTabs button{display:inline-flex;flex:0 0 auto}
+.pdfBar{padding:9px 12px!important}
+@media(max-width:1120px){
+  .routeWorkspace{grid-template-columns:1fr!important}
+  .routeWorkspace>#routePlanner{position:static!important}
+  #routePlanner .grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .routeVisualGrid{grid-template-columns:1fr 1fr}
+  #terrainSupply{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tripTabs{position:sticky;top:0;display:flex!important;gap:6px}
+  .tripPanel{width:100%}
+  .poiRow{grid-template-columns:1fr}
+  .poiRow>div:last-child{justify-content:flex-start!important}
+  .bikeConfiguratorGrid{grid-template-columns:1fr}
+  .bikeAside .bagList{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pdfBar{position:sticky;bottom:5px;z-index:200}
+}
+@media(max-width:820px){
+  #routePlanner .grid.four{grid-template-columns:1fr 1fr}
+  .routeVisualGrid{grid-template-columns:1fr}
+  #terrainSupply{grid-template-columns:1fr}
+  .bikeAside .bagList,.bagList{grid-template-columns:1fr}
+  .bikeStage{min-height:330px}.bikeStage svg{min-height:330px}
+  .pdfBar{padding:7px 9px!important}
+  .pdfBar .pdfBuild{padding:10px 12px!important;font-size:11px}
+}
 </style>
 </head>
 <body>
 <header class="productHero">
   <div class="brandRow">
     <div>
-      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.1.0</div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.1.1</div>
       <h1>Dein Bike. Dein Abenteuer.</h1>
       <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
     </div>
@@ -659,6 +702,7 @@ function showAppMode(mode){
     if(mode==='route'&&hasRoute)result.classList.remove('hidden');
   }
   if(mode==='bike')setTimeout(()=>renderBikePackPlanner(),30);
+  window.scrollTo({top:0,behavior:'smooth'});
   if(mode==='route'){
     const hasRoute=!!window.__routeContext?.coords?.length;
     const target=hasRoute?$('routeOverview'):$('routePlanner');
@@ -1920,31 +1964,34 @@ function classifyTerrainCounts(counts){
 function renderJourneyTerrainBand(){
   const host=$('journeyTerrainBand');if(!host)return;
   const d=window.__terrainSupplyData,ctx=window.__routeContext;
-  if(!d?.available||!Array.isArray(d.stages)||!d.stages.length||!ctx?.m?.cumDist){
+  if(!d?.available||!ctx?.m?.cumDist){
     host.innerHTML='<span class="unknown" style="width:100%"></span>';host.title='Terrain-Daten noch nicht verfügbar';return;
   }
   const points=[];
-  d.stages.forEach(s=>(s.terrain?.samples||[]).forEach(x=>{
+  (d.stages||[]).forEach(s=>(s.terrain?.routeSamples||s.terrain?.samples||[]).forEach(x=>{
     if(Number.isFinite(x.idx)&&Number.isFinite(ctx.m.cumDist[x.idx]))points.push({d:ctx.m.cumDist[x.idx],kind:x.kind||'unknown'});
   }));
   points.sort((a,b)=>a.d-b.d);
   const total=ctx.m.totalDist||1;
   if(!points.length){host.innerHTML='<span class="unknown" style="width:100%"></span>';host.title='Keine ausreichenden OSM-Terrain-Tags';return}
-  const segs=[];let cursor=0;
-  points.forEach((p,i)=>{
-    const left=i===0?0:(points[i-1].d+p.d)/2;
-    const right=i===points.length-1?total:(p.d+points[i+1].d)/2;
-    if(left>cursor+0.5)segs.push({a:cursor,b:left,kind:'unknown'});
-    segs.push({a:left,b:right,kind:p.kind});cursor=right;
-  });
-  if(cursor<total)segs.push({a:cursor,b:total,kind:'unknown'});
+  const edges=[0];
+  for(let i=1;i<points.length;i++)edges.push((points[i-1].d+points[i].d)/2);
+  edges.push(total);
+  const segs=points.map((p,i)=>({a:Math.max(0,edges[i]),b:Math.min(total,edges[i+1]),kind:p.kind}));
   const merged=[];
-  segs.forEach(s=>{const last=merged[merged.length-1];if(last&&last.kind===s.kind&&Math.abs(last.b-s.a)<1)last.b=s.b;else merged.push({...s})});
-  host.innerHTML=merged.map(s=>`<span class="${s.kind}" title="${s.a.toFixed(0)}–${s.b.toFixed(0)} km · ${s.kind}" style="width:${Math.max(.3,(s.b-s.a)/total*100)}%"></span>`).join('');
+  segs.forEach(s=>{
+    const last=merged[merged.length-1];
+    if(last&&last.kind===s.kind)last.b=s.b;else merged.push({...s});
+  });
+  host.innerHTML=merged.map(s=>{
+    const label={paved:'Asphalt/befestigt',gravel:'Gravel/kompakt',rough:'unbefestigt/rau',unknown_offroad:'Track/Path – Oberfläche unbekannt',unknown:'unbekannt'}[s.kind]||s.kind;
+    return `<span class="${s.kind}" title="${s.a.toFixed(0)}–${s.b.toFixed(0)} km · ${label}" style="width:${Math.max(.25,(s.b-s.a)/total*100)}%"></span>`;
+  }).join('');
+  host.title='Terrain-Segmente auf derselben Kilometerachse wie das Höhenprofil';
 }
 function syncRouteTerrainStrip(){
   const src=$('journeyTerrainBand'),dst=$('routeTerrainStrip');
-  if(dst)dst.innerHTML=src?.innerHTML||'<span class="unknown" style="width:100%"></span>';
+  if(dst){dst.innerHTML=src?.innerHTML||'<span class="unknown" style="width:100%"></span>';dst.title=src?.title||'Terrain entlang der Route';}
 }
 
 function renderJourneyMiniProfile(){
@@ -2164,9 +2211,10 @@ async function fetchTerrainSupply(coords,stages){
   }
 
   const intel=stages.map((s,si)=>({
-    terrain:{counts:{paved:0,gravel:0,rough:0,unknown_offroad:0,unknown:0},total:0,roughSignals:0,names:[],samples:[]},
+    terrain:{counts:{paved:0,gravel:0,rough:0,unknown_offroad:0,unknown:0},total:0,roughSignals:0,names:[],samples:[],routeSamples:[]},
     supply:{sleep:[],food:[],water:[],grocery:[],bike:[]}
   }));
+  const routeSamples=samples.map(sp=>({...sp,kind:'unknown',matchDistance:Infinity}));
   const seenWays=new Set(),seenPois=new Set();
 
   for(const el of res.elements){
@@ -2191,10 +2239,17 @@ async function fetchTerrainSupply(coords,stages){
     }
     if(el.type==='way'&&t.highway){
       const key=`way-${el.id}`; if(seenWays.has(key))continue; seenWays.add(key);
-      let bestStage=0,bestD=Infinity;
-      samples.forEach(sp=>{const d=distKmLatLon(p,sp);if(d<bestD){bestD=d;bestStage=sp.stage}});
+      let bestStage=0,bestD=Infinity,bestSampleIndex=-1;
+      samples.forEach((sp,sidx)=>{const d=distKmLatLon(p,sp);if(d<bestD){bestD=d;bestStage=sp.stage;bestSampleIndex=sidx}});
       if(bestD<=2.5){
         const sc=surfaceClass(t),ti=intel[bestStage].terrain;
+        if(bestSampleIndex>=0){
+          const rs=routeSamples[bestSampleIndex];
+          const rank={rough:5,gravel:4,paved:3,unknown_offroad:2,unknown:1};
+          if(bestD<rs.matchDistance || (bestD<=rs.matchDistance*1.2 && (rank[sc]||0)>(rank[rs.kind]||0))){
+            rs.kind=sc;rs.matchDistance=bestD;rs.surface=t.surface||'';rs.highway=t.highway||'';rs.tracktype=t.tracktype||'';rs.smoothness=t.smoothness||'';
+          }
+        }
         ti.counts[sc]=(ti.counts[sc]||0)+1; ti.total++;
         if(ti.samples.length<30){
           let nearestIdx=null,nearest=Infinity;
@@ -2207,7 +2262,8 @@ async function fetchTerrainSupply(coords,stages){
     }
   }
 
-  intel.forEach(x=>{
+  intel.forEach((x,si)=>{
+    x.terrain.routeSamples=routeSamples.filter(rs=>rs.stage===si).sort((a,b)=>a.idx-b.idx);
     Object.values(x.supply).forEach(arr=>arr.sort((a,b)=>a.distance-b.distance));
     x.terrain.difficulty=terrainAvailable?terrainDifficulty(x.terrain.counts,x.terrain.roughSignals,x.terrain.total):{label:'nicht verfügbar',level:'unknown',reason:'Versorgung konnte geladen werden, Terrain-Stichproben jedoch nicht.'};
   });
@@ -2240,22 +2296,24 @@ function supplyCategory(stage,cat,label,arr,sourceAvailable=true){
   const id=`poi-${stage}-${cat}`;
   const selected=window.stageSelections[selectionKey(stage,cat)];
   if(!sourceAvailable){
-    return `<div class="supplyStatus warn"><strong>${label}</strong><br><span class="tiny">Zusatzdaten in diesem Lauf nicht verfügbar. Adventure Bike OS versucht automatisch mehrere OSM-Server; die Routenberechnung wird dadurch nicht blockiert.</span></div>`;
+    return `<div class="supplyStatus warn"><strong>${label}</strong><div class="tiny">Zusatzdaten aktuell nicht verfügbar.</div></div>`;
   }
   if(!arr?.length){
-    return `<div class="supplyStatus"><strong>${label}: 0 Treffer</strong><br><span class="tiny">Im ca. 5-km-Umfeld des Etappenziels wurde in OSM kein passender POI gefunden. Das bedeutet nicht zwingend, dass es vor Ort nichts gibt.</span></div>`;
+    return `<div class="supplyStatus"><strong>${label}</strong><div class="tiny">Kein OSM-Treffer im Suchumfeld · vor Ort trotzdem möglich.</div></div>`;
   }
-  return `<div class="supplyStatus ok"><button type="button" class="poiToggle" onclick="togglePoiList('${id}')">${label}: ${arr.length} Treffer ▾</button>
+  return `<div class="supplyStatus ok"><button type="button" class="poiToggle" onclick="togglePoiList('${id}')">${label} · ${arr.length} Treffer ▾</button>
     <div id="${id}" class="poiList">${arr.map((x,idx)=>{
       const isSel=selected?.name===x.name,search=searchLinkForPoi(x);
-      return `<div class="poiRow"><div><strong>${x.name}</strong>${x.sleepType?` <span class="tiny">· ${x.sleepType}</span>`:''}<br><span class="tiny">${x.distance.toFixed(1)} km vom Etappenziel · OSM-Treffer, Öffnung/Verfügbarkeit nicht geprüft</span></div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-        ${cat==='sleep'?`<a href="${search}" target="_blank" rel="noopener" class="poiAdd" style="text-decoration:none">🔎 Unterkunft suchen</a>`:''}
-        ${x.website?`<a href="${x.website}" target="_blank" rel="noopener" class="poiAdd" style="text-decoration:none">Website (OSM)</a>`:''}
-        ${x.maplink?`<a href="${x.maplink}" target="_blank" rel="noopener" class="poiAdd" style="text-decoration:none">Karte</a>`:''}
-        ${cat==='sleep'&&x.booking?`<a href="${x.booking}" target="_blank" rel="noopener" class="poiAdd" style="text-decoration:none">Reservieren</a>`:''}
-        <button type="button" class="poiAdd ${isSel?'selected':''}" onclick="addStagePOI(${stage},'${cat}',${idx})">${isSel?'✓ Hinzugefügt':'＋ Zur Etappe'}</button>
-      </div>${cat==='sleep'?`<div class="tiny" style="margin-top:5px">OSM-Websites können veraltet sein. „Unterkunft suchen“ ist der robustere Fallback.</div>`:''}</div>`;
+      return `<div class="poiRow">
+        <div><strong>${x.name}</strong>${x.sleepType?` <span class="tiny">· ${x.sleepType}</span>`:''}<div class="tiny">${x.distance.toFixed(1)} km vom Etappenziel · Verfügbarkeit nicht geprüft</div></div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          ${cat==='sleep'?`<a href="${search}" target="_blank" rel="noopener" class="poiAdd" style="text-decoration:none">🔎 Suchen</a>`:''}
+          ${x.maplink?`<a href="${x.maplink}" target="_blank" rel="noopener" class="poiAdd" style="text-decoration:none">Karte</a>`:''}
+          ${x.website?`<a href="${x.website}" target="_blank" rel="noopener" class="poiAdd" style="text-decoration:none">Website</a>`:''}
+          ${cat==='sleep'&&x.booking?`<a href="${x.booking}" target="_blank" rel="noopener" class="poiAdd" style="text-decoration:none">Reservieren</a>`:''}
+          <button type="button" class="poiAdd ${isSel?'selected':''}" onclick="addStagePOI(${stage},'${cat}',${idx})">${isSel?'✓ gewählt':'＋ Etappe'}</button>
+        </div>
+      </div>`;
     }).join('')}</div></div>`;
 }
 let terrainMapMarkers=[];
@@ -2378,10 +2436,20 @@ function attachBlockActions(root=document){root.querySelectorAll('.card,.layerBo
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function createPersonalPDF(){
  if(!pdfMemory.length){showCopyToast('Noch keine Blöcke für PDF ausgewählt');return}
- const title=`${$('start').value.trim()} → ${$('dest').value.trim()}`,date=$('tripdate').value||'',popup=window.open('','_blank');
- if(!popup){showCopyToast('Pop-up blockiert');return}
- const body=pdfMemory.map((x,i)=>`<section style="padding:18px 0;border-top:1px solid #ddd;break-inside:avoid"><h3>${i+1}</h3>${x.image?`<img src="${x.image}" alt="Höhenprofil" style="display:block;width:100%;max-width:100%;height:auto;object-fit:contain;border:1px solid #ddd;border-radius:10px;margin:8px auto 14px">`:`<pre style="white-space:pre-wrap;font:14px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">${escapeHtml(x.text)}</pre>`}</section>`).join('');
- popup.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:36px;color:#132019"><button onclick="window.print()" style="padding:10px 14px;background:#1f6f4a;color:#fff;border:0;border-radius:10px;font-weight:700">Als PDF speichern / drucken</button><h1>${escapeHtml(title)}</h1><div>${date?'Abfahrt '+escapeHtml(date):''}</div>${body}</body></html>`);
+ const title=`${$('start').value.trim()} → ${$('dest').value.trim()}`;
+ const date=$('tripdate').value||'',end=$('enddate').value||'';
+ const popup=window.open('','_blank'); if(!popup){showCopyToast('Pop-up blockiert');return}
+ const body=pdfMemory.map((x,i)=>{
+   const raw=(x.text||'').trim(),lines=raw.split('\n').map(s=>s.trim()).filter(Boolean);
+   const heading=lines.shift()||`Reisebaustein ${i+1}`;
+   const content=lines.map(line=>`<div class="pdfLine">${escapeHtml(line)}</div>`).join('');
+   return `<section class="pdfCard"><div class="pdfNum">${i+1}</div><div class="pdfContent"><h2>${escapeHtml(heading)}</h2>${x.image?`<img src="${x.image}" alt="Reisegrafik">`:`<div class="pdfText">${content}</div>`}</div></section>`;
+ }).join('');
+ const days=travelDays(),metrics=window.__routeMetrics;
+ const meta=`<div class="pdfMeta">${metrics?`<span><b>${metrics.totalDist.toFixed(0)} km</b><small>Distanz</small></span><span><b>${metrics.hasElevation?Math.round(metrics.totalAsc)+' HM':'HM offen'}</b><small>Anstieg</small></span>`:''}${days?`<span><b>${days} Tage</b><small>Zeitfenster</small></span>`:''}<span><b>${escapeHtml($('lodging')?.options[$('lodging').selectedIndex]?.text||'')}</b><small>Übernachtung</small></span></div>`;
+ popup.document.write(`<!doctype html><html lang="de"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>
+ *{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;color:#14261d;background:#f5f4ee}main{max-width:900px;margin:0 auto;padding:28px}.pdfHead{background:#0d4937;color:white;padding:28px;border-radius:18px;margin-bottom:14px}.pdfHead h1{margin:0 0 7px;font-size:34px}.pdfHead p{margin:0;opacity:.78}.pdfMeta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.pdfMeta span{background:white;border:1px solid #dce1d9;border-radius:12px;padding:10px}.pdfMeta b,.pdfMeta small{display:block}.pdfMeta b{font-size:15px}.pdfMeta small{font-size:9px;color:#738078;margin-top:3px}.pdfCard{display:grid;grid-template-columns:34px 1fr;gap:10px;background:white;border:1px solid #dde1da;border-radius:14px;padding:14px;margin:9px 0;break-inside:avoid}.pdfNum{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#e4efe8;color:#176b49;font-weight:900}.pdfContent h2{font-size:17px;margin:2px 0 9px}.pdfLine{font-size:11px;line-height:1.45;padding:3px 0;border-bottom:1px solid #f0f1ed}.pdfLine:last-child{border:0}.pdfCard img{display:block;width:100%;height:auto;border:1px solid #dde1da;border-radius:10px;margin:6px 0}.printBtn{margin:0 0 12px;padding:10px 14px;background:#176b49;color:#fff;border:0;border-radius:10px;font-weight:800}@media print{body{background:white}.printBtn{display:none}main{padding:0}.pdfHead{border-radius:0}.pdfCard{box-shadow:none}}@media(max-width:650px){main{padding:12px}.pdfMeta{grid-template-columns:1fr 1fr}.pdfHead h1{font-size:27px}}
+ </style></head><body><main><button class="printBtn" onclick="window.print()">Als PDF speichern / drucken</button><div class="pdfHead"><div style="font-size:10px;letter-spacing:.12em;opacity:.72">ADVENTURE BIKE OS · REISEPLAN</div><h1>${escapeHtml(title)}</h1><p>${date?'Abfahrt '+escapeHtml(date):''}${end?' · Ende '+escapeHtml(end):''}</p></div>${meta}${body}</main></body></html>`);
  popup.document.close();
 }
 function exportMemoryText(){return pdfMemory.map(x=>x.text).join('\n\n------------------------------\n\n')}
