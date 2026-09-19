@@ -344,22 +344,115 @@ body.packFocus .focusExplainer{display:block}
 .compatBadge{padding:5px 8px;border-radius:999px;background:#fff;border:1px solid #dce7df;font-size:9px;font-weight:800}
 .mountHint{font-size:8px;color:var(--muted);margin-top:2px}
 .bikeStageName{position:absolute;left:12px;top:12px;z-index:3;padding:6px 8px;border-radius:9px;background:rgba(255,253,247,.92);font-size:9px;font-weight:900;color:#1d3c2e;border:1px solid #d7e2da}
+
+/* =====================================================
+   8.1.0 UI CONSOLIDATION
+   ===================================================== */
+:root{--shell:#0d4937;--shell2:#093d2f;--paper:#fbf7ee;--paper2:#f4f2e9;--accent:#176f4d;--ink:#14261d;--muted:#6b756f;--line:#d9ddd4}
+body{background:linear-gradient(180deg,var(--shell2),var(--shell));}
+.productHero{max-width:1180px;margin:0 auto;padding:34px 22px 20px;color:#f8f3e9}
+.brandRow{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.productHero h1{font-size:clamp(38px,5.2vw,70px);line-height:.98;letter-spacing:-.045em;margin:7px 0 10px}
+.productHero .sub{font-size:15px;max-width:720px;color:rgba(255,255,255,.82);line-height:1.5}
+.productHero .eyebrow{color:#37a672}
+.heroMark{font-size:72px;line-height:1;color:#f6f0df;opacity:.95;transform:scaleX(1.35)}
+.appModeSwitch{max-width:1180px;margin:0 auto 16px;padding:0 22px;grid-template-columns:1fr 1fr .56fr;gap:10px}
+.appModeSwitch button{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:9px;align-items:center;text-align:left;padding:13px 16px;border-radius:13px}
+.appModeSwitch button>span{grid-row:1/3;font-size:19px}.appModeSwitch button>b{font-size:13px}.appModeSwitch button>small{font-size:9px;opacity:.66;font-weight:600}
+main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
+.routeWorkspace{display:grid;grid-template-columns:minmax(310px,.38fr) minmax(0,.62fr);gap:12px;align-items:start}
+.routeWorkspace>#routePlanner{position:sticky;top:10px}
+.routeWorkspace>#result.hidden{display:none!important}
+.routeWorkspace>#result{min-width:0}
+.card{border-radius:19px;border-color:#d8d6cb;box-shadow:0 10px 28px rgba(3,31,20,.08)}
+#routePlanner{padding:16px}
+#routePlanner .formGroup{margin:0 0 9px;padding:11px 12px;border-radius:13px;background:#faf9f4;border:1px solid #e2e1d8}
+#routePlanner .formGroup h3{display:flex;align-items:center;gap:7px;font-size:12px;margin:0 0 9px}
+#routePlanner .formGroup h3 span{width:22px;height:22px;border-radius:50%;background:#e0ebe4;display:grid;place-items:center;color:#176548;font-size:10px}
+#routePlanner label{font-size:8px;letter-spacing:.05em}
+#routePlanner input,#routePlanner select{padding:9px 10px;font-size:11px;border-radius:9px}
+#routePlanner .grid{gap:8px}#routePlanner .grid.four{grid-template-columns:1fr 1fr}
+#routePlanner .formHint{font-size:8px;margin-top:5px}
+#routePlanner #quickcheck{grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px!important}
+#routePlanner .summaryBox{padding:8px;border-radius:10px}
+#routePlanner .summaryBox b{font-size:12px}#routePlanner .summaryBox span{font-size:8px}
+#routePlanner #go{margin-top:8px;border-radius:11px;padding:12px;font-size:12px}
+#routePlanner #status{font-size:9px;line-height:1.35;padding:7px 2px 0}
+#routeOverview{padding:15px}
+.routeOverviewHead{align-items:center}
+.routeOverviewTitle h2{font-size:25px;letter-spacing:-.025em}
+.routeExportActions{gap:5px}.routeExportActions button{font-size:9px;padding:7px 8px}
+#routeOverview .stats{grid-template-columns:repeat(4,1fr);gap:7px;margin:10px 0}
+#routeOverview .stat{padding:9px 10px;border-radius:11px;background:#f3f6f2}
+#routeOverview .stat b{font-size:16px}#routeOverview .stat span{font-size:8px}
+.hmState{padding:7px 9px;font-size:9px;margin:8px 0}
+.adventureCheck{padding:9px;margin-top:8px}.adventureCheckGrid{gap:5px}.checkTile{min-height:68px;padding:7px}.checkTile b{font-size:9px}.checkTile .state{font-size:13px}.checkTile .tiny{font-size:7px}
+.checkWhy{font-size:8px;padding:7px;margin-top:6px}
+.routeVisualGrid{display:grid;grid-template-columns:.9fr 1.1fr;gap:8px;margin-top:9px}
+.mapPanel,.elevTop{border:1px solid var(--line);border-radius:14px;background:#fbfaf4;padding:8px;margin:0}
+.visualPanelHead{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;font-weight:900;margin-bottom:6px}
+.miniAction{width:auto!important;margin:0!important;padding:5px 7px!important;font-size:8px!important;background:#edf4ef!important;color:#245d43!important}
+#map{height:315px!important;border-radius:10px}
+.elevTop canvas{height:220px}
+.elevTop .note{font-size:8px;margin:4px 0 0}
+.routeTerrainStrip{display:flex;height:10px;border-radius:999px;overflow:hidden;background:#d6d2c7;margin-top:7px}
+.routeTerrainStrip span{height:100%;display:block}.routeTerrainStrip .paved{background:#648675}.routeTerrainStrip .gravel{background:#b58b54}.routeTerrainStrip .rough{background:#795b42}.routeTerrainStrip .unknown{background:#d4d2ca}.routeTerrainStrip .unknown_offroad{background:#998773}
+.routeTerrainLegend{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;font-size:7px;color:var(--muted)}.routeTerrainLegend i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:3px}.routeTerrainLegend .paved i{background:#648675}.routeTerrainLegend .gravel i{background:#b58b54}.routeTerrainLegend .rough i{background:#795b42}.routeTerrainLegend .unknown i{background:#d4d2ca}
+.tripTabs{position:sticky;top:5px;z-index:40;margin:8px 0;background:rgba(13,73,55,.93);padding:6px;border-radius:13px;backdrop-filter:blur(10px)}
+.tripTabs button{background:transparent;color:#fff;border-color:rgba(255,255,255,.18);padding:8px 10px;font-size:9px}.tripTabs button.active{background:#f8f4e9;color:#163b2b}
+.tripPanel .card{margin-top:8px;padding:14px}.tripPanel h2{font-size:18px}
+#packStandalone{max-width:1180px;margin:0 auto!important;padding:16px}
+#packStandalone>h2{font-size:24px}
+.bikeJourneyCard{padding:12px;background:#f7faf7}.bikeJourneyGrid{grid-template-columns:1fr 1fr}.bikeJourneyTitle{font-size:19px}
+.routeSetupProposal{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.routeSetupProposal .proposalMeta{grid-column:1/-1}.routeSetupProposal button{margin:0}
+.packPlannerHead{padding:2px 0 4px}.packPlannerHead h3{font-size:19px}
+.packSteps{gap:7px}.packStep{padding:9px}.packStepNum{width:25px;height:25px}.packStep b{font-size:10px}
+.bikeConfiguratorGrid{grid-template-columns:minmax(0,1.6fr) minmax(270px,.68fr);gap:9px}
+.bikeStage{min-height:450px}.bikeStage svg{min-height:450px}
+.bikeAside{gap:7px}.bagPanel{padding:8px}.bagLine{padding:6px}.bagLine button{padding:5px 6px}
+.gearGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.gearCard{padding:8px}.gearThumb.semantic{height:56px;font-size:25px}
+.packBottomBar{border-radius:13px}
+.pdfBar{max-width:1180px;margin:12px auto 0;border-radius:14px}
+.siteFooter{max-width:1180px;margin:8px auto 0;padding:20px 22px 30px;color:rgba(255,255,255,.82);display:flex;justify-content:space-between;gap:20px;align-items:center;font-size:9px}.footerBrand{font-size:11px}.footerLinks{display:flex;gap:18px;flex-wrap:wrap}
+@media(max-width:940px){
+  .routeWorkspace{grid-template-columns:1fr}.routeWorkspace>#routePlanner{position:static}
+  .routeVisualGrid{grid-template-columns:1fr 1fr}
+  .appModeSwitch{grid-template-columns:1fr 1fr}.appModeSwitch button:last-child{grid-column:1/-1}
+  .bikeConfiguratorGrid{grid-template-columns:1fr}.gearGrid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:700px){
+  .productHero{padding:24px 14px 14px}.productHero h1{font-size:42px}.heroMark{display:none}
+  .appModeSwitch{padding:0 14px;grid-template-columns:1fr 1fr}.appModeSwitch button{padding:10px}.appModeSwitch button>small{display:none}
+  main{padding:0 10px 18px}
+  #routePlanner .grid,#routePlanner .grid.four{grid-template-columns:1fr 1fr}
+  .routeVisualGrid{grid-template-columns:1fr}#map{height:330px!important}
+  #routeOverview .stats{grid-template-columns:1fr 1fr}
+  .adventureCheckGrid{grid-template-columns:1fr 1fr}
+  .bikeJourneyGrid{grid-template-columns:1fr}.gearGrid{grid-template-columns:repeat(2,1fr)}
+  .siteFooter{padding:18px 14px 30px;display:block}.footerLinks{margin-top:10px}
+}
 </style>
 </head>
 <body>
-<header>
-  <div class="eyebrow">ADVENTURE BIKE OS · ADVENTURE APP 8.0.0</div>
-  <h1>Dein Bike.<br>Dein Abenteuer.</h1>
-  <div class="sub">8.0.0 verbindet Route, Terrain und Bike-Setup enger: verständlichere Taschenpositionen, Bike-Profil aus deinen Eingaben, passendere Ausrüstungs-Icons und ein segmentiertes Terrain-Band entlang der tatsächlichen Route.</div>
+<header class="productHero">
+  <div class="brandRow">
+    <div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.1.0</div>
+      <h1>Dein Bike. Dein Abenteuer.</h1>
+      <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
+    </div>
+    <div class="heroMark" aria-hidden="true">▲</div>
+  </div>
 </header>
 <div class="appModeSwitch noPrint">
-  <button id="modeRouteBtn" class="active" type="button" onclick="showAppMode('route')">🗺️ Route planen</button>
-  <button id="modeBikeBtn" type="button" onclick="showAppMode('bike')">🚲 Bike konfigurieren</button>
+  <button id="modeRouteBtn" class="active" type="button" onclick="showAppMode('route')"><span>🗺️</span><b>Route planen</b><small>Ziel, Terrain & Etappen</small></button>
+  <button id="modeBikeBtn" type="button" onclick="showAppMode('bike')"><span>🚲</span><b>Bike konfigurieren</b><small>Ausrüstung & Setup</small></button>
+  <button type="button" onclick="document.querySelector('.pdfBar')?.scrollIntoView({behavior:'smooth'})"><span>📄</span><b>Reise-PDF</b><small>Dein fertiger Plan</small></button>
 </div>
 <main>
-  <section id="routePlanner" class="card">
+  <div id="routeWorkspace" class="routeWorkspace"><section id="routePlanner" class="card">
     <div class="formGroup" style="margin-top:0">
-      <h3>1 · Reise</h3>
+      <h3><span>1</span> Deine Reise</h3>
       <div class="grid">
         <div><label>Start</label><input id="start" placeholder="z. B. Innsbruck"></div>
         <div><label>Ziel</label><input id="dest" placeholder="z. B. Hamburg"></div>
@@ -372,7 +465,7 @@ body.packFocus .focusExplainer{display:block}
     </div>
 
     <div class="formGroup">
-      <h3>2 · Deine Tagesleistung</h3>
+      <h3><span>2</span> Tagesleistung</h3>
       <div class="grid four">
         <div><label>Ziel km / Tag</label><input id="kmday" type="number" min="30" max="300" placeholder="z. B. 120"></div>
         <div><label>Max. HM / Tag</label><input id="hmday" type="number" min="300" max="6000" placeholder="z. B. 1800"></div>
@@ -382,7 +475,7 @@ body.packFocus .focusExplainer{display:block}
     </div>
 
     <div class="formGroup">
-      <h3>3 · Route & Übernachtung</h3>
+      <h3><span>3</span> Route & Schlafen</h3>
       <div class="grid four">
         <div><label>Routing</label><select id="profile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schnell / Asphalt</option><option value="gravel">Gravel</option></select></div>
         <div><label>Priorität</label><select id="priority"><option>Ausgewogen</option><option>Mehr Gravel</option><option>Einfacher fahrbar</option></select></div>
@@ -392,7 +485,7 @@ body.packFocus .focusExplainer{display:block}
     </div>
 
     <div class="formGroup">
-      <h3>4 · Bike</h3>
+      <h3><span>4</span> Dein Bike</h3>
       <div class="grid four">
         <div><label>Bike-Typ</label><select id="biketype"><option value="gravel" selected>Gravelbike</option><option value="trekking">Trekkingbike</option><option value="mtb">MTB</option><option value="road">Rennrad</option></select></div>
         <div><label>Marke</label><input id="bikebrand" placeholder="z. B. Cannondale"></div>
@@ -411,18 +504,12 @@ body.packFocus .focusExplainer{display:block}
       <div class="summaryBox"><b id="quickDays">–</b><span>verfügbare Fahrtage</span></div>
       <div class="summaryBox"><b id="quickFeasibility">Noch offen</b><span>Machbarkeit</span></div>
     </div>
-    <button id="go">FAHRRADROUTE BERECHNEN</button>
+    <button id="go">ROUTE BERECHNEN</button>
     <div id="status" class="status">Start, Ziel und Reisedaten eingeben – Adventure Bike OS baut daraus die Reise.</div>
   </section>
 
   
-<section id="packStandalone" class="card modeHidden">
-  <div class="eyebrow">PACKPLAN & BIKE-SETUP</div>
-  <h2>Bike konfigurieren – unabhängig von der Route</h2>
-  <p class="note">Die Packplanung und 3D-Ansicht funktionieren auch dann, wenn ein externer Routingdienst gerade nicht antwortet.</p>
-  <button type="button" class="packFocusExit" onclick="togglePackOnly()">← Pack-Fokus beenden</button>
-  <div id="bikePackPlanner" class="packPlanner"></div>
-</section>
+
 
 <section id="result" class="hidden">
     <div id="routeOverview" class="card">
@@ -457,11 +544,18 @@ body.packFocus .focusExplainer{display:block}
         <div id="adventureWhy" class="checkWhy">Route wird berechnet. Danach erklären wir die wichtigsten Belastungs- und Risikotreiber.</div>
       </div>
 
-      <div id="map"></div>
-      <div class="elevTop">
-        <h3>Höhenprofil</h3>
-        <div class="elevWrap"><canvas id="elevation" width="1000" height="260"></canvas><div id="elevTip" class="elevTip pdfExclude"></div></div>
-        <p id="elevNote" class="note pdfExclude">Kilometerachse und Etappenenden erscheinen direkt nach erfolgreicher Höhenabfrage.</p>
+      <div class="routeVisualGrid">
+        <div class="mapPanel">
+          <div class="visualPanelHead"><span>Karte</span><button type="button" class="miniAction noPrint" onclick="showWholeRoute()">Route zentrieren</button></div>
+          <div id="map"></div>
+        </div>
+        <div class="elevTop">
+          <div class="visualPanelHead"><span>Höhenprofil & Terrain</span><span class="tiny">km · Höhe · Etappen</span></div>
+          <div class="elevWrap"><canvas id="elevation" width="1000" height="260"></canvas><div id="elevTip" class="elevTip pdfExclude"></div></div>
+          <div id="routeTerrainStrip" class="routeTerrainStrip"><span class="unknown" style="width:100%"></span></div>
+          <div class="routeTerrainLegend"><span class="paved"><i></i>Asphalt</span><span class="gravel"><i></i>Gravel</span><span class="rough"><i></i>unbefestigt</span><span class="unknown"><i></i>unbekannt</span></div>
+          <p id="elevNote" class="note pdfExclude">Kilometerachse und Etappenenden erscheinen direkt nach erfolgreicher Höhenabfrage.</p>
+        </div>
       </div>
       <p class="note">Karte © OpenStreetMap-Mitwirkende. Routing: <span id="routingSource">–</span>. Wegzustand, Sperren und lokale Regeln vor der Fahrt prüfen.</p>
       <div id="routeFreshness" class="routeFreshness"></div>
@@ -510,12 +604,23 @@ body.packFocus .focusExplainer{display:block}
         <p class="note">Versorgung zeigt OSM-POI-Treffer im Umfeld der Etappenziele; das ist keine Echtzeit-Verfügbarkeit und keine Garantie für Öffnungszeiten.</p>
       </div>
     </div>
-  </section>
+  </section></div>
+<section id="packStandalone" class="card modeHidden">
+  <div class="eyebrow">PACKPLAN & BIKE-SETUP</div>
+  <h2>Bike konfigurieren – unabhängig von der Route</h2>
+  <p class="note">Die Packplanung und 3D-Ansicht funktionieren auch dann, wenn ein externer Routingdienst gerade nicht antwortet.</p>
+  <button type="button" class="packFocusExit" onclick="togglePackOnly()">← Pack-Fokus beenden</button>
+  <div id="bikePackPlanner" class="packPlanner"></div>
+</section>
   <div class="pdfBar noPrint">
     <div><strong>Meine Reise-PDF</strong><div id="pdfCount" class="pdfCount">0 Blöcke ausgewählt</div></div>
     <div style="display:flex;gap:8px;align-items:center"><button type="button" class="copyBtn" onclick="clearPdfSelection()">Auswahl leeren</button><button id="pdfCreate" class="pdfBuild" type="button" onclick="createPersonalPDF()">PDF ERSTELLEN</button></div>
   </div>
 </main>
+<footer class="siteFooter noPrint">
+  <div class="footerBrand">▲ <strong>Adventure Bike OS</strong></div>
+  <div class="footerLinks"><span>Routen</span><span>Bike-Setup</span><span>Ausrüstung</span><span>Wissen</span><span>Hilfe</span></div>
+</footer>
 <div id="copyToast" class="copyToast">Kopiert</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -1707,10 +1812,10 @@ function bagMountHint(id){
   })[id]||'Montagepunkt am Bike';
 }
 function currentBikeIdentity(){
-  const brand=($('bikeBrand')?.value||'').trim();
-  const model=($('bikeModel')?.value||'').trim();
-  const year=($('bikeYear')?.value||'').trim();
-  const type=$('bikeType')?.options[$('bikeType').selectedIndex]?.text||'Bike';
+  const brand=($('bikebrand')?.value||'').trim();
+  const model=($('bikemodel')?.value||'').trim();
+  const year=($('bikeyear')?.value||'').trim();
+  const type=$('biketype')?.options[$('biketype').selectedIndex]?.text||'Bike';
   const full=[brand,model,year].filter(Boolean).join(' · ');
   return {brand,model,year,type,label:full||type};
 }
@@ -1720,7 +1825,7 @@ function bikeIdentityHtml(){
 }
 function guidedBikeSvg(){
   const on=id=>!!bikeBagState[id];
-  const bt=($('bikeType')?.value||'gravel').toLowerCase();
+  const bt=($('biketype')?.value||'gravel').toLowerCase();
   const flat=bt.includes('mtb')||bt.includes('mountain');
   const tag=(id,x,y,w,h,label,cls='')=>on(id)
     ?`<g class="bikeMountTag on" data-bag-target="${id}" onclick="toggleBagFromBike('${id}')"><rect class="bagBody" x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="#304c3e" stroke="#fff" stroke-width="3"/><text x="${x+w/2}" y="${y+h/2+5}" text-anchor="middle" font-size="15" font-weight="900" fill="#fff">${label}</text></g>`
@@ -1837,6 +1942,11 @@ function renderJourneyTerrainBand(){
   segs.forEach(s=>{const last=merged[merged.length-1];if(last&&last.kind===s.kind&&Math.abs(last.b-s.a)<1)last.b=s.b;else merged.push({...s})});
   host.innerHTML=merged.map(s=>`<span class="${s.kind}" title="${s.a.toFixed(0)}–${s.b.toFixed(0)} km · ${s.kind}" style="width:${Math.max(.3,(s.b-s.a)/total*100)}%"></span>`).join('');
 }
+function syncRouteTerrainStrip(){
+  const src=$('journeyTerrainBand'),dst=$('routeTerrainStrip');
+  if(dst)dst.innerHTML=src?.innerHTML||'<span class="unknown" style="width:100%"></span>';
+}
+
 function renderJourneyMiniProfile(){
   const c=$('journeyMiniProfile');if(!c)return;
   const ctx=c.getContext('2d'),route=window.__routeContext,coords=route?.coords||[];
@@ -1868,7 +1978,7 @@ function renderJourneyMiniProfile(){
   ctx.fillStyle='#5f6d65';ctx.font='9px system-ui';ctx.textAlign='left';ctx.fillText(`${Math.round(maxE)} m`,2,12);ctx.fillText(`${Math.round(minE)} m`,2,pad.t+ph);
 }
 function refreshJourneyMini(){
-  requestAnimationFrame(()=>{renderJourneyMiniProfile();renderJourneyTerrainBand()});
+  requestAnimationFrame(()=>{renderJourneyMiniProfile();renderJourneyTerrainBand();syncRouteTerrainStrip();syncRouteTerrainStrip()});
 }
 function renderBikePackPlanner(){
   const host=$('bikePackPlanner');if(!host)return;
