@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#0b4c39"/>
+<title>Adventure Bike OS · Mobile 0.1</title>
+<link rel="manifest" href="manifest.webmanifest"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{--g:#0b4c39;--g2:#167454;--cream:#f5f0e4;--card:#fffdf7;--muted:#6f7a73;--line:#dfe5df;--accent:#e8efe9;--warn:#f6e7bf}
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:var(--g);color:#13281f}
+.app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--cream);padding-bottom:92px}
+.hero{background:var(--g);color:white;padding:18px 18px 16px;position:sticky;top:0;z-index:30}
+.kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.72}
+.hero h1{font-size:28px;line-height:1;margin:5px 0 4px}.hero p{margin:0;font-size:13px;opacity:.82}
+.topnav{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:13px}
+.topnav button{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:white;border-radius:12px;padding:9px 6px;font-weight:700;font-size:11px}
+.screen{display:none;padding:14px}.screen.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 1px 0 rgba(0,0,0,.02)}
+.card h2{font-size:20px;margin:0 0 4px}.card h3{font-size:15px;margin:0 0 8px}.sub{font-size:12px;color:var(--muted);line-height:1.4}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:10px;text-transform:uppercase;font-weight:800;color:#67766e;display:block;margin-bottom:5px}
+input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px;background:white;font-size:15px}
+.primary{width:100%;border:0;border-radius:13px;background:var(--g2);color:white;font-weight:800;padding:14px;font-size:15px}
+.secondary{border:1px solid #c9d5ce;background:white;color:var(--g);font-weight:800;border-radius:12px;padding:10px 12px}
+.statrow{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.stat{background:var(--accent);border-radius:12px;padding:9px 8px}.stat b{font-size:15px;display:block}.stat span{font-size:9px;color:#66756d}
+#map{height:280px;border-radius:15px;overflow:hidden}.elev{width:100%;height:160px;background:#f4f7f3;border-radius:15px}
+.stage{border:1px solid #dce4de;border-radius:14px;padding:11px;margin:8px 0;background:white}.stage.active{outline:3px solid #2a8b63}
+.stagehead{display:flex;justify-content:space-between;gap:8px}.stagehead b{font-size:14px}.stagehead span{font-size:11px;color:#68786f}
+.tabs{display:flex;gap:7px;overflow:auto;padding-bottom:2px}.tabs button{white-space:nowrap;border:1px solid #cfd9d2;border-radius:999px;padding:8px 11px;background:white;font-weight:700}.tabs button.active{background:var(--g2);color:#fff;border-color:var(--g2)}
+.bike{background:#edf4ef;border-radius:16px;padding:12px}.bike svg{width:100%;height:auto;display:block}
+.bag{fill:#164f3b;stroke:#fff;stroke-width:3}.bag.rec{stroke:#31b67a;stroke-width:7;filter:drop-shadow(0 0 5px rgba(49,182,122,.8))}
+.gearlist{display:flex;gap:7px;flex-wrap:wrap}.chip{border:1px solid #cfd9d2;border-radius:999px;padding:8px 10px;background:white;font-size:12px}.chip.selected{background:#173d2b;color:white}.recommend{background:#eaf6ed;border:1px solid #c8dfd1;border-radius:13px;padding:10px;margin:9px 0}.recommend b{display:block}
+.check{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check .card{margin:0}.ok{color:#18734f;font-weight:800}.pending{color:#8c6a13;font-weight:800}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(255,253,247,.97);border-top:1px solid #d7ddd8;padding:7px 5px calc(7px + env(safe-area-inset-bottom));z-index:40}
+.bottom button{border:0;background:transparent;font-size:9px;color:#53645b;padding:6px 2px}.bottom button b{display:block;font-size:20px;margin-bottom:2px}.bottom button.active{color:var(--g2);font-weight:800}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#132b21;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;display:none;z-index:100}
+.loading{display:none;padding:10px;background:#eef5ef;border-radius:12px;font-size:12px;margin-top:8px}.loading.show{display:block}
+@media(max-width:390px){.hero h1{font-size:25px}.statrow{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.check{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hero">
+    <div class="kicker">Adventure Bike OS · Mobile 0.1</div>
+    <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
+    <p>Von der Idee zum fahrbaren Reiseplan.</p>
+    <div class="topnav">
+      <button onclick="go('plan')">🗺 Route</button>
+      <button onclick="go('bike')">🚲 Bike</button>
+      <button onclick="go('check')">✅ Reise-Check</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="screen-home" class="screen active">
+      <div class="card">
+        <div class="sub">AKTUELLE REISE</div>
+        <h2 id="homeTitle">Neue Reise planen</h2>
+        <p class="sub" id="homeMeta">Noch keine Route berechnet.</p>
+        <button class="primary" onclick="go('plan')">Route planen</button>
+      </div>
+      <div class="card">
+        <h3>Mobile 0.1</h3>
+        <p class="sub">Dieser Prototyp nutzt denselben Routing-Backend wie die Web-App, ist aber als eigenständiger iPhone-Flow aufgebaut: Route → Etappen → Bike & Packen → Reise-Check.</p>
+      </div>
+    </section>
+
+    <section id="screen-plan" class="screen">
+      <div class="card">
+        <h2>Route planen</h2><p class="sub">Nur die wichtigsten Eingaben. Details können später ergänzt werden.</p>
+        <div class="grid2">
+          <div><label>Start</label><input id="start" value="Innsbruck"/></div>
+          <div><label>Ziel</label><input id="dest" value="München"/></div>
+          <div><label>km / Tag</label><input id="kmday" type="number" value="120"/></div>
+          <div><label>max. HM / Tag</label><input id="hmday" type="number" value="1800"/></div>
+          <div><label>Routing</label><select id="profile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schneller Asphalt</option></select></div>
+          <div><label>Übernachtung</label><select id="lodging"><option>Hotel / Pension</option><option>Camping / Zelt</option><option>Gemischt</option></select></div>
+        </div>
+        <button class="primary" style="margin-top:12px" onclick="calculateRoute()">Fahrradroute berechnen</button>
+        <div id="routeLoading" class="loading">Route wird berechnet …</div>
+      </div>
+    </section>
+
+    <section id="screen-stages" class="screen">
+      <div class="card">
+        <div class="sub">ROUTE BERECHNET</div>
+        <h2 id="routeTitle">–</h2>
+        <div class="statrow" style="margin-top:10px">
+          <div class="stat"><b id="distStat">–</b><span>Distanz</span></div>
+          <div class="stat"><b id="hmStat">–</b><span>Anstieg</span></div>
+          <div class="stat"><b id="stageStat">–</b><span>Etappen</span></div>
+          <div class="stat"><b id="avgStat">–</b><span>Ø / Tag</span></div>
+        </div>
+      </div>
+      <div class="card"><h3>Karte</h3><div id="map"></div></div>
+      <div class="card"><h3>Höhenprofil</h3><canvas id="elevation" class="elev"></canvas><p class="sub">Etappe antippen → Karte zoomt auf den Abschnitt.</p></div>
+      <div class="card"><h3>Etappen</h3><div id="stageList"></div></div>
+    </section>
+
+    <section id="screen-bike" class="screen">
+      <div class="card">
+        <h2>Bike & Packen</h2>
+        <p class="sub">Gegenstand antippen → empfohlene Tasche leuchtet → direkt packen.</p>
+        <div class="bike">
+          <svg viewBox="0 0 420 250">
+            <circle cx="110" cy="175" r="65" fill="none" stroke="#17231e" stroke-width="10"/>
+            <circle cx="315" cy="175" r="65" fill="none" stroke="#17231e" stroke-width="10"/>
+            <path d="M110 175 L175 85 L245 175 L110 175 M175 85 L270 90 L245 175 M270 90 L315 175" fill="none" stroke="#9b8559" stroke-width="10"/>
+            <rect data-bag="saddle" class="bag" x="140" y="52" rx="10" width="70" height="38"/><text x="175" y="76" text-anchor="middle" fill="white" font-weight="800">S</text>
+            <rect data-bag="frame" class="bag" x="180" y="112" rx="10" width="80" height="52"/><text x="220" y="143" text-anchor="middle" fill="white" font-weight="800">R</text>
+            <rect data-bag="handlebar" class="bag" x="268" y="54" rx="10" width="58" height="55"/><text x="297" y="86" text-anchor="middle" fill="white" font-weight="800">L</text>
+            <rect data-bag="top" class="bag" x="213" y="82" rx="8" width="58" height="24"/><text x="242" y="99" text-anchor="middle" fill="white" font-size="11" font-weight="800">OT</text>
+            <rect data-bag="tool" class="bag" x="154" y="114" rx="8" width="32" height="42"/><text x="170" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="800">W</text>
+          </svg>
+        </div>
+        <div id="recommendBox" class="recommend">Wähle einen Gegenstand.</div>
+        <div class="gearlist" id="gearList"></div>
+      </div>
+      <div class="card">
+        <h3>Gepackt</h3><div id="bagContents"></div>
+      </div>
+    </section>
+
+    <section id="screen-check" class="screen">
+      <div class="card"><h2>Reise-Check</h2><p class="sub">Was vor der Abfahrt noch offen ist.</p></div>
+      <div class="check">
+        <div class="card"><h3>🧭 Navigation</h3><div class="ok">bereit</div><p class="sub">GPX offline · Smartphone Backup · Karten offline</p></div>
+        <div class="card"><h3>🌦 Wetter</h3><div class="pending">prüfen</div><p class="sub">72 h vor Abfahrt: Regen, Wind, Temperatur.</p></div>
+        <div class="card"><h3>🏨 Reservierungen</h3><div class="pending">noch offen</div><p class="sub">Unterkünfte und Transfers extern bestätigen.</p></div>
+        <div class="card"><h3>🔋 Strom & Licht</h3><div class="ok">Basis vorhanden</div><p class="sub">Computer · Frontlicht · Rücklicht · Powerbank</p></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="bottom">
+  <button data-nav="home" class="active" onclick="go('home')"><b>⌂</b>Start</button>
+  <button data-nav="plan" onclick="go('plan')"><b>🗺</b>Route</button>
+  <button data-nav="stages" onclick="go('stages')"><b>▥</b>Etappen</button>
+  <button data-nav="bike" onclick="go('bike')"><b>🚲</b>Bike</button>
+  <button data-nav="check" onclick="go('check')"><b>✓</b>Check</button>
+</nav>
+<div id="toast" class="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const API='https://adventure-bike-os-api.onrender.com';
+let state={coords:null,metrics:null,stages:[],map:null,layers:[],selectedGear:null,assignments:{}};
+
+function $(id){return document.getElementById(id)}
+function toast(t){const x=$('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',1400)}
+function go(name){
+ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+ $('screen-'+name).classList.add('active');
+ document.querySelectorAll('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.nav===name));
+ if(name==='stages'&&state.map)setTimeout(()=>state.map.invalidateSize(),80);
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function hav(a,b){const R=6371,rad=x=>x*Math.PI/180,dlat=rad(b[1]-a[1]),dlon=rad(b[0]-a[0]),la1=rad(a[1]),la2=rad(b[1]);const q=Math.sin(dlat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dlon/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
+function metrics(coords){
+ let dist=[0],gain=[0],d=0,g=0;
+ for(let i=1;i<coords.length;i++){d+=hav(coords[i-1],coords[i]);const de=(coords[i][2]||0)-(coords[i-1][2]||0);if(de>0)g+=de;dist.push(d);gain.push(g)}
+ return {dist,gain,totalDist:d,totalGain:g};
+}
+function makeStages(coords,m,target,maxhm){
+ const out=[];let s=0;
+ for(let i=1;i<coords.length;i++){
+   const dk=m.dist[i]-m.dist[s],hg=m.gain[i]-m.gain[s];
+   if((dk>=target*.95)||(dk>=target&&hg>=maxhm*.75)||(hg>=maxhm)){
+     if(i-s>4){out.push({s,e:i,km:dk,hm:hg});s=i}
+   }
+ }
+ if(s<coords.length-1){const e=coords.length-1;out.push({s,e,km:m.dist[e]-m.dist[s],hm:m.gain[e]-m.gain[s]})}
+ return out;
+}
+async function calculateRoute(){
+ const load=$('routeLoading');load.classList.add('show');
+ try{
+   const r=await fetch(API+'/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:$('start').value,dest:$('dest').value,profile:$('profile').value})});
+   const data=await r.json(); if(!r.ok)throw new Error(data.error||'Route nicht verfügbar');
+   const coords=data.coords||data.coordinates||data.route?.coords||[];
+   if(!coords.length)throw new Error('Keine Routengeometrie erhalten');
+   const m=metrics(coords),st=makeStages(coords,m,+$('kmday').value||120,+$('hmday').value||1800);
+   state.coords=coords;state.metrics=m;state.stages=st;
+   renderRoute();
+   localStorage.setItem('abo-mobile-route',JSON.stringify({start:$('start').value,dest:$('dest').value,coords,metrics:m,stages:st}));
+   go('stages');
+ }catch(e){toast(e.message)}
+ finally{load.classList.remove('show')}
+}
+function renderRoute(){
+ if(!state.coords)return;
+ const s=$('start').value,d=$('dest').value,m=state.metrics,st=state.stages;
+ $('routeTitle').textContent=`${s} → ${d}`;$('homeTitle').textContent=`${s} → ${d}`;
+ $('homeMeta').textContent=`${m.totalDist.toFixed(0)} km · ${Math.round(m.totalGain)} HM · ${st.length} Etappen`;
+ $('distStat').textContent=m.totalDist.toFixed(0)+' km';$('hmStat').textContent=Math.round(m.totalGain)+' HM';$('stageStat').textContent=st.length;$('avgStat').textContent=(m.totalDist/st.length).toFixed(0)+' km';
+ renderMap();drawElevation();renderStages();
+}
+function renderMap(){
+ if(!state.map){state.map=L.map('map',{scrollWheelZoom:false,touchZoom:true});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(state.map)}
+ state.layers.forEach(l=>l.remove());state.layers=[];
+ const latlng=state.coords.map(c=>[c[1],c[0]]);
+ const line=L.polyline(latlng,{color:'#2777dd',weight:6}).addTo(state.map);state.layers.push(line);state.map.fitBounds(line.getBounds(),{padding:[15,15]});
+}
+function stageColor(i){return ['#2b83ba','#d7191c','#1a9c7c','#e6ab02','#f07b3f','#8064a2','#39806f','#ff7043','#7a568f'][i%9]}
+function focusStage(i){
+ const st=state.stages[i];if(!st||!state.map)return;
+ state.layers.slice(1).forEach(l=>l.remove());state.layers=state.layers.slice(0,1);
+ const ll=state.coords.slice(st.s,st.e+1).map(c=>[c[1],c[0]]);
+ const l=L.polyline(ll,{color:stageColor(i),weight:8}).addTo(state.map);state.layers.push(l);state.map.fitBounds(l.getBounds(),{padding:[20,20]});
+ document.querySelectorAll('.stage').forEach((e,j)=>e.classList.toggle('active',j===i));
+}
+function renderStages(){
+ $('stageList').innerHTML=state.stages.map((s,i)=>`<div class="stage" onclick="focusStage(${i})"><div class="stagehead"><b>Etappe ${i+1}</b><span>${s.km.toFixed(0)} km · ${Math.round(s.hm)} HM</span></div><div class="sub">Antippen, um die Etappe auf der Karte hervorzuheben.</div></div>`).join('');
+}
+function drawElevation(){
+ const c=$('elevation'),ctx=c.getContext('2d'),dpr=devicePixelRatio||1,w=c.clientWidth,h=160;c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);
+ const coords=state.coords,m=state.metrics,vals=coords.map(x=>x[2]||0),lo=Math.min(...vals),hi=Math.max(...vals),pad=18;
+ const x=i=>pad+(w-pad*2)*(m.dist[i]/m.totalDist),y=e=>h-pad-(h-pad*2)*((e-lo)/Math.max(1,hi-lo));
+ state.stages.forEach((s,i)=>{ctx.fillStyle=stageColor(i)+'18';ctx.fillRect(x(s.s),pad,x(s.e)-x(s.s),h-pad*2);ctx.fillStyle=stageColor(i);ctx.font='11px sans-serif';ctx.fillText('E'+(i+1),x(s.s)+4,16)});
+ ctx.strokeStyle='#176a4d';ctx.lineWidth=2.5;ctx.beginPath();coords.forEach((p,i)=>{const X=x(i),Y=y(p[2]||0);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.stroke();
+ c.onclick=e=>{const r=c.getBoundingClientRect(),km=((e.clientX-r.left)/r.width)*m.totalDist;let idx=state.stages.findIndex(s=>km>=m.dist[s.s]&&km<=m.dist[s.e]);if(idx<0)idx=0;focusStage(idx)};
+}
+
+const gear=[
+ {id:'jacket',name:'Daunenjacke',bag:'saddle',why:'leicht, voluminös, unterwegs selten nötig'},
+ {id:'tool',name:'Werkzeug',bag:'frame',why:'kompakt und schwer – zentral am Bike'},
+ {id:'power',name:'Powerbank',bag:'frame',why:'kompakt, geschützt und zentral'},
+ {id:'rain',name:'Regenjacke',bag:'handlebar',why:'schnell erreichbar'},
+ {id:'snack',name:'Snacks',bag:'top',why:'während der Fahrt schnell erreichbar'}
+];
+function initGear(){
+ $('gearList').innerHTML=gear.map(g=>`<button class="chip" data-gear="${g.id}" onclick="selectGear('${g.id}')">${g.name}</button>`).join('');
+ renderBagContents();
+}
+function selectGear(id){
+ state.selectedGear=id;
+ document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('selected',x.dataset.gear===id));
+ const g=gear.find(x=>x.id===id);document.querySelectorAll('[data-bag]').forEach(x=>x.classList.toggle('rec',x.dataset.bag===g.bag));
+ $('recommendBox').innerHTML=`<b>${g.name} → empfohlen: ${bagName(g.bag)}</b><span class="sub">${g.why}</span><br><button class="primary" style="margin-top:8px" onclick="packSelected()">in empfohlene Tasche</button>`;
+}
+function bagName(id){return {saddle:'Satteltasche',frame:'Rahmentasche',handlebar:'Lenkertasche',top:'Oberrohrtasche',tool:'Werkzeugtasche'}[id]||id}
+function packSelected(){const g=gear.find(x=>x.id===state.selectedGear);if(!g)return;state.assignments[g.id]=g.bag;toast(`${g.name} → ${bagName(g.bag)}`);renderBagContents();const next=gear.find(x=>!state.assignments[x.id]);if(next)selectGear(next.id);else{$('recommendBox').textContent='Alles gepackt.';document.querySelectorAll('[data-bag]').forEach(x=>x.classList.remove('rec'))}}
+function renderBagContents(){
+ const groups={};Object.entries(state.assignments).forEach(([gid,b])=>(groups[b]??=[]).push(gear.find(x=>x.id===gid)));
+ $('bagContents').innerHTML=Object.keys(groups).length?Object.entries(groups).map(([b,items])=>`<div class="stage"><b>${bagName(b)}</b><div class="sub">${items.map(g=>`${g.name} <button class="secondary" style="padding:3px 7px" onclick="unpack('${g.id}')">×</button>`).join(' · ')}</div></div>`).join(''):'<p class="sub">Noch nichts gepackt.</p>';
+}
+function unpack(id){delete state.assignments[id];renderBagContents();toast('Gegenstand entfernt')}
+
+(function boot(){
+ initGear();
+ const saved=localStorage.getItem('abo-mobile-route');
+ if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;$('start').value=x.start;$('dest').value=x.dest;renderRoute()}catch(e){}}
+ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
