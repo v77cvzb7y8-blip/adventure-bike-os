@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.73 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.80 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -614,21 +614,16 @@ def transport_nearby():
 
 @app.post("/api/osm-terrain")
 def osm_terrain():
-    """Fast, narrow terrain-only query around sampled route points."""
     try:
         body=request.get_json(force=True) or {}
-        samples=(body.get("samples") or [])[:42]
-        if not samples:return jsonify(ok=False,elements=[]),400
-        clauses=[]
-        for p in samples:
-            lat=float(p["lat"]);lon=float(p["lon"])
-            clauses.append(
-                f'way(around:90,{lat},{lon})["highway"];'
-            )
-        q='[out:json][timeout:16];('+''.join(clauses)+');out tags center;'
+        samples=(body.get("samples") or [])[:34]
+        if not samples:
+            return jsonify(ok=False,elements=[]),400
+        clauses=[f'way(around:120,{float(p["lat"])},{float(p["lon"])})["highway"];' for p in samples]
+        q='[out:json][timeout:18];('+''.join(clauses)+');out tags geom qt;'
         for url in OVERPASS_ENDPOINTS:
             try:
-                r=session.post(url,data={"data":q},headers={"User-Agent":UA,"Accept":"application/json"},timeout=18)
+                r=session.post(url,data={"data":q},headers={"User-Agent":UA,"Accept":"application/json"},timeout=22)
                 print(f"[OSM-TERRAIN] {url} status={r.status_code}",flush=True)
                 if r.ok:
                     return jsonify(ok=True,elements=(r.json() or {}).get("elements") or [],source=url)
@@ -638,6 +633,35 @@ def osm_terrain():
     except Exception as e:
         print(f"[OSM-TERRAIN] error {type(e).__name__}: {e}",flush=True)
         return jsonify(ok=False,elements=[],warning="Terrain-Zusatzdaten derzeit nicht erreichbar."),200
+
+
+@app.post("/api/osm-supply-stage")
+def osm_supply_stage():
+    try:
+        body=request.get_json(force=True) or {}
+        lat=float(body.get("lat"))
+        lon=float(body.get("lon"))
+        lodging=(body.get("lodging") or "hotel").lower()
+        sleep_regex="hotel|guest_house|hostel|motel|camp_site" if lodging=="mixed" else ("camp_site|caravan_site" if lodging=="camping" else "hotel|guest_house|hostel|motel")
+        q=(
+            f'[out:json][timeout:13];('
+            f'nwr(around:5000,{lat},{lon})["tourism"~"{sleep_regex}"];'
+            f'nwr(around:3500,{lat},{lon})["amenity"~"restaurant|cafe|fast_food|drinking_water|bicycle_repair_station"];'
+            f'nwr(around:3500,{lat},{lon})["shop"~"supermarket|convenience|bakery|bicycle"];'
+            f');out center tags;'
+        )
+        for url in OVERPASS_ENDPOINTS:
+            try:
+                r=session.post(url,data={"data":q},headers={"User-Agent":UA,"Accept":"application/json"},timeout=16)
+                print(f"[OSM-SUPPLY-STAGE] {url} status={r.status_code}",flush=True)
+                if r.ok:
+                    return jsonify(ok=True,elements=(r.json() or {}).get("elements") or [],source=url)
+            except Exception as e:
+                print(f"[OSM-SUPPLY-STAGE] {url} failed {e}",flush=True)
+        return jsonify(ok=False,elements=[],warning="Versorgungsdaten für diese Etappe derzeit nicht erreichbar."),200
+    except Exception as e:
+        print(f"[OSM-SUPPLY-STAGE] error {type(e).__name__}: {e}",flush=True)
+        return jsonify(ok=False,elements=[],warning="Versorgungsdaten derzeit nicht erreichbar."),200
 
 @app.post("/api/osm-supply")
 def osm_supply():
@@ -672,7 +696,7 @@ def osm_supply():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.73-terrain-supply-stages-8.2.3")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.80-terrain-progressive-pack-8.3.0")
 
 @app.get("/health")
 def health():

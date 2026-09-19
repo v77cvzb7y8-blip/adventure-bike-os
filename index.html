@@ -555,13 +555,36 @@ main{max-width:1180px;margin:0 auto;padding:0 22px 24px}
 .stageLegend{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
 .stageLegend button{border:1px solid #d8ded8;background:white;border-radius:999px;padding:4px 7px;font-size:8px;font-weight:800}
 .stageLegend button.active{background:#176b49;color:white;border-color:#176b49}
+
+.stageProfileBand{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.supplyProgress{display:grid;gap:9px}
+.supplyStageCard{border:1px solid #dfe6df;border-radius:12px;background:#fff;padding:11px}
+.supplyStageCard.loading{background:#fbfcfa}
+.supplySkeleton{height:8px;border-radius:999px;background:linear-gradient(90deg,#edf0ec,#f7f8f6,#edf0ec);background-size:200% 100%;animation:supplyPulse 1.2s linear infinite;margin:7px 0}
+@keyframes supplyPulse{to{background-position:-200% 0}}
+.packWorkbench{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:12px;align-items:start}
+.packWorkbenchBike{position:sticky;top:12px;border:1px solid #dfe5df;border-radius:14px;background:#eef3ee;padding:10px}
+.packWorkbenchAside{display:grid;gap:8px}
+.packBagCard{border:1px solid #dce5dd;border-radius:12px;background:#f8fbf8;padding:9px}
+.packBagCard.active{outline:2px solid #1d7a55;background:#eef8f1}
+.packBagItems{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.packBagItems span{font-size:8px;border:1px solid #d9e2db;background:#fff;border-radius:999px;padding:4px 6px}
+.packNextItem{border:1px solid #ecd9ad;background:#fff7e7;border-radius:12px;padding:9px}
+.bikeViewTabs{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0}
+.bikeViewTabs button{width:auto;margin:0;padding:6px 9px;border:1px solid #d9e0da;background:white;color:#173c2d;border-radius:9px;font-size:9px}
+.bikeViewTabs button.active{background:#176b49;color:white}
+.bike3dWrap{height:430px;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 45%,#f9fbf8,#e8efe9);position:relative}
+.bike3dWrap canvas{width:100%;height:100%;touch-action:none;display:block}
+.bike3dHint{position:absolute;left:12px;bottom:10px;background:rgba(255,255,255,.9);padding:6px 8px;border-radius:8px;font-size:8px}
+.packFly{transition:left .8s cubic-bezier(.18,.8,.2,1),top .8s cubic-bezier(.18,.8,.2,1),transform .8s ease,opacity .8s ease!important}
+@media(max-width:900px){.packWorkbench{grid-template-columns:1fr}.packWorkbenchBike{position:relative;top:auto}}
 </style>
 </head>
 <body>
 <header class="productHero">
   <div class="brandRow">
     <div>
-      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.2.3</div>
+      <div class="eyebrow">ADVENTURE BIKE OS · WEB APP 8.3.0</div>
       <h1>Dein Bike. Dein Abenteuer.</h1>
       <div class="sub">Von der Idee zur fahrbaren Reise – Route, Terrain, Bike und Packplan in einem Workflow.</div>
     </div>
@@ -911,6 +934,11 @@ function drawElevation(coords,m,stages,activeStage=null){
   const lo=Math.min(...elev),hi=Math.max(...elev),span=Math.max(1,hi-lo);
   const xForKm=km=>L+(W-L-R)*(km/m.totalDist);
   const yForElev=e=>H-B-(H-T-B)*((e-lo)/span);
+  stages.forEach((st,i)=>{
+    const x1=xForKm(m.dist[st.s]||0),x2=xForKm(m.dist[st.e]||m.totalDist);
+    ctx.save();ctx.globalAlpha=activeStage===null?.055:(i===activeStage?.16:.025);ctx.fillStyle=stageColor(i);ctx.fillRect(x1,T,Math.max(1,x2-x1),H-T-B);ctx.restore();
+  });
+
 
   // kilometer axis
   ctx.strokeStyle='#d7ddd8';ctx.lineWidth=1;
@@ -949,12 +977,12 @@ function drawElevation(coords,m,stages,activeStage=null){
   ctx.fillStyle='#66736b';ctx.font='20px system-ui';ctx.textAlign='left';
   ctx.fillText(Math.round(hi)+' m',L,22);ctx.fillText(Math.round(lo)+' m',L,H-B-6);
 
-  // stage markers + labels
+  // stage markers + labels use the same colors as the map
   ctx.textAlign='center';
-  stages.slice(0,-1).forEach((st,si)=>{
-    const km=m.dist[st.e],x=xForKm(km);
-    ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,H-B);ctx.strokeStyle='#9aa69e';ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle='#66736b';ctx.font='15px system-ui';ctx.fillText('Etappe '+(si+1),x,T+14);
+  stages.forEach((st,si)=>{
+    const x1=xForKm(m.dist[st.s]||0),x2=xForKm(m.dist[st.e]||m.totalDist);
+    if(si<stages.length-1){ctx.beginPath();ctx.moveTo(x2,T);ctx.lineTo(x2,H-B);ctx.strokeStyle=stageColor(si);ctx.lineWidth=2;ctx.stroke()}
+    ctx.fillStyle=stageColor(si);ctx.font='bold 14px system-ui';ctx.fillText('Etappe '+(si+1),(x1+x2)/2,T+15);
   });
 
   window.__elevChart={coords,m,lo,hi,L,R,T,B,xForKm,yForElev};
@@ -1672,27 +1700,17 @@ function customBagOptions(){
 function gearLabel(g){return `${g.icon||'•'} ${g.name}${g.qty&&g.qty>1?` ×${g.qty}`:''}`}
 function animateGearToBag(gearId,bagId){
   return new Promise(resolve=>{
-    const g=gearById(gearId),b=bagById(bagId);
-    if(!g||!b){resolve();return}
+    const g=gearById(gearId),b=bagById(bagId);if(!g||!b){resolve();return}
     const card=document.querySelector(`[data-gear-card="${gearId}"]`);
-    const sr=card?.getBoundingClientRect()||{left:window.innerWidth/2,top:window.innerHeight-60,width:20,height:20};
-    const target=
-      document.querySelector(`.packDock [data-bag-target="${bagId}"]`) ||
-      document.querySelector(`.stepPanel.active [data-bag-target="${bagId}"]`) ||
-      document.querySelector(`[data-bag-target="${bagId}"]`);
-    const tr=target?.getBoundingClientRect();
-    const tx=tr?tr.left+tr.width/2:window.innerWidth/2;
-    const ty=tr?tr.top+tr.height/2:Math.min(180,window.innerHeight*.25);
+    const target=document.querySelector(`.stepPanel.active [data-bag-target="${bagId}"]`)||document.querySelector(`[data-bag-target="${bagId}"]`);
+    const bagCard=document.querySelector(`[data-pack-bag-card="${bagId}"]`);
+    const sr=card?.getBoundingClientRect()||{left:window.innerWidth*.72,top:window.innerHeight*.72,width:40,height:40};
+    const tr=target?.getBoundingClientRect()||bagCard?.getBoundingClientRect();
     const ghost=document.createElement('div');ghost.className='packFly';ghost.textContent=gearLabel(g);
-    ghost.style.left=`${sr.left+Math.min(sr.width/2,80)}px`;ghost.style.top=`${sr.top+Math.min(sr.height/2,32)}px`;
-    document.body.appendChild(ghost);
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      ghost.style.left=`${tx}px`;ghost.style.top=`${ty}px`;ghost.style.transform='translate(-50%,-50%) scale(.78)';ghost.style.opacity='.18';
-    }));
-    setTimeout(()=>{
-      if(target){target.classList.add('packTargetFlash');setTimeout(()=>target.classList.remove('packTargetFlash'),760)}
-      ghost.remove();resolve();
-    },1090);
+    ghost.style.left=`${sr.left+sr.width/2}px`;ghost.style.top=`${sr.top+sr.height/2}px`;ghost.style.transform='translate(-50%,-50%)';document.body.appendChild(ghost);
+    target?.classList.add('packTargetFlash');bagCard?.classList.add('active');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ghost.style.left=`${tr?tr.left+tr.width/2:window.innerWidth/2}px`;ghost.style.top=`${tr?tr.top+tr.height/2:window.innerHeight*.35}px`;ghost.style.transform='translate(-50%,-50%) scale(.65)';ghost.style.opacity='.12'}));
+    setTimeout(()=>{ghost.remove();target?.classList.remove('packTargetFlash');bagCard?.classList.remove('active');resolve()},900);
   });
 }
 async function animatedPackGear(gearId){
@@ -2045,44 +2063,11 @@ function bikeIdentityHtml(){
   return `<div class="bikeIdentity"><div><h4>${b.label}</h4><div class="tiny">${exact?'Deine Angaben steuern Bike-Typ und Montagehinweise. Die Grafik ist derzeit modellnah und schematisch – keine exakte Hersteller-CAD-Geometrie.':'Marke und Modell eintragen, damit die Ansicht und Kompatibilitätsprüfung gezielter werden.'}</div></div><span class="compatBadge">${exact?'Modellprofil Beta':'generisches Bike-Profil'}</span></div>`;
 }
 function guidedBikeSvg(){
+  if(bikeViewMode==='3d')return `<div class="bike3dWrap"><canvas id="bike3dLocal"></canvas><div class="bike3dHint">Ziehen = drehen · hoch/runter = kippen</div></div>`;
   const on=id=>!!bikeBagState[id];
-  const bt=($('biketype')?.value||'gravel').toLowerCase();
-  const flat=bt.includes('mtb')||bt.includes('mountain');
-  const tag=(id,x,y,w,h,label,cls='')=>on(id)
-    ?`<g class="bikeMountTag on" data-bag-target="${id}" onclick="toggleBagFromBike('${id}')"><rect class="bagBody" x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="#304c3e" stroke="#fff" stroke-width="3"/><text x="${x+w/2}" y="${y+h/2+5}" text-anchor="middle" font-size="15" font-weight="900" fill="#fff">${label}</text></g>`
-    :`<g class="bikeMountTag bikeMountPlus" data-bag-target="${id}" onclick="toggleBagFromBike('${id}')"><circle cx="${x+w/2}" cy="${y+h/2}" r="14"/><text x="${x+w/2}" y="${y+h/2+5}" text-anchor="middle">+</text></g>`;
-  return `<svg viewBox="0 0 760 500" role="img" aria-label="Bike mit anklickbaren Taschenpositionen">
-    <rect width="760" height="500" fill="#eef3ee"/>
-    <g fill="none" stroke="#1d2521" stroke-width="14">
-      <circle cx="170" cy="340" r="105"/><circle cx="590" cy="340" r="105"/>
-    </g>
-    <g stroke="#8d7a57" stroke-width="15" stroke-linecap="round" fill="none">
-      <path d="M170 340 L360 340 L290 175 Z"/>
-      <path d="M290 175 L505 185 L360 340"/>
-      <path d="M505 185 L590 340"/>
-      <path d="M170 340 L290 175"/>
-    </g>
-    <g stroke="#1d2521" stroke-width="13" stroke-linecap="round">
-      <line x1="290" y1="175" x2="282" y2="128"/><line x1="248" y1="124" x2="310" y2="124"/>
-      <line x1="505" y1="185" x2="524" y2="132"/>${flat?'<line x1="488" y1="128" x2="572" y2="128"/>':'<path d="M505 128 H548 Q565 130 555 150" fill="none"/>'}
-    </g>
-    <circle cx="360" cy="340" r="19" fill="#1d2521"/>
-    ${tag('saddle',220,92,108,58,'S')}
-    ${tag('top',365,148,92,34,'OT')}
-    ${tag('frame',310,205,145,92,'R')}
-    ${tag('handlebar',515,92,110,96,'L')}
-    ${tag('tools',265,205,48,58,'W')}
-    ${tag('rearSideL',95,245,92,122,'HL')}
-    ${tag('rearSideR',185,255,92,122,'HR')}
-    ${tag('frontSideL',535,250,82,122,'VL')}
-    ${tag('frontSideR',612,260,82,122,'VR')}
-    ${tag('forkL',510,235,55,95,'GL')}
-    ${tag('forkR',665,235,55,95,'GR')}
-    ${tag('bottles',385,300,42,78,'FL')}
-    ${bikeAccessoryState.rearLight?'<circle cx="225" cy="120" r="10" fill="#d43a31"/>':''}
-    ${bikeAccessoryState.frontLight?'<circle cx="570" cy="142" r="12" fill="#f3d44f"/>':''}
-    ${bikeAccessoryState.computer?'<rect x="520" y="105" width="35" height="22" rx="5" fill="#25332c"/>':''}
-  </svg>`;
+  const bag=(id,x,y,w,h,label,cls='')=>on(id)?`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="${cls==='rear'?'#536b5a':'#284b3b'}" stroke="#f8f4e9" stroke-width="3"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" fill="#fff" font-size="13" font-weight="900">${label}</text></g>`:`<g data-bag-target="${id}" onclick="toggleBagFromBike('${id}')" style="cursor:pointer"><circle cx="${x+w/2}" cy="${y+h/2}" r="12" fill="#fff" stroke="#1f6f4a" stroke-width="2" stroke-dasharray="3 3"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" fill="#1f6f4a" font-weight="900">+</text></g>`;
+  const spokes=Array.from({length:16},(_,i)=>{const a=i*Math.PI/8;return `<line x1="175" y1="330" x2="${(175+106*Math.cos(a)).toFixed(1)}" y2="${(330+106*Math.sin(a)).toFixed(1)}"/><line x1="635" y1="330" x2="${(635+106*Math.cos(a)).toFixed(1)}" y2="${(330+106*Math.sin(a)).toFixed(1)}"/>`}).join('');
+  return `<svg viewBox="0 0 820 470" role="img" aria-label="Gravelbike mit Taschen"><rect width="820" height="470" fill="#eef3ee"/><g fill="none" stroke="#1e2421" stroke-width="12"><circle cx="175" cy="330" r="112"/><circle cx="635" cy="330" r="112"/></g><g stroke="#65716a" stroke-width="2" opacity=".55">${spokes}</g><g fill="none" stroke="#8d7a57" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"><path d="M175 330 L382 330 L305 160 Z"/><path d="M305 160 L535 175 L382 330 Z"/><path d="M535 175 L635 330"/><path d="M175 330 L305 160"/></g><g fill="none" stroke="#1e2421" stroke-width="10" stroke-linecap="round"><path d="M305 160 L294 112"/><path d="M258 107 H326"/><path d="M535 175 L558 116"/><path d="M550 112 C584 108 602 113 594 133 C589 145 600 153 612 149"/></g><circle cx="382" cy="330" r="20" fill="#1e2421"/><path d="M382 330 C330 340 255 341 190 330" fill="none" stroke="#2c302d" stroke-width="3"/>${bag('saddle',232,74,118,54,'S')}${bag('top',385,145,92,30,'OT')}${bag('frame',335,194,142,88,'R')}${bag('handlebar',548,72,118,82,'L')}${bag('tools',286,206,42,52,'W')}${bag('rearSideL',78,244,82,112,'HL','rear')}${bag('rearSideR',153,250,82,112,'HR','rear')}${bag('frontSideL',568,248,72,110,'VL')}${bag('frontSideR',638,250,72,110,'VR')}${bag('forkL',532,230,44,92,'GL')}${bag('forkR',697,231,44,92,'GR')}${bag('bottles',392,284,40,74,'FL')}${bikeAccessoryState.rearLight?'<circle cx="240" cy="108" r="9" fill="#d73a31"/>':''}${bikeAccessoryState.frontLight?'<circle cx="605" cy="120" r="10" fill="#f0cf47"/>':''}${bikeAccessoryState.computer?'<rect x="566" y="94" width="33" height="21" rx="4" fill="#26312c"/>':''}</svg>`;
 }
 
 function routeSetupSuggestion(){
@@ -2247,7 +2232,7 @@ function renderBikePackPlanner(){
       ${bikeIdentityHtml()}
       <div class="bikeConfiguratorGrid">
         <div>
-          <div class="bikeStage"><div class="bikeStageName">${currentBikeIdentity().label}</div>${guidedBikeSvg()}<div class="bikeStageLegend">${bikeBagCatalog.map(b=>`<button type="button" class="${bikeBagState[b.id]?'on':''}" onclick="toggleBagFromBike('${b.id}')">${bikeBagState[b.id]?'✓':'＋'} ${b.name}</button>`).join('')}</div></div>
+          <div class="bikeViewTabs"><button type="button" class="${bikeViewMode!=='3d'?'active':''}" onclick="setBikeViewMode('config')">Seitenansicht</button><button type="button" class="${bikeViewMode==='3d'?'active':''}" onclick="setBikeViewMode('3d')">3D drehen</button></div><div class="bikeStage"><div class="bikeStageName">${currentBikeIdentity().label}</div>${guidedBikeSvg()}<div class="bikeStageLegend">${bikeBagCatalog.map(b=>`<button type="button" class="${bikeBagState[b.id]?'on':''}" onclick="toggleBagFromBike('${b.id}')">${bikeBagState[b.id]?'✓':'＋'} ${b.name}</button>`).join('')}</div></div>
           <div class="directionNote"><strong>Direkt am Bike antippen:</strong> Tasche montieren oder entfernen. Links/rechts = Fahrerperspektive.</div>${active.length===0?'<div class="emptyBikeHint">Dein Bike ist noch leer. Die kleinen + markieren mögliche Montagepunkte – noch ist nichts ausgewählt.</div>':''}
           <details class="moreViews"><summary>Weitere Ansichten</summary><div class="configTabs"><button type="button" onclick="setBikeViewMode('photo')">Foto-Referenz</button><button type="button" onclick="setBikeViewMode('3d')">3D Beta</button></div></details>
         </div>
@@ -2272,13 +2257,9 @@ function renderBikePackPlanner(){
       <div class="focusExplainer"><strong>Pack-Fokus:</strong> Hier bleibt nur der Einpack-Schritt sichtbar. Route, Setup-Auswahl und PDF-Bedienung werden ausgeblendet.</div>
       <div class="packModeTabs"><button type="button" class="${packMode==='plan'?'active':''}" onclick="setPackMode('plan')">Übersicht</button><button type="button" class="${packMode==='pack'?'active':''}" onclick="setPackMode('pack')">Einpacken · Animation</button><button type="button" onclick="animatedPackAll()">✨ Alles automatisch einpacken</button><button type="button" onclick="togglePackOnly()">Pack-Fokus · Vollbild</button></div>
       <div class="packDock">${packDockHtml()}</div>
-      <div class="bikeConfiguratorGrid">
-        <div>${bikeIdentityHtml()}<div class="bikeStage"><div class="bikeStageName">${currentBikeIdentity().label}</div>${guidedBikeSvg()}</div><div class="directionNote">Tippe auf eine Tasche am Bike, um sie zu montieren oder zu entfernen. Gepackte Inhalte stehen rechts.</div></div>
-        <div class="bikeAside">
-          <div class="bagPanel"><h4>Gepackte Taschen</h4><div class="bagList">${active.map(b=>`<div class="bagLine"><div><strong>${b.name}</strong><div class="meta">${bagWeight(b.id).toFixed(1)} kg · ${gearCatalog.filter(g=>gearAssignments[g.id]===b.id).length} Gegenstände</div></div><button type="button" onclick="highlightBikeBag('${b.id}')">anzeigen</button></div>${bagContentsHtml(b)}`).join('')}</div></div>
-          <div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>
-          ${packResearchHtml()}
-        </div>
+      <div class="packWorkbench">
+        <div class="packWorkbenchBike">${bikeIdentityHtml()}<div class="bikeViewTabs"><button type="button" class="${bikeViewMode!=='3d'?'active':''}" onclick="setBikeViewMode('config')">Seitenansicht</button><button type="button" class="${bikeViewMode==='3d'?'active':''}" onclick="setBikeViewMode('3d')">3D drehen</button></div><div class="bikeStage"><div class="bikeStageName">${currentBikeIdentity().label}</div>${guidedBikeSvg()}</div><div class="directionNote"><strong>Packen direkt am Bike:</strong> Zieltasche leuchtet auf; Inhalte stehen unmittelbar daneben.</div></div>
+        <div class="packWorkbenchAside">${(()=>{const next=gearCatalog.find(g=>!gearAssignments[g.id]);return next?`<div class="packNextItem"><strong>Nächster Gegenstand: ${gearLabel(next)}</strong><div class="tiny">Empfehlung: ${bagById(bestBagForGear(next.id))?.name||'erst passende Tasche montieren'}</div><button type="button" onclick="animatedPackGear('${next.id}')">in passende Tasche packen</button></div>`:''})()}${active.map(b=>`<div class="packBagCard" data-pack-bag-card="${b.id}"><strong>${b.name}</strong><div class="tiny">${bagWeight(b.id).toFixed(1)} kg · ${bagLoadPercent(b.id)}% Richtwert</div><div class="packBagItems">${bagItems(b.id).length?bagItems(b.id).map(g=>`<span>${gearLabel(g)}</span>`).join(''):'<span>leer</span>'}</div>${bagContentsHtml(b)}</div>`).join('')}<div class="packWeightBox"><strong>Packgewicht: ${total.toFixed(1)} / 20,0 kg</strong><div class="weightBar"><span style="width:${pct}%"></span></div></div>${packResearchHtml()}</div>
       </div>
     </div>
 
@@ -2287,7 +2268,7 @@ function renderBikePackPlanner(){
       <div class="packBottomMetric"><b>${packed} / ${gearCatalog.length}</b><span>Gegenstände gepackt</span><div class="packProgress"><i style="width:${Math.round(packed/Math.max(1,gearCatalog.length)*100)}%"></i></div></div>
       <button type="button" onclick="setPackWizardStep(Math.min(3,packWizardStep+1))">${packWizardStep<3?'Weiter →':'Packplan prüfen'}</button>
     </div>`;
-  attachBlockActions(host);refreshJourneyMini();
+  attachBlockActions(host);refreshJourneyMini();setTimeout(()=>initLocal3D(),40);
 } 
 function renderAdventureLayers(stages,weather){
   const loads=routeLoad(stages),hardest=loads.reduce((a,b)=>a.hm100>b.hm100?a:b);
@@ -2432,91 +2413,85 @@ function terrainRouteSamples(coords,stages,m,desiredKm=10,maxPoints=72){
   });
   return out.slice(0,maxPoints);
 }
+
+function wayGeometryPoints(el){
+  const g=el?.geometry||[];
+  if(Array.isArray(g)&&g.length)return g.filter(p=>Number.isFinite(p?.lat)&&Number.isFinite(p?.lon)).map(p=>({lat:p.lat,lon:p.lon}));
+  const c=centerOf(el);return c?[c]:[];
+}
+function nearestDistanceToWay(sample,el){
+  let best=Infinity;
+  for(const p of wayGeometryPoints(el)){const d=distKmLatLon(sample,p);if(d<best)best=d}
+  return best;
+}
 async function fetchTerrainSupply(coords,stages,m){
-  const samples=terrainRouteSamples(coords,stages,m).slice(0,42);
-  const endpoints=stages.map((s,i)=>{
-    const c=coords[s.e]; return {lat:c[1],lon:c[0],stage:i};
-  });
-  const lodging=$('lodging').value;
-
-  const terrainPromise=fetch(`${API}/api/osm-terrain`,{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({samples})
-  }).then(r=>r.json()).catch(()=>({ok:false,elements:[]}));
-
-  const supplyPromise=fetch(`${API}/api/osm-supply`,{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({points:endpoints,lodging})
-  }).then(r=>r.json()).catch(()=>({ok:false,elements:[]}));
-
-  const [terrainRaw,supplyRaw]=await Promise.all([terrainPromise,supplyPromise]);
-
-  const intel=stages.map(()=>({
-    terrain:{counts:{paved:0,gravel:0,rough:0,unknown_offroad:0,unknown:0},total:0,roughSignals:0,names:[],samples:[],routeSamples:[]},
-    supply:{sleep:[],food:[],water:[],grocery:[],bike:[]},
-    ferries:[]
-  }));
-
+  const samples=terrainRouteSamples(coords,stages,m,Math.max(8,(m?.totalDist||0)/32),34);
+  const terrainRaw=await fetch(`${API}/api/osm-terrain`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({samples})})
+    .then(r=>r.json()).catch(()=>({ok:false,elements:[]}));
+  const intel=stages.map(()=>({terrain:{counts:{paved:0,gravel:0,rough:0,unknown_offroad:0,unknown:0},total:0,roughSignals:0,names:[],samples:[],routeSamples:[]},supply:{sleep:[],food:[],water:[],grocery:[],bike:[]},ferries:[]}));
   const routeSamples=samples.map(sp=>({...sp,kind:'unknown',matchDistance:Infinity}));
-  const seenWays=new Set(),seenPois=new Set();
-
-  // Terrain can succeed independently from supply.
-  for(const el of (terrainRaw.elements||[])){
-    const t=el.tags||{};
-    const kind=terrainKind(t);
-    const p=centerOf(el);
-    if(!p)continue;
-    const key=`${el.type}-${el.id}`;
-    if(seenWays.has(key))continue;seenWays.add(key);
-
-    let best=null,bestD=Infinity;
+  if(terrainRaw.ok){
     routeSamples.forEach(sp=>{
-      const d=distKmLatLon(p,sp);
-      if(d<bestD){bestD=d;best=sp}
+      let bestEl=null,bestD=Infinity;
+      for(const el of (terrainRaw.elements||[])){const d=nearestDistanceToWay(sp,el);if(d<bestD){bestD=d;bestEl=el}}
+      if(bestEl&&bestD<=0.16){
+        const t=bestEl.tags||{},kind=terrainKind(t);sp.kind=kind;sp.matchDistance=bestD;
+        const b=intel[sp.stage]?.terrain;if(b){b.counts[kind]=(b.counts[kind]||0)+1;b.total++;b.routeSamples.push({...sp});if(t.name&&!b.names.includes(t.name)&&b.names.length<4)b.names.push(t.name)}
+      }
     });
-    if(best && bestD<=0.22){
-      best.kind=kind;best.matchDistance=bestD;
-      const bucket=intel[best.stage]?.terrain;
-      if(bucket){
-        bucket.counts[kind]=(bucket.counts[kind]||0)+1;
-        bucket.total++;
-        bucket.routeSamples.push(best);
-        if(t.name && bucket.names.length<4 && !bucket.names.includes(t.name))bucket.names.push(t.name);
-        if(kind==='rough'||kind==='unknown_offroad')bucket.roughSignals++;
-      }
-    }
   }
+  return {available:!!terrainRaw.ok,terrainAvailable:!!terrainRaw.ok,supplyAvailable:false,terrainSource:terrainRaw.source||null,supplySource:null,stages:intel,ferries:[]};
+}
 
-  // Supply can also succeed independently.
-  if(supplyRaw.ok){
-    const endpointPts=endpoints;
-    for(const el of (supplyRaw.elements||[])){
-      const t=el.tags||{},p=centerOf(el);if(!p)continue;
-      const cat=poiCategory(t);if(!cat)continue;
-      const key=`${el.type}-${el.id}`;if(seenPois.has(key))continue;seenPois.add(key);
-      let bestStage=0,bestD=Infinity;
-      endpointPts.forEach((sp,i)=>{const d=distKmLatLon(p,sp);if(d<bestD){bestD=d;bestStage=i}});
-      if(bestD<=7){
-        const name=t.name||t.brand||({
-          sleep:'Unterkunft',food:'Essen',water:'Trinkwasser',grocery:'Einkauf',bike:'Bike-Service'
-        }[cat]||'POI');
-        const website=normalizeExternalUrl(t.website||t['contact:website']||'');
-        const search=`https://www.google.com/search?q=${encodeURIComponent(name+' '+(window.__routeContext?.labels?.[bestStage+1]||''))}`;
-        intel[bestStage].supply[cat].push({name,lat:p.lat,lon:p.lon,distance:bestD,website,search});
-      }
-    }
-    intel.forEach(x=>Object.keys(x.supply).forEach(k=>x.supply[k].sort((a,b)=>a.distance-b.distance)));
+function emptySupplyStage(){return {sleep:[],food:[],water:[],grocery:[],bike:[]}}
+function parseSupplyElements(elements,endpoint,label){
+  const out=emptySupplyStage(),seen=new Set();
+  for(const el of elements||[]){
+    const t=el.tags||{},p=centerOf(el);if(!p)continue;const cat=poiCategory(t);if(!cat)continue;
+    const key=`${el.type}-${el.id}`;if(seen.has(key))continue;seen.add(key);
+    const d=distKmLatLon(p,endpoint);if(d>7)continue;
+    const name=t.name||t.brand||({sleep:'Unterkunft',food:'Essen',water:'Trinkwasser',grocery:'Einkauf',bike:'Bike-Service'}[cat]);
+    out[cat].push({name,lat:p.lat,lon:p.lon,distance:d,website:normalizeExternalUrl(t.website||t['contact:website']||''),maplink:`https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lon}#map=16/${p.lat}/${p.lon}`,search:`https://www.google.com/search?q=${encodeURIComponent(name+' '+label)}`});
   }
-
-  return {
-    available:terrainRaw.ok||supplyRaw.ok,
-    terrainAvailable:!!terrainRaw.ok,
-    supplyAvailable:!!supplyRaw.ok,
-    terrainSource:terrainRaw.source||null,
-    supplySource:supplyRaw.source||null,
-    stages:intel,
-    ferries:[]
-  };
+  Object.values(out).forEach(a=>a.sort((x,y)=>x.distance-y.distance));return out;
+}
+let __supplyProgressState=[];
+function renderSupplyProgress(stages,names,status=[]){
+  const lodgingLabel=$('lodging')?.value==='camping'?'⛺ Camping / Zeltplatz':$('lodging')?.value==='mixed'?'🛏 Unterkunft / Camping':'🛏 Hotel / Pension';
+  $('terrainSupply').innerHTML=`<div class="supplyProgress">${stages.map((x,i)=>{
+    const st=status[i]||{state:'loading'};
+    if(st.state==='loading')return `<div class="supplyStageCard loading"><h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3><div class="tiny">Versorgung wird geladen …</div><div class="supplySkeleton"></div><div class="supplySkeleton"></div></div>`;
+    if(st.state==='error')return `<div class="supplyStageCard"><h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3><div class="tiny">Daten für diese Etappe gerade nicht erreichbar.</div><button type="button" onclick="retrySupplyStage(${i})">erneut laden</button></div>`;
+    const s=x.supply||emptySupplyStage();
+    return `<div class="supplyStageCard"><h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3>${supplyCategory(i,'sleep',lodgingLabel,s.sleep,true)}${supplyCategory(i,'food','🍽 Essen',s.food,true)}${supplyCategory(i,'water','💧 Trinkwasser',s.water,true)}${supplyCategory(i,'grocery','🛒 Einkauf',s.grocery,true)}${supplyCategory(i,'bike','🔧 Bike-Service',s.bike,true)}</div>`;
+  }).join('')}</div>`;
+  updateSelectedStops();attachBlockActions($('terrainSupply'));
+}
+async function loadSupplyProgressively(coords,stages,names,token){
+  const d=window.__terrainSupplyData;if(!d?.stages)return;
+  __supplyProgressState=stages.map(()=>({state:'loading'}));renderSupplyProgress(d.stages,names,__supplyProgressState);
+  const lodging=$('lodging').value;
+  const jobs=stages.map((s,i)=>async()=>{
+    const c=coords[s.e],label=names[i+1]||`Etappe ${i+1}`;
+    try{
+      const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),18000);
+      const r=await fetch(`${API}/api/osm-supply-stage`,{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({lat:c[1],lon:c[0],lodging})});
+      clearTimeout(timer);const raw=await r.json();if(token!==__routeEnrichmentToken)return;
+      if(raw.ok){d.stages[i].supply=parseSupplyElements(raw.elements,{lat:c[1],lon:c[0]},label);__supplyProgressState[i]={state:'done'}}else __supplyProgressState[i]={state:'error'};
+    }catch(e){if(token===__routeEnrichmentToken)__supplyProgressState[i]={state:'error'}}
+    if(token===__routeEnrichmentToken){d.supplyAvailable=__supplyProgressState.some(x=>x.state==='done');renderSupplyProgress(d.stages,names,__supplyProgressState);renderJourneyCheck()}
+  });
+  let next=0;async function worker(){while(next<jobs.length){const i=next++;await jobs[i]()}}await Promise.all([worker(),worker()]);
+}
+async function retrySupplyStage(i){
+  const ctx=window.__routeContext;if(!ctx?.coords?.length)return;__supplyProgressState[i]={state:'loading'};renderSupplyProgress(window.__terrainSupplyData.stages,ctx.labels,__supplyProgressState);
+  const s=ctx.stages[i],c=ctx.coords[s.e],label=ctx.labels[i+1],lodging=$('lodging').value;
+  try{
+    const r=await fetch(`${API}/api/osm-supply-stage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:c[1],lon:c[0],lodging})});
+    const raw=await r.json();
+    if(raw.ok){window.__terrainSupplyData.stages[i].supply=parseSupplyElements(raw.elements,{lat:c[1],lon:c[0]},label);__supplyProgressState[i]={state:'done'}}else __supplyProgressState[i]={state:'error'}
+  }catch(e){__supplyProgressState[i]={state:'error'}}
+  renderSupplyProgress(window.__terrainSupplyData.stages,ctx.labels,__supplyProgressState);
 }
 function terrainBars(t){
   if(!t?.total)return '<p>Keine ausreichenden OSM-Oberflächentags in der Stichprobe.</p>';
@@ -2596,32 +2571,7 @@ async function retryRouteExtras(){
   void enrichRouteAfterRender(ctx.coords,ctx.stages,ctx.labels,token);
 }
 function renderTerrainSupply(data,stages,names){
-  window.__terrainSupplyData=data;window.__lastStages=stages;window.__lastStageNames=names;
-  const lodgingLabel=$('lodging')?.value==='camping'?'⛺ Camping / Zeltplatz':$('lodging')?.value==='mixed'?'🛏 Unterkunft / Camping':'🛏 Hotel / Pension';
-  if(!data?.available){
-    $('terrainSupply').innerHTML=`<div class="supplyUnavailableCompact">
-      <h3>Versorgungsdaten gerade nicht erreichbar</h3>
-      <p>Route und Etappen bleiben vollständig nutzbar. Unterkunft, Essen, Trinkwasser, Einkauf und Bike-Service werden nicht pro Etappe als Fehler wiederholt.</p>
-      <button type="button" onclick="retryRouteExtras()">Zusatzdaten erneut laden</button>
-    </div>`;
-    updateSelectedStops();attachBlockActions($('terrainSupply'));renderJourneyCheck();return;
-  }
-  $('terrainSupply').innerHTML=data.stages.map((x,i)=>`<div class="intelCard">
-    <h3>Etappe ${i+1}: ${names[i]} → ${names[i+1]}</h3>
-    <p><strong>Terrain-Profil:</strong> ${x.terrain.difficulty.label}</p>
-    <p>${x.terrain.difficulty.reason}</p>
-    <p class="tiny"><strong>Was bedeutet „Stichproben-Treffer“?</strong> Pro Etappe prüfen wir mehrere Punkte direkt entlang deiner berechneten Route. Rund um jeden Prüfpunkt suchen wir in OSM nach Wegobjekten im nahen Umfeld. Jedes eindeutige gefundene Wegobjekt zählt einmal als Treffer und wird anhand von Tags wie <code>surface</code>, <code>tracktype</code> und <code>smoothness</code> eingeordnet. <strong>Wichtig:</strong> 6 Gravel-Treffer bedeuten nicht 6 km oder 6 %, sondern nur, dass Gravel-Tags in den geprüften Bereichen mehrfach vorkommen. Die Stichproben sind jetzt zusätzlich als Punkte auf der Karte sichtbar.</p>
-    <div class="terrainLegend"><span>● Befestigt</span><span>● Gravel</span><span>● Rau</span><span>● Track/Path unbekannt</span></div>
-    ${terrainBars(x.terrain)}
-    ${x.terrain.names?.length?`<p class="tiny">Nahe Stichprobe: ${x.terrain.names.join(' · ')}</p>`:''}
-    <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
-    ${supplyCategory(i,'sleep',lodgingLabel,x.supply.sleep,true)}
-    ${supplyCategory(i,'food','🍽 Essen',x.supply.food,true)}
-    ${supplyCategory(i,'water','💧 Trinkwasser',x.supply.water,true)}
-    ${supplyCategory(i,'grocery','🛒 Einkauf',x.supply.grocery,true)}
-    ${supplyCategory(i,'bike','🔧 Bike-Service',x.supply.bike,true)}
-  </div>`).join('');
-  updateSelectedStops();attachBlockActions($('terrainSupply'));
+  renderSupplyProgress(data?.stages||stages.map(()=>({supply:emptySupplyStage()})),names,stages.map(()=>({state:'loading'})));
 }
 
 
@@ -2803,6 +2753,7 @@ async function enrichRouteAfterRender(coords,stages,labels,token){
       const terrainSupply=terrainResult.value;
       window.__terrainSupplyData=terrainSupply;
       renderTerrainSupply(terrainSupply,stages,labels);renderJourneyCheck();
+      void loadSupplyProgressively(coords,stages,labels,token);
       updateTerrainStatus(terrainSupply);
       renderTerrainOnMap(terrainSupply);
       refreshJourneyMini();
