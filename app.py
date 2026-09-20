@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.941-lodging-hotfix (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.942-lodging-search-v2 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -1300,53 +1300,80 @@ def osm_terrain():
 
 @app.post("/api/lodging-nearby")
 def lodging_nearby():
-    """Lightweight accommodation-only OSM lookup for one stage destination."""
+    """
+    Accommodation-only OSM lookup.
+    Searches several points around the actual end of the stage so a route point
+    on the edge of town does not accidentally produce zero accommodation hits.
+    """
     try:
         body=request.get_json(force=True) or {}
-        lat=float(body["lat"]); lon=float(body["lon"])
         lodging=(body.get("lodging") or "hotel").lower()
+        raw_points=body.get("points") or []
+        if not raw_points and body.get("lat") is not None and body.get("lon") is not None:
+            raw_points=[{"lat":body["lat"],"lon":body["lon"]}]
+
+        points=[]
+        for p in raw_points[:5]:
+            try:
+                points.append((float(p["lat"]),float(p["lon"])))
+            except (TypeError,ValueError,KeyError):
+                continue
+        if not points:
+            return jsonify(ok=False,elements=[],warning="Kein gültiger Suchpunkt."),400
+
         sleep_regex=(
-            "hotel|guest_house|hostel|motel|camp_site|caravan_site"
+            "hotel|guest_house|hostel|motel|apartment|chalet|alpine_hut|wilderness_hut|camp_site|caravan_site"
             if lodging=="mixed"
-            else ("camp_site|caravan_site" if lodging=="camping" else "hotel|guest_house|hostel|motel")
+            else (
+                "camp_site|caravan_site"
+                if lodging=="camping"
+                else "hotel|guest_house|hostel|motel|apartment|chalet|alpine_hut"
+            )
         )
-        key=(round(lat,4),round(lon,4),lodging)
+
+        key=(tuple((round(lat,4),round(lon,4)) for lat,lon in points),lodging)
         cached=_cache_get(_lodging_cache,key,CACHE_TTL_LODGING)
         if cached is not None:
             return jsonify(**cached,cached=True)
 
         errors=[]
-        for radius in (3500,6500):
-            q=(
-                f'[out:json][timeout:8];'
+        # First a focused search; then a wider fallback. Multiple route points
+        # make the search robust if the stage endpoint lies outside the town centre.
+        for radius in (4500,9000):
+            clauses=[
                 f'nwr(around:{radius},{lat},{lon})["tourism"~"{sleep_regex}"];'
-                f'out center tags 80;'
-            )
+                for lat,lon in points
+            ]
+            q='[out:json][timeout:12];('+''.join(clauses)+');out center tags 160;'
             for url in OVERPASS_ENDPOINTS:
                 try:
                     r=session.post(
                         url,data={"data":q},
                         headers={"User-Agent":UA,"Accept":"application/json"},
-                        timeout=10
+                        timeout=14
                     )
-                    print(f"[LODGING] r={radius} {url} status={r.status_code}",flush=True)
+                    print(f"[LODGING-V2] r={radius} points={len(points)} {url} status={r.status_code}",flush=True)
                     if not r.ok:
                         errors.append(f"{url}:HTTP{r.status_code}")
                         continue
                     elements=(r.json() or {}).get("elements") or []
-                    out={"ok":True,"elements":elements,"source":url,"radius_m":radius}
-                    _cache_set(_lodging_cache,key,out)
-                    # If results exist, return immediately; otherwise widen once.
-                    if elements or radius==6500:
+                    if elements:
+                        out={"ok":True,"elements":elements,"source":url,"radius_m":radius,"search_points":len(points)}
+                        _cache_set(_lodging_cache,key,out)
                         return jsonify(**out)
+                    # Valid empty response: try wider radius, no need to try all mirrors.
                     break
                 except Exception as e:
                     errors.append(f"{url}:{type(e).__name__}")
-                    print(f"[LODGING] failed {url}: {e}",flush=True)
+                    print(f"[LODGING-V2] failed {url}: {e}",flush=True)
 
-        return jsonify(ok=False,elements=[],warning="Unterkünfte derzeit nicht erreichbar.",errors=errors[-3:]),200
+        # Do not cache an empty result; another public mirror may work later.
+        return jsonify(
+            ok=True,elements=[],source=None,radius_m=9000,search_points=len(points),
+            warning="Im erweiterten Suchbereich wurden keine passenden OSM-Unterkünfte gefunden."
+        ),200
     except Exception as e:
-        print(f"[LODGING] error {type(e).__name__}: {e}",flush=True)
+        print(f"[LODGING-V2] error {type(e).__name__}: {e}",flush=True)
         return jsonify(ok=False,elements=[],warning="Unterkünfte derzeit nicht erreichbar."),200
 
 
