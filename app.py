@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.87 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.88-terrain-batch-fallback (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -20,6 +20,8 @@ CACHE_TTL_TRANSPORT = 2 * 3600
 _route_cache = {}
 _place_cache = {}
 _transport_cache = {}
+SUPPLY_CACHE = {}
+SUPPLY_CACHE_TTL = 30 * 60
 _cache_lock = threading.Lock()
 _nominatim_lock = threading.Lock()
 _last_nominatim_request = 0.0
@@ -113,7 +115,6 @@ def place_suggestions(q, limit=5):
         photon_error=e
         print(f"[PHOTON] failed {type(e).__name__}: {e}",flush=True)
 
-    # Nominatim is only a fallback now. A 429 here must never break routing.
     if not rows:
         try:
             rows=_nominatim_search_rows(q,limit=limit)
@@ -201,7 +202,6 @@ def valhalla_route(a, b):
     if len(coords)<2:
         raise ValueError("Valhalla returned no usable route geometry")
 
-    # Sample the route for elevation to keep payload manageable.
     step=max(1, len(coords)//450)
     sampled=coords[::step]
     if sampled[-1] != coords[-1]:
@@ -228,14 +228,12 @@ def valhalla_route(a, b):
     }
 
 
-
 def _interp(a, b, t):
     return {"lat": a["lat"] + (b["lat"]-a["lat"])*t, "lon": a["lon"] + (b["lon"]-a["lon"])*t}
 
 def segmented_route(a, b, profile="trekking"):
     """Last-resort prototype fallback: split long trips into shorter routing legs."""
     import math
-    # Haversine distance for choosing segment count.
     lat1,lon1,lat2,lon2=map(math.radians,[a["lat"],a["lon"],b["lat"],b["lon"]])
     h=math.sin((lat2-lat1)/2)**2+math.cos(lat1)*math.cos(lat2)*math.sin((lon2-lon1)/2)**2
     straight=6371*2*math.asin(math.sqrt(h))
@@ -259,7 +257,6 @@ def segmented_route(a, b, profile="trekking"):
             coords=coords[1:]
         merged.extend(coords)
     return {"type":"Feature","geometry":{"type":"LineString","coordinates":merged},"properties":{"routing_source":"Segmented "+"/".join(sorted(set(sources))),"segments":segments}}
-
 
 
 def _sample_for_height(coords, limit=450):
@@ -343,7 +340,6 @@ def osrm_bike_route(a,b):
         "geometry":{"type":"LineString","coordinates":coords3},
         "properties":{"routing_source":"OSRM Bike fallback","distance_m":routes[0].get("distance"),"height_source":height_source}
     }
-
 
 
 def osrm_bike_segmented(a,b):
@@ -599,7 +595,6 @@ def transport_nearby():
                     y["search"]="https://www.google.com/search?q="+requests.utils.quote(query)
                     arr.append(y)
             arr.sort(key=lambda x:x["distance_km"])
-            # keep useful variety
             chosen=[]
             for kind in ("train","bus","ferry"):
                 chosen += [x for x in arr if x["kind"]==kind][:3]
@@ -614,22 +609,100 @@ def transport_nearby():
 
 @app.post("/api/osm-terrain-batch")
 def osm_terrain_batch():
+    """Robuste Terrain-Stichproben: kleine parallele Overpass-Abfragen mit einmaligem Fallback."""
     try:
         body=request.get_json(force=True) or {}
-        samples=(body.get("samples") or [])[:16]
-        if not samples:
-            return jsonify(ok=False,elements=[]),400
-        clauses=[f'way(around:140,{float(p["lat"])},{float(p["lon"])})["highway"];' for p in samples]
-        q='[out:json][timeout:10];('+''.join(clauses)+');out tags geom qt;'
-        for url in OVERPASS_ENDPOINTS:
+        raw=(body.get("samples") or [])[:16]
+        samples=[]
+        for p in raw:
             try:
-                r=session.post(url,data={"data":q},headers={"User-Agent":UA,"Accept":"application/json"},timeout=12)
-                print(f"[OSM-TERRAIN-BATCH] {url} status={r.status_code}",flush=True)
-                if r.ok:
-                    return jsonify(ok=True,elements=(r.json() or {}).get("elements") or [],source=url)
+                samples.append({"lat":float(p["lat"]),"lon":float(p["lon"])})
+            except (TypeError,ValueError,KeyError):
+                continue
+        if not samples:
+            return jsonify(ok=False,elements=[],warning="Keine gültigen Terrain-Stichproben."),400
+
+        chunks=[samples[i:i+4] for i in range(0,len(samples),4)]
+
+        def build_query(chunk):
+            clauses=[f'way(around:100,{p["lat"]},{p["lon"]})["highway"];' for p in chunk]
+            return '[out:json][timeout:6];('+''.join(clauses)+');out tags geom qt;'
+
+        def one_request(chunk_index, endpoint_index, timeout=7):
+            url=OVERPASS_ENDPOINTS[endpoint_index % len(OVERPASS_ENDPOINTS)]
+            q=build_query(chunks[chunk_index])
+            try:
+                r=requests.post(
+                    url,
+                    data={"data":q},
+                    headers={"User-Agent":UA,"Accept":"application/json"},
+                    timeout=timeout
+                )
+                print(f"[OSM-TERRAIN-BATCH] chunk={chunk_index+1}/{len(chunks)} {url} status={r.status_code}",flush=True)
+                if not r.ok:
+                    return chunk_index,False,[],url,f"HTTP {r.status_code}"
+                elements=(r.json() or {}).get("elements") or []
+                return chunk_index,True,elements,url,None
             except Exception as e:
-                print(f"[OSM-TERRAIN-BATCH] {url} failed {e}",flush=True)
-        return jsonify(ok=False,elements=[],warning="Terrain-Batch derzeit nicht erreichbar."),200
+                print(f"[OSM-TERRAIN-BATCH] chunk={chunk_index+1} {url} failed {type(e).__name__}: {e}",flush=True)
+                return chunk_index,False,[],url,type(e).__name__
+
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        results={}
+        failed=[]
+        with ThreadPoolExecutor(max_workers=min(4,len(chunks))) as pool:
+            futures=[pool.submit(one_request,i,i % len(OVERPASS_ENDPOINTS),7) for i in range(len(chunks))]
+            for fut in as_completed(futures):
+                i,ok,elements,url,error=fut.result()
+                if ok:
+                    results[i]=(elements,url)
+                else:
+                    failed.append(i)
+
+        if failed:
+            retry_failed=[]
+            with ThreadPoolExecutor(max_workers=min(4,len(failed))) as pool:
+                futures=[pool.submit(one_request,i,(i+1) % len(OVERPASS_ENDPOINTS),5) for i in failed]
+                for fut in as_completed(futures):
+                    i,ok,elements,url,error=fut.result()
+                    if ok:
+                        results[i]=(elements,url)
+                    else:
+                        retry_failed.append(i)
+            failed=retry_failed
+
+        merged=[]
+        seen=set()
+        sources=[]
+        for i in sorted(results):
+            elements,url=results[i]
+            sources.append(url)
+            for el in elements:
+                key=(el.get("type"),el.get("id"))
+                if key in seen:
+                    continue
+                seen.add(key)
+                merged.append(el)
+
+        if not results:
+            return jsonify(
+                ok=False,
+                elements=[],
+                warning="Terrain-Dienste antworten derzeit nicht. Bitte später erneut versuchen.",
+                failed_chunks=len(chunks)
+            ),200
+
+        partial=bool(failed)
+        return jsonify(
+            ok=True,
+            elements=merged,
+            source=", ".join(sorted(set(sources))),
+            partial=partial,
+            completed_chunks=len(results),
+            total_chunks=len(chunks),
+            warning=("Terrain nur teilweise verfügbar." if partial else None)
+        )
     except Exception as e:
         print(f"[OSM-TERRAIN-BATCH] error {type(e).__name__}: {e}",flush=True)
         return jsonify(ok=False,elements=[],warning="Terrain-Batch derzeit nicht erreichbar."),200
@@ -703,7 +776,6 @@ def osm_supply_stage():
 
         sleep_regex="hotel|guest_house|hostel|motel|camp_site" if lodging=="mixed" else ("camp_site|caravan_site" if lodging=="camping" else "hotel|guest_house|hostel|motel")
 
-        # Smaller search radii and compact queries: show useful partial results quickly.
         queries=[
             (
                 f'[out:json][timeout:8];('
@@ -712,7 +784,6 @@ def osm_supply_stage():
                 f'nwr(around:2200,{lat},{lon})["shop"~"supermarket|convenience|bakery|bicycle"];'
                 f');out center tags 80;'
             ),
-            # Fallback: essentials only, even smaller radius.
             (
                 f'[out:json][timeout:6];('
                 f'nwr(around:2500,{lat},{lon})["tourism"~"{sleep_regex}"];'
@@ -773,13 +844,11 @@ def osm_supply():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.87-pack-click-hotfix-8.3.7")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.88-terrain-batch-fallback")
 
 @app.get("/health")
 def health():
     return jsonify(status="ok")
-
-
 
 
 @app.post("/api/elevation")
@@ -885,7 +954,6 @@ def reverse():
         return jsonify(error="Ortsname konnte nicht ermittelt werden."), 502
 
 
-
 @app.post("/api/weather")
 def weather():
     """Optional per-stage weather. Never blocks route planning."""
@@ -973,7 +1041,6 @@ def route():
             except Exception:return None
 
         a=provided("start",start);b=provided("destination",dest)
-        # Text route cache can survive temporary geocoder problems.
         text_key=(start.casefold(),dest.casefold(),profile)
         cached_text=_cache_get(_route_cache,("text",)+text_key,CACHE_TTL_ROUTE)
         if cached_text is not None and not (a and b):
