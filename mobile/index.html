@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.3.4.1</title>
+<title>Adventure Bike OS · Mobile 0.3.5</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -288,12 +288,23 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .terrain-map-legend{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px;font-size:10px;color:#68736d}
 .terrain-map-legend span{display:inline-flex;align-items:center;gap:4px}
 .terrain-map-legend i{width:14px;height:4px;border-radius:3px;display:inline-block}
+
+.stage-profile-detail{display:none;margin-top:10px;padding:10px;border:1px solid #dfe5df;border-radius:12px;background:#fbfcfa}
+.stage.active .stage-profile-detail{display:block}
+.stage-profile-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}
+.stage-profile-head b{font-size:12px}
+.stage-profile-head span{font-size:10px;color:#6b756f}
+.stage-elev{display:block;width:100%;height:150px;border-radius:10px;background:#fff}
+.stage-profile-legend{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px;font-size:9px;color:#68736d}
+.stage-profile-legend span{display:inline-flex;align-items:center;gap:4px}
+.stage-profile-legend i{width:13px;height:4px;border-radius:3px;display:inline-block}
+.stage-profile-note{font-size:10px;color:#6a756f;line-height:1.35;margin-top:6px}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.3.4.1</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.3.5</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -897,6 +908,7 @@ function focusStage(i){
 
  document.querySelectorAll('.stage').forEach((e,j)=>e.classList.toggle('active',j===i));
  drawElevation();
+ requestAnimationFrame(()=>drawStageElevation(i));
 
  const from=state.stageNames[i]||`Etappe ${i+1}`;
  const to=state.stageNames[i+1]||'Etappenziel';
@@ -1239,6 +1251,18 @@ function renderStages(){
      </div>
      ${terrainHTML(i)}
      ${technicalHTML(i)}
+     <div class="stage-profile-detail" id="stageProfileDetail${i}" onclick="event.stopPropagation()">
+       <div class="stage-profile-head"><b>Etappenprofil · Terrain</b><span>${s.km.toFixed(0)} km · ${state.heightAvailable?Math.round(s.hm)+' HM':'HM –'}</span></div>
+       <canvas id="stageElevation${i}" class="stage-elev"></canvas>
+       <div class="stage-profile-legend">
+         <span><i style="background:#3a7f5f"></i>befestigt</span>
+         <span><i style="background:#9a8b63"></i>fein</span>
+         <span><i style="background:#c8863b"></i>Gravel</span>
+         <span><i style="background:#b64b3b"></i>grob</span>
+         <span><i style="background:#9aa39d"></i>offen</span>
+       </div>
+       <div class="stage-profile-note">${terrainForStage(i)?.segments?.length?'Terrainfarben folgen den gematchten Abschnitten dieser Etappe.':'Terrainabschnitte noch nicht verfügbar – das Etappenprofil wird trotzdem vergrößert angezeigt.'}</div>
+     </div>
      <div class="stage-actions">
        <button class="stage-map-btn" type="button" onclick="event.stopPropagation();showStageOnMap(${i},event)">Etappe ${i+1} auf Karte</button>
      </div>
@@ -1247,6 +1271,72 @@ function renderStages(){
    </div>`;
  }).join('');
 }
+
+function drawStageElevation(i){
+ const c=$(`stageElevation${i}`);
+ const st=state.stages?.[i];
+ if(!c||!st||!state.coords||!state.metrics)return;
+
+ const ctx=c.getContext('2d'),dpr=devicePixelRatio||1;
+ const w=Math.max(260,c.clientWidth||300),h=150;
+ c.width=w*dpr;c.height=h*dpr;
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ ctx.clearRect(0,0,w,h);
+
+ if(!state.heightAvailable){
+   ctx.fillStyle='#6f7a73';ctx.font='12px sans-serif';
+   ctx.fillText('Höhendaten derzeit nicht verfügbar.',12,24);
+   return;
+ }
+
+ const coords=state.coords,m=state.metrics,padL=34,padR=10,padT=12,padB=24;
+ const vals=coords.slice(st.s,st.e+1).map(x=>Number(x[2])||0);
+ const lo=Math.min(...vals),hi=Math.max(...vals);
+ const d0=m.dist[st.s],d1=m.dist[st.e],span=Math.max(.001,d1-d0);
+ const xIdx=idx=>padL+(w-padL-padR)*((m.dist[idx]-d0)/span);
+ const y=e=>h-padB-(h-padT-padB)*((e-lo)/Math.max(1,hi-lo));
+
+ ctx.beginPath();
+ for(let idx=st.s;idx<=st.e;idx++){
+   const X=xIdx(idx),Y=y(coords[idx][2]||0);
+   idx===st.s?ctx.moveTo(X,Y):ctx.lineTo(X,Y);
+ }
+ ctx.lineTo(xIdx(st.e),h-padB);ctx.lineTo(xIdx(st.s),h-padB);ctx.closePath();
+ ctx.fillStyle='rgba(23,106,77,.08)';ctx.fill();
+
+ ctx.strokeStyle='#176a4d';ctx.lineWidth=2.5;ctx.beginPath();
+ for(let idx=st.s;idx<=st.e;idx++){
+   const X=xIdx(idx),Y=y(coords[idx][2]||0);
+   idx===st.s?ctx.moveTo(X,Y):ctx.lineTo(X,Y);
+ }
+ ctx.stroke();
+
+ const t=terrainForStage(i);
+ (t?.segments||[]).forEach(seg=>{
+   const sd0=d0+span*(Number(seg.start_fraction)||0);
+   const sd1=d0+span*(Number(seg.end_fraction)||0);
+   let a=st.s,b=st.e;
+   for(let idx=st.s;idx<=st.e;idx++){if(m.dist[idx]>=sd0){a=idx;break}}
+   for(let idx=a;idx<=st.e;idx++){if(m.dist[idx]>=sd1){b=idx;break}}
+   if(b<=a)b=Math.min(st.e,a+1);
+
+   ctx.strokeStyle=terrainColor(seg.class);ctx.lineWidth=5;ctx.beginPath();
+   for(let idx=a;idx<=b;idx++){
+     const X=xIdx(idx),Y=y(coords[idx][2]||0);
+     idx===a?ctx.moveTo(X,Y):ctx.lineTo(X,Y);
+   }
+   ctx.stroke();
+ });
+
+ ctx.fillStyle='#68736d';ctx.font='10px sans-serif';
+ ctx.fillText(`${Math.round(lo)} m`,2,h-padB+3);
+ ctx.fillText(`${Math.round(hi)} m`,2,padT+3);
+ ctx.fillText('0 km',padL,h-6);
+ const kmLabel=`${st.km.toFixed(0)} km`;
+ const tw=ctx.measureText(kmLabel).width;
+ ctx.fillText(kmLabel,w-padR-tw,h-6);
+}
+
 function drawElevation(){
  const c=$('elevation'),ctx=c.getContext('2d'),dpr=devicePixelRatio||1,w=c.clientWidth,h=160;c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);
  if(!state.heightAvailable){ctx.fillStyle='#6f7a73';ctx.font='13px sans-serif';ctx.fillText('Höhendaten derzeit nicht verfügbar.',18,32);return;}
