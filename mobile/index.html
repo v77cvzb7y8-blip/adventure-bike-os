@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.3.8.1</title>
+<title>Adventure Bike OS · Mobile 0.3.8.2</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -335,7 +335,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.3.8.1</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.3.8.2</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -803,7 +803,7 @@ async function calculateRoute(){
    initStageAnchors();
    // A newly calculated route must never inherit Terrain from a previous backend run.
    state.terrain={status:'idle',stages:[],source:null,warning:null};
-   state.lodging={results:{},status:{},selected:{}};
+   state.lodging={results:{},status:{},selected:{},searchInfo:{}};
    localStorage.removeItem('abo-mobile-lodging-selected');
    localStorage.removeItem('abo-mobile-terrain-v3');
    localStorage.removeItem('abo-mobile-terrain-v6');
@@ -1363,7 +1363,7 @@ function lodgingMode(){
 }
 function lodgingTypeLabel(t){
  return {
-   hotel:'Hotel',guest_house:'Pension',hostel:'Hostel',motel:'Motel',
+   hotel:'Hotel',guest_house:'Pension',hostel:'Hostel',motel:'Motel',apartment:'Apartment',chalet:'Chalet',alpine_hut:'Berghütte',wilderness_hut:'Schutzhütte',
    camp_site:'Camping',caravan_site:'Camping / Caravan'
  }[t]||'Unterkunft';
 }
@@ -1421,7 +1421,7 @@ function normalizeLodgingElement(el,center){
  const lat=Number(el.lat ?? el.center?.lat),lon=Number(el.lon ?? el.center?.lon);
  if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
  const type=t.tourism||'';
- if(!['hotel','guest_house','hostel','motel','camp_site','caravan_site'].includes(type))return null;
+ if(!['hotel','guest_house','hostel','motel','apartment','chalet','alpine_hut','wilderness_hut','camp_site','caravan_site'].includes(type))return null;
  const name=t.name||t['name:de']||lodgingTypeLabel(type);
  const website=t.website||t['contact:website']||'';
  const phone=t.phone||t['contact:phone']||'';
@@ -1501,6 +1501,7 @@ function lodgingStageHTML(i){
    ${budgetSummaryHTML()}
    ${body}
    ${!selected?`<div class="lodging-actions"><button class="secondary" type="button" onclick="event.stopPropagation();loadLodgingForStage(${i})">${status==='loading'?'lädt …':'Unterkünfte suchen'}</button></div>`:''}
+   ${state.lodging?.searchInfo?.[i]?`<div class="lodging-map-note">${escapeHTML(state.lodging.searchInfo[i])}</div>`:''}
    ${(rows.length||selected)?'<div class="lodging-map-note">Geladene Unterkünfte werden zusätzlich auf der Karte markiert.</div>':''}
  </div>`;
 }
@@ -1599,16 +1600,27 @@ function renderStagesKeepProfile(){
 }
 async function loadLodgingForStage(i){
  const st=state.stages?.[i]; if(!st||!state.coords)return;
- const c=state.coords[st.e],center={lat:c[1],lon:c[0]};
+ const end=st.e,start=st.s,span=Math.max(1,end-start);
+ const offsets=[0,-.06,-.12,-.20];
+ const points=[];
+ offsets.forEach(off=>{
+   const idx=Math.max(start,Math.min(end,end+Math.round(span*off)));
+   const c=state.coords[idx];
+   if(c)points.push({lat:c[1],lon:c[0]});
+ });
+ const center=points[0];
+
  state.lodging.status[i]='loading';
+ state.lodging.searchInfo=state.lodging.searchInfo||{};
+ state.lodging.searchInfo[i]='Suche entlang des Etappenendes …';
  renderStagesKeepProfile();
 
  try{
    const r=await fetchWithTimeout(API+'/api/lodging-nearby',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({lat:center.lat,lon:center.lon,lodging:lodgingMode()})
-   },24000);
+     body:JSON.stringify({points,lodging:lodgingMode()})
+   },32000);
 
    const data=await r.json();
    if(!r.ok||!data.ok)throw new Error(data.warning||'Unterkünfte nicht verfügbar');
@@ -1620,11 +1632,17 @@ async function loadLodgingForStage(i){
      if(!uniq.has(key))uniq.set(key,x);
    });
 
-   state.lodging.results[i]=[...uniq.values()].slice(0,8);
+   state.lodging.results[i]=[...uniq.values()].slice(0,12);
    state.lodging.status[i]='ready';
+   state.lodging.searchInfo[i]=state.lodging.results[i].length
+     ? `${state.lodging.results[i].length} Treffer · Suchradius bis ${(Number(data.radius_m)||0)/1000} km`
+     : (data.warning||'Keine passenden OSM-Unterkünfte gefunden.');
  }catch(e){
    state.lodging.results[i]=[];
    state.lodging.status[i]=(e&&e.name==='AbortError')?'timeout':'error';
+   state.lodging.searchInfo[i]=(e&&e.name==='AbortError')
+     ? 'Unterkunftssuche hat das Zeitlimit erreicht.'
+     : (e.message||'Unterkunftssuche fehlgeschlagen.');
  }
  renderStagesKeepProfile();
  renderMap();
