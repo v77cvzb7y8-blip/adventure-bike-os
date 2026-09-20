@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.4.1</title>
+<title>Adventure Bike OS · Mobile 0.4.2</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -338,12 +338,24 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .nav-export-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
 .nav-export-actions button{flex:1 1 160px}
 .nav-export-note{font-size:10px;color:#68736d;line-height:1.4;margin-top:7px}
+
+.stay-choice{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.stay-choice button{border:1px solid #cfd8d2;background:#fff;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:800;color:#536159}
+.stay-choice button.active.hotel{background:#e8eef7;border-color:#8aa3c5;color:#294d7a}
+.stay-choice button.active.camping{background:#e7f2e9;border-color:#79a884;color:#2f6740}
+.stay-choice button.active.mixed{background:#f3efe6;border-color:#b9a77e;color:#695a34}
+.lodging-kind{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;padding:4px 7px;border-radius:999px;margin-bottom:5px}
+.lodging-kind.hotel{background:#e8eef7;color:#294d7a}
+.lodging-kind.camping{background:#e7f2e9;color:#2f6740}
+.lodging-group{margin-top:9px;padding-top:8px;border-top:1px solid #e6ebe7}
+.lodging-group-title{font-size:10px;font-weight:900;margin-bottom:6px;color:#425049}
+.stay-hint{font-size:9px;color:#6e7972;line-height:1.4;margin-top:3px}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.4.1</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.4.2</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -516,7 +528,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
-let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],stageLayers:[],terrainLayers:[],lodgingLayers:[],terrain:{status:'idle',stages:[],source:null,warning:null},lodging:{results:{},status:{},selected:{}},stageAnchors:[],routeStart:null,routeRerouting:false,selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
+let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],stageLayers:[],terrainLayers:[],lodgingLayers:[],terrain:{status:'idle',stages:[],source:null,warning:null},lodging:{results:{},status:{},selected:{},stageMode:{},searchInfo:{}},stageAnchors:[],routeStart:null,routeRerouting:false,selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
 
 
 function escapeHTML(v){
@@ -734,7 +746,7 @@ function buildPrintReport(){
      <h2>Unterkünfte</h2>
      <p class="pr-muted">Budgetziel: ${lodgingPrefs().nightBudget?lodgingPrefs().nightBudget.toFixed(0)+' € / Nacht':'kein Nachtlimit'}${lodgingPrefs().totalBudget?' · '+lodgingPrefs().totalBudget.toFixed(0)+' € gesamt':''} · Kategorie ${priceLevelLabel()}.</p>
      ${selectedLodgings.length?`<table>
-       <thead><tr><th>Nacht</th><th>Ort / Unterkunft</th><th>Typ</th><th>Preis</th><th>Status</th></tr></thead>
+       <thead><tr><th>Nacht</th><th>Ort / Unterkunft</th><th>Form</th><th>Preis</th><th>Status</th></tr></thead>
        <tbody>${selectedLodgings.map(x=>`<tr><td>${x.stage+1}</td><td>${escapeHTML(x.name)}</td><td>${escapeHTML(lodgingTypeLabel(x.type))}</td><td>${Number(x.quotedPrice)?Number(x.quotedPrice).toFixed(0)+' €':'offen'}</td><td>${x.status==='booked'?'reserviert':'vorgemerkt'}</td></tr>`).join('')}</tbody>
      </table>`:`<p class="pr-muted">Noch keine Unterkunft ausgewählt.</p>`}
    </section>`;
@@ -939,7 +951,8 @@ async function calculateRoute(){
    initStageAnchors();
    // A newly calculated route must never inherit Terrain from a previous backend run.
    state.terrain={status:'idle',stages:[],source:null,warning:null};
-   state.lodging={results:{},status:{},selected:{},searchInfo:{}};
+   state.lodging={results:{},status:{},selected:{},stageMode:{},searchInfo:{}};
+   localStorage.removeItem('abo-mobile-lodging-stage-modes');
    localStorage.removeItem('abo-mobile-lodging-selected');
    localStorage.removeItem('abo-mobile-terrain-v3');
    localStorage.removeItem('abo-mobile-terrain-v6');
@@ -1455,7 +1468,7 @@ function lodgingPrefs(){
 }
 function saveLodgingPrefs(){
  localStorage.setItem('abo-mobile-lodging-prefs',JSON.stringify(lodgingPrefs()));
- renderStages();
+ if(state.stages?.length)renderStagesKeepProfile();
 }
 function restoreLodgingPrefs(){
  try{
@@ -1496,6 +1509,73 @@ function lodgingMode(){
  if(v.includes('camp'))return 'camping';
  if(v.includes('gemischt'))return 'mixed';
  return 'hotel';
+}
+
+function lodgingCategory(type){
+ return ['camp_site','caravan_site'].includes(type)?'camping':'hotel';
+}
+function lodgingKindHTML(type){
+ const c=lodgingCategory(type);
+ return `<span class="lodging-kind ${c}">${c==='camping'?'⛺ Camping':'🏨 Hotel / Unterkunft'}</span>`;
+}
+function stageLodgingMode(i){
+ const global=lodgingMode();
+ if(global!=='mixed')return global;
+ const m=state.lodging?.stageMode?.[i];
+ return ['hotel','camping','mixed'].includes(m)?m:'mixed';
+}
+function restoreStageLodgingModes(){
+ try{
+   const x=JSON.parse(localStorage.getItem('abo-mobile-lodging-stage-modes')||'{}');
+   if(x&&typeof x==='object')state.lodging.stageMode=x;
+ }catch(e){}
+}
+function saveStageLodgingModes(){
+ localStorage.setItem('abo-mobile-lodging-stage-modes',JSON.stringify(state.lodging.stageMode||{}));
+}
+async function setStageLodgingMode(i,mode){
+ if(lodgingMode()!=='mixed')return;
+ if(!['hotel','camping','mixed'].includes(mode))mode='mixed';
+ if(state.lodging.selected?.[i]){
+   toast('Unterkunft zuerst über „ändern“ lösen');
+   return;
+ }
+ state.lodging.stageMode=state.lodging.stageMode||{};
+ state.lodging.stageMode[i]=mode;
+ saveStageLodgingModes();
+ delete state.lodging.results[i];
+ delete state.lodging.status[i];
+ if(state.lodging.searchInfo)delete state.lodging.searchInfo[i];
+ renderStagesKeepProfile();
+ await loadLodgingForStage(i);
+}
+function stageStayChoiceHTML(i,selected){
+ if(lodgingMode()!=='mixed')return '';
+ const m=stageLodgingMode(i);
+ if(selected){
+   const c=lodgingCategory(selected.type);
+   return `<div class="stay-hint">Übernachtungsart für diese Nacht: ${c==='camping'?'⛺ Camping':'🏨 Hotel / Unterkunft'} · für Änderung zuerst „ändern“.</div>`;
+ }
+ return `<div class="stay-choice" role="group" aria-label="Übernachtungsart Nacht ${i+1}">
+   <button type="button" class="hotel ${m==='hotel'?'active':''}" onclick="event.stopPropagation();setStageLodgingMode(${i},'hotel')">🏨 Hotel</button>
+   <button type="button" class="camping ${m==='camping'?'active':''}" onclick="event.stopPropagation();setStageLodgingMode(${i},'camping')">⛺ Camping</button>
+   <button type="button" class="mixed ${m==='mixed'?'active':''}" onclick="event.stopPropagation();setStageLodgingMode(${i},'mixed')">↔ Egal</button>
+ </div>`;
+}
+function renderLodgingCards(rows,i){
+ return rows.map(x=>`<div class="lodging-item ${lodgingCategory(x.type)}">
+   ${lodgingKindHTML(x.type)}
+   <h4>${escapeHTML(x.name)}</h4>
+   <div class="lodging-meta">${lodgingTypeLabel(x.type)} · ${x.distance.toFixed(1)} km vom Etappenziel${Number.isFinite(x.routeDistance)?` · ${x.routeDistance.toFixed(1)} km Luftlinie zur Route`:''}${x.stars?` · ${escapeHTML(x.stars)}★`:''}${x.bicycle?` · Fahrrad: ${escapeHTML(x.bicycle)}`:''}</div>
+   ${campingFeaturesHTML(x)}
+   <div class="lodging-item-actions">
+     <button type="button" class="reserve" onclick="event.stopPropagation();selectLodging(${i},'${x.id}')">vormerken</button>
+     ${safeExternalUrl(x.website)
+       ?`<a href="${escapeHTML(safeExternalUrl(x.website))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Website öffnen</a>`
+       :`<a href="${escapeHTML(lodgingSearchUrl({...x,stageIndex:i}))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Web suchen</a>`}
+     <a href="${escapeHTML(lodgingMapUrl(x))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Karte öffnen</a>
+   </div>
+ </div>`).join('');
 }
 function lodgingTypeLabel(t){
  return {
@@ -1596,7 +1676,8 @@ function lodgingStageHTML(i){
 
  let body='';
  if(selected){
-   body=`<div class="lodging-item selected">
+   body=`<div class="lodging-item selected ${lodgingCategory(selected.type)}">
+     ${lodgingKindHTML(selected.type)}
      <h4>${escapeHTML(selected.name)}</h4>
      <div class="lodging-meta">${lodgingTypeLabel(selected.type)} · ${selected.distance.toFixed(1)} km vom Etappenziel${Number.isFinite(selected.routeDistance)?` · ${selected.routeDistance.toFixed(1)} km Luftlinie zur Route`:''}${selected.stars?` · ${escapeHTML(selected.stars)}★`:''}</div>
      ${campingFeaturesHTML(selected)}
@@ -1620,26 +1701,25 @@ function lodgingStageHTML(i){
  }else if(status==='error'){
    body=`<div class="lodging-empty">Unterkünfte konnten gerade nicht geladen werden. Bitte erneut versuchen.</div>`;
  }else if(rows.length){
-   body=`<div class="lodging-list">${rows.map(x=>`<div class="lodging-item">
-     <h4>${escapeHTML(x.name)}</h4>
-     <div class="lodging-meta">${lodgingTypeLabel(x.type)} · ${x.distance.toFixed(1)} km vom Etappenziel${Number.isFinite(x.routeDistance)?` · ${x.routeDistance.toFixed(1)} km Luftlinie zur Route`:''}${x.stars?` · ${escapeHTML(x.stars)}★`:''}${x.bicycle?` · Fahrrad: ${escapeHTML(x.bicycle)}`:''}</div>
-     ${campingFeaturesHTML(x)}
-     <div class="lodging-item-actions">
-       <button type="button" class="reserve" onclick="event.stopPropagation();selectLodging(${i},'${x.id}')">vormerken</button>
-       ${safeExternalUrl(x.website)
-         ?`<a href="${escapeHTML(safeExternalUrl(x.website))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Website öffnen</a>`
-         :`<a href="${escapeHTML(lodgingSearchUrl({...x,stageIndex:i}))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Web suchen</a>`}
-       <a href="${escapeHTML(lodgingMapUrl(x))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Karte öffnen</a>
-     </div>
-   </div>`).join('')}</div>`;
+   if(stageLodgingMode(i)==='mixed'){
+     const hotelRows=rows.filter(x=>lodgingCategory(x.type)==='hotel');
+     const campRows=rows.filter(x=>lodgingCategory(x.type)==='camping');
+     body=`<div class="lodging-list">
+       ${hotelRows.length?`<div class="lodging-group"><div class="lodging-group-title">🏨 Hotel / Pension / Unterkunft · ${hotelRows.length}</div>${renderLodgingCards(hotelRows,i)}</div>`:''}
+       ${campRows.length?`<div class="lodging-group"><div class="lodging-group-title">⛺ Camping · ${campRows.length}</div>${renderLodgingCards(campRows,i)}</div>`:''}
+     </div>`;
+   }else{
+     body=`<div class="lodging-list">${renderLodgingCards(rows,i)}</div>`;
+   }
  }else if(status==='ready'){
    body=`<div class="lodging-empty">Im Suchradius wurden keine passenden Unterkünfte gefunden. Du kannst die Unterkunftsart ändern oder erneut suchen.</div>`;
  }else{
-   body=`<div class="lodging-empty">Noch keine Unterkunft geladen. Gesucht wird nach deiner Auswahl „${escapeHTML($('lodging')?.value||'Hotel / Pension')}“.</div>`;
+   body=`<div class="lodging-empty">Noch keine Unterkunft geladen. Sucheinstellung für diese Nacht: ${stageLodgingMode(i)==='camping'?'Camping':stageLodgingMode(i)==='hotel'?'Hotel / Pension':'Hotel + Camping'}.</div>`;
  }
 
  return `<div class="lodging-box" onclick="event.stopPropagation()">
    <div class="lodging-head"><div><b>${heading}</b><div class="lodging-meta">${escapeHTML(destination)}</div></div><span>${last?'optional':'für Nacht '+(i+1)}</span></div>
+   ${stageStayChoiceHTML(i,selected)}
    ${budgetSummaryHTML()}
    ${body}
    ${!selected?`<div class="lodging-actions"><button class="secondary" type="button" onclick="event.stopPropagation();loadLodgingForStage(${i})">${status==='loading'?'lädt …':'Unterkünfte suchen'}</button></div>`:''}
@@ -1745,11 +1825,11 @@ function lodgingCacheKey(i){
  const st=state.stages?.[i];
  if(!st||!state.coords)return '';
  const c=state.coords[st.e];
- return `v1|${lodgingMode()}|${c[1].toFixed(3)}|${c[0].toFixed(3)}`;
+ return `v2|${stageLodgingMode(i)}|${c[1].toFixed(3)}|${c[0].toFixed(3)}`;
 }
 function readLodgingCache(i){
  try{
-   const store=JSON.parse(localStorage.getItem('abo-mobile-lodging-results-v2')||'{}');
+   const store=JSON.parse(localStorage.getItem('abo-mobile-lodging-results-v3')||'{}');
    const item=store[lodgingCacheKey(i)];
    if(!item||!item.ts||Date.now()-item.ts>6*3600*1000)return null;
    return item.rows||null;
@@ -1758,11 +1838,11 @@ function readLodgingCache(i){
 function writeLodgingCache(i,rows){
  try{
    const key=lodgingCacheKey(i); if(!key)return;
-   const store=JSON.parse(localStorage.getItem('abo-mobile-lodging-results-v2')||'{}');
+   const store=JSON.parse(localStorage.getItem('abo-mobile-lodging-results-v3')||'{}');
    store[key]={ts:Date.now(),rows:(rows||[]).slice(0,12)};
    const keys=Object.keys(store).sort((a,b)=>(store[b]?.ts||0)-(store[a]?.ts||0)).slice(0,12);
    const trimmed={};keys.forEach(k=>trimmed[k]=store[k]);
-   localStorage.setItem('abo-mobile-lodging-results-v2',JSON.stringify(trimmed));
+   localStorage.setItem('abo-mobile-lodging-results-v3',JSON.stringify(trimmed));
  }catch(e){}
 }
 function normalizeBackendLodging(x,center){
@@ -1836,7 +1916,8 @@ async function enrichLodgingForStage(i){
 async function loadLodgingForStage(i){
  const st=state.stages?.[i]; if(!st||!state.coords)return;
  const end=st.e,start=st.s,span=Math.max(1,end-start);
- const offsets=[0,-.10,-.20];
+ const mode=stageLodgingMode(i);
+ const offsets=mode==='hotel'?[0,-.10,-.20]:[0,-.08,-.16,-.26,-.38];
  const points=[];
  offsets.forEach(off=>{
    const idx=Math.max(start,Math.min(end,end+Math.round(span*off)));
@@ -1856,7 +1937,7 @@ async function loadLodgingForStage(i){
    renderStagesKeepProfile();renderMap();
  }else{
    state.lodging.status[i]='loading';
-   state.lodging.searchInfo[i]='Unterkünfte werden gesucht …';
+   state.lodging.searchInfo[i]=mode==='camping'?'Campingplätze entlang des Etappenendes werden gesucht …':(mode==='mixed'?'Hotels und Camping werden getrennt gesucht …':'Unterkünfte werden gesucht …');
    renderStagesKeepProfile();
  }
 
@@ -1864,7 +1945,7 @@ async function loadLodgingForStage(i){
    const r=await fetchWithTimeout(API+'/api/lodging-nearby',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({points,lodging:lodgingMode()})
+     body:JSON.stringify({points,lodging:mode})
    },16000);
    const data=await r.json();
    if(!r.ok||!data.ok)throw new Error(data.warning||'Unterkünfte nicht verfügbar');
@@ -2434,6 +2515,7 @@ function unpack(id){
  restoreBikeProfile();
  restoreLodgingPrefs();
  restoreLodgingSelections();
+ restoreStageLodgingModes();
  initGear();
  const saved=localStorage.getItem('abo-mobile-route');
  if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);state.stageAnchors=x.stageAnchors||[];state.routeStart=x.routeStart||null;if(!state.stageAnchors.length||!state.routeStart)initStageAnchors();$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v6')||'null');const key=`v6|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-profile-v2.1'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'Valhalla',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
