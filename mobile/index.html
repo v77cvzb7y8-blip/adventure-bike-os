@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.3.9</title>
+<title>Adventure Bike OS · Mobile 0.4.0</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -339,7 +339,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.3.9</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.4.0</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -1611,7 +1611,7 @@ function lodgingCacheKey(i){
 }
 function readLodgingCache(i){
  try{
-   const store=JSON.parse(localStorage.getItem('abo-mobile-lodging-results-v1')||'{}');
+   const store=JSON.parse(localStorage.getItem('abo-mobile-lodging-results-v2')||'{}');
    const item=store[lodgingCacheKey(i)];
    if(!item||!item.ts||Date.now()-item.ts>6*3600*1000)return null;
    return item.rows||null;
@@ -1620,15 +1620,39 @@ function readLodgingCache(i){
 function writeLodgingCache(i,rows){
  try{
    const key=lodgingCacheKey(i); if(!key)return;
-   const store=JSON.parse(localStorage.getItem('abo-mobile-lodging-results-v1')||'{}');
+   const store=JSON.parse(localStorage.getItem('abo-mobile-lodging-results-v2')||'{}');
    store[key]={ts:Date.now(),rows:(rows||[]).slice(0,12)};
    const keys=Object.keys(store).sort((a,b)=>(store[b]?.ts||0)-(store[a]?.ts||0)).slice(0,12);
    const trimmed={};keys.forEach(k=>trimmed[k]=store[k]);
-   localStorage.setItem('abo-mobile-lodging-results-v1',JSON.stringify(trimmed));
+   localStorage.setItem('abo-mobile-lodging-results-v2',JSON.stringify(trimmed));
  }catch(e){}
 }
-function mergeLodgingRows(center,elements){
- const all=(elements||[]).map(el=>normalizeLodgingElement(el,center)).filter(Boolean);
+function normalizeBackendLodging(x,center){
+ if(!x)return null;
+ const lat=Number(x.lat),lon=Number(x.lon);
+ if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
+ const type=String(x.type||'');
+ if(!['hotel','guest_house','hostel','motel','apartment','chalet','alpine_hut','wilderness_hut','camp_site','caravan_site'].includes(type))return null;
+ return {
+   id:String(x.id||`${x.osm_type||'x'}-${x.osm_id||'na'}-${lat.toFixed(4)}-${lon.toFixed(4)}`),
+   name:x.name||lodgingTypeLabel(type),type,lat,lon,
+   website:x.website||'',phone:x.phone||'',stars:x.stars||'',bicycle:x.bicycle||'',
+   distance:haversineKm(center,{lat,lon}),
+   routeDistance:distancePointToRouteKm({lat,lon}),
+   shower:osmBoolLabel(x.shower),
+   toilets:osmBoolLabel(x.toilets),
+   drinkingWater:osmBoolLabel(x.drinking_water),
+   power:osmBoolLabel(x.power_supply),
+   tents:osmBoolLabel(x.tents),
+   reservation:String(x.reservation||''),
+   fee:String(x.fee||''),
+   osm_type:x.osm_type||'',
+   osm_id:x.osm_id||null,
+   source:x.source||''
+ };
+}
+function mergeLodgingRows(center,rows){
+ const all=(rows||[]).map(x=>normalizeBackendLodging(x,center)).filter(Boolean);
  const uniq=new Map();
  all.sort((a,b)=>a.distance-b.distance).forEach(x=>{
    const key=(x.name+'|'+x.type+'|'+x.lat.toFixed(4)+'|'+x.lon.toFixed(4)).toLowerCase();
@@ -1636,10 +1660,45 @@ function mergeLodgingRows(center,elements){
  });
  return [...uniq.values()].slice(0,12);
 }
+async function enrichLodgingForStage(i){
+ const rows=state.lodging.results?.[i]||[];
+ const items=rows.filter(x=>x.osm_id&&x.osm_type).slice(0,8)
+   .map(x=>({osm_id:x.osm_id,osm_type:x.osm_type}));
+ if(!items.length)return;
+ try{
+   const r=await fetchWithTimeout(API+'/api/lodging-enrich',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({items})
+   },8000);
+   const data=await r.json();
+   if(!r.ok||!data.ok||!Array.isArray(data.details)||!data.details.length)return;
+
+   const keyOf=(typ,id)=>`${String(typ||'').toLowerCase().charAt(0)}-${id}`;
+   const byKey=new Map(data.details.map(d=>[keyOf(d.osm_type,d.osm_id),d]));
+   rows.forEach(x=>{
+     const d=byKey.get(keyOf(x.osm_type,x.osm_id)); if(!d)return;
+     if(d.website)x.website=d.website;
+     if(d.phone)x.phone=d.phone;
+     if(d.stars)x.stars=d.stars;
+     if(d.bicycle)x.bicycle=d.bicycle;
+     if(d.shower)x.shower=osmBoolLabel(d.shower);
+     if(d.toilets)x.toilets=osmBoolLabel(d.toilets);
+     if(d.drinking_water)x.drinkingWater=osmBoolLabel(d.drinking_water);
+     if(d.power_supply)x.power=osmBoolLabel(d.power_supply);
+     if(d.tents)x.tents=osmBoolLabel(d.tents);
+     if(d.reservation)x.reservation=String(d.reservation);
+     if(d.fee)x.fee=String(d.fee);
+   });
+   writeLodgingCache(i,rows);
+   renderStagesKeepProfile();
+   renderMap();
+ }catch(e){}
+}
 async function loadLodgingForStage(i){
  const st=state.stages?.[i]; if(!st||!state.coords)return;
  const end=st.e,start=st.s,span=Math.max(1,end-start);
- const offsets=[0,-.08,-.16,-.24];
+ const offsets=[0,-.10,-.20];
  const points=[];
  offsets.forEach(off=>{
    const idx=Math.max(start,Math.min(end,end+Math.round(span*off)));
@@ -1647,67 +1706,47 @@ async function loadLodgingForStage(i){
    if(c)points.push({lat:c[1],lon:c[0]});
  });
  const center=points[0];
+ if(!center)return;
 
  state.lodging.searchInfo=state.lodging.searchInfo||{};
-
- // Instant local result if this same stage area was searched recently.
  const cached=readLodgingCache(i);
+
  if(cached?.length){
    state.lodging.results[i]=cached;
    state.lodging.status[i]='ready';
-   state.lodging.searchInfo[i]=`${cached.length} gespeicherte Treffer · werden aktualisiert …`;
-   renderStagesKeepProfile();
-   renderMap();
+   state.lodging.searchInfo[i]=`${cached.length} gespeicherte Treffer · Aktualisierung läuft …`;
+   renderStagesKeepProfile();renderMap();
  }else{
    state.lodging.status[i]='loading';
-   state.lodging.searchInfo[i]='Schnellsuche rund ums Etappenziel …';
+   state.lodging.searchInfo[i]='Unterkünfte werden gesucht …';
    renderStagesKeepProfile();
  }
 
  try{
-   // Phase 1: focused search. Usually enough for towns and stage destinations.
-   let r=await fetchWithTimeout(API+'/api/lodging-nearby',{
+   const r=await fetchWithTimeout(API+'/api/lodging-nearby',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({points,lodging:lodgingMode(),mode:'fast'})
-   },15000);
-   let data=await r.json();
+     body:JSON.stringify({points,lodging:lodgingMode()})
+   },16000);
+   const data=await r.json();
    if(!r.ok||!data.ok)throw new Error(data.warning||'Unterkünfte nicht verfügbar');
 
-   let rows=mergeLodgingRows(center,data.elements||[]);
+   const rows=mergeLodgingRows(center,data.results||[]);
    if(rows.length){
      state.lodging.results[i]=rows;
      state.lodging.status[i]='ready';
-     state.lodging.searchInfo[i]=`${rows.length} Treffer · schnelle Suche bis ${(Number(data.radius_m)||0)/1000} km${data.cached?' · Cache':''}`;
+     state.lodging.searchInfo[i]=`${rows.length} Treffer · ${data.source||'Unterkunftssuche'}${data.cached?' · Cache':''}${data.fallback_used?' · Fallback':''}`;
      writeLodgingCache(i,rows);
-     renderStagesKeepProfile();
-     renderMap();
+     renderStagesKeepProfile();renderMap();
+     enrichLodgingForStage(i);
      return;
    }
 
-   // Phase 2 only when necessary.
-   state.lodging.status[i]='loading';
-   state.lodging.searchInfo[i]='Keine Treffer nah dran · Suchbereich wird erweitert …';
-   renderStagesKeepProfile();
-
-   r=await fetchWithTimeout(API+'/api/lodging-nearby',{
-     method:'POST',
-     headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({points,lodging:lodgingMode(),mode:'wide'})
-   },18000);
-   data=await r.json();
-   if(!r.ok||!data.ok)throw new Error(data.warning||'Erweiterte Unterkunftssuche nicht verfügbar');
-
-   rows=mergeLodgingRows(center,data.elements||[]);
-   state.lodging.results[i]=rows;
+   state.lodging.results[i]=[];
    state.lodging.status[i]='ready';
-   state.lodging.searchInfo[i]=rows.length
-     ? `${rows.length} Treffer · erweiterte Suche bis ${(Number(data.radius_m)||0)/1000} km${data.cached?' · Cache':''}`
-     : 'Auch im erweiterten Suchbereich wurden keine passenden OSM-Unterkünfte gefunden.';
-   if(rows.length)writeLodgingCache(i,rows);
+   state.lodging.searchInfo[i]=data.warning||'Keine passenden Unterkünfte im Suchbereich gefunden.';
  }catch(e){
    if(cached?.length){
-     // Keep useful cached results instead of replacing them with an error.
      state.lodging.results[i]=cached;
      state.lodging.status[i]='ready';
      state.lodging.searchInfo[i]=`${cached.length} gespeicherte Treffer · Aktualisierung derzeit nicht möglich`;
@@ -1719,8 +1758,7 @@ async function loadLodgingForStage(i){
        : (e.message||'Unterkunftssuche fehlgeschlagen.');
    }
  }
- renderStagesKeepProfile();
- renderMap();
+ renderStagesKeepProfile();renderMap();
 }
 async function selectLodging(stageIndex,id){
  const item=(state.lodging.results?.[stageIndex]||[]).find(x=>x.id===id);
