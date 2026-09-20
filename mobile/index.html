@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.3.0</title>
+<title>Adventure Bike OS · Mobile 0.3.1</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -241,12 +241,23 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .pack-health{margin:10px 0 4px;padding:10px;border-radius:12px;background:#f6f8f6;border:1px solid #e0e5e0}
 .pack-health b{display:block;margin-bottom:4px}
 .pack-health .small{font-size:11px;color:#657069;line-height:1.35}
+
+.quick-pack{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid #edf0ed}
+.quick-pack button{font-size:10px;padding:6px 8px;border-radius:999px;border:1px solid #d5ddd7;background:#fff;color:#33423a}
+.quick-pack button.rec{background:#dff0e7;border-color:#7fba9a;color:#205b3f;font-weight:800}
+.custom-gear-box{margin-top:12px;padding:10px;border:1px solid #dfe5df;border-radius:12px;background:#fafbfa}
+.custom-gear-box summary{cursor:pointer;font-weight:800;font-size:12px}
+.custom-gear-grid{display:grid;grid-template-columns:1.5fr .7fr .7fr 1fr;gap:6px;margin-top:9px}
+.custom-gear-grid input,.custom-gear-grid select{width:100%;box-sizing:border-box;padding:8px;border:1px solid #d8ddd8;border-radius:9px;background:#fff}
+.custom-gear-actions{display:flex;gap:7px;margin-top:8px}
+.custom-remove{font-size:9px;border:0;background:transparent;color:#8a4d42;padding:2px 0;text-decoration:underline}
+@media(max-width:520px){.custom-gear-grid{grid-template-columns:1fr 1fr}.custom-gear-grid .wide{grid-column:1/-1}}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.3.0</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.3.1</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -359,6 +370,20 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <div id="recommendBox" class="recommend">Wähle einen Gegenstand.</div>
         <h3 style="margin-top:12px">Ausrüstung</h3>
         <div id="gearList"></div>
+        <details class="custom-gear-box">
+          <summary>+ Eigenen Gegenstand hinzufügen</summary>
+          <div class="custom-gear-grid">
+            <input id="customGearName" class="wide" placeholder="z. B. Sandalen">
+            <input id="customGearKg" type="number" min="0.01" step="0.05" placeholder="kg">
+            <input id="customGearL" type="number" min="0.1" step="0.1" placeholder="Liter">
+            <select id="customGearCategory">
+              <option>Reparatur</option><option>Sicherheit</option><option>Kleidung</option><option>Elektronik</option><option>Verpflegung</option><option selected>Sonstiges</option>
+            </select>
+          </div>
+          <div class="custom-gear-actions">
+            <button class="primary" type="button" onclick="addCustomGear()">hinzufügen</button>
+          </div>
+        </details>
         <h3 style="margin-top:12px">Taschen</h3>
         <div id="bagGrid" class="baggrid"></div>
       </div>
@@ -1140,7 +1165,7 @@ function renderBikeSetup(){
  }
 }
 
-const gear=[
+let gear=[
  {id:'tool',name:'Werkzeug',category:'Reparatur',bag:'tool',kg:.55,l:0.8,required:'always',why:'schwer und kompakt – tief am Bike'},
  {id:'tube',name:'Ersatzschlauch / Plug-Kit',category:'Reparatur',bag:'frame',kg:.22,l:0.5,required:'always',why:'zentral, kompakt und schnell erreichbar'},
  {id:'pump',name:'Pumpe / CO₂',category:'Reparatur',bag:'frame',kg:.18,l:0.5,required:'always',why:'zentral und gut erreichbar'},
@@ -1161,6 +1186,48 @@ const bags={
  tool:{name:'Werkzeugtasche',cap:1.0,liters:1.2}
 };
 
+
+function restoreCustomGear(){
+ try{
+   const custom=JSON.parse(localStorage.getItem('abo-mobile-custom-gear')||'[]');
+   if(Array.isArray(custom)){
+     const ids=new Set(gear.map(g=>g.id));
+     custom.forEach(g=>{if(g&&g.id&&!ids.has(g.id)){gear.push(g);ids.add(g.id)}});
+   }
+ }catch(e){}
+}
+function saveCustomGear(){
+ const custom=gear.filter(g=>g.custom);
+ localStorage.setItem('abo-mobile-custom-gear',JSON.stringify(custom));
+}
+function addCustomGear(){
+ const name=($('customGearName')?.value||'').trim();
+ const kg=Math.max(.01,+($('customGearKg')?.value||0));
+ const l=Math.max(.1,+($('customGearL')?.value||0));
+ const category=$('customGearCategory')?.value||'Sonstiges';
+ if(!name){toast('Name eingeben');return}
+ if(!kg||!l){toast('Gewicht und Liter eingeben');return}
+ const id='custom-'+Date.now();
+ gear.push({id,name,category,bag:'saddle',kg,l,required:'optional',why:'individueller Gegenstand',custom:true});
+ saveCustomGear();
+ $('customGearName').value='';$('customGearKg').value='';$('customGearL').value='';
+ renderGearList();renderPackHealth();renderBikeSetup();
+ toast('Gegenstand hinzugefügt');
+}
+function removeCustomGear(id,ev){
+ if(ev){ev.preventDefault();ev.stopPropagation()}
+ gear=gear.filter(g=>g.id!==id);
+ delete state.assignments[id];
+ saveCustomGear();
+ localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
+ renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();
+ toast('Gegenstand entfernt');
+}
+function quickAssign(gid,bag,ev){
+ if(ev){ev.preventDefault();ev.stopPropagation()}
+ state.selectedGear=gid;state.movingGear=null;
+ assignToBag(bag);
+}
 function isRequiredGear(g){
  const days=(state.stages||[]).length||1;
  return g.required==='always' || (g.required==='multi' && days>=2);
@@ -1193,16 +1260,26 @@ function renderPackHealth(){
  el.innerHTML=`<b>${title}</b><div class="small">${msg}</div>`;
 }
 function renderGearList(){
- const categories=['Reparatur','Sicherheit','Kleidung','Elektronik','Verpflegung'];
+ const categories=['Reparatur','Sicherheit','Kleidung','Elektronik','Verpflegung','Sonstiges'];
  $('gearList').innerHTML=categories.map(cat=>{
    const items=gear.filter(g=>g.category===cat);
    if(!items.length)return '';
    return `<div class="gear-section"><h4>${cat}</h4>${items.map(g=>{
-     const packed=!!state.assignments[g.id],req=isRequiredGear(g);
-     return `<div class="gearrow" data-gear="${g.id}" onclick="selectGear('${g.id}')">
-       <div class="gear-row-main"><div><b>${g.name}</b><div class="gear-meta">${g.kg.toFixed(2)} kg · ${g.l.toFixed(1)} l · empfohlen: ${bagName(g.bag)}</div>
-       <div class="gear-badges"><span class="gear-badge ${req?'required':'optional'}">${req?'Pflicht':'optional'}</span>${packed?'<span class="gear-badge packed">gepackt</span>':''}</div></div>
-       <button class="inlinebtn" type="button">${packed?'ändern':'wählen'}</button></div>
+     const packed=!!state.assignments[g.id],req=isRequiredGear(g),active=state.selectedGear===g.id;
+     const q=active?`<div class="quick-pack">
+       ${Object.entries(bags).map(([bid,b])=>`<button class="${bid===g.bag?'rec':''}" onclick="quickAssign('${g.id}','${bid}',event)">${b.name}</button>`).join('')}
+     </div>`:'';
+     return `<div class="gearrow ${active?'active':''}" data-gear="${g.id}">
+       <div style="width:100%">
+         <div class="gear-row-main">
+           <div><b>${g.name}</b><div class="gear-meta">${g.kg.toFixed(2)} kg · ${g.l.toFixed(1)} l · empfohlen: ${bagName(g.bag)}</div>
+             <div class="gear-badges"><span class="gear-badge ${req?'required':'optional'}">${req?'Pflicht':'optional'}</span>${packed?'<span class="gear-badge packed">gepackt</span>':''}</div>
+             ${g.custom?`<button class="custom-remove" onclick="removeCustomGear('${g.id}',event)">löschen</button>`:''}
+           </div>
+           <button class="inlinebtn" type="button" onclick="event.stopPropagation();selectGear('${g.id}')">${active?'schließen':(packed?'umpacken':'packen')}</button>
+         </div>
+         ${q}
+       </div>
      </div>`;
    }).join('')}</div>`;
  }).join('');
@@ -1227,6 +1304,7 @@ function startEmptySetup(){
  toast('Leerer Packplan');
 }
 function initGear(){
+ restoreCustomGear();
  const saved=localStorage.getItem('abo-mobile-pack');
  const mode=localStorage.getItem('abo-mobile-pack-mode');
  if(saved){
@@ -1250,13 +1328,17 @@ function clearBagHighlights(){
  document.querySelectorAll('[data-bag]').forEach(x=>x.classList.remove('rec','move-target'));
 }
 function selectGear(id){
+ const closing=state.selectedGear===id && !state.movingGear;
  state.movingGear=null;
- state.selectedGear=id;
- document.querySelectorAll('.gearrow').forEach(x=>x.classList.toggle('active',x.dataset.gear===id));
+ state.selectedGear=closing?null:id;
  const g=gear.find(x=>x.id===id);
  clearBagHighlights();
- document.querySelectorAll('[data-bag]').forEach(x=>x.classList.toggle('rec',x.dataset.bag===g.bag));
- $('recommendBox').innerHTML=`<b>${g.name}</b><span class="sub">Empfehlung: ${bagName(g.bag)} · ${g.why}</span><br><button class="primary" style="margin-top:8px" onclick="assignToBag('${g.bag}')">in ${bagName(g.bag)} packen</button>`;
+ if(!closing&&g){
+   document.querySelectorAll('[data-bag]').forEach(x=>x.classList.toggle('rec',x.dataset.bag===g.bag));
+   $('recommendBox').innerHTML=`<b>${g.name}</b><span class="sub">Empfohlen: ${bagName(g.bag)}. Du kannst jetzt direkt hier in der Liste eine Tasche wählen oder am Bike tippen.</span>`;
+ }else{
+   $('recommendBox').textContent='Gegenstand wählen → Tasche direkt darunter auswählen.';
+ }
  renderGearList();
  renderBagContents();
  renderBikeBagState();
@@ -1292,13 +1374,9 @@ function assignToBag(bag){
  renderBagContents();
  renderPackHealth();
  renderBikeSetup();
- const next=gear.find(x=>!state.assignments[x.id]);
- if(next)selectGear(next.id);
- else{
-   $('recommendBox').textContent='Packplan vollständig. Gegenstand in einer Tasche antippen, um ihn direkt zu verschieben.';
-   state.selectedGear=null;
-   document.querySelectorAll('.gearrow').forEach(x=>x.classList.remove('active'));
- }
+ state.selectedGear=null;
+ $('recommendBox').textContent='Gegenstand wählen → Tasche direkt darunter auswählen.';
+ renderGearList();
 }
 function renderBikeBagState(){
  Object.entries(bags).forEach(([id,b])=>{
