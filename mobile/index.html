@@ -4,14 +4,14 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.1.6</title>
+<title>Adventure Bike OS · Mobile 0.1.7</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 :root{--g:#0b4c39;--g2:#167454;--cream:#f5f0e4;--card:#fffdf7;--muted:#6f7a73;--line:#dfe5df;--accent:#e8efe9;--warn:#f6e7bf}
 *{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:var(--g);color:#13281f}
 .app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--cream);padding-bottom:92px}
-.hero{background:var(--g);color:white;padding:18px 18px 16px;position:sticky;top:0;z-index:30}
+.hero{background:var(--g);color:white;padding:18px 18px 16px;position:sticky;top:0;z-index:2000}
 .kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.72}
 .hero h1{font-size:28px;line-height:1;margin:5px 0 4px}.hero p{margin:0;font-size:13px;opacity:.82}
 .topnav{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:13px}
@@ -46,7 +46,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 #map.map-active{pointer-events:auto;outline:3px solid rgba(22,116,84,.16)}
 
 
-.map-shell{position:relative}
+.map-shell{position:relative;z-index:1;isolation:isolate;overflow:hidden;border-radius:15px}
 .map-gesture-shield{
   position:absolute; inset:0; z-index:500;
   background:transparent;
@@ -55,12 +55,24 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 }
 .map-gesture-shield.hidden{display:none}
 
+
+.map-shell .leaflet-container{position:relative!important;z-index:0!important}
+.map-shell .leaflet-pane{z-index:auto}
+.map-shell .leaflet-map-pane{z-index:1}
+.map-shell .leaflet-tile-pane{z-index:2}
+.map-shell .leaflet-overlay-pane{z-index:3}
+.map-shell .leaflet-shadow-pane{z-index:4}
+.map-shell .leaflet-marker-pane{z-index:5}
+.map-shell .leaflet-tooltip-pane{z-index:6}
+.map-shell .leaflet-popup-pane{z-index:7}
+.map-shell .leaflet-control{z-index:8}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.1.6</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.1.7</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
