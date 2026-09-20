@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.4.2</title>
+<title>Adventure Bike OS · Mobile 0.5.0</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -350,12 +350,30 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .lodging-group{margin-top:9px;padding-top:8px;border-top:1px solid #e6ebe7}
 .lodging-group-title{font-size:10px;font-weight:900;margin-bottom:6px;color:#425049}
 .stay-hint{font-size:9px;color:#6e7972;line-height:1.4;margin-top:3px}
+
+.weather-box{border:1px solid #dfe6e1;border-radius:14px;padding:10px;margin-top:10px;background:#fbfcfb}
+.weather-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.weather-head b{font-size:12px}
+.weather-date{font-size:9px;color:#68736d;font-weight:800}
+.weather-main{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.weather-stat{border:1px solid #e6ebe7;border-radius:10px;padding:7px;background:#fff}
+.weather-stat span{display:block;font-size:8px;color:#738078;text-transform:uppercase;font-weight:800}
+.weather-stat b{display:block;font-size:12px;margin-top:2px}
+.weather-signals{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.weather-signal{font-size:8px;font-weight:900;border-radius:999px;padding:4px 7px;background:#edf1ee;color:#556159}
+.weather-signal.watch{background:#f5edd7;color:#765d18}
+.weather-signal.high{background:#f5dfdd;color:#8b3c34}
+.weather-status{display:inline-block;font-size:8px;font-weight:900;border-radius:999px;padding:4px 7px;background:#e7f1e9;color:#356846}
+.weather-status.watch{background:#f5edd7;color:#765d18}
+.weather-status.high{background:#f5dfdd;color:#8b3c34}
+.weather-status.open{background:#edf0ee;color:#657069}
+.weather-note{font-size:9px;color:#6d7972;line-height:1.4;margin-top:7px}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.4.2</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.5.0</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -388,12 +406,14 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
           <div><label>km / Tag</label><input id="kmday" type="number" value="120"/></div>
           <div><label>max. HM / Tag</label><input id="hmday" type="number" value="1800"/></div>
           <div><label>Routing</label><select id="profile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schneller Asphalt</option></select></div>
+          <div><label>Reisestart</label><input id="tripStartDate" type="date" onchange="saveTripPrefs();weatherDateChanged()"></div>
           <div><label>Übernachtung</label><select id="lodging" onchange="saveLodgingPrefs()"><option>Hotel / Pension</option><option>Camping / Zelt</option><option>Gemischt</option></select></div>
           <div><label>Preiskategorie</label><select id="priceLevel" onchange="saveLodgingPrefs()"><option value="any">egal</option><option value="budget">sparsam</option><option value="mid" selected>mittel</option><option value="comfort">komfortabel</option></select></div>
           <div><label>max. € / Nacht</label><input id="nightBudget" type="number" min="0" step="10" value="90" onchange="saveLodgingPrefs()"></div>
           <div><label>Unterkunftsbudget gesamt €</label><input id="lodgingBudgetTotal" type="number" min="0" step="25" placeholder="optional" onchange="saveLodgingPrefs()"></div>
         </div>
         <div class="sub" style="margin-top:8px">Budget dient als Planungsziel. OSM liefert meist keine verlässlichen Live-Preise; konkrete Preise werden deshalb erst nach Prüfung der Unterkunft bewertet.</div>
+        <div class="sub" style="margin-top:6px">Wetter wird pro Etappe entlang der Route ausgewertet. Außerhalb des Detail-Prognosefensters zeigt Adventure Bike OS bewusst noch keine scheinpräzisen Wetterwerte.</div>
 
         <div class="fitnessbox">
           <h3>Fahrerprofil · Beta</h3>
@@ -508,7 +528,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
           </div>
           <div class="nav-export-note">Für Garmin: GPX speichern/teilen und anschließend in Garmin Connect importieren bzw. an den Edge synchronisieren.</div>
         </div>
-        <div class="card"><h3>🌦 Wetter</h3><div class="pending">prüfen</div><p class="sub">72 h vor Abfahrt: Regen, Wind, Temperatur.</p></div>
+        <div class="card"><h3>🌦 Wetter</h3><div id="weatherCheckStatus" class="pending">Reisedatum fehlt</div><p id="weatherCheckText" class="sub">Reisestart im Plan eintragen. Wetter wird danach pro Etappe entlang der Route ausgewertet.</p></div>
         <div class="card"><h3>🏨 Reservierungen</h3><div id="lodgingCheckStatus" class="pending">noch offen</div><p class="sub" id="lodgingCheckText">Unterkünfte an den Etappenzielen auswählen und Reservierungen bestätigen.</p></div>
         <div class="card"><h3>🔋 Strom & Licht</h3><div class="ok">Basis vorhanden</div><p class="sub">Computer · Frontlicht · Rücklicht · Powerbank</p></div>
       </div>
@@ -528,7 +548,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
-let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],stageLayers:[],terrainLayers:[],lodgingLayers:[],terrain:{status:'idle',stages:[],source:null,warning:null},lodging:{results:{},status:{},selected:{},stageMode:{},searchInfo:{}},stageAnchors:[],routeStart:null,routeRerouting:false,selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
+let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],stageLayers:[],terrainLayers:[],lodgingLayers:[],terrain:{status:'idle',stages:[],source:null,warning:null},lodging:{results:{},status:{},selected:{},stageMode:{},searchInfo:{}},weather:{status:'idle',startDate:'',stages:[],source:null,reason:null,routeKey:null},stageAnchors:[],routeStart:null,routeRerouting:false,selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
 
 
 function escapeHTML(v){
@@ -656,6 +676,202 @@ async function exportGPX(){
    toast(e.message||'GPX konnte nicht exportiert werden');
  }
 }
+
+function tripStartDate(){
+ return String($('tripStartDate')?.value||'').trim();
+}
+function tripPrefs(){
+ return {startDate:tripStartDate()};
+}
+function saveTripPrefs(){
+ localStorage.setItem('abo-mobile-trip-prefs-v1',JSON.stringify(tripPrefs()));
+}
+function restoreTripPrefs(){
+ try{
+   const p=JSON.parse(localStorage.getItem('abo-mobile-trip-prefs-v1')||'null');
+   if(p?.startDate&&$('tripStartDate'))$('tripStartDate').value=p.startDate;
+ }catch(e){}
+}
+function addDaysISO(iso,days){
+ if(!iso)return '';
+ const p=iso.split('-').map(Number);
+ if(p.length!==3||p.some(x=>!Number.isFinite(x)))return '';
+ const d=new Date(Date.UTC(p[0],p[1]-1,p[2]+days));
+ return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+}
+function weatherRouteKey(){
+ if(!state.coords||!state.stages?.length||!tripStartDate())return '';
+ const ends=state.stages.map(s=>{
+   const c=state.coords?.[s.e];
+   return c?`${Number(c[0]).toFixed(3)},${Number(c[1]).toFixed(3)}`:'x';
+ }).join('|');
+ return `w1|${tripStartDate()}|${state.stages.length}|${Number(state.metrics?.totalDist||0).toFixed(1)}|${ends}`;
+}
+function weatherCacheRead(){
+ try{
+   const x=JSON.parse(localStorage.getItem('abo-mobile-weather-v1')||'null');
+   if(!x||x.key!==weatherRouteKey()||!x.ts||Date.now()-x.ts>30*60*1000)return null;
+   return x.data||null;
+ }catch(e){return null}
+}
+function weatherCacheWrite(data){
+ try{
+   const key=weatherRouteKey(); if(!key)return;
+   localStorage.setItem('abo-mobile-weather-v1',JSON.stringify({key,ts:Date.now(),data}));
+ }catch(e){}
+}
+function invalidateWeather(reason='Route geändert'){
+ state.weather={status:'idle',startDate:tripStartDate(),stages:[],source:null,reason,routeKey:null};
+}
+function stageWeatherPoints(i){
+ const st=state.stages?.[i];
+ if(!st||!state.coords?.length)return [];
+ const points=[];
+ const add=(idx,role)=>{
+   const c=state.coords[Math.max(st.s,Math.min(st.e,idx))];
+   if(!c)return;
+   const p={lat:Number(c[1]),lon:Number(c[0]),role};
+   if(Number.isFinite(Number(c[2])))p.elev=Number(c[2]);
+   if(!points.some(x=>Math.abs(x.lat-p.lat)<1e-5&&Math.abs(x.lon-p.lon)<1e-5))points.push(p);
+ };
+ add(st.s,'start');
+ let hi=st.s,hiZ=-Infinity;
+ for(let j=st.s;j<=st.e;j++){
+   const z=Number(state.coords[j]?.[2]);
+   if(Number.isFinite(z)&&z>hiZ){hiZ=z;hi=j}
+ }
+ add(hi,'high');
+ add(st.e,'end');
+ return points.slice(0,3);
+}
+function weatherSignalLabel(name,level){
+ const labels={
+   rain:{none:'Regen unauffällig',watch:'Regen beachten',high:'Regenrisiko hoch'},
+   wind:{none:'Wind unauffällig',watch:'Wind beachten',high:'Wind stark'},
+   heat:{none:'Hitze unauffällig',watch:'Warm',high:'Hitzerisiko'},
+   cold:{none:'Kälte unauffällig',watch:'Kühl',high:'Kälterisiko'}
+ };
+ return labels[name]?.[level]||name;
+}
+function weatherBandText(band,horizon){
+ if(band==='short')return `kurzfristige Prognose · ${horizon} Tag${horizon===1?'':'e'} voraus`;
+ if(band==='medium')return `mittelfristige Prognose · ${horizon} Tage voraus`;
+ if(band==='long')return `weiteres Prognosefenster · ${horizon} Tage voraus`;
+ return '';
+}
+function weatherHTML(i){
+ if(!tripStartDate())return '';
+ const w=state.weather?.stages?.[i];
+ const date=addDaysISO(tripStartDate(),i);
+ if(state.weather?.status==='loading'&&!w){
+   return `<div class="weather-box"><div class="weather-head"><b>🌦 Wetter · Tag ${i+1}</b><span class="weather-status open">lädt</span></div><div class="weather-note">${escapeHTML(date)} · Start, Hochpunkt und Ziel werden geprüft.</div></div>`;
+ }
+ if(!w){
+   return `<div class="weather-box"><div class="weather-head"><b>🌦 Wetter · Tag ${i+1}</b><span class="weather-status open">offen</span></div><div class="weather-note">${escapeHTML(date)} · Wetter noch nicht geladen.</div></div>`;
+ }
+ if(!w.available){
+   return `<div class="weather-box"><div class="weather-head"><b>🌦 Wetter · Tag ${i+1}</b><span class="weather-status open">noch offen</span></div><div class="weather-note">${escapeHTML(date)} · ${escapeHTML(w.reason||'Noch keine Detailprognose verfügbar.')}</div></div>`;
+ }
+ const cls=w.overall==='high'?'high':w.overall==='watch'?'watch':'';
+ const statusText=w.overall==='high'?'Wetter relevant':w.overall==='watch'?'beobachten':'unauffällig';
+ const sig=w.signals||{};
+ const active=Object.entries(sig).filter(([,v])=>v&&v!=='none');
+ return `<div class="weather-box">
+   <div class="weather-head"><div><b>🌦 Wetter · Tag ${i+1}</b><div class="weather-date">${escapeHTML(w.date||date)}</div></div><span class="weather-status ${cls}">${statusText}</span></div>
+   <div class="weather-main">
+     <div class="weather-stat"><span>Temperatur</span><b>${Number.isFinite(Number(w.tmin))?Math.round(w.tmin)+'°':'–'} bis ${Number.isFinite(Number(w.tmax))?Math.round(w.tmax)+'°':'–'}</b></div>
+     <div class="weather-stat"><span>Regen</span><b>${Number.isFinite(Number(w.rain_probability))?Math.round(w.rain_probability)+' %':'–'}</b></div>
+     <div class="weather-stat"><span>Wind</span><b>${Number.isFinite(Number(w.wind_kmh))?Math.round(w.wind_kmh)+' km/h':'–'}</b></div>
+   </div>
+   ${active.length?`<div class="weather-signals">${active.map(([k,v])=>`<span class="weather-signal ${v}">${escapeHTML(weatherSignalLabel(k,v))}</span>`).join('')}</div>`:''}
+   <div class="weather-note">${Number.isFinite(Number(w.precipitation_mm))?`Niederschlag bis ${Number(w.precipitation_mm).toFixed(1)} mm · `:''}${Number.isFinite(Number(w.gust_kmh))?`Böen bis ${Math.round(w.gust_kmh)} km/h · `:''}${w.sample_count||0} Routenpunkte · ${escapeHTML(weatherBandText(w.forecast_band,Number(w.horizon_days)||0))}.</div>
+ </div>`;
+}
+function renderWeatherCheck(){
+ const statusEl=$('weatherCheckStatus'),textEl=$('weatherCheckText');
+ if(!statusEl||!textEl)return;
+ if(!tripStartDate()){
+   statusEl.textContent='Reisedatum fehlt';statusEl.className='pending';
+   textEl.textContent='Reisestart im Plan eintragen. Wetter wird danach pro Etappe entlang der Route ausgewertet.';
+   return;
+ }
+ if(!state.stages?.length){
+   statusEl.textContent='Route fehlt';statusEl.className='pending';
+   textEl.textContent='Zuerst Route berechnen; Wetter wird anschließend den einzelnen Etappen zugeordnet.';
+   return;
+ }
+ if(state.weather?.status==='loading'){
+   statusEl.textContent='wird geladen';statusEl.className='pending';
+   textEl.textContent='Start, Hochpunkt und Ziel jeder Etappe werden geprüft.';
+   return;
+ }
+ const rows=state.weather?.stages||[];
+ const available=rows.filter(x=>x?.available);
+ const high=available.filter(x=>x.overall==='high');
+ const watch=available.filter(x=>x.overall==='watch');
+ const open=rows.filter(x=>x&&!x.available);
+ if(!rows.length){
+   statusEl.textContent='noch offen';statusEl.className='pending';
+   textEl.textContent='Wetterdaten noch nicht geladen.';
+ }else if(high.length){
+   statusEl.textContent=`${high.length} Etappe${high.length>1?'n':''} relevant`;statusEl.className='pending';
+   textEl.textContent='Mindestens ein Wetterfaktor ist deutlich ausgeprägt. Details direkt in den Etappen prüfen.';
+ }else if(watch.length){
+   statusEl.textContent='beobachten';statusEl.className='pending';
+   textEl.textContent=`${watch.length} Etappe${watch.length>1?'n':''} mit Wetterhinweis. ${open.length?'Weitere Tage liegen noch außerhalb des Detailfensters.':''}`;
+ }else if(available.length===state.stages.length){
+   statusEl.textContent='geprüft';statusEl.className='ok';
+   textEl.textContent='Für alle Etappen liegt aktuell eine Detailprognose ohne auffälliges Wettersignal vor.';
+ }else{
+   statusEl.textContent='teilweise verfügbar';statusEl.className='pending';
+   textEl.textContent=`${available.length}/${state.stages.length} Etappen mit Detailprognose. Weitere Tage werden näher an der Reise verfügbar.`;
+ }
+}
+async function loadWeather(force=false){
+ const start=tripStartDate();
+ if(!start||!state.coords||!state.stages?.length){
+   invalidateWeather(start?'Route fehlt':'Reisedatum fehlt');
+   renderWeatherCheck();
+   return;
+ }
+ const key=weatherRouteKey();
+ if(!force){
+   const cached=weatherCacheRead();
+   if(cached){
+     state.weather={...cached,status:'ready',routeKey:key};
+     renderStagesKeepProfile();renderWeatherCheck();
+     return;
+   }
+ }
+ state.weather={status:'loading',startDate:start,stages:[],source:null,reason:null,routeKey:key};
+ renderStagesKeepProfile();renderWeatherCheck();
+
+ const payload={stages:state.stages.map((st,i)=>({date:addDaysISO(start,i),points:stageWeatherPoints(i)}))};
+ try{
+   const r=await fetchWithTimeout(API+'/api/weather-stage-batch',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify(payload)
+   },26000);
+   const data=await r.json();
+   if(!r.ok||!data.ok)throw new Error(data.reason||'Wetter nicht verfügbar');
+   const next={
+     status:'ready',startDate:start,
+     stages:Array.isArray(data.stages)?data.stages:[],
+     source:data.source||'Open-Meteo',reason:data.reason||null,routeKey:key
+   };
+   state.weather=next;
+   weatherCacheWrite(next);
+ }catch(e){
+   state.weather={status:'error',startDate:start,stages:[],source:null,reason:e.message||'Wetter nicht verfügbar',routeKey:key};
+ }
+ renderStagesKeepProfile();renderWeatherCheck();
+}
+function weatherDateChanged(){
+ invalidateWeather('Reisedatum geändert');
+ if(state.stages?.length&&tripStartDate())loadWeather(true);
+ else {renderStagesKeepProfile();renderWeatherCheck();}
+}
 function printTerrainLabel(t){
  if(!t)return 'offen';
  if((Number(t.coverage)||0)<50)return `unzureichend (${Math.round(Number(t.coverage)||0)}%)`;
@@ -740,6 +956,22 @@ function buildPrintReport(){
      <p><span class="pr-badge ${currentTerrainConfidence()>=50?'pr-ok':'pr-warn'}">${currentTerrainConfidence()>=50?'Terrain kann berücksichtigt werden':'Terrain noch nicht belastbar'}</span></p>
    </section>`;
 
+
+ const weatherRows=(state.weather?.stages||[]);
+ const weatherSection=tripStartDate()?`
+   <section>
+     <h2>Wetter</h2>
+     <p class="pr-muted">Reisestart ${escapeHTML(tripStartDate())}. Wetter je Etappe entlang von Start, Hochpunkt und Ziel.</p>
+     ${weatherRows.length?`<table>
+       <thead><tr><th>Tag</th><th>Datum</th><th>Temperatur</th><th>Regen</th><th>Wind</th><th>Status</th></tr></thead>
+       <tbody>${state.stages.map((s,i)=>{
+         const w=weatherRows[i];
+         if(!w?.available)return `<tr><td>${i+1}</td><td>${escapeHTML(addDaysISO(tripStartDate(),i))}</td><td colspan="4">${escapeHTML(w?.reason||'Noch keine Detailprognose')}</td></tr>`;
+         const status=w.overall==='high'?'Wetter relevant':w.overall==='watch'?'beobachten':'unauffällig';
+         return `<tr><td>${i+1}</td><td>${escapeHTML(w.date||addDaysISO(tripStartDate(),i))}</td><td>${Math.round(Number(w.tmin))}–${Math.round(Number(w.tmax))} °C</td><td>${Math.round(Number(w.rain_probability)||0)} %</td><td>${Math.round(Number(w.wind_kmh)||0)} km/h</td><td>${status}</td></tr>`;
+       }).join('')}</tbody>
+     </table>`:`<p class="pr-muted">Wetterdaten noch nicht geladen.</p>`}
+   </section>`:'';
  const selectedLodgings=Object.entries(state.lodging?.selected||{}).map(([i,x])=>({stage:Number(i),...x})).sort((a,b)=>a.stage-b.stage);
  const lodgingSection=`
    <section>
@@ -773,7 +1005,7 @@ function buildPrintReport(){
      <h2>Reise-Check</h2>
      <div class="pr-columns">
        <div><h3>Navigation</h3><p>Finale Route als GPX exportierbar · ausgewählte Unterkünfte als Wegpunkte enthalten.</p></div>
-       <div><h3>Wetter</h3><p>72 h vor Abfahrt: Regen, Wind und Temperatur prüfen.</p></div>
+       <div><h3>Wetter</h3><p>Etappenweise Prognose entlang der Route; näher an der Reise erneut aktualisieren.</p></div>
        <div><h3>Reservierungen</h3><p>Unterkünfte und Transfers extern bestätigen.</p></div>
        <div><h3>Strom & Licht</h3><p>Computer · Frontlicht · Rücklicht · Powerbank</p></div>
      </div>
@@ -785,6 +1017,7 @@ function buildPrintReport(){
    ${routeSection}
    ${stagesSection}
    ${bikeSection}
+   ${weatherSection}
    ${lodgingSection}
    ${packSection}
    ${checkSection}
@@ -952,6 +1185,8 @@ async function calculateRoute(){
    // A newly calculated route must never inherit Terrain from a previous backend run.
    state.terrain={status:'idle',stages:[],source:null,warning:null};
    state.lodging={results:{},status:{},selected:{},stageMode:{},searchInfo:{}};
+   invalidateWeather('Neue Route');
+   localStorage.removeItem('abo-mobile-weather-v1');
    localStorage.removeItem('abo-mobile-lodging-stage-modes');
    localStorage.removeItem('abo-mobile-lodging-selected');
    localStorage.removeItem('abo-mobile-terrain-v3');
@@ -963,6 +1198,7 @@ async function calculateRoute(){
    requestAnimationFrame(()=>requestAnimationFrame(()=>{renderRoute();renderBikeSetup();}));
    resolveStageNames();
    setTimeout(()=>analyzeTerrain(true),250);
+   if(tripStartDate())setTimeout(()=>loadWeather(true),450);
  }catch(e){toast(e.message)}
  finally{load.classList.remove('show')}
 }
@@ -1795,6 +2031,7 @@ async function rerouteThroughLodgings(changedStage=null){
    refreshLodgingRouteDistances();
 
    state.terrain={status:'idle',stages:[],source:null,warning:null};
+   invalidateWeather('Route an Unterkunft angepasst');
    localStorage.removeItem('abo-mobile-terrain-v6');
    localStorage.setItem('abo-mobile-stage-names',JSON.stringify(state.stageNames));
    localStorage.setItem('abo-mobile-route',JSON.stringify({
@@ -1805,6 +2042,7 @@ async function rerouteThroughLodgings(changedStage=null){
    renderRoute();renderBikeSetup();
    toast('Route an Unterkunft angepasst');
    setTimeout(()=>analyzeTerrain(true),250);
+   if(tripStartDate())setTimeout(()=>loadWeather(true),450);
  }catch(e){
    if(changedStage!=null && state.lodging?.selected?.[changedStage])state.lodging.selected[changedStage].routeApplied=false;
    toast(e.message||'Route konnte nicht angepasst werden');
@@ -2039,6 +2277,7 @@ function renderStages(){
        </div>
        <div class="stage-profile-note">${terrainForStage(i)?.segments?.length?'Terrainfarben folgen den gematchten Abschnitten dieser Etappe.':'Terrainabschnitte noch nicht verfügbar – das Etappenprofil wird trotzdem vergrößert angezeigt.'}</div>
      </div>
+     ${weatherHTML(i)}
      ${lodgingStageHTML(i)}
      <div class="stage-actions">
        <button class="stage-map-btn" type="button" onclick="event.stopPropagation();showStageOnMap(${i},event)">Etappe ${i+1} auf Karte</button>
@@ -2048,6 +2287,7 @@ function renderStages(){
    </div>`;
  }).join('');
  renderLodgingCheck();
+ renderWeatherCheck();
 }
 
 function drawStageElevation(i){
@@ -2514,11 +2754,13 @@ function unpack(id){
  restoreRiderProfile();
  restoreBikeProfile();
  restoreLodgingPrefs();
+ restoreTripPrefs();
  restoreLodgingSelections();
  restoreStageLodgingModes();
  initGear();
  const saved=localStorage.getItem('abo-mobile-route');
  if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);state.stageAnchors=x.stageAnchors||[];state.routeStart=x.routeStart||null;if(!state.stageAnchors.length||!state.routeStart)initStageAnchors();$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v6')||'null');const key=`v6|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-profile-v2.1'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'Valhalla',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
+ if(state.coords&&tripStartDate())setTimeout(()=>loadWeather(false),350);
  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
