@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.93-terrain-visual-v2.1 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.94-lodging-route-via (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -1589,6 +1589,122 @@ def weather():
     except Exception as e:
         print(f"[WEATHER] ERROR: {type(e).__name__}: {e}",flush=True)
         return jsonify(available=False,reason="Wetterdaten derzeit nicht verfügbar.",results=[]),200
+
+
+def _route_coord_distance_m(a,b):
+    import math
+    lat1,lon1=float(a[1]),float(a[0])
+    lat2,lon2=float(b[1]),float(b[0])
+    R=6371000.0
+    p1,p2=math.radians(lat1),math.radians(lat2)
+    dp=math.radians(lat2-lat1);dl=math.radians(lon2-lon1)
+    q=math.sin(dp/2)**2+math.cos(p1)*math.cos(p2)*math.sin(dl/2)**2
+    return 2*R*math.asin(min(1.0,math.sqrt(q)))
+
+def _nearest_route_indices(coords, points):
+    out=[]
+    start=0
+    for p in points[1:]:
+        target=[float(p["lon"]),float(p["lat"])]
+        best_i=start
+        best_d=None
+        for i in range(start,len(coords)):
+            try:
+                d=_route_coord_distance_m(coords[i],target)
+            except Exception:
+                continue
+            if best_d is None or d<best_d:
+                best_d=d;best_i=i
+        out.append(best_i)
+        start=min(len(coords)-1,best_i+1)
+    if out:
+        out[-1]=len(coords)-1
+    return out
+
+def _brouter_via(points, profile="trekking"):
+    lonlats="|".join(f'{float(p["lon"])},{float(p["lat"])}' for p in points)
+    r=session.get(
+        "https://brouter.de/brouter",
+        params={"lonlats":lonlats,"profile":profile,"alternativeidx":0,"format":"geojson"},
+        timeout=32
+    )
+    print(f"[ROUTE-VIA] BRouter status={r.status_code} points={len(points)}",flush=True)
+    r.raise_for_status()
+    data=r.json()
+    f=(data.get("features") or [data])[0] if isinstance(data,dict) else data
+    coords=((f or {}).get("geometry") or {}).get("coordinates") or []
+    if len(coords)<2:
+        raise ValueError("BRouter lieferte keine Via-Geometrie")
+    return f
+
+@app.post("/api/route-via")
+def route_via():
+    """
+    Route through explicit stage-end waypoints.
+    Used when an accommodation becomes the real end point of a day.
+    """
+    try:
+        body=request.get_json(force=True) or {}
+        raw=(body.get("points") or [])[:10]
+        profile=body.get("profile") or "trekking"
+        points=[]
+        for p in raw:
+            try:
+                points.append({"lat":float(p["lat"]),"lon":float(p["lon"])})
+            except (TypeError,ValueError,KeyError):
+                continue
+        if len(points)<2:
+            return jsonify(error="Mindestens Start und Ziel sind erforderlich."),400
+
+        key=("via",profile)+tuple((round(p["lat"],5),round(p["lon"],5)) for p in points)
+        cached=_cache_get(_route_cache,key,CACHE_TTL_ROUTE)
+        if cached is not None:
+            cached["properties"]["cached"]=True
+            return jsonify(cached)
+
+        routing_source="BRouter via"
+        try:
+            f=_brouter_via(points,profile)
+            coords=(f.get("geometry") or {}).get("coordinates") or []
+            leg_end_indices=_nearest_route_indices(coords,points)
+        except Exception as e:
+            print(f"[ROUTE-VIA] BRouter failed {type(e).__name__}: {e}; using leg fallback",flush=True)
+            routing_source="multi-engine leg fallback"
+            coords=[]
+            leg_end_indices=[]
+            properties={}
+            for i in range(len(points)-1):
+                feature,source=race_route(points[i],points[i+1],profile)
+                ff=feature["features"][0] if isinstance(feature,dict) and "features" in feature else feature
+                leg=((ff or {}).get("geometry") or {}).get("coordinates") or []
+                if len(leg)<2:
+                    raise ValueError(f"Keine Geometrie für Via-Abschnitt {i+1}")
+                if coords and coords[-1][:2]==leg[0][:2]:
+                    leg=leg[1:]
+                coords.extend(leg)
+                leg_end_indices.append(len(coords)-1)
+                properties.update((ff or {}).get("properties") or {})
+            f={"geometry":{"type":"LineString","coordinates":coords},"properties":properties}
+
+        result={
+            "geometry":{"type":"LineString","coordinates":coords},
+            "properties":{
+                **((f or {}).get("properties") or {}),
+                "routing_source":routing_source,
+                "cached":False,
+                "via_count":max(0,len(points)-2)
+            },
+            "leg_end_indices":leg_end_indices
+        }
+        _cache_set(_route_cache,key,result)
+        return jsonify(result)
+    except requests.RequestException as e:
+        print(f"[ROUTE-VIA] EXTERNAL ERROR: {type(e).__name__}: {e}",flush=True)
+        return jsonify(error="Route über Unterkunft konnte gerade nicht berechnet werden.",detail=str(e)[:500]),502
+    except Exception as e:
+        print(f"[ROUTE-VIA] INTERNAL ERROR: {type(e).__name__}: {e}",flush=True)
+        return jsonify(error="Route über Unterkunft konnte nicht berechnet werden.",detail=f"{type(e).__name__}: {str(e)[:500]}"),500
+
 
 @app.post("/api/route")
 def route():
