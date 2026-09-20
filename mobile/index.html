@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.3.3</title>
+<title>Adventure Bike OS · Mobile 0.3.4</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -284,12 +284,16 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
   #printReport .pr-columns{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
   #printReport .pr-footer{margin-top:8mm;padding-top:3mm;border-top:1px solid #dfe4e0;font-size:8px;color:#748078}
 }
+
+.terrain-map-legend{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px;font-size:10px;color:#68736d}
+.terrain-map-legend span{display:inline-flex;align-items:center;gap:4px}
+.terrain-map-legend i{width:14px;height:4px;border-radius:3px;display:inline-block}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.3.3</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.3.4</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -355,7 +359,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
         </div>
       </div>
       <div class="card"><h3>Karte</h3><div class="map-shell"><div id="map"></div><div id="mapShield" class="map-gesture-shield" aria-hidden="true"></div></div>
-<div class="map-actions"><button id="mapToggle" class="map-toggle" type="button" onclick="toggleMapInteraction()">Karte aktivieren</button></div></div>
+<div class="map-actions"><button id="mapToggle" class="map-toggle" type="button" onclick="toggleMapInteraction()">Karte aktivieren</button></div><div class="terrain-map-legend"><span><i style="background:#3a7f5f"></i>befestigt</span><span><i style="background:#9a8b63"></i>fein</span><span><i style="background:#c8863b"></i>Gravel</span><span><i style="background:#b64b3b"></i>grob</span><span><i style="background:#9aa39d"></i>offen</span></div></div>
       <div class="card"><h3>Höhenprofil</h3><canvas id="elevation" class="elev"></canvas><div class="profile-info"><b id="profileStage">Gesamtroute</b><span id="profileMeta">Etappe antippen → Karte + Profil synchron</span></div></div>
       <div class="card"><h3>Etappen</h3><div id="stageList"></div></div>
     </section>
@@ -452,7 +456,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
-let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],stageLayers:[],terrain:{status:'idle',stages:[],source:null,warning:null},selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
+let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],stageLayers:[],terrainLayers:[],terrain:{status:'idle',stages:[],source:null,warning:null},selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
 
 
 function escapeHTML(v){
@@ -741,7 +745,7 @@ async function calculateRoute(){
    // A newly calculated route must never inherit Terrain from a previous backend run.
    state.terrain={status:'idle',stages:[],source:null,warning:null};
    localStorage.removeItem('abo-mobile-terrain-v3');
-   localStorage.removeItem('abo-mobile-terrain-v4');
+   localStorage.removeItem('abo-mobile-terrain-v5');
    localStorage.removeItem('abo-mobile-terrain-v3');
    state.stageNames=[$('start').value.trim(),...Array(Math.max(0,st.length-1)).fill('Etappenziel wird ermittelt …'),$('dest').value.trim()];
    localStorage.setItem('abo-mobile-route',JSON.stringify({start:$('start').value,dest:$('dest').value,coords,metrics:m,stages:st}));
@@ -788,6 +792,9 @@ function renderRoute(){
  $('distStat').textContent=m.totalDist.toFixed(0)+' km';$('hmStat').textContent=state.heightAvailable?Math.round(m.totalGain)+' HM':'–';$('stageStat').textContent=st.length;$('avgStat').textContent=(m.totalDist/st.length).toFixed(0)+' km';
  renderMap();drawElevation();renderStages();
 }
+function terrainColor(cls){
+ return {paved:'#3a7f5f',fine:'#9a8b63',gravel:'#c8863b',rough:'#b64b3b',unknown:'#9aa39d'}[cls]||'#9aa39d';
+}
 function renderMap(){
  if(!state.map){
    state.map=L.map('map',{
@@ -805,7 +812,8 @@ function renderMap(){
 
  state.layers.forEach(l=>l.remove());
  state.stageLayers.forEach(l=>l.remove());
- state.layers=[]; state.stageLayers=[];
+ (state.terrainLayers||[]).forEach(l=>l.remove());
+ state.layers=[]; state.stageLayers=[]; state.terrainLayers=[];
 
  const all=state.coords.map(c=>[c[1],c[0]]);
  const selected=state.selectedStage;
@@ -827,6 +835,25 @@ function renderMap(){
    }).addTo(state.map);
    state.stageLayers.push(layer);
  });
+
+ // Terrain v2.1: route-matched edge segments overlay the route itself.
+ if(state.terrain?.status==='ready'){
+   state.terrain.stages.forEach((t,stageIndex)=>{
+     (t?.segments||[]).forEach(seg=>{
+       const ll=(seg.geometry||[]).map(c=>[c[1],c[0]]).filter(x=>Number.isFinite(x[0])&&Number.isFinite(x[1]));
+       if(ll.length<2)return;
+       const isSel=selected==null||selected===stageIndex;
+       const layer=L.polyline(ll,{
+         color:terrainColor(seg.class),
+         weight:selected===stageIndex?8:6,
+         opacity:isSel?.96:.15,
+         lineCap:'round',
+         lineJoin:'round'
+       }).addTo(state.map);
+       state.terrainLayers.push(layer);
+     });
+   });
+ }
 
  state.map.invalidateSize(true);
  requestAnimationFrame(()=>{
@@ -918,7 +945,9 @@ function normalizeTerrainV2Stage(x){
      x.max_grade?`max. Kantensteigung ${x.max_grade}%`:null,
      x.way_count?`${x.way_count} OSM-Wege`:null
    ].filter(Boolean),
-   dataSource:x.source||'Valhalla'
+   dataSource:x.source||'Valhalla',
+   visualCoverage:Number(x.visual_coverage)||0,
+   segments:Array.isArray(x.segments)?x.segments:[]
  };
 }
 
@@ -942,7 +971,7 @@ async function analyzeTerrain(force=false){
 
  try{
    const stageShapes=stageTerrainShapes(46);
-   const r=await fetchWithTimeout(API+'/api/terrain-profile-v2',{
+   const r=await fetchWithTimeout(API+'/api/terrain-profile-v2.1',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
      body:JSON.stringify({stages:stageShapes})
@@ -964,11 +993,11 @@ async function analyzeTerrain(force=false){
      serviceCoverage:Math.round(100*(data.stage_success||0)/Math.max(1,data.stage_total||state.stages.length)),
      matchedCoverage:Math.round(100*(data.stage_success||0)/Math.max(1,data.stage_total||state.stages.length)),
      reliableCoverage:Number(data.reliable_coverage)||0,
-     dataVersion:data.version||'terrain-profile-v2'
+     dataVersion:data.version||'terrain-profile-v2.1'
    };
 
-   localStorage.setItem('abo-mobile-terrain-v4',JSON.stringify({
-     key:`v4|${$('start').value}|${$('dest').value}|${state.metrics.totalDist.toFixed(1)}`,
+   localStorage.setItem('abo-mobile-terrain-v5',JSON.stringify({
+     key:`v5|${$('start').value}|${$('dest').value}|${state.metrics.totalDist.toFixed(1)}`,
      stages,
      source:state.terrain.source,
      serviceCoverage:state.terrain.serviceCoverage,
@@ -985,6 +1014,8 @@ async function analyzeTerrain(force=false){
  }
  renderStages();
  renderBikeSetup();
+ renderMap();
+ drawElevation();
  if(state.selectedStage!=null)focusStage(state.selectedStage);
 }
 
@@ -1061,7 +1092,7 @@ function terrainHTML(i){
  if(state.terrain.status==='loading'){
    return `<div class="terrain-box">
      <div class="terrain-head"><b>Terrain Beta</b><span class="terrain-status">wird analysiert …</span></div>
-     <div class="terrain-summary">Die Route wird direkt auf das Valhalla/OSM-Wegenetz gematcht und abschnittsweise ausgewertet.</div>
+     <div class="terrain-summary">Die Route wird direkt auf das Valhalla/OSM-Wegenetz gematcht und abschnittsweise ausgewertet. Die Farben erscheinen danach auch auf Karte und Höhenprofil.</div>
    </div>`;
  }
  if(state.terrain.status==='error'){
@@ -1093,7 +1124,7 @@ function terrainHTML(i){
      <span class="terrain-chip"><i class="terrain-dot rough"></i> grob ${t.rough}%</span>
      <span class="terrain-chip"><i class="terrain-dot unknown"></i> offen ${t.unknown}%</span>
    </div>
-   <div class="terrain-summary">${C.note}. Dienst ${t.serviceCoverage}% · Weg gefunden ${t.matchedCoverage}% · zuverlässig ${t.coverage}%${t.avgDistance!=null?' · Ø '+Math.round(t.avgDistance)+' m zum OSM-Weg':''}. Ab 0.3.2 wird die tatsächliche Routengeometrie abschnittsweise per Map-Matching ausgewertet.</div>
+   <div class="terrain-summary">${C.note}. Dienst ${t.serviceCoverage}% · Weg gefunden ${t.matchedCoverage}% · zuverlässig ${t.coverage}%${t.avgDistance!=null?' · Ø '+Math.round(t.avgDistance)+' m zum OSM-Weg':''}. Ab 0.3.4 werden gematchte Terrain-Abschnitte direkt auf Karte und Höhenprofil eingefärbt.</div>
    ${caution}
  </div>`;
 }
@@ -1228,6 +1259,24 @@ function drawElevation(){
    ctx.fillStyle=stageColor(i);ctx.font=(active?'bold ':'')+'11px sans-serif';ctx.fillText('E'+(i+1),x(s.s)+4,16)
  });
  ctx.strokeStyle='#176a4d';ctx.lineWidth=2.5;ctx.beginPath();coords.forEach((p,i)=>{const X=x(i),Y=y(p[2]||0);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.stroke();
+
+ // Terrain v2.1 is painted directly onto the elevation profile.
+ if(state.terrain?.status==='ready'){
+   state.stages.forEach((st,stageIndex)=>{
+     const t=state.terrain.stages[stageIndex];
+     (t?.segments||[]).forEach(seg=>{
+       const d0=m.dist[st.s]+(m.dist[st.e]-m.dist[st.s])*(Number(seg.start_fraction)||0);
+       const d1=m.dist[st.s]+(m.dist[st.e]-m.dist[st.s])*(Number(seg.end_fraction)||0);
+       let a=st.s,b=st.e;
+       for(let i=st.s;i<=st.e;i++){if(m.dist[i]>=d0){a=i;break}}
+       for(let i=a;i<=st.e;i++){if(m.dist[i]>=d1){b=i;break}}
+       if(b<=a)b=Math.min(st.e,a+1);
+       ctx.strokeStyle=terrainColor(seg.class);ctx.lineWidth=4;ctx.beginPath();
+       for(let i=a;i<=b;i++){const X=x(i),Y=y(coords[i][2]||0);i===a?ctx.moveTo(X,Y):ctx.lineTo(X,Y)}
+       ctx.stroke();
+     });
+   });
+ }
  if(state.selectedStage!=null){
    const s=state.stages[state.selectedStage];
    ctx.strokeStyle=stageColor(state.selectedStage);ctx.lineWidth=4;ctx.beginPath();
@@ -1598,7 +1647,7 @@ function unpack(id){
  restoreBikeProfile();
  initGear();
  const saved=localStorage.getItem('abo-mobile-route');
- if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v4')||'null');const key=`v4|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-profile-v2'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'Valhalla',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
+ if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v5')||'null');const key=`v5|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-profile-v2.1'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'Valhalla',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
