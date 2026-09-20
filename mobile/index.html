@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.5.1</title>
+<title>Adventure Bike OS · Mobile 0.2.5.3</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -197,7 +197,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.5.1</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.5.3</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -665,13 +665,13 @@ function nearestWayForSample(sample,elements){
  for(const el of elements||[]){
    const geom=el.geometry||[];
    if(!geom.length)continue;
-   for(let k=0;k<geom.length;k+=Math.max(1,Math.floor(geom.length/18))){
+   for(let k=0;k<geom.length;k+=Math.max(1,Math.floor(geom.length/36))){
      const p=geom[k];
      const d=approxMeters(sample,{lat:+p.lat,lon:+p.lon});
      if(d<bestD){bestD=d;best=el}
    }
  }
- return bestD<=180?best:null;
+ return bestD<=260?best:null;
 }
 
 function summarizeTerrain(samples,elements){
@@ -712,7 +712,7 @@ async function analyzeTerrain(force=false){
  state.terrain={status:'loading',stages:[],source:null,warning:null};
  renderStages();
 
- const samples=terrainSamples(16);
+ const samples=terrainSamples(20);
  try{
    const r=await fetchWithTimeout(API+'/api/osm-terrain-batch',{
      method:'POST',
@@ -747,17 +747,48 @@ function terrainForStage(i){
 }
 
 function terrainCompatibility(t){
- if(!t)return {factor:1,label:'Terrain noch offen',note:'Terrain wird nicht gewichtet.'};
+ if(!t)return {factor:1,label:'Terrain noch offen',note:'Terrain wird nicht gewichtet.',confidence:'none'};
  const p=riderProfile();
  const skill={easy:.78,medium:1.0,advanced:1.2}[p.techskill]||1;
  const comfort={smooth:.8,mixed:1.0,rough:1.18}[p.surfacecomfort]||1;
  const tolerance=skill*comfort;
  const raw=t.risk/Math.max(.55,tolerance);
- const factor=1+Math.max(0,raw-.35)*.34;
+
+ // Datenqualität zuerst: schlechte Abdeckung darf keine scheinbar präzise Aussage erzeugen.
+ if(t.coverage<50){
+   return {
+     factor:1,
+     label:'Terrain-Daten unzureichend',
+     note:`OSM-Abdeckung ${t.coverage}% · keine Terrain-Gewichtung`,
+     confidence:'low'
+   };
+ }
+
+ const fullFactor=1+Math.max(0,raw-.35)*.34;
+
+ if(t.coverage<75){
+   const halfFactor=1+(fullFactor-1)*.5;
+   let partialLabel='Terrain teilweise verfügbar';
+   if(raw>.85)partialLabel+=' · eher anspruchsvoll';
+   else if(raw>.58)partialLabel+=' · aufmerksam';
+   return {
+     factor:halfFactor,
+     label:partialLabel,
+     note:`OSM-Abdeckung ${t.coverage}% · Terrain nur vorsichtig gewichtet`,
+     confidence:'medium'
+   };
+ }
+
  let label='Terrain passend';
  if(raw>.85)label='Terrain anspruchsvoll';
  else if(raw>.58)label='Terrain aufmerksam';
- return {factor,label,note:`OSM-Abdeckung ${t.coverage}% · grob/technisch ${t.rough}% · Gravel ${t.gravel+t.fine}%`};
+
+ return {
+   factor:fullFactor,
+   label,
+   note:`OSM-Abdeckung ${t.coverage}% · Terrain vollständig gewichtet`,
+   confidence:'high'
+ };
 }
 
 function terrainHTML(i){
@@ -780,7 +811,11 @@ function terrainHTML(i){
  }
  const seg=(k,v,cls)=>`<span class="${cls}" style="width:${Math.max(0,v)}%"></span>`;
  const C=terrainCompatibility(t);
- const caution=t.coverage<55 ? `<div class="terrain-warning">Nur ${t.coverage}% der Stichproben konnten eindeutig einer OSM-Wegeinformation zugeordnet werden. Terrainbewertung daher mit Vorsicht lesen.</div>` : '';
+ const caution=t.coverage<50
+   ? `<div class="terrain-warning">Nur ${t.coverage}% der Stichproben konnten eindeutig zugeordnet werden. Deshalb wird Terrain für diese Etappe nicht in die Belastungsbewertung eingerechnet.</div>`
+   : (t.coverage<75
+      ? `<div class="terrain-warning">${t.coverage}% Abdeckung: Terrain ist nur teilweise verfügbar und wird deshalb nur abgeschwächt berücksichtigt.</div>`
+      : '');
  return `<div class="terrain-box">
    <div class="terrain-head"><b>Terrain Beta · ${C.label}</b><span class="terrain-status">${t.samples} Stichproben</span></div>
    <div class="terrain-bar">
