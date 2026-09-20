@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/1.00-lodging-photon-first (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/1.02-mixed-stay-planner (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -1317,21 +1317,31 @@ def _lodging_allowed_types(mode):
 
 def _lodging_photon_point(lat,lon,lodging,radius_km=10,limit=24):
     """
-    Photon reverse search supports radius + osm_tag filters.
-    Query the broad tourism key, then keep only accommodation values ourselves.
+    Photon accommodation lookup.
+    Hotel keeps the proven broad tourism query.
+    Camping uses explicit tourism values so sparse camp sites are not crowded
+    out by nearby hotels/other tourism POIs.
     """
+    params=[
+        ("lat",float(lat)),("lon",float(lon)),
+        ("radius",max(1,min(float(radius_km),25))),
+        ("limit",max(1,min(int(limit),30))),
+        ("lang","de")
+    ]
+    if lodging=="camping":
+        params += [
+            ("osm_tag","tourism:camp_site"),
+            ("osm_tag","tourism:caravan_site")
+        ]
+    else:
+        params += [("osm_tag","tourism")]
+
     r=session.get(
         "https://photon.komoot.io/reverse",
-        params={
-            "lat":float(lat),"lon":float(lon),
-            "radius":max(1,min(float(radius_km),25)),
-            "limit":max(1,min(int(limit),30)),
-            "lang":"de",
-            "osm_tag":"tourism"
-        },
+        params=params,
         timeout=6
     )
-    print(f"[LODGING-PHOTON] {lat:.4f},{lon:.4f} status={r.status_code}",flush=True)
+    print(f"[LODGING-PHOTON] mode={lodging} {lat:.4f},{lon:.4f} status={r.status_code}",flush=True)
     r.raise_for_status()
 
     allowed=_lodging_allowed_types(lodging)
@@ -1455,19 +1465,24 @@ def _lodging_overpass_fallback(points,lodging,radius=9000):
 @app.post("/api/lodging-nearby")
 def lodging_nearby():
     """
-    Fast-first accommodation lookup.
-    1) Photon reverse POI search (primary, short timeout)
-    2) public Overpass only if Photon returns no usable accommodation
+    Stable per-night accommodation lookup.
+    - hotel: unchanged fast Photon-first path
+    - camping: targeted Photon filters, wider corridor; Overpass only fallback
+    - mixed: hotel and camping are queried separately, then merged so camping
+      cannot disappear behind a long hotel result list
     """
     try:
         body=request.get_json(force=True) or {}
         lodging=(body.get("lodging") or "hotel").lower()
+        if lodging not in ("hotel","camping","mixed"):
+            lodging="hotel"
+
         raw_points=body.get("points") or []
         if not raw_points and body.get("lat") is not None and body.get("lon") is not None:
             raw_points=[{"lat":body["lat"],"lon":body["lon"]}]
 
         points=[]
-        for p in raw_points[:4]:
+        for p in raw_points[:5]:
             try:
                 points.append((float(p["lat"]),float(p["lon"])))
             except (TypeError,ValueError,KeyError):
@@ -1475,38 +1490,59 @@ def lodging_nearby():
         if not points:
             return jsonify(ok=False,results=[],warning="Kein gültiger Suchpunkt."),400
 
-        key=(tuple((round(lat,3),round(lon,3)) for lat,lon in points[:2]),lodging,"photon-v1")
+        # Camping is naturally more sparse than hotels, therefore it gets
+        # more route sample points and a wider radius.
+        point_count=4 if lodging in ("camping","mixed") else 2
+        key=(tuple((round(lat,3),round(lon,3)) for lat,lon in points[:point_count]),lodging,"stay-v2")
         cached=_cache_get(_lodging_cache,key,CACHE_TTL_LODGING)
         if cached is not None:
             return jsonify(**cached,cached=True)
 
         from concurrent.futures import ThreadPoolExecutor, as_completed
-        rows=[]
-        photon_errors=[]
-        with ThreadPoolExecutor(max_workers=min(2,len(points))) as pool:
-            futs=[pool.submit(_lodging_photon_point,lat,lon,lodging,10,24) for lat,lon in points[:2]]
-            for fut in as_completed(futs):
-                try:
-                    rows.extend(fut.result())
-                except Exception as e:
-                    photon_errors.append(type(e).__name__)
 
-        rows=_lodging_dedupe(rows)
+        def query_mode(mode):
+            radius=18 if mode=="camping" else 10
+            use_points=points[:4] if mode=="camping" else points[:2]
+            rows=[]; errors=[]
+            with ThreadPoolExecutor(max_workers=min(len(use_points),4)) as pool:
+                futs=[pool.submit(_lodging_photon_point,lat,lon,mode,radius,30) for lat,lon in use_points]
+                for fut in as_completed(futs):
+                    try: rows.extend(fut.result())
+                    except Exception as e: errors.append(type(e).__name__)
+            return _lodging_dedupe(rows),errors
+
+        photon_errors=[]
+        if lodging=="mixed":
+            # Separate pools prevent the dense hotel category from starving camping.
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                fh=pool.submit(query_mode,"hotel")
+                fc=pool.submit(query_mode,"camping")
+                hotel_rows,hotel_err=fh.result()
+                camp_rows,camp_err=fc.result()
+            photon_errors=hotel_err+camp_err
+            # Keep a balanced candidate set: nearest sorting is done on mobile.
+            rows=_lodging_dedupe(hotel_rows[:14]+camp_rows[:14])
+        else:
+            rows,photon_errors=query_mode(lodging)
+
         if rows:
             out={
-                "ok":True,"results":rows[:20],
+                "ok":True,"results":rows[:28],
                 "source":"Photon","fallback_used":False,
-                "warning":None
+                "mode":lodging,"warning":None
             }
             _cache_set(_lodging_cache,key,out)
             return jsonify(**out)
 
-        source,rows=_lodging_overpass_fallback(points,lodging,9000)
+        # Last resort only. Camping uses a larger corridor than hotels.
+        fallback_radius=16000 if lodging=="camping" else (14000 if lodging=="mixed" else 9000)
+        source,rows=_lodging_overpass_fallback(points,lodging,fallback_radius)
         rows=_lodging_dedupe(rows)
         if rows:
             out={
-                "ok":True,"results":rows[:20],
+                "ok":True,"results":rows[:28],
                 "source":source or "Overpass fallback","fallback_used":True,
+                "mode":lodging,
                 "warning":"Photon ohne Treffer; OSM-Fallback verwendet."
             }
             _cache_set(_lodging_cache,key,out)
@@ -1514,8 +1550,8 @@ def lodging_nearby():
 
         return jsonify(
             ok=True,results=[],source="Photon + OSM fallback",
-            fallback_used=True,
-            warning="Keine passenden Unterkünfte im Suchbereich gefunden.",
+            fallback_used=True,mode=lodging,
+            warning="Keine passenden Unterkünfte im Suchkorridor gefunden.",
             diagnostics={"photon_errors":photon_errors}
         ),200
     except Exception as e:
