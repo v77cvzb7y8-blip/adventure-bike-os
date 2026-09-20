@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.3</title>
+<title>Adventure Bike OS · Mobile 0.2.3.1</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -148,12 +148,20 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .loadbar i.warn{background:#c3902d}
 .loadbar i.over{background:#c55245}
 
+
+.stage-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.stage-map-btn{
+  border:0;border-radius:999px;background:#187a59;color:#fff;
+  padding:8px 10px;font-size:10px;font-weight:800
+}
+.stage-map-btn:active{transform:scale(.98)}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.3</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.3.1</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -490,9 +498,30 @@ function renderMap(){
  requestAnimationFrame(()=>state.map.fitBounds(line.getBounds(),{padding:[15,15]}));
 }
 function stageColor(i){return ['#2b83ba','#d7191c','#1a9c7c','#e6ab02','#f07b3f','#8064a2','#39806f','#ff7043','#7a568f'][i%9]}
+
+function showStageOnMap(i,ev){
+ if(ev){ev.preventDefault();ev.stopPropagation();}
+ focusStage(i);
+ requestAnimationFrame(()=>{
+   if(state.map){
+     state.map.invalidateSize(true);
+     const st=state.stages[i];
+     if(st){
+       const ll=state.coords.slice(st.s,st.e+1).map(c=>[c[1],c[0]]);
+       const bounds=L.latLngBounds(ll);
+       state.map.fitBounds(bounds,{padding:[24,24],animate:false});
+     }
+   }
+   const mapCard=$('map')?.closest('.card');
+   if(mapCard) mapCard.scrollIntoView({behavior:'smooth',block:'start'});
+ });
+}
+
 function focusStage(i){
  setMapInteraction(false);
- const st=state.stages[i];if(!st||!state.map)return;
+ const st=state.stages[i];if(!st)return;
+ if(!state.map) renderMap();
+ if(!state.map)return;
  state.selectedStage=i;
  state.layers.slice(1).forEach(l=>l.remove());state.layers=state.layers.slice(0,1);
  const ll=state.coords.slice(st.s,st.e+1).map(c=>[c[1],c[0]]);
@@ -569,9 +598,8 @@ function renderStages(){
    const from=state.stageNames[i]||($('start').value.trim()||'Start');
    const to=state.stageNames[i+1]||`Etappenziel ${i+1}`;
    const loading=to.includes('ermittelt');
-   const load=Math.round((s.km/target)*100);
    const L=stageLoad(s);
-   return `<div class="stage ${state.selectedStage===i?'active':''}" onclick="focusStage(${i})">
+   return `<div class="stage ${state.selectedStage===i?'active':''}" data-stage="${i}">
      <div class="stagehead"><b>Etappe ${i+1}</b><span>Tag ${i+1}</span></div>
      <div class="stage-route ${loading?'route-name-loading':''}">${from} → ${to}</div>
      <div class="stage-dayline">Tagesziel: ${(+($('kmday').value)||120).toFixed(0)} km · max. ${Math.round(+($('hmday').value)||1800)} HM</div>
@@ -581,11 +609,13 @@ function renderStages(){
        <div class="stage-stat"><span>Anstieg</span><b>${state.heightAvailable?Math.round(s.hm)+' HM':'–'}</b></div>
      </div>
      <div class="stage-meta">
-       <span class="pill">Karte + Profil synchron</span>
        <span class="load-badge ${L.cls}">${L.label}</span>
      </div>
      <div class="loadbar"><i class="${L.score>1.22?'over':L.score>1.02?'warn':''}" style="width:${Math.min(100,L.pct)}%"></i></div>
      <div class="load-reason">${L.reason}</div>
+     <div class="stage-actions">
+       <button class="stage-map-btn" type="button" onclick="showStageOnMap(${i},event)">Etappe ${i+1} auf Karte</button>
+     </div>
      ${state.stages.length===2 && i===0 && state.stages[1].km>=target*.45?'<div class="stage-note">Etappen wurden ausgeglichener verteilt, damit kein sehr kurzer Resttag entsteht.</div>':''}
    </div>`;
  }).join('');
