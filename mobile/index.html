@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.4.1</title>
+<title>Adventure Bike OS · Mobile 0.2.5</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -173,12 +173,31 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .factor-track i{display:block;height:100%;background:#2a7a5c;border-radius:inherit}
 .factor-val{font-size:9px;color:#6c7871}
 
+
+.terrain-box{margin-top:10px;padding:10px;border:1px solid #dbe4de;border-radius:12px;background:#f8faf8}
+.terrain-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.terrain-head b{font-size:12px}
+.terrain-status{font-size:10px;color:#68776f}
+.terrain-bar{display:flex;height:9px;border-radius:999px;overflow:hidden;background:#e8ede9;margin-top:8px}
+.terrain-bar span{height:100%}
+.terrain-legend{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px;font-size:9px;color:#68776f}
+.terrain-chip{display:inline-flex;align-items:center;gap:4px}
+.terrain-dot{width:8px;height:8px;border-radius:50%;background:#8ba79a;display:inline-block}
+.terrain-dot.paved{background:#6f8f83}
+.terrain-dot.fine{background:#b5a777}
+.terrain-dot.gravel{background:#a38352}
+.terrain-dot.rough{background:#b45d4d}
+.terrain-dot.unknown{background:#cdd5d0}
+.terrain-summary{margin-top:7px;font-size:10px;color:#50665a;line-height:1.4}
+.terrain-warning{margin-top:7px;padding:7px 8px;border-radius:9px;background:#fff5e8;border:1px solid #ecd7ad;font-size:10px;color:#7c6535}
+.terrain-btn{border:0;border-radius:999px;background:#eaf3ed;color:#17684c;font-size:10px;font-weight:800;padding:6px 8px}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.4.1</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.5</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -298,7 +317,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
-let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],stageLayers:[],selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
+let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],stageLayers:[],terrain:{status:'idle',stages:[],source:null,warning:null},selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
 
 function $(id){return document.getElementById(id)}
 function toast(t){const x=$('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',1400)}
@@ -457,6 +476,7 @@ async function calculateRoute(){
    go('stages');
    requestAnimationFrame(()=>requestAnimationFrame(()=>renderRoute()));
    resolveStageNames();
+   setTimeout(()=>analyzeTerrain(false),250);
  }catch(e){toast(e.message)}
  finally{load.classList.remove('show')}
 }
@@ -576,6 +596,182 @@ function focusStage(i){
  $('profileMeta').textContent=`${st.km.toFixed(0)} km · ${state.heightAvailable?Math.round(st.hm)+' HM':'HM –'} · ${load.label}`;
 }
 
+
+function terrainClass(tags){
+ tags=tags||{};
+ const surface=(tags.surface||'').toLowerCase();
+ const track=(tags.tracktype||'').toLowerCase();
+ const highway=(tags.highway||'').toLowerCase();
+ const smooth=(tags.smoothness||'').toLowerCase();
+ const mtb=parseFloat(tags['mtb:scale']||'0')||0;
+
+ if(mtb>=1 || ['very_bad','horrible','very_horrible','impassable'].includes(smooth) || ['grade4','grade5'].includes(track)){
+   return {key:'rough',label:'grob / technisch',risk:1.0};
+ }
+ if(['ground','dirt','earth','mud','sand','grass'].includes(surface) || track==='grade3'){
+   return {key:'rough',label:'unbefestigt / grob',risk:.85};
+ }
+ if(['gravel','pebblestone'].includes(surface) || track==='grade2'){
+   return {key:'gravel',label:'Gravel',risk:.55};
+ }
+ if(['fine_gravel','compacted'].includes(surface) || track==='grade1'){
+   return {key:'fine',label:'feiner Schotter',risk:.28};
+ }
+ if(['asphalt','paved','concrete','concrete:plates','paving_stones'].includes(surface)){
+   return {key:'paved',label:'befestigt',risk:.08};
+ }
+ if(surface==='unpaved'){
+   return {key:'gravel',label:'unbefestigt',risk:.55};
+ }
+ if(['motorway','trunk','primary','secondary','tertiary','residential','living_street','service','cycleway'].includes(highway)){
+   return {key:'unknown',label:'Untergrund unbekannt',risk:.18};
+ }
+ if(highway==='track'){
+   return {key:'unknown',label:'Track · Oberfläche unbekannt',risk:.6};
+ }
+ if(['path','bridleway'].includes(highway)){
+   return {key:'unknown',label:'Pfad · Oberfläche unbekannt',risk:.78};
+ }
+ return {key:'unknown',label:'unbekannt',risk:.35};
+}
+
+function approxMeters(a,b){
+ const R=6371000, p1=a.lat*Math.PI/180, p2=b.lat*Math.PI/180;
+ const dp=(b.lat-a.lat)*Math.PI/180, dl=(b.lon-a.lon)*Math.PI/180;
+ const h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+ return 2*R*Math.asin(Math.sqrt(h));
+}
+
+function terrainSamples(limit=16){
+ if(!state.coords||!state.metrics||!state.stages.length)return [];
+ const out=[], total=Math.max(1,state.metrics.totalDist);
+ const n=Math.min(limit,Math.max(8,state.stages.length*6));
+ for(let j=0;j<n;j++){
+   const target=total*(j+.5)/n;
+   let best=0,bd=Infinity;
+   for(let i=0;i<state.metrics.dist.length;i++){
+     const d=Math.abs(state.metrics.dist[i]-target);
+     if(d<bd){bd=d;best=i}
+   }
+   const c=state.coords[best];
+   const stageIndex=Math.max(0,state.stages.findIndex(s=>best>=s.s&&best<=s.e));
+   out.push({lat:c[1],lon:c[0],routeIndex:best,stageIndex});
+ }
+ return out;
+}
+
+function nearestWayForSample(sample,elements){
+ let best=null,bestD=Infinity;
+ for(const el of elements||[]){
+   const geom=el.geometry||[];
+   if(!geom.length)continue;
+   for(let k=0;k<geom.length;k+=Math.max(1,Math.floor(geom.length/18))){
+     const p=geom[k];
+     const d=approxMeters(sample,{lat:+p.lat,lon:+p.lon});
+     if(d<bestD){bestD=d;best=el}
+   }
+ }
+ return bestD<=180?best:null;
+}
+
+function summarizeTerrain(samples,elements){
+ const stageRows=state.stages.map(()=>({paved:0,fine:0,gravel:0,rough:0,unknown:0,total:0,risk:0,matched:0}));
+ samples.forEach(s=>{
+   const row=stageRows[Math.min(stageRows.length-1,s.stageIndex)] || stageRows[0];
+   const way=nearestWayForSample(s,elements);
+   const cls=terrainClass((way||{}).tags||{});
+   row[cls.key]++; row.total++; row.risk+=cls.risk;
+   if(way)row.matched++;
+ });
+ return stageRows.map(r=>{
+   const total=Math.max(1,r.total);
+   const pct=k=>Math.round((r[k]/total)*100);
+   return {
+     paved:pct('paved'),fine:pct('fine'),gravel:pct('gravel'),rough:pct('rough'),unknown:pct('unknown'),
+     risk:r.risk/total,coverage:Math.round((r.matched/total)*100),samples:r.total
+   };
+ });
+}
+
+async function analyzeTerrain(force=false){
+ if(!state.coords||!state.stages.length)return;
+ if(state.terrain.status==='loading')return;
+ if(!force && state.terrain.status==='ready')return;
+
+ state.terrain={status:'loading',stages:[],source:null,warning:null};
+ renderStages();
+
+ const samples=terrainSamples(16);
+ try{
+   const r=await fetch(API+'/api/osm-terrain-batch',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({samples:samples.map(s=>({lat:s.lat,lon:s.lon}))})
+   });
+   const data=await r.json();
+   if(!r.ok || !data.ok)throw new Error(data.warning||'Terrain-Daten nicht verfügbar');
+   const stages=summarizeTerrain(samples,data.elements||[]);
+   state.terrain={status:'ready',stages,source:data.source||'OSM',warning:null};
+   localStorage.setItem('abo-mobile-terrain',JSON.stringify({
+     key:`${$('start').value}|${$('dest').value}|${state.metrics.totalDist.toFixed(1)}`,
+     stages,source:state.terrain.source
+   }));
+ }catch(e){
+   state.terrain={status:'error',stages:[],source:null,warning:e.message||'Terrain-Daten nicht verfügbar'};
+ }
+ renderStages();
+ if(state.selectedStage!=null)focusStage(state.selectedStage);
+}
+
+function terrainForStage(i){
+ return state.terrain.status==='ready' ? (state.terrain.stages[i]||null) : null;
+}
+
+function terrainCompatibility(t){
+ if(!t)return {factor:1,label:'Terrain noch offen',note:'Terrain wird nicht gewichtet.'};
+ const p=riderProfile();
+ const skill={easy:.78,medium:1.0,advanced:1.2}[p.techskill]||1;
+ const comfort={smooth:.8,mixed:1.0,rough:1.18}[p.surfacecomfort]||1;
+ const tolerance=skill*comfort;
+ const raw=t.risk/Math.max(.55,tolerance);
+ const factor=1+Math.max(0,raw-.35)*.34;
+ let label='Terrain passend';
+ if(raw>.85)label='Terrain anspruchsvoll';
+ else if(raw>.58)label='Terrain aufmerksam';
+ return {factor,label,note:`OSM-Abdeckung ${t.coverage}% · grob/technisch ${t.rough}% · Gravel ${t.gravel+t.fine}%`};
+}
+
+function terrainHTML(i){
+ const t=terrainForStage(i);
+ if(state.terrain.status==='loading'){
+   return `<div class="terrain-box"><div class="terrain-head"><b>Terrain Beta</b><span class="terrain-status">wird analysiert …</span></div></div>`;
+ }
+ if(state.terrain.status==='error'){
+   return `<div class="terrain-box"><div class="terrain-head"><b>Terrain Beta</b><button class="terrain-btn" onclick="event.stopPropagation();analyzeTerrain(true)">erneut laden</button></div><div class="terrain-summary">Terrain-Daten konnten gerade nicht geladen werden. Distanz/HM-Bewertung bleibt aktiv.</div></div>`;
+ }
+ if(!t){
+   return `<div class="terrain-box"><div class="terrain-head"><b>Terrain Beta</b><button class="terrain-btn" onclick="event.stopPropagation();analyzeTerrain(true)">analysieren</button></div><div class="terrain-summary">OSM-Untergrunddaten noch nicht geladen.</div></div>`;
+ }
+ const seg=(k,v,cls)=>`<span class="${cls}" style="width:${Math.max(0,v)}%"></span>`;
+ const C=terrainCompatibility(t);
+ const caution=t.coverage<55 ? `<div class="terrain-warning">Nur ${t.coverage}% der Stichproben konnten eindeutig einer OSM-Wegeinformation zugeordnet werden. Terrainbewertung daher mit Vorsicht lesen.</div>` : '';
+ return `<div class="terrain-box">
+   <div class="terrain-head"><b>Terrain Beta · ${C.label}</b><span class="terrain-status">${t.samples} Stichproben</span></div>
+   <div class="terrain-bar">
+     ${seg('paved',t.paved,'paved')}${seg('fine',t.fine,'fine')}${seg('gravel',t.gravel,'gravel')}${seg('rough',t.rough,'rough')}${seg('unknown',t.unknown,'unknown')}
+   </div>
+   <div class="terrain-legend">
+     <span class="terrain-chip"><i class="terrain-dot paved"></i> befestigt ${t.paved}%</span>
+     <span class="terrain-chip"><i class="terrain-dot fine"></i> fein ${t.fine}%</span>
+     <span class="terrain-chip"><i class="terrain-dot gravel"></i> Gravel ${t.gravel}%</span>
+     <span class="terrain-chip"><i class="terrain-dot rough"></i> grob ${t.rough}%</span>
+     <span class="terrain-chip"><i class="terrain-dot unknown"></i> offen ${t.unknown}%</span>
+   </div>
+   <div class="terrain-summary">${C.note}. Die Werte sind eine OSM-Näherung entlang der Route, keine fahrtechnische Vor-Ort-Garantie.</div>
+   ${caution}
+ </div>`;
+}
+
 function riderProfile(){
  return {
    fitkm: Math.max(20, +$('fitkm').value || 80),
@@ -603,7 +799,10 @@ function stageLoad(stage){
  // Technik/Terrain werden im Profil bereits erfasst, fließen aber erst ein,
  // sobald echte Untergrunddaten pro Streckenabschnitt verfügbar sind.
  const fitnessScore=(Math.max(fitKmRatio,fitHmRatio)*.58 + Math.max(dayKmRatio,dayHmRatio)*.42);
- const score=fitnessScore*multiFactor*intensityFactor;
+ const stageIndex=state.stages.indexOf(stage);
+ const t=stageIndex>=0?terrainForStage(stageIndex):null;
+ const terrain=terrainCompatibility(t);
+ const score=fitnessScore*multiFactor*intensityFactor*terrain.factor;
 
  let label='passend',cls='load-fit';
  if(score<.72){label='locker';cls='load-easy'}
@@ -622,7 +821,10 @@ function stageLoad(stage){
    dayKmPct:Math.round(dayKmRatio*100),
    dayHmPct:Math.round(dayHmRatio*100),
    techLabel:{easy:'eher einfache Wege',medium:'solides Gravel-Niveau',advanced:'technisch erfahren'}[p.techskill]||'solides Gravel-Niveau',
-   surfaceLabel:{smooth:'Asphalt / feiner Schotter',mixed:'gemischt',rough:'auch grober Untergrund'}[p.surfacecomfort]||'gemischt'
+   surfaceLabel:{smooth:'Asphalt / feiner Schotter',mixed:'gemischt',rough:'auch grober Untergrund'}[p.surfacecomfort]||'gemischt',
+   terrainLabel:terrain.label,
+   terrainNote:terrain.note,
+   terrainActive:!!t
  };
 }
 function saveRiderProfile(){
@@ -674,8 +876,9 @@ function renderStages(){
        <b>${L.dominant} prägt diese Etappe stärker.</b>
        <div class="factor-row"><b>Distanz</b><span class="factor-track"><i style="width:${Math.min(100,L.fitKmPct)}%"></i></span><span class="factor-val">${L.fitKmPct}% deiner typischen Tour</span></div>
        <div class="factor-row"><b>Höhenmeter</b><span class="factor-track"><i style="width:${Math.min(100,L.fitHmPct)}%"></i></span><span class="factor-val">${L.fitHmPct}% deiner typischen Tour</span></div>
-       <div class="tech-note">Technikprofil: ${L.techLabel} · Untergrund-Komfort: ${L.surfaceLabel}. Noch nicht in der Bewertung gewichtet, bis echte Terrain-Daten pro Abschnitt vorhanden sind.</div>
+       <div class="tech-note">Technikprofil: ${L.techLabel} · Untergrund-Komfort: ${L.surfaceLabel}. ${L.terrainActive ? 'Terrain fließt als OSM-Näherung in die Bewertung ein: '+L.terrainLabel+'.' : 'Terrain noch nicht geladen; Bewertung basiert derzeit auf Distanz und Höhenmetern.'}</div>
      </div>
+     ${terrainHTML(i)}
      <div class="stage-actions">
        <button class="stage-map-btn" type="button" onclick="event.stopPropagation();showStageOnMap(${i},event)">Etappe ${i+1} auf Karte</button>
      </div>
@@ -831,7 +1034,7 @@ function unpack(id){
  restoreRiderProfile();
  initGear();
  const saved=localStorage.getItem('abo-mobile-route');
- if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest]}catch(e){}}
+ if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain')||'null');const key=`${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'OSM',warning:null}}catch(e){}}
  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
