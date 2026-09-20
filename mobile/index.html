@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.3.8</title>
+<title>Adventure Bike OS · Mobile 0.3.8.1</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -335,7 +335,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.3.8</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.3.8.1</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -1476,8 +1476,10 @@ function lodgingStageHTML(i){
    </div>`;
  }else if(status==='loading'){
    body=`<div class="lodging-empty">Unterkünfte rund um ${escapeHTML(destination)} werden gesucht …</div>`;
+ }else if(status==='timeout'){
+   body=`<div class="lodging-empty">Die Unterkunftssuche hat zu lange gedauert. Bitte erneut versuchen.</div>`;
  }else if(status==='error'){
-   body=`<div class="lodging-empty">Unterkünfte konnten gerade nicht geladen werden. Bitte später erneut versuchen.</div>`;
+   body=`<div class="lodging-empty">Unterkünfte konnten gerade nicht geladen werden. Bitte erneut versuchen.</div>`;
  }else if(rows.length){
    body=`<div class="lodging-list">${rows.map(x=>`<div class="lodging-item">
      <h4>${escapeHTML(x.name)}</h4>
@@ -1488,6 +1490,8 @@ function lodgingStageHTML(i){
        ${x.website?`<a href="${escapeHTML(x.website)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Website öffnen</a>`:''}
      </div>
    </div>`).join('')}</div>`;
+ }else if(status==='ready'){
+   body=`<div class="lodging-empty">Im Suchradius wurden keine passenden Unterkünfte gefunden. Du kannst die Unterkunftsart ändern oder erneut suchen.</div>`;
  }else{
    body=`<div class="lodging-empty">Noch keine Unterkunft geladen. Gesucht wird nach deiner Auswahl „${escapeHTML($('lodging')?.value||'Hotel / Pension')}“.</div>`;
  }
@@ -1586,33 +1590,44 @@ async function rerouteThroughLodgings(changedStage=null){
    if(state.selectedStage!=null)requestAnimationFrame(()=>drawStageElevation(state.selectedStage));
  }
 }
+
+function renderStagesKeepProfile(){
+ renderStages();
+ if(state.selectedStage!=null){
+   requestAnimationFrame(()=>drawStageElevation(state.selectedStage));
+ }
+}
 async function loadLodgingForStage(i){
  const st=state.stages?.[i]; if(!st||!state.coords)return;
  const c=state.coords[st.e],center={lat:c[1],lon:c[0]};
- state.lodging.status[i]='loading';renderStages();
+ state.lodging.status[i]='loading';
+ renderStagesKeepProfile();
+
  try{
-   const r=await fetch(API+'/api/osm-supply-batch',{
+   const r=await fetchWithTimeout(API+'/api/lodging-nearby',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({points:[center],lodging:lodgingMode()})
-   });
+     body:JSON.stringify({lat:center.lat,lon:center.lon,lodging:lodgingMode()})
+   },24000);
+
    const data=await r.json();
    if(!r.ok||!data.ok)throw new Error(data.warning||'Unterkünfte nicht verfügbar');
+
    const all=(data.elements||[]).map(el=>normalizeLodgingElement(el,center)).filter(Boolean);
    const uniq=new Map();
    all.sort((a,b)=>a.distance-b.distance).forEach(x=>{
      const key=(x.name+'|'+x.type+'|'+x.lat.toFixed(4)+'|'+x.lon.toFixed(4)).toLowerCase();
      if(!uniq.has(key))uniq.set(key,x);
    });
-   state.lodging.results[i]=[...uniq.values()].slice(0,6);
+
+   state.lodging.results[i]=[...uniq.values()].slice(0,8);
    state.lodging.status[i]='ready';
-   renderMap();
  }catch(e){
    state.lodging.results[i]=[];
-   state.lodging.status[i]='error';
+   state.lodging.status[i]=(e&&e.name==='AbortError')?'timeout':'error';
  }
- renderStages();
- if(state.selectedStage===i)requestAnimationFrame(()=>drawStageElevation(i));
+ renderStagesKeepProfile();
+ renderMap();
 }
 async function selectLodging(stageIndex,id){
  const item=(state.lodging.results?.[stageIndex]||[]).find(x=>x.id===id);
