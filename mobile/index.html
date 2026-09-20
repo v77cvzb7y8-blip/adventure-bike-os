@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.2</title>
+<title>Adventure Bike OS · Mobile 0.2.3</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -133,12 +133,27 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .bag-label.warn{fill:#ffe6a4}
 .bag-label.over{fill:#ffd0ca}
 
+
+.fitnessbox{margin-top:12px;padding:11px;border:1px solid #d8e3dc;border-radius:14px;background:#f5faf7}
+.fitnessbox h3{margin:0 0 3px;font-size:14px}
+.fitnessbox .sub{margin-bottom:8px}
+.load-badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:800;border:1px solid #d9e2dc}
+.load-easy{background:#eef7f1;color:#23684f}
+.load-fit{background:#edf5ff;color:#245e87}
+.load-hard{background:#fff6df;color:#8a6816}
+.load-over{background:#fff0ed;color:#a64135}
+.load-reason{margin-top:7px;font-size:10px;color:#5c6e64;line-height:1.4}
+.loadbar{height:7px;border-radius:999px;background:#e7ece8;overflow:hidden;margin-top:7px}
+.loadbar i{display:block;height:100%;background:#24775a;border-radius:inherit}
+.loadbar i.warn{background:#c3902d}
+.loadbar i.over{background:#c55245}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.2</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.3</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -173,6 +188,18 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
           <div><label>Routing</label><select id="profile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schneller Asphalt</option></select></div>
           <div><label>Übernachtung</label><select id="lodging"><option>Hotel / Pension</option><option>Camping / Zelt</option><option>Gemischt</option></select></div>
         </div>
+
+        <div class="fitnessbox">
+          <h3>Fahrerprofil · Beta</h3>
+          <div class="sub">Die Etappenbewertung orientiert sich an deinem normalen Trainingsniveau – nicht an einem pauschalen Schwierigkeitsgrad.</div>
+          <div class="grid2">
+            <div><label>typische Tour · km</label><input id="fitkm" type="number" value="80" min="20" step="5"/></div>
+            <div><label>typische Tour · HM</label><input id="fithm" type="number" value="1200" min="0" step="100"/></div>
+            <div><label>Mehrtagestouren</label><select id="multiday"><option value="rare">selten / neu</option><option value="some" selected>gelegentlich</option><option value="often">regelmäßig</option></select></div>
+            <div><label>gewünschte Intensität</label><select id="intensity"><option value="relaxed">entspannt</option><option value="sporty" selected>sportlich</option><option value="ambitious">ambitioniert</option></select></div>
+          </div>
+        </div>
+
         <button class="primary" style="margin-top:12px" onclick="calculateRoute()">Fahrradroute berechnen</button>
         <div id="routeLoading" class="loading">Route wird berechnet …</div>
       </div>
@@ -381,6 +408,7 @@ async function resolveStageNames(){
 }
 
 async function calculateRoute(){
+ saveRiderProfile();
  const load=$('routeLoading');load.classList.add('show');
  try{
    const r=await fetch(API+'/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:$('start').value,destination:$('dest').value,profile:$('profile').value})});
@@ -473,8 +501,68 @@ function focusStage(i){
  drawElevation();
  const from=state.stageNames[i]||`Etappe ${i+1}`,to=state.stageNames[i+1]||'Etappenziel';
  $('profileStage').textContent=`Etappe ${i+1}: ${from} → ${to}`;
- $('profileMeta').textContent=`${st.km.toFixed(0)} km · ${state.heightAvailable?Math.round(st.hm)+' HM':'HM –'}`;
+ const L=stageLoad(st);
+ $('profileMeta').textContent=`${st.km.toFixed(0)} km · ${state.heightAvailable?Math.round(st.hm)+' HM':'HM –'} · ${L.label}`;
 }
+
+function riderProfile(){
+ return {
+   fitkm: Math.max(20, +$('fitkm').value || 80),
+   fithm: Math.max(100, +$('fithm').value || 1200),
+   multiday: $('multiday').value || 'some',
+   intensity: $('intensity').value || 'sporty'
+ };
+}
+function stageLoad(stage){
+ const p=riderProfile();
+ const dayKm=Math.max(20,+$('kmday').value||120);
+ const dayHm=Math.max(100,+$('hmday').value||1800);
+
+ // Zwei Perspektiven: gewünschtes Tageslimit + reales Trainingsniveau.
+ const dayRatio=Math.max(stage.km/dayKm, stage.hm/dayHm);
+ const fitKmRatio=stage.km/p.fitkm;
+ const fitHmRatio=stage.hm/p.fithm;
+ const fitRatio=Math.max(fitKmRatio,fitHmRatio);
+
+ const multiFactor={rare:1.10,some:1.00,often:.92}[p.multiday]||1;
+ const intensityFactor={relaxed:1.08,sporty:1.00,ambitious:.93}[p.intensity]||1;
+
+ // Gewichtet: 55 % persönliche Fitness, 45 % selbst gesetztes Tagesziel.
+ const score=(fitRatio*.55 + dayRatio*.45)*multiFactor*intensityFactor;
+
+ let label='passend',cls='load-fit';
+ if(score<.72){label='locker';cls='load-easy'}
+ else if(score<=1.02){label='passend';cls='load-fit'}
+ else if(score<=1.22){label='anspruchsvoll';cls='load-hard'}
+ else {label='über Ziel';cls='load-over'}
+
+ const kmPct=Math.round(stage.km/p.fitkm*100);
+ const hmPct=Math.round(stage.hm/p.fithm*100);
+ const dayKmPct=Math.round(stage.km/dayKm*100);
+ const dayHmPct=Math.round(stage.hm/dayHm*100);
+ const dominant=fitKmRatio>=fitHmRatio?'Distanz':'Höhenmeter';
+
+ return {
+   score,label,cls,
+   pct:Math.round(score*100),
+   reason:`${dominant} prägt die Belastung stärker. Gegenüber deiner typischen Tour: ${kmPct}% Distanz / ${hmPct}% HM. Gegenüber deinem Tagesziel: ${dayKmPct}% Distanz / ${dayHmPct}% HM.`
+ };
+}
+function saveRiderProfile(){
+ const p=riderProfile();
+ localStorage.setItem('abo-mobile-rider',JSON.stringify(p));
+}
+function restoreRiderProfile(){
+ try{
+   const p=JSON.parse(localStorage.getItem('abo-mobile-rider')||'null');
+   if(!p)return;
+   if(p.fitkm)$('fitkm').value=p.fitkm;
+   if(p.fithm)$('fithm').value=p.fithm;
+   if(p.multiday)$('multiday').value=p.multiday;
+   if(p.intensity)$('intensity').value=p.intensity;
+ }catch(e){}
+}
+
 function renderStages(){
  const target=Math.max(1,(+$('kmday').value||120));
  $('stageList').innerHTML=state.stages.map((s,i)=>{
@@ -482,17 +570,22 @@ function renderStages(){
    const to=state.stageNames[i+1]||`Etappenziel ${i+1}`;
    const loading=to.includes('ermittelt');
    const load=Math.round((s.km/target)*100);
-   const loadText=load<=90?'locker':load<=110?'im Zielbereich':'lang';
+   const L=stageLoad(s);
    return `<div class="stage ${state.selectedStage===i?'active':''}" onclick="focusStage(${i})">
      <div class="stagehead"><b>Etappe ${i+1}</b><span>Tag ${i+1}</span></div>
      <div class="stage-route ${loading?'route-name-loading':''}">${from} → ${to}</div>
-     <div class="stage-dayline">Tagesziel: ${target.toFixed(0)} km · diese Etappe: ${load}%</div>
+     <div class="stage-dayline">Tagesziel: ${(+($('kmday').value)||120).toFixed(0)} km · max. ${Math.round(+($('hmday').value)||1800)} HM</div>
      <div class="stage-grid">
        <div class="stage-stat"><span>Ziel</span><b>${to}</b></div>
        <div class="stage-stat"><span>Distanz</span><b>${s.km.toFixed(0)} km</b></div>
-       <div class="stage-stat"><span>Belastung</span><b>${loadText}</b></div>
+       <div class="stage-stat"><span>Anstieg</span><b>${state.heightAvailable?Math.round(s.hm)+' HM':'–'}</b></div>
      </div>
-     <div class="stage-meta"><span class="pill">Karte + Profil synchron</span><span class="pill">${state.heightAvailable?Math.round(s.hm)+' HM':'HM –'}</span></div>
+     <div class="stage-meta">
+       <span class="pill">Karte + Profil synchron</span>
+       <span class="load-badge ${L.cls}">${L.label}</span>
+     </div>
+     <div class="loadbar"><i class="${L.score>1.22?'over':L.score>1.02?'warn':''}" style="width:${Math.min(100,L.pct)}%"></i></div>
+     <div class="load-reason">${L.reason}</div>
      ${state.stages.length===2 && i===0 && state.stages[1].km>=target*.45?'<div class="stage-note">Etappen wurden ausgeglichener verteilt, damit kein sehr kurzer Resttag entsteht.</div>':''}
    </div>`;
  }).join('');
@@ -641,6 +734,7 @@ function unpack(id){
 }
 
 (function boot(){
+ restoreRiderProfile();
  initGear();
  const saved=localStorage.getItem('abo-mobile-route');
  if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest]}catch(e){}}
