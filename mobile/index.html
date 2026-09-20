@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.4.0</title>
+<title>Adventure Bike OS · Mobile 0.4.1</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -334,12 +334,16 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .lodging-progress{display:flex;align-items:center;gap:6px;font-size:10px;color:#617068;margin-top:7px}
 .lodging-progress i{width:7px;height:7px;border-radius:50%;background:#9ba79f;display:inline-block;animation:lodgingPulse 1s infinite alternate}
 @keyframes lodgingPulse{from{opacity:.35}to{opacity:1}}
+
+.nav-export-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.nav-export-actions button{flex:1 1 160px}
+.nav-export-note{font-size:10px;color:#68736d;line-height:1.4;margin-top:7px}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.4.0</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.4.1</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -485,7 +489,13 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
         <div class="pdf-note">Auf iPad/iPhone öffnet sich der Druckdialog. Dort kannst du über die Druckvorschau „Als PDF sichern“ bzw. teilen.</div>
       </div>
       <div class="check">
-        <div class="card"><h3>🧭 Navigation</h3><div class="ok">bereit</div><p class="sub">GPX offline · Smartphone Backup · Karten offline</p></div>
+        <div class="card"><h3>🧭 Navigation</h3><div class="ok">bereit</div>
+          <p class="sub">Finale Route inklusive ausgewählter Unterkünfte als GPX exportieren.</p>
+          <div class="nav-export-actions">
+            <button class="primary" type="button" onclick="exportGPX()">GPX teilen / exportieren</button>
+          </div>
+          <div class="nav-export-note">Für Garmin: GPX speichern/teilen und anschließend in Garmin Connect importieren bzw. an den Edge synchronisieren.</div>
+        </div>
         <div class="card"><h3>🌦 Wetter</h3><div class="pending">prüfen</div><p class="sub">72 h vor Abfahrt: Regen, Wind, Temperatur.</p></div>
         <div class="card"><h3>🏨 Reservierungen</h3><div id="lodgingCheckStatus" class="pending">noch offen</div><p class="sub" id="lodgingCheckText">Unterkünfte an den Etappenzielen auswählen und Reservierungen bestätigen.</p></div>
         <div class="card"><h3>🔋 Strom & Licht</h3><div class="ok">Basis vorhanden</div><p class="sub">Computer · Frontlicht · Rücklicht · Powerbank</p></div>
@@ -511,6 +521,128 @@ let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,m
 
 function escapeHTML(v){
  return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
+function safeExternalUrl(v){
+ const raw=String(v||'').trim();
+ if(!raw)return '';
+ try{
+   const candidate=/^https?:\/\//i.test(raw)?raw:`https://${raw}`;
+   const u=new URL(candidate);
+   if(!['http:','https:'].includes(u.protocol))return '';
+   return u.href;
+ }catch(e){return ''}
+}
+function lodgingSearchUrl(x){
+ const q=[x?.name,state.stageNames?.[(Number(x?.stageIndex)||0)+1]].filter(Boolean).join(' ');
+ return `https://www.google.com/search?q=${encodeURIComponent(q||'Unterkunft')}`;
+}
+function lodgingMapUrl(x){
+ const q=(Number.isFinite(Number(x?.lat))&&Number.isFinite(Number(x?.lon)))
+   ? `${Number(x.lat)},${Number(x.lon)}`
+   : (x?.name||'Unterkunft');
+ return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+}
+function xmlEscape(v){
+ return String(v??'').replace(/[<>&'"]/g,c=>({
+   '<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'
+ })[c]);
+}
+function safeFileName(v){
+ const s=String(v||'adventure-bike-os').trim()
+   .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+   .replace(/[^a-zA-Z0-9_-]+/g,'-')
+   .replace(/^-+|-+$/g,'')
+   .slice(0,80);
+ return s||'adventure-bike-os';
+}
+function buildGPX(){
+ if(!state.coords||state.coords.length<2)throw new Error('Noch keine Route zum Exportieren vorhanden.');
+
+ const routeName=currentRouteName();
+ const startName=($('start')?.value||'Start').trim()||'Start';
+ const destName=($('dest')?.value||'Ziel').trim()||'Ziel';
+ const wpts=[];
+
+ const first=state.coords[0],last=state.coords[state.coords.length-1];
+ wpts.push({lat:first[1],lon:first[0],ele:first[2],name:startName,type:'Start'});
+
+ Object.entries(state.lodging?.selected||{})
+   .sort((a,b)=>Number(a[0])-Number(b[0]))
+   .forEach(([i,x])=>{
+     if(Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lon))){
+       wpts.push({
+         lat:Number(x.lat),lon:Number(x.lon),
+         name:x.name||`Unterkunft Nacht ${Number(i)+1}`,
+         type:x.status==='booked'?'Reservierte Unterkunft':'Unterkunft',
+         desc:`Nacht ${Number(i)+1}${x.status==='booked'?' · reserviert':' · vorgemerkt'}`
+       });
+     }
+   });
+
+ wpts.push({lat:last[1],lon:last[0],ele:last[2],name:destName,type:'Ziel'});
+
+ const waypointXML=wpts.map(w=>`  <wpt lat="${Number(w.lat).toFixed(7)}" lon="${Number(w.lon).toFixed(7)}">
+    ${Number.isFinite(Number(w.ele))?`<ele>${Number(w.ele).toFixed(1)}</ele>`:''}
+    <name>${xmlEscape(w.name)}</name>
+    ${w.desc?`<desc>${xmlEscape(w.desc)}</desc>`:''}
+    <type>${xmlEscape(w.type||'Waypoint')}</type>
+  </wpt>`).join('\n');
+
+ const trackXML=state.coords.map(c=>{
+   const lon=Number(c[0]),lat=Number(c[1]),ele=Number(c[2]);
+   if(!Number.isFinite(lat)||!Number.isFinite(lon))return '';
+   return `      <trkpt lat="${lat.toFixed(7)}" lon="${lon.toFixed(7)}">${Number.isFinite(ele)?`<ele>${ele.toFixed(1)}</ele>`:''}</trkpt>`;
+ }).filter(Boolean).join('\n');
+
+ return `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1"
+  creator="Adventure Bike OS"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>${xmlEscape(routeName)}</name>
+    <desc>${xmlEscape('Finale Bikepacking-Route mit ausgewählten Unterkünften')}</desc>
+  </metadata>
+${waypointXML}
+  <trk>
+    <name>${xmlEscape(routeName)}</name>
+    <type>Cycling</type>
+    <trkseg>
+${trackXML}
+    </trkseg>
+  </trk>
+</gpx>`;
+}
+async function exportGPX(){
+ try{
+   const gpx=buildGPX();
+   const name=safeFileName(currentRouteName())+'.gpx';
+   const file=new File([gpx],name,{type:'application/gpx+xml'});
+
+   if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+     try{
+       await navigator.share({
+         files:[file],
+         title:'Adventure Bike OS · '+currentRouteName(),
+         text:'Finale Route als GPX'
+       });
+       return;
+     }catch(e){
+       if(e?.name==='AbortError')return;
+     }
+   }
+
+   const url=URL.createObjectURL(file);
+   const a=document.createElement('a');
+   a.href=url;a.download=name;
+   document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),1500);
+   toast('GPX exportiert');
+ }catch(e){
+   toast(e.message||'GPX konnte nicht exportiert werden');
+ }
 }
 function printTerrainLabel(t){
  if(!t)return 'offen';
@@ -628,7 +760,7 @@ function buildPrintReport(){
    <section class="pr-section">
      <h2>Reise-Check</h2>
      <div class="pr-columns">
-       <div><h3>Navigation</h3><p>GPX offline · Smartphone Backup · Karten offline</p></div>
+       <div><h3>Navigation</h3><p>Finale Route als GPX exportierbar · ausgewählte Unterkünfte als Wegpunkte enthalten.</p></div>
        <div><h3>Wetter</h3><p>72 h vor Abfahrt: Regen, Wind und Temperatur prüfen.</p></div>
        <div><h3>Reservierungen</h3><p>Unterkünfte und Transfers extern bestätigen.</p></div>
        <div><h3>Strom & Licht</h3><p>Computer · Frontlicht · Rücklicht · Powerbank</p></div>
@@ -1474,7 +1606,10 @@ function lodgingStageHTML(i){
      ${state.routeRerouting?'<div class="route-adjusting">Route wird an die Unterkunft angepasst …</div>':(selected.routeApplied?'<div class="route-applied">✓ Diese Unterkunft ist das tatsächliche Tagesziel der Route.</div>':'')}
      <div class="lodging-item-actions">
        <button type="button" class="reserve" onclick="event.stopPropagation();toggleLodgingBooked(${i})">${selected.status==='booked'?'Reservierung zurücksetzen':'Als reserviert markieren'}</button>
-       ${selected.website?`<a href="${escapeHTML(selected.website)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Website öffnen</a>`:''}
+       ${safeExternalUrl(selected.website)
+         ?`<a href="${escapeHTML(safeExternalUrl(selected.website))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Website öffnen</a>`
+         :`<a href="${escapeHTML(lodgingSearchUrl({...selected,stageIndex:i}))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Web suchen</a>`}
+       <a href="${escapeHTML(lodgingMapUrl(selected))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Karte öffnen</a>
        <button type="button" onclick="event.stopPropagation();clearSelectedLodging(${i})">ändern</button>
      </div>
    </div>`;
@@ -1491,7 +1626,10 @@ function lodgingStageHTML(i){
      ${campingFeaturesHTML(x)}
      <div class="lodging-item-actions">
        <button type="button" class="reserve" onclick="event.stopPropagation();selectLodging(${i},'${x.id}')">vormerken</button>
-       ${x.website?`<a href="${escapeHTML(x.website)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Website öffnen</a>`:''}
+       ${safeExternalUrl(x.website)
+         ?`<a href="${escapeHTML(safeExternalUrl(x.website))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Website öffnen</a>`
+         :`<a href="${escapeHTML(lodgingSearchUrl({...x,stageIndex:i}))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Web suchen</a>`}
+       <a href="${escapeHTML(lodgingMapUrl(x))}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Karte öffnen</a>
      </div>
    </div>`).join('')}</div>`;
  }else if(status==='ready'){
