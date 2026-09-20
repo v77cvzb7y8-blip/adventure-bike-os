@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.1</title>
+<title>Adventure Bike OS · Mobile 0.2.2</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -125,12 +125,20 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .stage-stat b{display:block;font-size:12px;margin-top:2px}
 .stage-dayline{font-size:11px;color:#5f7167;margin-top:4px}
 
+
+.stage-note{margin-top:8px;padding:8px 9px;border-radius:10px;background:#f7f3e7;border:1px solid #e8ddba;font-size:10px;color:#6e6548}
+.pack-focus{margin:8px 0 10px;padding:9px 10px;border-radius:12px;background:#eef8f2;border:1px solid #b9ddc9;font-size:11px;color:#315c49}
+.pack-focus b{display:block;font-size:12px;color:#18382e;margin-bottom:2px}
+.bag-label{font-size:9px;font-weight:800;fill:#d8f2e5;pointer-events:none}
+.bag-label.warn{fill:#ffe6a4}
+.bag-label.over{fill:#ffd0ca}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.1</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.2</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -196,14 +204,15 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
             <circle cx="110" cy="175" r="65" fill="none" stroke="#17231e" stroke-width="10"/>
             <circle cx="315" cy="175" r="65" fill="none" stroke="#17231e" stroke-width="10"/>
             <path d="M110 175 L175 85 L245 175 L110 175 M175 85 L270 90 L245 175 M270 90 L315 175" fill="none" stroke="#9b8559" stroke-width="10"/>
-            <rect data-bag="saddle" class="bag" x="140" y="52" rx="10" width="70" height="38"/><text x="175" y="76" text-anchor="middle" fill="white" font-weight="800">S</text>
-            <rect data-bag="frame" class="bag" x="180" y="112" rx="10" width="80" height="52"/><text x="220" y="143" text-anchor="middle" fill="white" font-weight="800">R</text>
-            <rect data-bag="handlebar" class="bag" x="268" y="54" rx="10" width="58" height="55"/><text x="297" y="86" text-anchor="middle" fill="white" font-weight="800">L</text>
-            <rect data-bag="top" class="bag" x="213" y="82" rx="8" width="58" height="24"/><text x="242" y="99" text-anchor="middle" fill="white" font-size="11" font-weight="800">OT</text>
-            <rect data-bag="tool" class="bag" x="154" y="114" rx="8" width="32" height="42"/><text x="170" y="140" text-anchor="middle" fill="white" font-size="11" font-weight="800">W</text>
+            <rect data-bag="saddle" class="bag" x="140" y="52" rx="10" width="70" height="38"/><text x="175" y="70" text-anchor="middle" fill="white" font-weight="800">S</text><text data-filltext="saddle" class="bag-label" x="175" y="83" text-anchor="middle">0%</text>
+            <rect data-bag="frame" class="bag" x="180" y="112" rx="10" width="80" height="52"/><text x="220" y="137" text-anchor="middle" fill="white" font-weight="800">R</text><text data-filltext="frame" class="bag-label" x="220" y="153" text-anchor="middle">0%</text>
+            <rect data-bag="handlebar" class="bag" x="268" y="54" rx="10" width="58" height="55"/><text x="297" y="80" text-anchor="middle" fill="white" font-weight="800">L</text><text data-filltext="handlebar" class="bag-label" x="297" y="96" text-anchor="middle">0%</text>
+            <rect data-bag="top" class="bag" x="213" y="82" rx="8" width="58" height="24"/><text x="242" y="94" text-anchor="middle" fill="white" font-size="11" font-weight="800">OT</text><text data-filltext="top" class="bag-label" x="242" y="103" text-anchor="middle">0%</text>
+            <rect data-bag="tool" class="bag" x="154" y="114" rx="8" width="32" height="42"/><text x="170" y="134" text-anchor="middle" fill="white" font-size="11" font-weight="800">W</text><text data-filltext="tool" class="bag-label" x="170" y="149" text-anchor="middle">0%</text>
           </svg>
         </div>
-        <div id="recommendBox" class="recommend">Wähle einen Gegenstand.</div>
+        <div id="bikePackFocus" class="pack-focus"><b>Direkt am Bike packen</b>Gegenstand wählen → empfohlene Tasche leuchtet → Tasche antippen.</div>
+<div id="recommendBox" class="recommend">Wähle einen Gegenstand.</div>
         <h3 style="margin-top:12px">Ausrüstung</h3>
         <div id="gearList"></div>
         <h3 style="margin-top:12px">Taschen</h3>
@@ -268,7 +277,32 @@ function makeStages(coords,m,target,maxhm){
      if(i-s>4){out.push({s,e:i,km:dk,hm:hg});s=i}
    }
  }
- if(s<coords.length-1){const e=coords.length-1;out.push({s,e,km:m.dist[e]-m.dist[s],hm:m.gain[e]-m.gain[s]})}
+ if(s<coords.length-1){
+   const e=coords.length-1;
+   out.push({s,e,km:m.dist[e]-m.dist[s],hm:m.gain[e]-m.gain[s]})
+ }
+ // Kurze Restetappen vermeiden: die letzten zwei Etappen werden neu geteilt,
+ // wenn der letzte Tag weniger als 55 % des Distanzziels hat.
+ if(out.length>=2 && out[out.length-1].km < target*.55){
+   const a=out[out.length-2], b=out[out.length-1], start=a.s, end=b.e;
+   const totalKm=m.dist[end]-m.dist[start], desired=totalKm/2;
+   let best=null;
+   for(let i=start+5;i<=end-5;i++){
+     const km1=m.dist[i]-m.dist[start], km2=m.dist[end]-m.dist[i];
+     const hm1=m.gain[i]-m.gain[start], hm2=m.gain[end]-m.gain[i];
+     if(km1<target*.45 || km2<target*.45) continue;
+     const hmPenalty=(hm1>maxhm?((hm1-maxhm)/Math.max(1,maxhm))*3:0)+(hm2>maxhm?((hm2-maxhm)/Math.max(1,maxhm))*3:0);
+     const distPenalty=Math.abs(km1-desired)/Math.max(1,desired)+Math.abs(km2-desired)/Math.max(1,desired);
+     const score=distPenalty+hmPenalty;
+     if(!best||score<best.score)best={i,km1,km2,hm1,hm2,score};
+   }
+   if(best){
+     out.splice(out.length-2,2,
+       {s:start,e:best.i,km:best.km1,hm:best.hm1},
+       {s:best.i,e:end,km:best.km2,hm:best.hm2}
+     );
+   }
+ }
  return out;
 }
 function hasUsefulElevation(coords){
@@ -297,10 +331,15 @@ async function enrichElevation(coords){
 function cleanPlaceName(name){
  const raw=(name||'').trim();
  if(!raw)return '';
- const bad=['küstengewässer','festlandsockel','gemeindefreies gebiet','region','county','bezirk','landkreis'];
+ const bad=['küstengewässer','festlandsockel','gemeindefreies gebiet','county','bezirk','landkreis','region '];
  const low=raw.toLowerCase();
- if(raw.length>34 || bad.some(x=>low.includes(x))) return '';
- return raw.replace(/\s+kommune$/i,'').replace(/\s+kommun$/i,'').trim();
+ if(raw.length>32 || bad.some(x=>low.includes(x))) return '';
+ return raw
+   .replace(/\s+kommune$/i,'')
+   .replace(/\s+kommun$/i,'')
+   .replace(/\s+municipality$/i,'')
+   .replace(/\s+\([^)]*\)$/,'')
+   .trim();
 }
 async function reversePlaceAt(coord){
  try{
@@ -319,28 +358,26 @@ async function reversePlaceAt(coord){
 }
 async function resolveStageNames(){
  if(!state.coords||!state.stages.length)return;
- const names=[];
- const start=$('start').value.trim(),dest=$('dest').value.trim();
+ const names=[], start=$('start').value.trim(),dest=$('dest').value.trim();
  names.push(start);
  for(let i=0;i<state.stages.length-1;i++){
    const st=state.stages[i], span=Math.max(1,st.e-st.s);
-   const probes=[
-     st.e,
-     Math.max(st.s,st.e-Math.round(span*.05)),
-     Math.max(st.s,st.e-Math.round(span*.10)),
-     Math.min(state.coords.length-1,st.e+Math.round(span*.04))
-   ];
+   const offsets=[0,-.03,.03,-.07,.07,-.12,.12];
    let found='';
-   for(const p of probes){
-     found=await reversePlaceAt(state.coords[p]);
-     if(found)break;
+   for(const off of offsets){
+     const p=Math.max(st.s,Math.min(state.coords.length-1,st.e+Math.round(span*off)));
+     const candidate=await reversePlaceAt(state.coords[p]);
+     if(candidate && candidate!==names[names.length-1] && candidate!==dest){
+       found=candidate;break;
+     }
    }
-   names.push(found||`Etappenort ${i+1}`);
+   names.push(found||`Etappenziel ${i+1}`);
  }
  names.push(dest);
  state.stageNames=names;
  localStorage.setItem('abo-mobile-stage-names',JSON.stringify(names));
  renderStages();
+ if(state.selectedStage!=null) focusStage(state.selectedStage);
 }
 
 async function calculateRoute(){
@@ -456,6 +493,7 @@ function renderStages(){
        <div class="stage-stat"><span>Belastung</span><b>${loadText}</b></div>
      </div>
      <div class="stage-meta"><span class="pill">Karte + Profil synchron</span><span class="pill">${state.heightAvailable?Math.round(s.hm)+' HM':'HM –'}</span></div>
+     ${state.stages.length===2 && i===0 && state.stages[1].km>=target*.45?'<div class="stage-note">Etappen wurden ausgeglichener verteilt, damit kein sehr kurzer Resttag entsteht.</div>':''}
    </div>`;
  }).join('');
 }
@@ -515,6 +553,7 @@ function selectGear(id){
  document.querySelectorAll('[data-bag]').forEach(x=>x.classList.toggle('rec',x.dataset.bag===g.bag));
  $('recommendBox').innerHTML=`<b>${g.name}</b><span class="sub">Empfehlung: ${bagName(g.bag)} · ${g.why}</span><br><button class="primary" style="margin-top:8px" onclick="assignToBag('${g.bag}')">in ${bagName(g.bag)} packen</button>`;
  renderBagContents();
+ renderBikeBagState();
 }
 function startMove(id){
  const g=gear.find(x=>x.id===id); if(!g)return;
@@ -526,6 +565,7 @@ function startMove(id){
  const current=state.assignments[id];
  $('recommendBox').innerHTML=`<b>${g.name} verschieben</b><span class="sub">Aktuell: ${bagName(current)}. Tippe jetzt auf eine andere Tasche am Bike oder unten in der Taschenliste.</span>`;
  renderBagContents();
+ renderBikeBagState();
 }
 function bagName(id){return bags[id]?.name||id}
 function bagWeight(id){
@@ -550,6 +590,30 @@ function assignToBag(bag){
    document.querySelectorAll('.gearrow').forEach(x=>x.classList.remove('active'));
  }
 }
+function renderBikeBagState(){
+ Object.entries(bags).forEach(([id,b])=>{
+   const pct=Math.round((bagWeight(id)/b.cap)*100);
+   const t=document.querySelector(`[data-filltext="${id}"]`);
+   if(t){
+     t.textContent=`${pct}%`;
+     t.classList.toggle('warn',pct>80&&pct<=100);
+     t.classList.toggle('over',pct>100);
+   }
+   const rect=document.querySelector(`[data-bag="${id}"]`);
+   if(rect) rect.setAttribute('aria-label',`${b.name}, ${pct}% gefüllt`);
+ });
+ const focus=$('bikePackFocus');
+ if(focus){
+   const gid=state.movingGear||state.selectedGear, g=gear.find(x=>x.id===gid);
+   if(g){
+     const mode=state.movingGear?'verschieben':'packen';
+     focus.innerHTML=`<b>${g.name} ${mode}</b>${state.movingGear?'Tippe die Zieltasche direkt am Bike.':'Empfohlen: '+bagName(g.bag)+' – diese Tasche ist am Bike markiert.'}`;
+   }else{
+     focus.innerHTML='<b>Direkt am Bike packen</b>Gegenstand wählen → empfohlene Tasche leuchtet → Tasche antippen.';
+   }
+ }
+}
+
 function renderBagContents(){
  $('bagGrid').innerHTML=Object.entries(bags).map(([id,b])=>{
    const items=Object.entries(state.assignments).filter(([,bag])=>bag===id).map(([gid])=>gear.find(x=>x.id===gid)).filter(Boolean);
@@ -565,6 +629,7 @@ function renderBagContents(){
      ${items.length?'<div class="movehint">Gegenstand antippen → direkt verschieben</div>':''}
    </div>`;
  }).join('');
+ renderBikeBagState();
 }
 function unpack(id){
  delete state.assignments[id];
