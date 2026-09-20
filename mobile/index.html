@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.5.4</title>
+<title>Adventure Bike OS · Mobile 0.2.6</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -192,12 +192,24 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .terrain-warning{margin-top:7px;padding:7px 8px;border-radius:9px;background:#fff5e8;border:1px solid #ecd7ad;font-size:10px;color:#7c6535}
 .terrain-btn{border:0;border-radius:999px;background:#eaf3ed;color:#17684c;font-size:10px;font-weight:800;padding:6px 8px}
 
+
+.techcheck{margin-top:8px;padding:9px;border:1px solid #dce5df;border-radius:11px;background:#fbfcfb}
+.techcheck-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.techcheck-head b{font-size:11px}
+.tech-badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 7px;font-size:9px;font-weight:800;border:1px solid #d9e2dc}
+.tech-ok{background:#eef7f1;color:#23684f}.tech-watch{background:#fff6df;color:#8a6816}.tech-hard{background:#fff0ed;color:#a64135}.tech-open{background:#f0f3f1;color:#66736c}
+.tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:7px}
+.tech-stat{padding:7px;border-radius:9px;background:#f5f8f6;border:1px solid #e1e7e3}
+.tech-stat span{display:block;font-size:8px;color:#718078;text-transform:uppercase}.tech-stat b{display:block;font-size:10px;margin-top:2px}
+.tech-evidence{font-size:9px;color:#607168;line-height:1.4;margin-top:7px}
+.tech-warning{font-size:9px;color:#7c6535;line-height:1.4;margin-top:7px;padding:7px 8px;border-radius:9px;background:#fff7e9;border:1px solid #ecd7ad}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.5.4</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.6</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -685,21 +697,26 @@ function nearestWayForSample(sample,elements){
 }
 
 function summarizeTerrain(samples,elements){
- const stageRows=state.stages.map(()=>({paved:0,fine:0,gravel:0,rough:0,unknown:0,total:0,risk:0,matched:0}));
+ const stageRows=state.stages.map(()=>({paved:0,fine:0,gravel:0,rough:0,unknown:0,total:0,risk:0,matched:0,path:0,track:0,mtb:0,badSmooth:0,grade45:0,evidence:new Set()}));
  samples.forEach(s=>{
-   const row=stageRows[Math.min(stageRows.length-1,s.stageIndex)] || stageRows[0];
-   const way=nearestWayForSample(s,elements);
-   const cls=terrainClass((way||{}).tags||{});
+   const row=stageRows[Math.min(stageRows.length-1,s.stageIndex)]||stageRows[0];
+   const way=nearestWayForSample(s,elements), tags=(way||{}).tags||{}, cls=terrainClass(tags);
    row[cls.key]++; row.total++; row.risk+=cls.risk;
-   if(way)row.matched++;
+   if(way){
+     row.matched++;
+     const h=(tags.highway||'').toLowerCase(), tr=(tags.tracktype||'').toLowerCase(), sm=(tags.smoothness||'').toLowerCase(), mtb=parseFloat(tags['mtb:scale']||'0')||0;
+     if(h==='path'||h==='bridleway')row.path++;
+     if(h==='track')row.track++;
+     if(mtb>=1){row.mtb++;row.evidence.add(`MTB-Skala ${tags['mtb:scale']}`)}
+     if(['very_bad','horrible','very_horrible','impassable'].includes(sm)){row.badSmooth++;row.evidence.add(`smoothness ${sm}`)}
+     if(['grade4','grade5'].includes(tr)){row.grade45++;row.evidence.add(`tracktype ${tr}`)}
+   }
  });
  return stageRows.map(r=>{
-   const total=Math.max(1,r.total);
-   const pct=k=>Math.round((r[k]/total)*100);
-   return {
-     paved:pct('paved'),fine:pct('fine'),gravel:pct('gravel'),rough:pct('rough'),unknown:pct('unknown'),
-     risk:r.risk/total,coverage:Math.round((r.matched/total)*100),samples:r.total
-   };
+   const total=Math.max(1,r.total), pct=k=>Math.round((r[k]/total)*100);
+   return {paved:pct('paved'),fine:pct('fine'),gravel:pct('gravel'),rough:pct('rough'),unknown:pct('unknown'),
+     path:pct('path'),track:pct('track'),mtb:r.mtb,badSmooth:r.badSmooth,grade45:r.grade45,
+     risk:r.risk/total,coverage:Math.round((r.matched/total)*100),samples:r.total,evidence:[...r.evidence].slice(0,3)};
  });
 }
 
@@ -801,6 +818,25 @@ function terrainCompatibility(t){
  };
 }
 
+function technicalDifficulty(t){
+ const p=riderProfile();
+ if(!t||t.coverage<50)return {label:'Technik offen',cls:'tech-open',score:null,reason:'Zu wenig OSM-Daten für eine belastbare technische Einstufung.'};
+ let score=(t.rough/100)*1.35+(t.path/100)*.80+(t.track/100)*.30+Math.min(.55,t.mtb*.22)+Math.min(.45,t.badSmooth*.18)+Math.min(.45,t.grade45*.20);
+ score=Math.min(2,score);
+ const skill={easy:.52,medium:.90,advanced:1.25}[p.techskill]||.90;
+ const comfort={smooth:.82,mixed:1.0,rough:1.16}[p.surfacecomfort]||1;
+ const ratio=score/Math.max(.35,skill*comfort);
+ let label='technisch passend',cls='tech-ok';
+ if(ratio>1.25){label='technisch kritisch';cls='tech-hard'} else if(ratio>.82){label='technisch aufmerksam';cls='tech-watch'}
+ return {label,cls,score,reason:(t.evidence||[]).length?`OSM-Hinweise: ${(t.evidence||[]).join(' · ')}`:'Keine expliziten MTB-/Smoothness-Warnungen in den zugeordneten Stichproben.'};
+}
+function technicalHTML(i){
+ const t=terrainForStage(i), T=technicalDifficulty(t);
+ if(!t||t.coverage<50)return `<div class="techcheck"><div class="techcheck-head"><b>Technik-Check · Beta</b><span class="tech-badge ${T.cls}">${T.label}</span></div><div class="tech-warning">${T.reason}</div></div>`;
+ return `<div class="techcheck"><div class="techcheck-head"><b>Technik-Check · Beta</b><span class="tech-badge ${T.cls}">${T.label}</span></div>
+ <div class="tech-grid"><div class="tech-stat"><span>Pfad</span><b>${t.path}%</b></div><div class="tech-stat"><span>Track</span><b>${t.track}%</b></div><div class="tech-stat"><span>Grob</span><b>${t.rough}%</b></div></div>
+ <div class="tech-evidence">${T.reason}</div></div>`;
+}
 function terrainHTML(i){
  const t=terrainForStage(i);
  if(state.terrain.status==='loading'){
@@ -873,7 +909,9 @@ function stageLoad(stage){
  const stageIndex=state.stages.indexOf(stage);
  const t=stageIndex>=0?terrainForStage(stageIndex):null;
  const terrain=terrainCompatibility(t);
- const score=fitnessScore*multiFactor*intensityFactor*terrain.factor;
+ const tech=(t&&t.coverage>=50)?technicalDifficulty(t):null;
+ const techFactor=tech&&tech.score!=null ? (1+Math.max(0,tech.score-.55)*.12) : 1;
+ const score=fitnessScore*multiFactor*intensityFactor*terrain.factor*techFactor;
 
  let label='passend',cls='load-fit';
  if(score<.72){label='locker';cls='load-easy'}
@@ -950,6 +988,7 @@ function renderStages(){
        <div class="tech-note">Technikprofil: ${L.techLabel} · Untergrund-Komfort: ${L.surfaceLabel}. ${L.terrainActive ? 'Terrain fließt als OSM-Näherung in die Bewertung ein: '+L.terrainLabel+'.' : 'Terrain noch nicht geladen; Bewertung basiert derzeit auf Distanz und Höhenmetern.'}</div>
      </div>
      ${terrainHTML(i)}
+     ${technicalHTML(i)}
      <div class="stage-actions">
        <button class="stage-map-btn" type="button" onclick="event.stopPropagation();showStageOnMap(${i},event)">Etappe ${i+1} auf Karte</button>
      </div>
