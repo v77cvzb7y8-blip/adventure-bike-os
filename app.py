@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.92-terrain-profile-v2 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.93-terrain-visual-v2.1 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -904,6 +904,84 @@ def _summarize_valhalla_edges(edges):
         "way_count": len(way_ids),
     }
 
+def _terrain_merge_edge_segments(edges, matched_shape):
+    """
+    Build compact visual terrain segments from Valhalla edge shape indices.
+    Consecutive edges with the same normalized surface class are merged.
+    """
+    if not matched_shape:
+        return []
+
+    usable=[]
+    total_length=0.0
+    for e in edges or []:
+        try:
+            length=max(0.0,float(e.get("length") or 0.0))
+            b=int(e.get("begin_shape_index"))
+            z=int(e.get("end_shape_index"))
+        except (TypeError,ValueError):
+            continue
+        if length<=0 or b<0 or z<b or b>=len(matched_shape):
+            continue
+        z=min(z,len(matched_shape)-1)
+        cls,risk=_valhalla_surface_class(e.get("surface"),bool(e.get("unpaved")))
+        usable.append({
+            "class":cls,
+            "risk":risk,
+            "length_km":length,
+            "begin":b,
+            "end":z,
+            "surface":str(e.get("surface") or ""),
+            "use":str(e.get("use") or ""),
+        })
+        total_length+=length
+
+    if not usable or total_length<=0:
+        return []
+
+    merged=[]
+    progressed=0.0
+    for e in usable:
+        start_fraction=progressed/total_length
+        progressed+=e["length_km"]
+        end_fraction=min(1.0,progressed/total_length)
+
+        coords=[
+            [float(matched_shape[i][0]),float(matched_shape[i][1])]
+            for i in range(e["begin"],e["end"]+1)
+            if i < len(matched_shape)
+        ]
+        if len(coords)<2:
+            continue
+
+        can_merge=(
+            merged and
+            merged[-1]["class"]==e["class"] and
+            merged[-1]["use"]==e["use"] and
+            abs(merged[-1]["end_fraction"]-start_fraction)<0.03
+        )
+        if can_merge:
+            m=merged[-1]
+            if m["geometry"][-1]==coords[0]:
+                coords=coords[1:]
+            m["geometry"].extend(coords)
+            m["length_km"]=round(m["length_km"]+e["length_km"],3)
+            m["end_fraction"]=round(end_fraction,5)
+            m["risk"]=round(max(m["risk"],e["risk"]),3)
+        else:
+            merged.append({
+                "class":e["class"],
+                "risk":round(e["risk"],3),
+                "length_km":round(e["length_km"],3),
+                "start_fraction":round(start_fraction,5),
+                "end_fraction":round(end_fraction,5),
+                "surface":e["surface"],
+                "use":e["use"],
+                "geometry":coords,
+            })
+
+    return merged[:160]
+
 def _valhalla_trace_stage(stage):
     shape=stage.get("shape") or []
     clean=[]
@@ -923,6 +1001,7 @@ def _valhalla_trace_stage(stage):
         "filters":{
             "action":"include",
             "attributes":[
+                "shape",
                 "edge.length",
                 "edge.surface",
                 "edge.unpaved",
@@ -932,7 +1011,9 @@ def _valhalla_trace_stage(stage):
                 "edge.weighted_grade",
                 "edge.max_upward_grade",
                 "edge.max_downward_grade",
-                "edge.bicycle_type"
+                "edge.bicycle_type",
+                "edge.begin_shape_index",
+                "edge.end_shape_index"
             ]
         }
     }
@@ -942,16 +1023,29 @@ def _valhalla_trace_stage(stage):
         headers={"X-Client-Id":"adventure-bike-os-prototype","User-Agent":UA},
         timeout=18
     )
-    print(f"[TERRAIN-V2] stage={stage.get('stage_index')} valhalla status={r.status_code}",flush=True)
+    print(f"[TERRAIN-V2.1] stage={stage.get('stage_index')} valhalla status={r.status_code}",flush=True)
     r.raise_for_status()
     data=r.json() or {}
     edges=data.get("edges") or []
     if not edges:
         raise ValueError("Valhalla lieferte keine Terrain-Kanten")
+
+    matched_shape=[]
+    encoded=data.get("shape")
+    if isinstance(encoded,str) and encoded:
+        try:
+            matched_shape=_decode_polyline6(encoded)
+        except Exception as e:
+            print(f"[TERRAIN-V2.1] shape decode failed: {e}",flush=True)
+
     summary=_summarize_valhalla_edges(edges)
     summary["stage_index"]=int(stage.get("stage_index") or 0)
     summary["source"]="Valhalla trace_attributes"
     summary["status"]="matched" if summary["ok"] else "no_match"
+    summary["segments"]=_terrain_merge_edge_segments(edges,matched_shape)
+    summary["visual_coverage"]=round(
+        100*sum(float(s.get("length_km") or 0) for s in summary["segments"])/max(.001,float(summary.get("distance_km") or 0))
+    ) if summary["segments"] else 0
     return summary
 
 @app.post("/api/terrain-profile-v2")
@@ -971,7 +1065,7 @@ def terrain_profile_v2():
             if len(shape)>=2:
                 stages.append({"stage_index":int(s.get("stage_index",i)),"shape":shape[:70]})
         if not stages:
-            return jsonify(ok=False,version="terrain-profile-v2",stages=[],warning="Keine gültigen Etappen-Geometrien."),400
+            return jsonify(ok=False,version="terrain-profile-v2.1",stages=[],warning="Keine gültigen Etappen-Geometrien."),400
 
         results=[]
         errors=[]
@@ -996,7 +1090,7 @@ def terrain_profile_v2():
         avg_cov=round(sum(float(x.get("coverage") or 0) for x in results)/max(1,len(results)))
         return jsonify(
             ok=successful>0,
-            version="terrain-profile-v2",
+            version="terrain-profile-v2.1",
             source="Valhalla trace_attributes",
             stages=sorted(results,key=lambda x:x["stage_index"]),
             stage_success=successful,
@@ -1008,7 +1102,7 @@ def terrain_profile_v2():
         ),200
     except Exception as e:
         print(f"[TERRAIN-V2] error {type(e).__name__}: {e}",flush=True)
-        return jsonify(ok=False,version="terrain-profile-v2",stages=[],warning="Terrain-Profil derzeit nicht erreichbar."),200
+        return jsonify(ok=False,version="terrain-profile-v2.1",stages=[],warning="Terrain-Profil derzeit nicht erreichbar."),200
 
 
 @app.post("/api/terrain-match-v1")
@@ -1315,7 +1409,7 @@ def osm_supply():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.92-terrain-profile-v2")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.93-terrain-visual-v2.1")
 
 @app.get("/health")
 def health():
