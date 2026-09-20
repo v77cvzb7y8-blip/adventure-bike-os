@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.0</title>
+<title>Adventure Bike OS · Mobile 0.2.1</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -92,12 +92,45 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .route-name-loading{opacity:.6}
 @media(max-width:390px){.baggrid{grid-template-columns:1fr}}
 
+
+.bag.rec{
+  stroke:#f2b84b!important;
+  stroke-width:5!important;
+  filter:drop-shadow(0 0 7px rgba(242,184,75,.75));
+}
+.bag.move-target{
+  stroke:#2ba877!important;
+  stroke-width:5!important;
+  filter:drop-shadow(0 0 7px rgba(43,168,119,.65));
+}
+.bagcard.recommended{background:#fffaf0;border-color:#e8c77a}
+.bagcard.move-target{background:#f1fbf6;border-color:#7dc9a7}
+.filllabels{display:flex;justify-content:space-between;gap:8px;font-size:10px;margin-top:3px}
+.filllabels .filled{font-weight:800;color:#17684c}
+.filllabels .free{color:#7b8580}
+.bagbar.dual{display:flex;background:#e7ece8}
+.bagbar.dual .used{height:100%;background:#1e805e}
+.bagbar.dual .used.warn{background:#c3902d}
+.bagbar.dual .used.over{background:#c55245}
+.bagbar.dual .freepart{height:100%;background:#dfe6e1}
+.bagitembtn{
+  border:1px solid #d6e0d9;background:#f8fbf9;border-radius:999px;
+  padding:5px 7px;margin:2px 3px 2px 0;font-size:10px;color:#41534a
+}
+.bagitembtn.active{background:#dff3e8;border-color:#66b88e;font-weight:800}
+.movehint{font-size:11px;color:#527064;margin-top:6px}
+.stage-grid{display:grid;grid-template-columns:1.4fr .8fr .8fr;gap:6px;margin-top:8px}
+.stage-stat{background:#f4f8f5;border:1px solid #dbe5de;border-radius:10px;padding:7px}
+.stage-stat span{display:block;font-size:9px;color:#748078;text-transform:uppercase;letter-spacing:.05em}
+.stage-stat b{display:block;font-size:12px;margin-top:2px}
+.stage-dayline{font-size:11px;color:#5f7167;margin-top:4px}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.0</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.1</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -202,7 +235,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
-let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],selectedGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
+let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
 
 function $(id){return document.getElementById(id)}
 function toast(t){const x=$('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',1400)}
@@ -406,14 +439,23 @@ function focusStage(i){
  $('profileMeta').textContent=`${st.km.toFixed(0)} km · ${state.heightAvailable?Math.round(st.hm)+' HM':'HM –'}`;
 }
 function renderStages(){
+ const target=Math.max(1,(+$('kmday').value||120));
  $('stageList').innerHTML=state.stages.map((s,i)=>{
    const from=state.stageNames[i]||($('start').value.trim()||'Start');
    const to=state.stageNames[i+1]||`Etappenziel ${i+1}`;
    const loading=to.includes('ermittelt');
+   const load=Math.round((s.km/target)*100);
+   const loadText=load<=90?'locker':load<=110?'im Zielbereich':'lang';
    return `<div class="stage ${state.selectedStage===i?'active':''}" onclick="focusStage(${i})">
-     <div class="stagehead"><b>Etappe ${i+1}</b><span>${s.km.toFixed(0)} km · ${state.heightAvailable?Math.round(s.hm)+' HM':'HM –'}</span></div>
+     <div class="stagehead"><b>Etappe ${i+1}</b><span>Tag ${i+1}</span></div>
      <div class="stage-route ${loading?'route-name-loading':''}">${from} → ${to}</div>
-     <div class="stage-meta"><span class="pill">Karte + Profil</span><span class="pill">${(s.km/Math.max(1,(+$('kmday').value||120))*100).toFixed(0)}% Tagesziel</span></div>
+     <div class="stage-dayline">Tagesziel: ${target.toFixed(0)} km · diese Etappe: ${load}%</div>
+     <div class="stage-grid">
+       <div class="stage-stat"><span>Ziel</span><b>${to}</b></div>
+       <div class="stage-stat"><span>Distanz</span><b>${s.km.toFixed(0)} km</b></div>
+       <div class="stage-stat"><span>Belastung</span><b>${loadText}</b></div>
+     </div>
+     <div class="stage-meta"><span class="pill">Karte + Profil synchron</span><span class="pill">${state.heightAvailable?Math.round(s.hm)+' HM':'HM –'}</span></div>
    </div>`;
  }).join('');
 }
@@ -461,12 +503,28 @@ function initGear(){
  if(saved){try{state.assignments=JSON.parse(saved)||{}}catch(e){}}
  renderBagContents();
 }
+function clearBagHighlights(){
+ document.querySelectorAll('[data-bag]').forEach(x=>x.classList.remove('rec','move-target'));
+}
 function selectGear(id){
+ state.movingGear=null;
  state.selectedGear=id;
  document.querySelectorAll('.gearrow').forEach(x=>x.classList.toggle('active',x.dataset.gear===id));
  const g=gear.find(x=>x.id===id);
+ clearBagHighlights();
  document.querySelectorAll('[data-bag]').forEach(x=>x.classList.toggle('rec',x.dataset.bag===g.bag));
  $('recommendBox').innerHTML=`<b>${g.name}</b><span class="sub">Empfehlung: ${bagName(g.bag)} · ${g.why}</span><br><button class="primary" style="margin-top:8px" onclick="assignToBag('${g.bag}')">in ${bagName(g.bag)} packen</button>`;
+ renderBagContents();
+}
+function startMove(id){
+ const g=gear.find(x=>x.id===id); if(!g)return;
+ state.selectedGear=id;
+ state.movingGear=id;
+ document.querySelectorAll('.gearrow').forEach(x=>x.classList.remove('active'));
+ clearBagHighlights();
+ document.querySelectorAll('[data-bag]').forEach(x=>x.classList.add('move-target'));
+ const current=state.assignments[id];
+ $('recommendBox').innerHTML=`<b>${g.name} verschieben</b><span class="sub">Aktuell: ${bagName(current)}. Tippe jetzt auf eine andere Tasche am Bike oder unten in der Taschenliste.</span>`;
  renderBagContents();
 }
 function bagName(id){return bags[id]?.name||id}
@@ -474,30 +532,45 @@ function bagWeight(id){
  return Object.entries(state.assignments).filter(([,b])=>b===id).reduce((sum,[gid])=>sum+(gear.find(x=>x.id===gid)?.kg||0),0);
 }
 function assignToBag(bag){
- const g=gear.find(x=>x.id===state.selectedGear);if(!g){toast('Zuerst Gegenstand wählen');return}
+ const gid=state.movingGear||state.selectedGear;
+ const g=gear.find(x=>x.id===gid);
+ if(!g){toast('Zuerst Gegenstand wählen');return}
+ const old=state.assignments[g.id];
  state.assignments[g.id]=bag;
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
- toast(`${g.name} → ${bagName(bag)}`);
+ toast(old && old!==bag ? `${g.name}: ${bagName(old)} → ${bagName(bag)}` : `${g.name} → ${bagName(bag)}`);
+ state.movingGear=null;
+ clearBagHighlights();
  renderBagContents();
- document.querySelectorAll('[data-bag]').forEach(x=>x.classList.remove('rec'));
- const next=gear.find(x=>!state.assignments[x.id]);if(next)selectGear(next.id);else{$('recommendBox').textContent='Packplan vollständig.';state.selectedGear=null}
+ const next=gear.find(x=>!state.assignments[x.id]);
+ if(next)selectGear(next.id);
+ else{
+   $('recommendBox').textContent='Packplan vollständig. Gegenstand in einer Tasche antippen, um ihn direkt zu verschieben.';
+   state.selectedGear=null;
+   document.querySelectorAll('.gearrow').forEach(x=>x.classList.remove('active'));
+ }
 }
 function renderBagContents(){
  $('bagGrid').innerHTML=Object.entries(bags).map(([id,b])=>{
    const items=Object.entries(state.assignments).filter(([,bag])=>bag===id).map(([gid])=>gear.find(x=>x.id===gid)).filter(Boolean);
-   const kg=bagWeight(id),pct=Math.round((kg/b.cap)*100),cl=pct>100?'over':pct>80?'warn':'';
-   const rec=gear.find(x=>x.id===state.selectedGear)?.bag===id;
-   return `<div class="bagcard ${rec?'recommended':''}" onclick="assignToBag('${id}')">
+   const kg=bagWeight(id),pct=Math.round((kg/b.cap)*100),used=Math.min(100,pct),free=Math.max(0,100-used),cl=pct>100?'over':pct>80?'warn':'';
+   const rec=gear.find(x=>x.id===state.selectedGear)?.bag===id && !state.movingGear;
+   const move=!!state.movingGear;
+   return `<div class="bagcard ${rec?'recommended':''} ${move?'move-target':''}" onclick="assignToBag('${id}')">
      <h4>${b.name}</h4>
-     <div class="sub">${kg.toFixed(1)} / ${b.cap.toFixed(1)} kg · ${pct}%</div>
-     <div class="bagbar"><i class="${cl}" style="width:${Math.min(100,pct)}%"></i></div>
-     <div class="bagitems">${items.length?items.map(g=>`${g.name} <button class="inlinebtn" onclick="event.stopPropagation();unpack('${g.id}')">×</button>`).join(' · '):'leer'}</div>
+     <div class="sub">${kg.toFixed(1)} / ${b.cap.toFixed(1)} kg</div>
+     <div class="bagbar dual"><i class="used ${cl}" style="width:${used}%"></i><i class="freepart" style="width:${free}%"></i></div>
+     <div class="filllabels"><span class="filled">${pct}% gefüllt</span><span class="free">${Math.max(0,100-pct)}% frei</span></div>
+     <div class="bagitems">${items.length?items.map(g=>`<button class="bagitembtn ${state.movingGear===g.id?'active':''}" onclick="event.stopPropagation();startMove('${g.id}')">${g.name} ↔</button>`).join(''):'leer'}</div>
+     ${items.length?'<div class="movehint">Gegenstand antippen → direkt verschieben</div>':''}
    </div>`;
  }).join('');
 }
 function unpack(id){
  delete state.assignments[id];
+ if(state.movingGear===id)state.movingGear=null;
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
+ clearBagHighlights();
  renderBagContents();
  toast('Gegenstand entfernt');
 }
