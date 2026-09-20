@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.1.2</title>
+<title>Adventure Bike OS · Mobile 0.1.3</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -43,7 +43,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.1.2</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.1.3</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -147,7 +147,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
-let state={coords:null,metrics:null,stages:[],map:null,layers:[],selectedGear:null,assignments:{}};
+let state={coords:null,metrics:null,stages:[],map:null,layers:[],selectedGear:null,assignments:{},heightAvailable:false};
 
 function $(id){return document.getElementById(id)}
 function toast(t){const x=$('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',1400)}
@@ -176,12 +176,34 @@ function makeStages(coords,m,target,maxhm){
  if(s<coords.length-1){const e=coords.length-1;out.push({s,e,km:m.dist[e]-m.dist[s],hm:m.gain[e]-m.gain[s]})}
  return out;
 }
+function hasUsefulElevation(coords){
+ const z=coords.filter(c=>Array.isArray(c)&&c.length>2&&Number.isFinite(Number(c[2]))).map(c=>Number(c[2]));
+ return z.length>=2 && ((Math.max(...z)-Math.min(...z))>3 || Math.max(...z)>10);
+}
+async function enrichElevation(coords){
+ if(hasUsefulElevation(coords)) return {coords,ok:true};
+ const load=$('routeLoading');
+ if(load){load.textContent='Route gefunden. Höhenprofil wird geladen …';load.classList.add('show');}
+ try{
+   const r=await fetch(API+'/api/elevation',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({coordinates:coords.map(c=>[c[0],c[1]])})
+   });
+   const data=await r.json();
+   if(r.ok && data.ok && Array.isArray(data.coordinates) && data.coordinates.length>1 && hasUsefulElevation(data.coordinates)){
+     return {coords:data.coordinates,ok:true};
+   }
+ }catch(e){}
+ return {coords,ok:false};
+}
+
 async function calculateRoute(){
  const load=$('routeLoading');load.classList.add('show');
  try{
    const r=await fetch(API+'/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:$('start').value,destination:$('dest').value,profile:$('profile').value})});
    const data=await r.json(); if(!r.ok)throw new Error(data.error||'Route nicht verfügbar');
-   const coords =
+   let coords =
      data.coords ||
      data.coordinates ||
      data.route?.coords ||
@@ -189,8 +211,10 @@ async function calculateRoute(){
      data.route?.geometry?.coordinates ||
      [];
    if(!Array.isArray(coords)||!coords.length)throw new Error('Keine Routengeometrie erhalten');
+   const elev=await enrichElevation(coords);
+   coords=elev.coords;
    const m=metrics(coords),st=makeStages(coords,m,+$('kmday').value||120,+$('hmday').value||1800);
-   state.coords=coords;state.metrics=m;state.stages=st;
+   state.coords=coords;state.metrics=m;state.stages=st;state.heightAvailable=elev.ok;
    renderRoute();
    localStorage.setItem('abo-mobile-route',JSON.stringify({start:$('start').value,dest:$('dest').value,coords,metrics:m,stages:st}));
    go('stages');
@@ -202,7 +226,7 @@ function renderRoute(){
  const s=$('start').value,d=$('dest').value,m=state.metrics,st=state.stages;
  $('routeTitle').textContent=`${s} → ${d}`;$('homeTitle').textContent=`${s} → ${d}`;
  $('homeMeta').textContent=`${m.totalDist.toFixed(0)} km · ${Math.round(m.totalGain)} HM · ${st.length} Etappen`;
- $('distStat').textContent=m.totalDist.toFixed(0)+' km';$('hmStat').textContent=Math.round(m.totalGain)+' HM';$('stageStat').textContent=st.length;$('avgStat').textContent=(m.totalDist/st.length).toFixed(0)+' km';
+ $('distStat').textContent=m.totalDist.toFixed(0)+' km';$('hmStat').textContent=state.heightAvailable?Math.round(m.totalGain)+' HM':'–';$('stageStat').textContent=st.length;$('avgStat').textContent=(m.totalDist/st.length).toFixed(0)+' km';
  renderMap();drawElevation();renderStages();
 }
 function renderMap(){
@@ -220,11 +244,12 @@ function focusStage(i){
  document.querySelectorAll('.stage').forEach((e,j)=>e.classList.toggle('active',j===i));
 }
 function renderStages(){
- $('stageList').innerHTML=state.stages.map((s,i)=>`<div class="stage" onclick="focusStage(${i})"><div class="stagehead"><b>Etappe ${i+1}</b><span>${s.km.toFixed(0)} km · ${Math.round(s.hm)} HM</span></div><div class="sub">Antippen, um die Etappe auf der Karte hervorzuheben.</div></div>`).join('');
+ $('stageList').innerHTML=state.stages.map((s,i)=>`<div class="stage" onclick="focusStage(${i})"><div class="stagehead"><b>Etappe ${i+1}</b><span>${s.km.toFixed(0)} km · ${state.heightAvailable?Math.round(s.hm)+' HM':'HM –'}</span></div><div class="sub">Antippen, um die Etappe auf der Karte hervorzuheben.</div></div>`).join('');
 }
 function drawElevation(){
  const c=$('elevation'),ctx=c.getContext('2d'),dpr=devicePixelRatio||1,w=c.clientWidth,h=160;c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);
- const coords=state.coords,m=state.metrics,vals=coords.map(x=>x[2]||0),lo=Math.min(...vals),hi=Math.max(...vals),pad=18;
+ if(!state.heightAvailable){ctx.fillStyle='#6f7a73';ctx.font='13px sans-serif';ctx.fillText('Höhendaten derzeit nicht verfügbar.',18,32);return;}
+ const coords=state.coords,m=state.metrics,vals=coords.map(x=>Number(x[2])||0),lo=Math.min(...vals),hi=Math.max(...vals),pad=18;
  const x=i=>pad+(w-pad*2)*(m.dist[i]/m.totalDist),y=e=>h-pad-(h-pad*2)*((e-lo)/Math.max(1,hi-lo));
  state.stages.forEach((s,i)=>{ctx.fillStyle=stageColor(i)+'18';ctx.fillRect(x(s.s),pad,x(s.e)-x(s.s),h-pad*2);ctx.fillStyle=stageColor(i);ctx.font='11px sans-serif';ctx.fillText('E'+(i+1),x(s.s)+4,16)});
  ctx.strokeStyle='#176a4d';ctx.lineWidth=2.5;ctx.beginPath();coords.forEach((p,i)=>{const X=x(i),Y=y(p[2]||0);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.stroke();
@@ -259,7 +284,7 @@ function unpack(id){delete state.assignments[id];renderBagContents();toast('Gege
 (function boot(){
  initGear();
  const saved=localStorage.getItem('abo-mobile-route');
- if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;$('start').value=x.start;$('dest').value=x.dest;renderRoute()}catch(e){}}
+ if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;renderRoute()}catch(e){}}
  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
