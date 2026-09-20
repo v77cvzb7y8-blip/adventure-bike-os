@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.88-terrain-batch-fallback (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.90-terrain-data-v1 (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -607,12 +607,280 @@ def transport_nearby():
         return jsonify(ok=False,points=[],warning="ÖV-Zusatzdaten derzeit nicht erreichbar."),200
 
 
+
+def _terrain_point_segment_m(p, a, b):
+    """Approximate point-to-segment distance in meters for short OSM segments."""
+    import math
+    R=6371000.0
+    lat0=math.radians((p["lat"]+a["lat"]+b["lat"])/3.0)
+    def xy(q):
+        return (
+            math.radians(q["lon"])*R*math.cos(lat0),
+            math.radians(q["lat"])*R
+        )
+    px,py=xy(p); ax,ay=xy(a); bx,by=xy(b)
+    vx,vy=bx-ax,by-ay
+    wx,wy=px-ax,py-ay
+    vv=vx*vx+vy*vy
+    t=(wx*vx+wy*vy)/vv if vv>0 else 0.0
+    t=max(0.0,min(1.0,t))
+    dx=px-(ax+t*vx); dy=py-(ay+t*vy)
+    return (dx*dx+dy*dy)**0.5
+
+def _terrain_way_distance_m(sample, el):
+    geom=el.get("geometry") or []
+    if not geom:
+        return None
+    if len(geom)==1:
+        import math
+        p={"lat":float(geom[0]["lat"]),"lon":float(geom[0]["lon"])}
+        lat1,lon1,lat2,lon2=map(math.radians,[sample["lat"],sample["lon"],p["lat"],p["lon"]])
+        h=math.sin((lat2-lat1)/2)**2+math.cos(lat1)*math.cos(lat2)*math.sin((lon2-lon1)/2)**2
+        return 6371000*2*math.asin(math.sqrt(h))
+    best=None
+    for i in range(len(geom)-1):
+        try:
+            a={"lat":float(geom[i]["lat"]),"lon":float(geom[i]["lon"])}
+            b={"lat":float(geom[i+1]["lat"]),"lon":float(geom[i+1]["lon"])}
+        except (TypeError,ValueError,KeyError):
+            continue
+        d=_terrain_point_segment_m(sample,a,b)
+        if best is None or d<best:
+            best=d
+    return best
+
+def _terrain_normalize(tags):
+    tags=tags or {}
+    highway=str(tags.get("highway") or "").lower()
+    surface=str(tags.get("surface") or "").lower()
+    tracktype=str(tags.get("tracktype") or "").lower()
+    smoothness=str(tags.get("smoothness") or "").lower()
+    mtb_raw=str(tags.get("mtb:scale") or "")
+    try:
+        mtb_scale=float(mtb_raw.split(";")[0]) if mtb_raw else 0.0
+    except Exception:
+        mtb_scale=0.0
+
+    cls="unknown"; risk=.35
+    if mtb_scale>=1 or smoothness in ("very_bad","horrible","very_horrible","impassable") or tracktype in ("grade4","grade5"):
+        cls="rough";risk=1.0
+    elif surface in ("ground","dirt","earth","mud","sand","grass") or tracktype=="grade3":
+        cls="rough";risk=.85
+    elif surface in ("gravel","pebblestone") or tracktype=="grade2":
+        cls="gravel";risk=.55
+    elif surface in ("fine_gravel","compacted") or tracktype=="grade1":
+        cls="fine";risk=.28
+    elif surface in ("asphalt","paved","concrete","concrete:plates","paving_stones"):
+        cls="paved";risk=.08
+    elif surface=="unpaved":
+        cls="gravel";risk=.55
+    elif highway=="track":
+        cls="unknown";risk=.60
+    elif highway in ("path","bridleway"):
+        cls="unknown";risk=.78
+    elif highway in ("motorway","trunk","primary","secondary","tertiary","residential","living_street","service","cycleway"):
+        cls="unknown";risk=.18
+
+    evidence=[]
+    if mtb_scale>=1:evidence.append(f"mtb:scale={mtb_raw}")
+    if smoothness:evidence.append(f"smoothness={smoothness}")
+    if tracktype:evidence.append(f"tracktype={tracktype}")
+    if surface:evidence.append(f"surface={surface}")
+
+    return {
+        "surface_class":cls,
+        "risk":round(risk,3),
+        "highway":highway,
+        "surface":surface,
+        "tracktype":tracktype,
+        "smoothness":smoothness,
+        "mtb_scale":mtb_scale,
+        "sac_scale":str(tags.get("sac_scale") or ""),
+        "bicycle":str(tags.get("bicycle") or ""),
+        "evidence":evidence[:4],
+    }
+
+@app.post("/api/terrain-match-v1")
+def terrain_match_v1():
+    """
+    Terrain-Datenbasis v1:
+    - Server ordnet jeden Routen-Stichpunkt direkt dem nächstgelegenen OSM-Weg zu.
+    - Frontend erhält normalisierte Felder + Distanz + Confidence.
+    - Fehlgeschlagene Overpass-Chunks bleiben pro Stichpunkt sichtbar statt still zu verschwinden.
+    """
+    try:
+        body=request.get_json(force=True) or {}
+        raw=(body.get("samples") or [])[:15]
+        samples=[]
+        for idx,p in enumerate(raw):
+            try:
+                samples.append({
+                    "sample_index":idx,
+                    "lat":float(p["lat"]),
+                    "lon":float(p["lon"]),
+                    "stage_index":int(p.get("stageIndex") or 0),
+                    "route_index":int(p.get("routeIndex") or 0),
+                })
+            except (TypeError,ValueError,KeyError):
+                continue
+
+        if not samples:
+            return jsonify(ok=False,matches=[],warning="Keine gültigen Terrain-Stichproben."),400
+
+        # Drei kleine Queries statt vieler Einzelrequests oder einer großen Query.
+        chunks=[samples[i:i+5] for i in range(0,len(samples),5)]
+
+        def build_query(chunk):
+            clauses=[
+                f'way(around:260,{p["lat"]},{p["lon"]})["highway"];'
+                for p in chunk
+            ]
+            return '[out:json][timeout:8];('+''.join(clauses)+');out tags geom qt;'
+
+        def request_chunk(chunk_index, endpoint_index, timeout=10):
+            url=OVERPASS_ENDPOINTS[endpoint_index % len(OVERPASS_ENDPOINTS)]
+            q=build_query(chunks[chunk_index])
+            try:
+                r=session.post(
+                    url,
+                    data={"data":q},
+                    headers={"User-Agent":UA,"Accept":"application/json"},
+                    timeout=timeout
+                )
+                print(
+                    f"[TERRAIN-V1] chunk={chunk_index+1}/{len(chunks)} "
+                    f"source={url} status={r.status_code}",
+                    flush=True
+                )
+                if not r.ok:
+                    return chunk_index,False,[],url,f"HTTP {r.status_code}"
+                return chunk_index,True,(r.json() or {}).get("elements") or [],url,None
+            except Exception as e:
+                print(
+                    f"[TERRAIN-V1] chunk={chunk_index+1} source={url} "
+                    f"failed {type(e).__name__}: {e}",
+                    flush=True
+                )
+                return chunk_index,False,[],url,type(e).__name__
+
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        results={}
+        failed=[]
+
+        with ThreadPoolExecutor(max_workers=min(3,len(chunks))) as pool:
+            futs=[
+                pool.submit(request_chunk,i,i % len(OVERPASS_ENDPOINTS),10)
+                for i in range(len(chunks))
+            ]
+            for fut in as_completed(futs):
+                i,ok,elements,url,error=fut.result()
+                if ok: results[i]=(elements,url)
+                else: failed.append(i)
+
+        # Ein gezielter Retry auf anderem Mirror.
+        if failed:
+            still_failed=[]
+            with ThreadPoolExecutor(max_workers=min(3,len(failed))) as pool:
+                futs=[
+                    pool.submit(request_chunk,i,(i+1) % len(OVERPASS_ENDPOINTS),8)
+                    for i in failed
+                ]
+                for fut in as_completed(futs):
+                    i,ok,elements,url,error=fut.result()
+                    if ok: results[i]=(elements,url)
+                    else: still_failed.append(i)
+            failed=still_failed
+
+        matches=[]
+        sources=set()
+
+        for ci,chunk in enumerate(chunks):
+            if ci not in results:
+                for s in chunk:
+                    matches.append({
+                        **s,
+                        "status":"unavailable",
+                        "matched":False,
+                        "confidence":"none",
+                        "distance_to_way_m":None,
+                    })
+                continue
+
+            elements,url=results[ci]
+            sources.add(url)
+
+            for s in chunk:
+                best=None;best_d=None
+                for el in elements:
+                    d=_terrain_way_distance_m(s,el)
+                    if d is None: continue
+                    if best_d is None or d<best_d:
+                        best_d=d;best=el
+
+                # Conservative acceptance. Large deviations are surfaced as no_match.
+                if best is None or best_d is None or best_d>180:
+                    matches.append({
+                        **s,
+                        "status":"no_match",
+                        "matched":False,
+                        "confidence":"none",
+                        "distance_to_way_m":round(best_d,1) if best_d is not None else None,
+                    })
+                    continue
+
+                if best_d<=35:
+                    confidence="high"
+                elif best_d<=90:
+                    confidence="medium"
+                else:
+                    confidence="low"
+
+                norm=_terrain_normalize(best.get("tags") or {})
+                matches.append({
+                    **s,
+                    "status":"matched",
+                    "matched":True,
+                    "confidence":confidence,
+                    "distance_to_way_m":round(best_d,1),
+                    "osm_type":best.get("type"),
+                    "osm_id":best.get("id"),
+                    **norm,
+                })
+
+        matches.sort(key=lambda x:x["sample_index"])
+        total=len(matches)
+        service=sum(1 for x in matches if x["status"]!="unavailable")
+        matched=sum(1 for x in matches if x.get("matched"))
+        reliable=sum(1 for x in matches if x.get("confidence") in ("high","medium"))
+
+        return jsonify(
+            ok=True,
+            version="terrain-data-v1",
+            matches=matches,
+            source=", ".join(sorted(sources)),
+            partial=bool(failed),
+            service_coverage=round(100*service/max(1,total)),
+            matched_coverage=round(100*matched/max(1,total)),
+            reliable_coverage=round(100*reliable/max(1,total)),
+            warning=("Ein Teil der Terrain-Abfragen war nicht erreichbar." if failed else None),
+        )
+
+    except Exception as e:
+        print(f"[TERRAIN-V1] error {type(e).__name__}: {e}",flush=True)
+        return jsonify(
+            ok=False,
+            version="terrain-data-v1",
+            matches=[],
+            warning="Terrain-Datenbasis derzeit nicht erreichbar."
+        ),200
+
+
 @app.post("/api/osm-terrain-batch")
 def osm_terrain_batch():
     """Robuste Terrain-Stichproben: kleine parallele Overpass-Abfragen mit einmaligem Fallback."""
     try:
         body=request.get_json(force=True) or {}
-        raw=(body.get("samples") or [])[:20]
+        raw=(body.get("samples") or [])[:16]
         samples=[]
         for p in raw:
             try:
@@ -622,13 +890,13 @@ def osm_terrain_batch():
         if not samples:
             return jsonify(ok=False,elements=[],warning="Keine gültigen Terrain-Stichproben."),400
 
-        chunks=[samples[i:i+3] for i in range(0,len(samples),3)]
+        chunks=[samples[i:i+4] for i in range(0,len(samples),4)]
 
         def build_query(chunk):
-            clauses=[f'way(around:180,{p["lat"]},{p["lon"]})["highway"];' for p in chunk]
-            return '[out:json][timeout:7];('+''.join(clauses)+');out tags geom qt;'
+            clauses=[f'way(around:100,{p["lat"]},{p["lon"]})["highway"];' for p in chunk]
+            return '[out:json][timeout:6];('+''.join(clauses)+');out tags geom qt;'
 
-        def one_request(chunk_index, endpoint_index, timeout=8):
+        def one_request(chunk_index, endpoint_index, timeout=7):
             url=OVERPASS_ENDPOINTS[endpoint_index % len(OVERPASS_ENDPOINTS)]
             q=build_query(chunks[chunk_index])
             try:
@@ -652,7 +920,7 @@ def osm_terrain_batch():
         results={}
         failed=[]
         with ThreadPoolExecutor(max_workers=min(4,len(chunks))) as pool:
-            futures=[pool.submit(one_request,i,i % len(OVERPASS_ENDPOINTS),8) for i in range(len(chunks))]
+            futures=[pool.submit(one_request,i,i % len(OVERPASS_ENDPOINTS),7) for i in range(len(chunks))]
             for fut in as_completed(futures):
                 i,ok,elements,url,error=fut.result()
                 if ok:
@@ -663,7 +931,7 @@ def osm_terrain_batch():
         if failed:
             retry_failed=[]
             with ThreadPoolExecutor(max_workers=min(4,len(failed))) as pool:
-                futures=[pool.submit(one_request,i,(i+1) % len(OVERPASS_ENDPOINTS),6) for i in failed]
+                futures=[pool.submit(one_request,i,(i+1) % len(OVERPASS_ENDPOINTS),5) for i in failed]
                 for fut in as_completed(futures):
                     i,ok,elements,url,error=fut.result()
                     if ok:
@@ -844,7 +1112,7 @@ def osm_supply():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.89-terrain-confidence")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.90-terrain-data-v1")
 
 @app.get("/health")
 def health():
