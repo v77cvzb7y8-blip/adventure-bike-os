@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.6</title>
+<title>Adventure Bike OS · Mobile 0.2.7</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -209,7 +209,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.6</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.7</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -682,18 +682,44 @@ function terrainSamples(limit=16){
  return out;
 }
 
+function pointSegmentMeters(p,a,b){
+ // Local equirectangular projection is sufficient for short OSM segments.
+ const R=6371000;
+ const lat0=(p.lat+a.lat+b.lat)/3*Math.PI/180;
+ const toXY=q=>({
+   x:q.lon*Math.PI/180*R*Math.cos(lat0),
+   y:q.lat*Math.PI/180*R
+ });
+ const P=toXY(p), A=toXY(a), B=toXY(b);
+ const vx=B.x-A.x, vy=B.y-A.y, wx=P.x-A.x, wy=P.y-A.y;
+ const vv=vx*vx+vy*vy;
+ let t=vv>0?(wx*vx+wy*vy)/vv:0;
+ t=Math.max(0,Math.min(1,t));
+ const dx=P.x-(A.x+t*vx), dy=P.y-(A.y+t*vy);
+ return Math.sqrt(dx*dx+dy*dy);
+}
+
 function nearestWayForSample(sample,elements){
  let best=null,bestD=Infinity;
  for(const el of elements||[]){
    const geom=el.geometry||[];
    if(!geom.length)continue;
-   for(let k=0;k<geom.length;k+=Math.max(1,Math.floor(geom.length/36))){
-     const p=geom[k];
-     const d=approxMeters(sample,{lat:+p.lat,lon:+p.lon});
+
+   if(geom.length===1){
+     const d=approxMeters(sample,{lat:+geom[0].lat,lon:+geom[0].lon});
+     if(d<bestD){bestD=d;best=el}
+     continue;
+   }
+
+   // True distance to each line segment, rather than distance to a few vertices.
+   for(let k=0;k<geom.length-1;k++){
+     const a={lat:+geom[k].lat,lon:+geom[k].lon};
+     const b={lat:+geom[k+1].lat,lon:+geom[k+1].lon};
+     const d=pointSegmentMeters(sample,a,b);
      if(d<bestD){bestD=d;best=el}
    }
  }
- return bestD<=260?best:null;
+ return bestD<=220?best:null;
 }
 
 function summarizeTerrain(samples,elements){
@@ -874,7 +900,7 @@ function terrainHTML(i){
      <span class="terrain-chip"><i class="terrain-dot rough"></i> grob ${t.rough}%</span>
      <span class="terrain-chip"><i class="terrain-dot unknown"></i> offen ${t.unknown}%</span>
    </div>
-   <div class="terrain-summary">${C.note}. Die Werte sind eine OSM-Näherung entlang der Route, keine fahrtechnische Vor-Ort-Garantie.</div>
+   <div class="terrain-summary">${C.note}. Die Werte sind eine OSM-Näherung entlang der Route. 0.2.7 misst jetzt die Distanz zur tatsächlichen OSM-Weglinie statt nur zu einzelnen Geometriepunkten.</div>
    ${caution}
  </div>`;
 }
