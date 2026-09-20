@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.4</title>
+<title>Adventure Bike OS · Mobile 0.2.4.1</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -178,7 +178,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.4</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.4.1</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -553,7 +553,7 @@ function showStageOnMap(i,ev){
  setTimeout(()=>{
    if(state.map)state.map.invalidateSize(true);
    const mapCard=$('map')?.closest('.card');
-   if(mapCard)mapCard.scrollIntoView({behavior:'smooth',block:'start'});
+   if(mapCard)mapCard.scrollIntoView({behavior:'smooth',block:'center'});
  },60);
 }
 
