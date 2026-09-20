@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.3.8.2</title>
+<title>Adventure Bike OS · Mobile 0.3.9</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -330,12 +330,16 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .price-entry input{padding:8px;font-size:12px}
 .route-adjusting{font-size:10px;font-weight:800;color:#7a5514;margin-top:6px}
 .route-applied{font-size:10px;color:#236345;margin-top:6px}
+
+.lodging-progress{display:flex;align-items:center;gap:6px;font-size:10px;color:#617068;margin-top:7px}
+.lodging-progress i{width:7px;height:7px;border-radius:50%;background:#9ba79f;display:inline-block;animation:lodgingPulse 1s infinite alternate}
+@keyframes lodgingPulse{from{opacity:.35}to{opacity:1}}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.3.8.2</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.3.9</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -1475,7 +1479,7 @@ function lodgingStageHTML(i){
      </div>
    </div>`;
  }else if(status==='loading'){
-   body=`<div class="lodging-empty">Unterkünfte rund um ${escapeHTML(destination)} werden gesucht …</div>`;
+   body=`<div class="lodging-progress"><i></i><span>${escapeHTML(state.lodging?.searchInfo?.[i]||('Unterkünfte rund um '+destination+' werden gesucht …'))}</span></div>`;
  }else if(status==='timeout'){
    body=`<div class="lodging-empty">Die Unterkunftssuche hat zu lange gedauert. Bitte erneut versuchen.</div>`;
  }else if(status==='error'){
@@ -1598,10 +1602,44 @@ function renderStagesKeepProfile(){
    requestAnimationFrame(()=>drawStageElevation(state.selectedStage));
  }
 }
+
+function lodgingCacheKey(i){
+ const st=state.stages?.[i];
+ if(!st||!state.coords)return '';
+ const c=state.coords[st.e];
+ return `v1|${lodgingMode()}|${c[1].toFixed(3)}|${c[0].toFixed(3)}`;
+}
+function readLodgingCache(i){
+ try{
+   const store=JSON.parse(localStorage.getItem('abo-mobile-lodging-results-v1')||'{}');
+   const item=store[lodgingCacheKey(i)];
+   if(!item||!item.ts||Date.now()-item.ts>6*3600*1000)return null;
+   return item.rows||null;
+ }catch(e){return null}
+}
+function writeLodgingCache(i,rows){
+ try{
+   const key=lodgingCacheKey(i); if(!key)return;
+   const store=JSON.parse(localStorage.getItem('abo-mobile-lodging-results-v1')||'{}');
+   store[key]={ts:Date.now(),rows:(rows||[]).slice(0,12)};
+   const keys=Object.keys(store).sort((a,b)=>(store[b]?.ts||0)-(store[a]?.ts||0)).slice(0,12);
+   const trimmed={};keys.forEach(k=>trimmed[k]=store[k]);
+   localStorage.setItem('abo-mobile-lodging-results-v1',JSON.stringify(trimmed));
+ }catch(e){}
+}
+function mergeLodgingRows(center,elements){
+ const all=(elements||[]).map(el=>normalizeLodgingElement(el,center)).filter(Boolean);
+ const uniq=new Map();
+ all.sort((a,b)=>a.distance-b.distance).forEach(x=>{
+   const key=(x.name+'|'+x.type+'|'+x.lat.toFixed(4)+'|'+x.lon.toFixed(4)).toLowerCase();
+   if(!uniq.has(key))uniq.set(key,x);
+ });
+ return [...uniq.values()].slice(0,12);
+}
 async function loadLodgingForStage(i){
  const st=state.stages?.[i]; if(!st||!state.coords)return;
  const end=st.e,start=st.s,span=Math.max(1,end-start);
- const offsets=[0,-.06,-.12,-.20];
+ const offsets=[0,-.08,-.16,-.24];
  const points=[];
  offsets.forEach(off=>{
    const idx=Math.max(start,Math.min(end,end+Math.round(span*off)));
@@ -1610,39 +1648,76 @@ async function loadLodgingForStage(i){
  });
  const center=points[0];
 
- state.lodging.status[i]='loading';
  state.lodging.searchInfo=state.lodging.searchInfo||{};
- state.lodging.searchInfo[i]='Suche entlang des Etappenendes …';
- renderStagesKeepProfile();
+
+ // Instant local result if this same stage area was searched recently.
+ const cached=readLodgingCache(i);
+ if(cached?.length){
+   state.lodging.results[i]=cached;
+   state.lodging.status[i]='ready';
+   state.lodging.searchInfo[i]=`${cached.length} gespeicherte Treffer · werden aktualisiert …`;
+   renderStagesKeepProfile();
+   renderMap();
+ }else{
+   state.lodging.status[i]='loading';
+   state.lodging.searchInfo[i]='Schnellsuche rund ums Etappenziel …';
+   renderStagesKeepProfile();
+ }
 
  try{
-   const r=await fetchWithTimeout(API+'/api/lodging-nearby',{
+   // Phase 1: focused search. Usually enough for towns and stage destinations.
+   let r=await fetchWithTimeout(API+'/api/lodging-nearby',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({points,lodging:lodgingMode()})
-   },32000);
-
-   const data=await r.json();
+     body:JSON.stringify({points,lodging:lodgingMode(),mode:'fast'})
+   },15000);
+   let data=await r.json();
    if(!r.ok||!data.ok)throw new Error(data.warning||'Unterkünfte nicht verfügbar');
 
-   const all=(data.elements||[]).map(el=>normalizeLodgingElement(el,center)).filter(Boolean);
-   const uniq=new Map();
-   all.sort((a,b)=>a.distance-b.distance).forEach(x=>{
-     const key=(x.name+'|'+x.type+'|'+x.lat.toFixed(4)+'|'+x.lon.toFixed(4)).toLowerCase();
-     if(!uniq.has(key))uniq.set(key,x);
-   });
+   let rows=mergeLodgingRows(center,data.elements||[]);
+   if(rows.length){
+     state.lodging.results[i]=rows;
+     state.lodging.status[i]='ready';
+     state.lodging.searchInfo[i]=`${rows.length} Treffer · schnelle Suche bis ${(Number(data.radius_m)||0)/1000} km${data.cached?' · Cache':''}`;
+     writeLodgingCache(i,rows);
+     renderStagesKeepProfile();
+     renderMap();
+     return;
+   }
 
-   state.lodging.results[i]=[...uniq.values()].slice(0,12);
+   // Phase 2 only when necessary.
+   state.lodging.status[i]='loading';
+   state.lodging.searchInfo[i]='Keine Treffer nah dran · Suchbereich wird erweitert …';
+   renderStagesKeepProfile();
+
+   r=await fetchWithTimeout(API+'/api/lodging-nearby',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({points,lodging:lodgingMode(),mode:'wide'})
+   },18000);
+   data=await r.json();
+   if(!r.ok||!data.ok)throw new Error(data.warning||'Erweiterte Unterkunftssuche nicht verfügbar');
+
+   rows=mergeLodgingRows(center,data.elements||[]);
+   state.lodging.results[i]=rows;
    state.lodging.status[i]='ready';
-   state.lodging.searchInfo[i]=state.lodging.results[i].length
-     ? `${state.lodging.results[i].length} Treffer · Suchradius bis ${(Number(data.radius_m)||0)/1000} km`
-     : (data.warning||'Keine passenden OSM-Unterkünfte gefunden.');
+   state.lodging.searchInfo[i]=rows.length
+     ? `${rows.length} Treffer · erweiterte Suche bis ${(Number(data.radius_m)||0)/1000} km${data.cached?' · Cache':''}`
+     : 'Auch im erweiterten Suchbereich wurden keine passenden OSM-Unterkünfte gefunden.';
+   if(rows.length)writeLodgingCache(i,rows);
  }catch(e){
-   state.lodging.results[i]=[];
-   state.lodging.status[i]=(e&&e.name==='AbortError')?'timeout':'error';
-   state.lodging.searchInfo[i]=(e&&e.name==='AbortError')
-     ? 'Unterkunftssuche hat das Zeitlimit erreicht.'
-     : (e.message||'Unterkunftssuche fehlgeschlagen.');
+   if(cached?.length){
+     // Keep useful cached results instead of replacing them with an error.
+     state.lodging.results[i]=cached;
+     state.lodging.status[i]='ready';
+     state.lodging.searchInfo[i]=`${cached.length} gespeicherte Treffer · Aktualisierung derzeit nicht möglich`;
+   }else{
+     state.lodging.results[i]=[];
+     state.lodging.status[i]=(e&&e.name==='AbortError')?'timeout':'error';
+     state.lodging.searchInfo[i]=(e&&e.name==='AbortError')
+       ? 'Unterkunftssuche hat das Zeitlimit erreicht.'
+       : (e.message||'Unterkunftssuche fehlgeschlagen.');
+   }
  }
  renderStagesKeepProfile();
  renderMap();
