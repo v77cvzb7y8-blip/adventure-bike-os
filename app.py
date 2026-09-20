@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/1.02-mixed-stay-planner (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/1.10-weather-core (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -21,7 +21,9 @@ _route_cache = {}
 _place_cache = {}
 _transport_cache = {}
 _lodging_cache = {}
+_weather_cache = {}
 CACHE_TTL_LODGING = 60 * 60
+CACHE_TTL_WEATHER = 30 * 60
 SUPPLY_CACHE = {}
 SUPPLY_CACHE_TTL = 30 * 60
 _cache_lock = threading.Lock()
@@ -1914,6 +1916,245 @@ def weather():
     except Exception as e:
         print(f"[WEATHER] ERROR: {type(e).__name__}: {e}",flush=True)
         return jsonify(available=False,reason="Wetterdaten derzeit nicht verfügbar.",results=[]),200
+
+
+
+def _weather_level(value, watch, high, reverse=False):
+    """Return none/watch/high without pretending more precision than the source supports."""
+    if value is None:
+        return "none"
+    try:
+        v=float(value)
+    except Exception:
+        return "none"
+    if reverse:
+        if v <= high: return "high"
+        if v <= watch: return "watch"
+    else:
+        if v >= high: return "high"
+        if v >= watch: return "watch"
+    return "none"
+
+def _weather_point_forecast(lat, lon, target_str, role="route"):
+    key=(round(float(lat),3),round(float(lon),3),target_str)
+    cached=_cache_get(_weather_cache,key,CACHE_TTL_WEATHER)
+    if cached is not None:
+        return dict(cached, cached=True, role=role)
+
+    params={
+        "latitude":float(lat),
+        "longitude":float(lon),
+        "daily":",".join([
+            "weather_code",
+            "temperature_2m_max",
+            "temperature_2m_min",
+            "precipitation_probability_max",
+            "precipitation_sum",
+            "wind_speed_10m_max",
+            "wind_gusts_10m_max"
+        ]),
+        "timezone":"auto",
+        "forecast_days":16
+    }
+    r=session.get("https://api.open-meteo.com/v1/forecast",params=params,timeout=12)
+    print(f"[WEATHER-CORE] {lat:.4f},{lon:.4f} date={target_str} role={role} status={r.status_code}",flush=True)
+    r.raise_for_status()
+    daily=(r.json() or {}).get("daily") or {}
+    times=daily.get("time") or []
+    if target_str not in times:
+        return {"available":False,"date":target_str,"role":role}
+    i=times.index(target_str)
+
+    def pick(key):
+        vals=daily.get(key) or []
+        return vals[i] if i < len(vals) else None
+
+    out={
+        "available":True,
+        "date":target_str,
+        "role":role,
+        "lat":float(lat),
+        "lon":float(lon),
+        "weather_code":pick("weather_code"),
+        "tmax":pick("temperature_2m_max"),
+        "tmin":pick("temperature_2m_min"),
+        "rain_probability":pick("precipitation_probability_max"),
+        "precipitation_mm":pick("precipitation_sum"),
+        "wind_kmh":pick("wind_speed_10m_max"),
+        "gust_kmh":pick("wind_gusts_10m_max"),
+        "source":"Open-Meteo"
+    }
+    _cache_set(_weather_cache,key,out)
+    return out
+
+def _weather_stage_summary(date_str, samples, horizon_days):
+    available=[x for x in samples if x.get("available")]
+    if not available:
+        return {
+            "available":False,
+            "date":date_str,
+            "horizon_days":horizon_days,
+            "reason":"Für diesen Reisetag ist noch keine Detailprognose verfügbar.",
+            "samples":[]
+        }
+
+    def nums(key):
+        out=[]
+        for x in available:
+            try:
+                out.append(float(x.get(key)))
+            except Exception:
+                pass
+        return out
+
+    tmins=nums("tmin"); tmaxs=nums("tmax")
+    rains=nums("rain_probability"); mm=nums("precipitation_mm")
+    winds=nums("wind_kmh"); gusts=nums("gust_kmh")
+
+    tmin=min(tmins) if tmins else None
+    tmax=max(tmaxs) if tmaxs else None
+    rain=max(rains) if rains else None
+    precip=max(mm) if mm else None
+    wind=max(winds) if winds else None
+    gust=max(gusts) if gusts else None
+
+    rank={"none":0,"watch":1,"high":2}
+    rain_signal=max(
+        [_weather_level(rain,35,60), _weather_level(precip,1.0,3.0)],
+        key=lambda x: rank[x]
+    )
+    wind_signal=max(
+        [_weather_level(wind,30,45), _weather_level(gust,45,65)],
+        key=lambda x: rank[x]
+    )
+    heat_signal=_weather_level(tmax,26,30)
+    cold_signal=_weather_level(tmin,8,3,reverse=True)
+
+    signals={"rain":rain_signal,"wind":wind_signal,"heat":heat_signal,"cold":cold_signal}
+    severity=max(rank[v] for v in signals.values())
+    overall={0:"ok",1:"watch",2:"high"}[severity]
+
+    return {
+        "available":True,
+        "date":date_str,
+        "horizon_days":horizon_days,
+        "forecast_band":"short" if horizon_days<=5 else ("medium" if horizon_days<=10 else "long"),
+        "tmin":tmin,
+        "tmax":tmax,
+        "rain_probability":rain,
+        "precipitation_mm":precip,
+        "wind_kmh":wind,
+        "gust_kmh":gust,
+        "signals":signals,
+        "overall":overall,
+        "sample_count":len(available),
+        "samples":available,
+        "source":"Open-Meteo"
+    }
+
+@app.post("/api/weather-stage-batch")
+def weather_stage_batch():
+    """
+    Stage-aware weather for Adventure Bike OS.
+
+    Input:
+      {stages:[{date:"YYYY-MM-DD", points:[{lat,lon,role}, ...]}, ...]}
+
+    Each stage is sampled at multiple route points. The API returns both
+    normalized stage summaries and machine-readable signals for later
+    route/pack/camping integrations. Weather never blocks route planning.
+    """
+    try:
+        body=request.get_json(force=True) or {}
+        raw_stages=(body.get("stages") or [])[:10]
+        if not raw_stages:
+            return jsonify(ok=False,available=False,reason="Keine Etappen angegeben.",stages=[]),400
+
+        from datetime import date as _date, datetime as _dt
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        def parse_date(s):
+            try:
+                return _dt.strptime(str(s),"%Y-%m-%d").date()
+            except Exception:
+                return None
+
+        today=_date.today()
+        output=[]
+
+        for si,raw in enumerate(raw_stages):
+            date_str=str(raw.get("date") or "")
+            target=parse_date(date_str)
+            if target is None:
+                output.append({"available":False,"date":date_str,"reason":"Ungültiges Reisedatum."})
+                continue
+
+            horizon=(target-today).days
+            if horizon < 0:
+                output.append({
+                    "available":False,"date":date_str,"horizon_days":horizon,
+                    "reason":"Das Reisedatum liegt in der Vergangenheit."
+                })
+                continue
+            if horizon > 15:
+                output.append({
+                    "available":False,"date":date_str,"horizon_days":horizon,
+                    "reason":"Detailprognose noch nicht verfügbar."
+                })
+                continue
+
+            points=[]
+            for p in (raw.get("points") or [])[:4]:
+                try:
+                    points.append({
+                        "lat":float(p["lat"]),
+                        "lon":float(p["lon"]),
+                        "role":str(p.get("role") or "route")
+                    })
+                except (KeyError,TypeError,ValueError):
+                    continue
+
+            if not points:
+                output.append({
+                    "available":False,"date":date_str,"horizon_days":horizon,
+                    "reason":"Keine gültigen Wetterpunkte für diese Etappe."
+                })
+                continue
+
+            samples=[]
+            errors=[]
+            with ThreadPoolExecutor(max_workers=min(4,len(points))) as pool:
+                futs={
+                    pool.submit(_weather_point_forecast,p["lat"],p["lon"],date_str,p["role"]):p
+                    for p in points
+                }
+                for fut in as_completed(futs):
+                    try:
+                        samples.append(fut.result())
+                    except Exception as e:
+                        errors.append(type(e).__name__)
+
+            summary=_weather_stage_summary(date_str,samples,horizon)
+            if errors:
+                summary["partial_errors"]=errors
+            summary["stage_index"]=si
+            output.append(summary)
+
+        any_available=any(x.get("available") for x in output)
+        return jsonify(
+            ok=True,
+            available=any_available,
+            source="Open-Meteo",
+            stages=output,
+            architecture={
+                "sampling":"stage-start + high-point + stage-end",
+                "signals":["rain","wind","heat","cold"],
+                "forecast_horizon_days":15
+            }
+        )
+    except Exception as e:
+        print(f"[WEATHER-CORE] ERROR: {type(e).__name__}: {e}",flush=True)
+        return jsonify(ok=False,available=False,reason="Wetterdaten derzeit nicht verfügbar.",stages=[]),200
 
 
 def _route_coord_distance_m(a,b):
