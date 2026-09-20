@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.5.0.1</title>
+<title>Adventure Bike OS · Mobile 0.5.0.2</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -373,7 +373,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.5.0.1</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.5.0.2</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -709,7 +709,7 @@ function weatherRouteKey(){
 }
 function weatherCacheRead(){
  try{
-   const x=JSON.parse(localStorage.getItem('abo-mobile-weather-v2')||'null');
+   const x=JSON.parse(localStorage.getItem('abo-mobile-weather-v3')||'null');
    if(!x||x.key!==weatherRouteKey()||!x.ts||Date.now()-x.ts>30*60*1000)return null;
    return x.data||null;
  }catch(e){return null}
@@ -717,7 +717,7 @@ function weatherCacheRead(){
 function weatherCacheWrite(data){
  try{
    const key=weatherRouteKey(); if(!key)return;
-   localStorage.setItem('abo-mobile-weather-v2',JSON.stringify({key,ts:Date.now(),data}));
+   localStorage.setItem('abo-mobile-weather-v3',JSON.stringify({key,ts:Date.now(),data}));
  }catch(e){}
 }
 function invalidateWeather(reason='Route geändert'){
@@ -862,7 +862,10 @@ async function loadWeather(force=false){
      body:JSON.stringify(payload)
    },32000);
    const data=await r.json();
-   if(!r.ok||!data.ok)throw new Error(data.reason||'Wetter nicht verfügbar');
+   if(!r.ok||!data.ok){
+     const detail=data?.diagnostic?` (${data.diagnostic})`:'';
+     throw new Error((data.reason||'Wetter nicht verfügbar')+detail);
+   }
    const stages=Array.isArray(data.stages)?data.stages:[];
    if(stages.length!==state.stages.length)throw new Error('Wetterantwort unvollständig');
    const next={
@@ -1196,7 +1199,7 @@ async function calculateRoute(){
    state.terrain={status:'idle',stages:[],source:null,warning:null};
    state.lodging={results:{},status:{},selected:{},stageMode:{},searchInfo:{}};
    invalidateWeather('Neue Route');
-   localStorage.removeItem('abo-mobile-weather-v2');
+   localStorage.removeItem('abo-mobile-weather-v3');
    localStorage.removeItem('abo-mobile-lodging-stage-modes');
    localStorage.removeItem('abo-mobile-lodging-selected');
    localStorage.removeItem('abo-mobile-terrain-v3');
