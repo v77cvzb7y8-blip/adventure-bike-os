@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.95-smart-lodging (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/1.00-lodging-photon-first (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -1298,50 +1298,115 @@ def osm_terrain():
 
 
 
-def _lodging_query_once(points, lodging, radius, limit=120):
-    """
-    Query public Overpass mirrors in parallel and return the first successful
-    response. This avoids waiting sequentially for a slow mirror.
-    """
-    from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 
-    sleep_regex=(
-        "hotel|guest_house|hostel|motel|apartment|chalet|alpine_hut|wilderness_hut|camp_site|caravan_site"
-        if lodging=="mixed"
-        else (
-            "camp_site|caravan_site"
-            if lodging=="camping"
-            else "hotel|guest_house|hostel|motel|apartment|chalet|alpine_hut"
-        )
+LODGING_TYPES = {
+    "hotel","guest_house","hostel","motel","apartment","chalet",
+    "alpine_hut","wilderness_hut","camp_site","caravan_site"
+}
+LODGING_HOTEL_TYPES = {
+    "hotel","guest_house","hostel","motel","apartment","chalet","alpine_hut"
+}
+LODGING_CAMP_TYPES = {"camp_site","caravan_site"}
+
+def _lodging_allowed_types(mode):
+    if mode=="camping":
+        return LODGING_CAMP_TYPES
+    if mode=="mixed":
+        return LODGING_TYPES
+    return LODGING_HOTEL_TYPES
+
+def _lodging_photon_point(lat,lon,lodging,radius_km=10,limit=24):
+    """
+    Photon reverse search supports radius + osm_tag filters.
+    Query the broad tourism key, then keep only accommodation values ourselves.
+    """
+    r=session.get(
+        "https://photon.komoot.io/reverse",
+        params={
+            "lat":float(lat),"lon":float(lon),
+            "radius":max(1,min(float(radius_km),25)),
+            "limit":max(1,min(int(limit),30)),
+            "lang":"de",
+            "osm_tag":"tourism"
+        },
+        timeout=6
     )
+    print(f"[LODGING-PHOTON] {lat:.4f},{lon:.4f} status={r.status_code}",flush=True)
+    r.raise_for_status()
+
+    allowed=_lodging_allowed_types(lodging)
+    out=[]
+    for f in (r.json() or {}).get("features") or []:
+        g=f.get("geometry") or {}
+        c=g.get("coordinates") or []
+        p=f.get("properties") or {}
+        if len(c)<2:
+            continue
+        osm_value=str(p.get("osm_value") or "")
+        osm_key=str(p.get("osm_key") or "")
+        if osm_key!="tourism" or osm_value not in allowed:
+            continue
+        name=p.get("name") or p.get("street") or osm_value.replace("_"," ").title()
+        out.append({
+            "id":f'photon-{p.get("osm_type") or "x"}-{p.get("osm_id") or len(out)}',
+            "name":name,
+            "type":osm_value,
+            "lat":float(c[1]),"lon":float(c[0]),
+            "website":p.get("website") or p.get("contact:website") or "",
+            "phone":p.get("phone") or p.get("contact:phone") or "",
+            "stars":p.get("stars") or "",
+            "bicycle":p.get("bicycle") or "",
+            "osm_type":str(p.get("osm_type") or ""),
+            "osm_id":p.get("osm_id"),
+            "source":"Photon"
+        })
+    return out
+
+def _lodging_dedupe(rows):
+    seen=set(); out=[]
+    for x in rows:
+        try:
+            key=(str(x.get("name") or "").casefold(),str(x.get("type") or ""),
+                 round(float(x["lat"]),4),round(float(x["lon"]),4))
+        except Exception:
+            continue
+        if key in seen:
+            continue
+        seen.add(key);out.append(x)
+    return out
+
+def _lodging_overpass_fallback(points,lodging,radius=9000):
+    """
+    Last-resort fallback only. Unlike previous versions this is never the
+    primary request, so a slow Overpass service cannot block normal results.
+    """
+    allowed=_lodging_allowed_types(lodging)
+    sleep_regex="|".join(sorted(allowed))
     clauses=[
         f'nwr(around:{int(radius)},{lat},{lon})["tourism"~"{sleep_regex}"];'
-        for lat,lon in points
+        for lat,lon in points[:2]
     ]
-    q='[out:json][timeout:8];('+''.join(clauses)+f');out center tags {int(limit)};'
+    q='[out:json][timeout:7];('+''.join(clauses)+');out center tags 100;'
 
+    from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
     def one(url):
         r=requests.post(
-            url,
-            data={"data":q},
+            url,data={"data":q},
             headers={"User-Agent":UA,"Accept":"application/json"},
-            timeout=9
+            timeout=8
         )
-        print(f"[LODGING-SMART] r={radius} {url} status={r.status_code}",flush=True)
         if not r.ok:
             raise requests.RequestException(f"HTTP {r.status_code}")
         return url,(r.json() or {}).get("elements") or []
 
     pool=ThreadPoolExecutor(max_workers=min(3,len(OVERPASS_ENDPOINTS)))
-    futures={pool.submit(one,url):url for url in OVERPASS_ENDPOINTS}
-    errors=[]
+    futs={pool.submit(one,url):url for url in OVERPASS_ENDPOINTS}
     try:
-        pending=set(futures)
-        deadline=time.time()+10
+        pending=set(futs)
+        deadline=time.time()+9
         while pending and time.time()<deadline:
             done,pending=wait(
-                pending,
-                timeout=max(.1,deadline-time.time()),
+                pending,timeout=max(.1,deadline-time.time()),
                 return_when=FIRST_COMPLETED
             )
             if not done:
@@ -1349,29 +1414,54 @@ def _lodging_query_once(points, lodging, radius, limit=120):
             for fut in done:
                 try:
                     source,elements=fut.result()
-                    for p in pending:
-                        p.cancel()
-                    return source,elements,errors
-                except Exception as e:
-                    errors.append(f"{futures[fut]}:{type(e).__name__}")
-        return None,[],errors
+                    for p in pending: p.cancel()
+                    rows=[]
+                    for el in elements:
+                        t=el.get("tags") or {}
+                        typ=t.get("tourism") or ""
+                        if typ not in allowed:
+                            continue
+                        lat=el.get("lat") or (el.get("center") or {}).get("lat")
+                        lon=el.get("lon") or (el.get("center") or {}).get("lon")
+                        if lat is None or lon is None:
+                            continue
+                        rows.append({
+                            "id":f'overpass-{el.get("type")}-{el.get("id")}',
+                            "name":t.get("name") or typ.replace("_"," ").title(),
+                            "type":typ,
+                            "lat":float(lat),"lon":float(lon),
+                            "website":t.get("website") or t.get("contact:website") or "",
+                            "phone":t.get("phone") or t.get("contact:phone") or "",
+                            "stars":t.get("stars") or "",
+                            "bicycle":t.get("bicycle") or "",
+                            "shower":t.get("shower") or "",
+                            "toilets":t.get("toilets") or "",
+                            "drinking_water":t.get("drinking_water") or "",
+                            "power_supply":t.get("power_supply") or t.get("electricity") or "",
+                            "tents":t.get("tents") or "",
+                            "reservation":t.get("reservation") or "",
+                            "fee":t.get("fee") or "",
+                            "osm_type":str(el.get("type") or ""),
+                            "osm_id":el.get("id"),
+                            "source":"Overpass fallback"
+                        })
+                    return source,rows
+                except Exception:
+                    pass
+        return None,[]
     finally:
         pool.shutdown(wait=False,cancel_futures=True)
-
 
 @app.post("/api/lodging-nearby")
 def lodging_nearby():
     """
-    Two-phase accommodation lookup:
-    - mode=fast: focused 5 km search, intended to return quickly
-    - mode=wide: wider 10 km fallback
-    Frontend decides whether the wide fallback is actually necessary.
+    Fast-first accommodation lookup.
+    1) Photon reverse POI search (primary, short timeout)
+    2) public Overpass only if Photon returns no usable accommodation
     """
     try:
         body=request.get_json(force=True) or {}
         lodging=(body.get("lodging") or "hotel").lower()
-        mode=(body.get("mode") or "fast").lower()
-
         raw_points=body.get("points") or []
         if not raw_points and body.get("lat") is not None and body.get("lon") is not None:
             raw_points=[{"lat":body["lat"],"lon":body["lon"]}]
@@ -1383,42 +1473,115 @@ def lodging_nearby():
             except (TypeError,ValueError,KeyError):
                 continue
         if not points:
-            return jsonify(ok=False,elements=[],warning="Kein gültiger Suchpunkt."),400
+            return jsonify(ok=False,results=[],warning="Kein gültiger Suchpunkt."),400
 
-        radius=10000 if mode=="wide" else 5000
-        # Fewer query circles = faster Overpass parsing. For the focused pass we
-        # use the endpoint and one point a little earlier on the route.
-        use_points=points[:4] if mode=="wide" else points[:2]
-
-        key=(tuple((round(lat,4),round(lon,4)) for lat,lon in use_points),lodging,mode)
+        key=(tuple((round(lat,3),round(lon,3)) for lat,lon in points[:2]),lodging,"photon-v1")
         cached=_cache_get(_lodging_cache,key,CACHE_TTL_LODGING)
         if cached is not None:
             return jsonify(**cached,cached=True)
 
-        source,elements,errors=_lodging_query_once(use_points,lodging,radius,160 if mode=="wide" else 100)
-        if source is None:
-            return jsonify(
-                ok=False,elements=[],mode=mode,radius_m=radius,
-                warning="Unterkunftssuche derzeit nicht erreichbar.",
-                errors=errors[-3:]
-            ),200
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        rows=[]
+        photon_errors=[]
+        with ThreadPoolExecutor(max_workers=min(2,len(points))) as pool:
+            futs=[pool.submit(_lodging_photon_point,lat,lon,lodging,10,24) for lat,lon in points[:2]]
+            for fut in as_completed(futs):
+                try:
+                    rows.extend(fut.result())
+                except Exception as e:
+                    photon_errors.append(type(e).__name__)
 
-        out={
-            "ok":True,
-            "elements":elements,
-            "source":source,
-            "radius_m":radius,
-            "search_points":len(use_points),
-            "mode":mode
-        }
-        # Cache successful non-empty results. Short empty fast results are not
-        # cached because the frontend may immediately try the wide pass.
-        if elements:
+        rows=_lodging_dedupe(rows)
+        if rows:
+            out={
+                "ok":True,"results":rows[:20],
+                "source":"Photon","fallback_used":False,
+                "warning":None
+            }
             _cache_set(_lodging_cache,key,out)
-        return jsonify(**out)
+            return jsonify(**out)
+
+        source,rows=_lodging_overpass_fallback(points,lodging,9000)
+        rows=_lodging_dedupe(rows)
+        if rows:
+            out={
+                "ok":True,"results":rows[:20],
+                "source":source or "Overpass fallback","fallback_used":True,
+                "warning":"Photon ohne Treffer; OSM-Fallback verwendet."
+            }
+            _cache_set(_lodging_cache,key,out)
+            return jsonify(**out)
+
+        return jsonify(
+            ok=True,results=[],source="Photon + OSM fallback",
+            fallback_used=True,
+            warning="Keine passenden Unterkünfte im Suchbereich gefunden.",
+            diagnostics={"photon_errors":photon_errors}
+        ),200
     except Exception as e:
-        print(f"[LODGING-SMART] error {type(e).__name__}: {e}",flush=True)
-        return jsonify(ok=False,elements=[],warning="Unterkünfte derzeit nicht erreichbar."),200
+        print(f"[LODGING] error {type(e).__name__}: {e}",flush=True)
+        return jsonify(ok=False,results=[],warning="Unterkunftssuche derzeit nicht erreichbar."),200
+
+@app.post("/api/lodging-enrich")
+def lodging_enrich():
+    """
+    Optional detail enrichment. The UI never waits for this endpoint before
+    showing lodging results.
+    """
+    try:
+        body=request.get_json(force=True) or {}
+        items=(body.get("items") or [])[:8]
+        node_ids=[];way_ids=[];rel_ids=[]
+        for x in items:
+            oid=x.get("osm_id")
+            typ=str(x.get("osm_type") or "").lower()
+            try: oid=int(oid)
+            except Exception: continue
+            if typ in ("n","node"): node_ids.append(oid)
+            elif typ in ("w","way"): way_ids.append(oid)
+            elif typ in ("r","relation"): rel_ids.append(oid)
+        clauses=[]
+        if node_ids: clauses.append(f'node(id:{",".join(map(str,node_ids))});')
+        if way_ids: clauses.append(f'way(id:{",".join(map(str,way_ids))});')
+        if rel_ids: clauses.append(f'relation(id:{",".join(map(str,rel_ids))});')
+        if not clauses:
+            return jsonify(ok=True,details=[])
+
+        q='[out:json][timeout:5];('+''.join(clauses)+');out center tags;'
+        details=[]
+        for url in OVERPASS_ENDPOINTS:
+            try:
+                r=requests.post(
+                    url,data={"data":q},
+                    headers={"User-Agent":UA,"Accept":"application/json"},
+                    timeout=6
+                )
+                if not r.ok:
+                    continue
+                for el in (r.json() or {}).get("elements") or []:
+                    t=el.get("tags") or {}
+                    details.append({
+                        "osm_type":str(el.get("type") or ""),
+                        "osm_id":el.get("id"),
+                        "website":t.get("website") or t.get("contact:website") or "",
+                        "phone":t.get("phone") or t.get("contact:phone") or "",
+                        "stars":t.get("stars") or "",
+                        "bicycle":t.get("bicycle") or "",
+                        "shower":t.get("shower") or "",
+                        "toilets":t.get("toilets") or "",
+                        "drinking_water":t.get("drinking_water") or "",
+                        "power_supply":t.get("power_supply") or t.get("electricity") or "",
+                        "tents":t.get("tents") or "",
+                        "reservation":t.get("reservation") or "",
+                        "fee":t.get("fee") or ""
+                    })
+                return jsonify(ok=True,details=details,source=url)
+            except Exception:
+                continue
+        return jsonify(ok=True,details=[],warning="Zusatzdetails derzeit nicht erreichbar.")
+    except Exception as e:
+        print(f"[LODGING-ENRICH] error {type(e).__name__}: {e}",flush=True)
+        return jsonify(ok=True,details=[],warning="Zusatzdetails derzeit nicht erreichbar.")
 
 
 @app.post("/api/osm-supply-batch")
