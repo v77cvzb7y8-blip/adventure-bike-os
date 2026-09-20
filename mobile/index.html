@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.9</title>
+<title>Adventure Bike OS · Mobile 0.3.0</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -222,12 +222,31 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .weight-zone span{display:block;font-size:10px;color:#6a756f}.weight-zone b{font-size:13px}
 .route-fit-note{margin-top:8px;font-size:11px;line-height:1.4;color:#5e6963}
 @media(max-width:430px){.bike-profile-grid{grid-template-columns:1fr}}
+
+.pack-mode-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.pack-mode-row button{flex:1 1 140px}
+.pack-mode-note{font-size:11px;line-height:1.4;color:#657069;margin:4px 0 10px}
+.gear-section{margin-top:12px}
+.gear-section h4{margin:0 0 6px;font-size:12px;color:#49564f}
+.gear-row-main{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.gear-meta{font-size:10px;color:#6d7771;margin-top:3px}
+.gear-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.gear-badge{font-size:9px;font-weight:800;border-radius:999px;padding:3px 6px;background:#edf1ee;color:#59635d}
+.gear-badge.required{background:#fff1d8;color:#7a5514}
+.gear-badge.optional{background:#edf3f0;color:#567064}
+.gear-badge.packed{background:#dff0e7;color:#236345}
+.volume-line{font-size:10px;color:#657069;margin-top:2px}
+.bagbar.volume{margin-top:5px}
+.bagbar.volume .used{opacity:.55}
+.pack-health{margin:10px 0 4px;padding:10px;border-radius:12px;background:#f6f8f6;border:1px solid #e0e5e0}
+.pack-health b{display:block;margin-bottom:4px}
+.pack-health .small{font-size:11px;color:#657069;line-height:1.35}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.9</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.3.0</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -318,6 +337,12 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
           <div id="bikeSetupCheck" class="setup-list" style="margin-top:10px"></div>
           <div id="bikeRouteFit" class="route-fit-note"></div>
         </div>
+        <div class="pack-mode-row">
+          <button class="primary" type="button" onclick="applyRecommendedSetup()">Empfohlenes Setup übernehmen</button>
+          <button class="secondary" type="button" onclick="startEmptySetup()">Leer starten</button>
+        </div>
+        <div class="pack-mode-note" id="packModeNote">Beim ersten Öffnen wird ein sinnvoller Vorschlag angezeigt, aber erst nach „übernehmen“ gespeichert.</div>
+        <div id="packHealth" class="pack-health"></div>
         <div class="bike">
           <svg viewBox="0 0 420 250">
             <circle cx="110" cy="175" r="65" fill="none" stroke="#17231e" stroke-width="10"/>
@@ -1065,12 +1090,8 @@ function packedZoneWeights(){
  return {rear:w('saddle'),center:w('frame')+w('tool')+w('top')*.35,front:w('handlebar')+w('top')*.65};
 }
 function missingCriticalGear(){
- const packed=new Set(Object.keys(state.assignments||{})),missing=[];
- if(!packed.has('tool'))missing.push('Werkzeug / Reparaturset');
- if(!packed.has('firstaid'))missing.push('Erste Hilfe');
- if(!packed.has('rain'))missing.push('Regenlage');
- if((state.stages||[]).length>=2&&!packed.has('power'))missing.push('Powerbank');
- return missing;
+ const packed=new Set(Object.keys(state.assignments||{}));
+ return gear.filter(g=>isRequiredGear(g)&&!packed.has(g.id)).map(g=>g.name);
 }
 function currentTerrainConfidence(){
  if(!state.terrain||state.terrain.status!=='ready'||!Array.isArray(state.terrain.stages)||!state.terrain.stages.length)return 0;
@@ -1120,27 +1141,110 @@ function renderBikeSetup(){
 }
 
 const gear=[
- {id:'jacket',name:'Daunenjacke',bag:'saddle',kg:.35,why:'leicht und voluminös'},
- {id:'tool',name:'Werkzeug',bag:'tool',kg:.55,why:'schwer und kompakt – tief am Bike'},
- {id:'power',name:'Powerbank',bag:'frame',kg:.3,why:'zentral und geschützt'},
- {id:'rain',name:'Regenjacke',bag:'handlebar',kg:.3,why:'schnell erreichbar'},
- {id:'snack',name:'Snacks',bag:'top',kg:.6,why:'während der Fahrt erreichbar'},
- {id:'firstaid',name:'Erste Hilfe',bag:'frame',kg:.2,why:'geschützt und gut erreichbar'},
- {id:'shirt',name:'Trikot / Shirt',bag:'saddle',kg:.22,why:'trocken und kompakt verstauen'}
+ {id:'tool',name:'Werkzeug',category:'Reparatur',bag:'tool',kg:.55,l:0.8,required:'always',why:'schwer und kompakt – tief am Bike'},
+ {id:'tube',name:'Ersatzschlauch / Plug-Kit',category:'Reparatur',bag:'frame',kg:.22,l:0.5,required:'always',why:'zentral, kompakt und schnell erreichbar'},
+ {id:'pump',name:'Pumpe / CO₂',category:'Reparatur',bag:'frame',kg:.18,l:0.5,required:'always',why:'zentral und gut erreichbar'},
+ {id:'firstaid',name:'Erste Hilfe',category:'Sicherheit',bag:'frame',kg:.20,l:0.7,required:'always',why:'geschützt und gut erreichbar'},
+ {id:'rain',name:'Regenjacke',category:'Kleidung',bag:'handlebar',kg:.30,l:1.8,required:'always',why:'schnell erreichbar'},
+ {id:'jacket',name:'Daunenjacke',category:'Kleidung',bag:'saddle',kg:.35,l:2.6,required:'multi',why:'leicht und voluminös'},
+ {id:'shirt',name:'Trikot / Shirt',category:'Kleidung',bag:'saddle',kg:.22,l:1.2,required:'multi',why:'trocken und kompakt verstauen'},
+ {id:'power',name:'Powerbank',category:'Elektronik',bag:'frame',kg:.30,l:0.4,required:'multi',why:'zentral und geschützt'},
+ {id:'light',name:'Licht / Backup-Licht',category:'Elektronik',bag:'top',kg:.18,l:0.3,required:'multi',why:'leicht erreichbar'},
+ {id:'snack',name:'Snacks',category:'Verpflegung',bag:'top',kg:.60,l:1.0,required:'always',why:'während der Fahrt erreichbar'},
+ {id:'water',name:'Zusatzwasser',category:'Verpflegung',bag:'frame',kg:1.00,l:1.0,required:'optional',why:'schwer – möglichst zentral'}
 ];
 const bags={
- saddle:{name:'Satteltasche',cap:4.5},
- frame:{name:'Rahmentasche',cap:2.5},
- handlebar:{name:'Lenkertasche',cap:2.5},
- top:{name:'Oberrohrtasche',cap:1.0},
- tool:{name:'Werkzeugtasche',cap:1.0}
+ saddle:{name:'Satteltasche',cap:4.5,liters:12},
+ frame:{name:'Rahmentasche',cap:2.5,liters:5},
+ handlebar:{name:'Lenkertasche',cap:2.5,liters:8},
+ top:{name:'Oberrohrtasche',cap:1.0,liters:1.5},
+ tool:{name:'Werkzeugtasche',cap:1.0,liters:1.2}
 };
+
+function isRequiredGear(g){
+ const days=(state.stages||[]).length||1;
+ return g.required==='always' || (g.required==='multi' && days>=2);
+}
+function recommendedAssignments(){
+ const out={};
+ gear.forEach(g=>{if(isRequiredGear(g)||g.required==='optional')out[g.id]=g.bag;});
+ return out;
+}
+function bagVolume(id){
+ return Object.entries(state.assignments).filter(([,b])=>b===id).reduce((sum,[gid])=>sum+(gear.find(x=>x.id===gid)?.l||0),0);
+}
+function renderPackHealth(){
+ const el=$('packHealth'); if(!el)return;
+ const required=gear.filter(isRequiredGear);
+ const packed=new Set(Object.keys(state.assignments||{}));
+ const missing=required.filter(g=>!packed.has(g.id));
+ const overW=Object.entries(bags).filter(([id,b])=>bagWeight(id)>b.cap);
+ const overV=Object.entries(bags).filter(([id,b])=>bagVolume(id)>b.liters);
+ let title='Packplan bereit';
+ let msg='Pflichtausrüstung vollständig und alle Taschen innerhalb der hinterlegten Grenzen.';
+ if(missing.length){
+   title=`${missing.length} Pflichtteil${missing.length>1?'e':''} fehlt`;
+   msg=missing.map(g=>g.name).join(' · ');
+ } else if(overW.length||overV.length){
+   title='Kapazität prüfen';
+   const names=[...new Set([...overW.map(([id])=>bagName(id)),...overV.map(([id])=>bagName(id))])];
+   msg=`Grenze überschritten: ${names.join(' · ')}`;
+ }
+ el.innerHTML=`<b>${title}</b><div class="small">${msg}</div>`;
+}
+function renderGearList(){
+ const categories=['Reparatur','Sicherheit','Kleidung','Elektronik','Verpflegung'];
+ $('gearList').innerHTML=categories.map(cat=>{
+   const items=gear.filter(g=>g.category===cat);
+   if(!items.length)return '';
+   return `<div class="gear-section"><h4>${cat}</h4>${items.map(g=>{
+     const packed=!!state.assignments[g.id],req=isRequiredGear(g);
+     return `<div class="gearrow" data-gear="${g.id}" onclick="selectGear('${g.id}')">
+       <div class="gear-row-main"><div><b>${g.name}</b><div class="gear-meta">${g.kg.toFixed(2)} kg · ${g.l.toFixed(1)} l · empfohlen: ${bagName(g.bag)}</div>
+       <div class="gear-badges"><span class="gear-badge ${req?'required':'optional'}">${req?'Pflicht':'optional'}</span>${packed?'<span class="gear-badge packed">gepackt</span>':''}</div></div>
+       <button class="inlinebtn" type="button">${packed?'ändern':'wählen'}</button></div>
+     </div>`;
+   }).join('')}</div>`;
+ }).join('');
+}
+function applyRecommendedSetup(){
+ state.assignments=recommendedAssignments();
+ localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
+ localStorage.setItem('abo-mobile-pack-mode','recommended');
+ state.selectedGear=null;state.movingGear=null;
+ clearBagHighlights();
+ renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();
+ const note=$('packModeNote');if(note)note.textContent='Empfohlenes Setup übernommen. Du kannst jeden Gegenstand danach frei verschieben.';
+ toast('Empfohlenes Setup übernommen');
+}
+function startEmptySetup(){
+ state.assignments={};state.selectedGear=null;state.movingGear=null;
+ localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
+ localStorage.setItem('abo-mobile-pack-mode','empty');
+ clearBagHighlights();
+ renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();
+ const note=$('packModeNote');if(note)note.textContent='Leerer Packplan. Pflichtteile werden markiert, aber nichts wird automatisch gepackt.';
+ toast('Leerer Packplan');
+}
 function initGear(){
- $('gearList').innerHTML=gear.map(g=>`<div class="gearrow" data-gear="${g.id}" onclick="selectGear('${g.id}')"><div><b>${g.name}</b><div class="sub">${g.kg.toFixed(2)} kg · empfohlen: ${bagName(g.bag)}</div></div><button class="inlinebtn" type="button">wählen</button></div>`).join('');
- document.querySelectorAll('[data-bag]').forEach(el=>el.addEventListener('click',()=>assignToBag(el.dataset.bag)));
  const saved=localStorage.getItem('abo-mobile-pack');
- if(saved){try{state.assignments=JSON.parse(saved)||{}}catch(e){}}
+ const mode=localStorage.getItem('abo-mobile-pack-mode');
+ if(saved){
+   try{state.assignments=JSON.parse(saved)||{}}catch(e){state.assignments={}}
+ }else{
+   // First visit: show a recommended preview, but don't persist it until accepted.
+   state.assignments=recommendedAssignments();
+ }
+ document.querySelectorAll('[data-bag]').forEach(el=>el.addEventListener('click',()=>assignToBag(el.dataset.bag)));
+ renderGearList();
  renderBagContents();
+ renderPackHealth();
+ const note=$('packModeNote');
+ if(note){
+   if(!saved)note.textContent='Empfohlener Vorschlag wird angezeigt, ist aber noch nicht gespeichert. „Übernehmen“ speichert ihn.';
+   else if(mode==='empty')note.textContent='Leerer Packplan gewählt. Pflichtteile werden markiert.';
+   else note.textContent='Gespeicherter Packplan geladen. Du kannst ihn jederzeit neu optimieren oder leeren.';
+ }
 }
 function clearBagHighlights(){
  document.querySelectorAll('[data-bag]').forEach(x=>x.classList.remove('rec','move-target'));
@@ -1153,6 +1257,7 @@ function selectGear(id){
  clearBagHighlights();
  document.querySelectorAll('[data-bag]').forEach(x=>x.classList.toggle('rec',x.dataset.bag===g.bag));
  $('recommendBox').innerHTML=`<b>${g.name}</b><span class="sub">Empfehlung: ${bagName(g.bag)} · ${g.why}</span><br><button class="primary" style="margin-top:8px" onclick="assignToBag('${g.bag}')">in ${bagName(g.bag)} packen</button>`;
+ renderGearList();
  renderBagContents();
  renderBikeBagState();
 }
@@ -1179,10 +1284,14 @@ function assignToBag(bag){
  const old=state.assignments[g.id];
  state.assignments[g.id]=bag;
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
+ localStorage.setItem('abo-mobile-pack-mode','custom');
  toast(old && old!==bag ? `${g.name}: ${bagName(old)} → ${bagName(bag)}` : `${g.name} → ${bagName(bag)}`);
  state.movingGear=null;
  clearBagHighlights();
+ renderGearList();
  renderBagContents();
+ renderPackHealth();
+ renderBikeSetup();
  const next=gear.find(x=>!state.assignments[x.id]);
  if(next)selectGear(next.id);
  else{
@@ -1218,25 +1327,35 @@ function renderBikeBagState(){
 function renderBagContents(){
  $('bagGrid').innerHTML=Object.entries(bags).map(([id,b])=>{
    const items=Object.entries(state.assignments).filter(([,bag])=>bag===id).map(([gid])=>gear.find(x=>x.id===gid)).filter(Boolean);
-   const kg=bagWeight(id),pct=Math.round((kg/b.cap)*100),used=Math.min(100,pct),free=Math.max(0,100-used),cl=pct>100?'over':pct>80?'warn':'';
+   const kg=bagWeight(id),vol=bagVolume(id);
+   const pct=Math.round((kg/b.cap)*100),vpct=Math.round((vol/b.liters)*100);
+   const used=Math.min(100,pct),vused=Math.min(100,vpct);
+   const free=Math.max(0,100-used),vfree=Math.max(0,100-vused);
+   const cl=pct>100?'over':pct>80?'warn':'',vcl=vpct>100?'over':vpct>80?'warn':'';
    const rec=gear.find(x=>x.id===state.selectedGear)?.bag===id && !state.movingGear;
    const move=!!state.movingGear;
    return `<div class="bagcard ${rec?'recommended':''} ${move?'move-target':''}" onclick="assignToBag('${id}')">
      <h4>${b.name}</h4>
      <div class="sub">${kg.toFixed(1)} / ${b.cap.toFixed(1)} kg</div>
      <div class="bagbar dual"><i class="used ${cl}" style="width:${used}%"></i><i class="freepart" style="width:${free}%"></i></div>
-     <div class="filllabels"><span class="filled">${pct}% gefüllt</span><span class="free">${Math.max(0,100-pct)}% frei</span></div>
+     <div class="filllabels"><span class="filled">${pct}% Gewicht</span><span class="free">${Math.max(0,100-pct)}% frei</span></div>
+     <div class="volume-line">${vol.toFixed(1)} / ${b.liters.toFixed(1)} l Volumen</div>
+     <div class="bagbar dual volume"><i class="used ${vcl}" style="width:${vused}%"></i><i class="freepart" style="width:${vfree}%"></i></div>
+     <div class="filllabels"><span class="filled">${vpct}% Volumen</span><span class="free">${Math.max(0,100-vpct)}% frei</span></div>
      <div class="bagitems">${items.length?items.map(g=>`<button class="bagitembtn ${state.movingGear===g.id?'active':''}" onclick="event.stopPropagation();startMove('${g.id}')">${g.name} ↔</button>`).join(''):'leer'}</div>
      ${items.length?'<div class="movehint">Gegenstand antippen → direkt verschieben</div>':''}
    </div>`;
  }).join('');
  renderBikeBagState();
+ renderPackHealth();
+ renderGearList();
  renderBikeSetup();
 }
 function unpack(id){
  delete state.assignments[id];
  if(state.movingGear===id)state.movingGear=null;
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
+ localStorage.setItem('abo-mobile-pack-mode','custom');
  clearBagHighlights();
  renderBagContents();
  renderBikeSetup();
