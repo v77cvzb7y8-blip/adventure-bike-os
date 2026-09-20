@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.3.2</title>
+<title>Adventure Bike OS · Mobile 0.3.3</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -252,12 +252,44 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .custom-gear-actions{display:flex;gap:7px;margin-top:8px}
 .custom-remove{font-size:9px;border:0;background:transparent;color:#8a4d42;padding:2px 0;text-decoration:underline}
 @media(max-width:520px){.custom-gear-grid{grid-template-columns:1fr 1fr}.custom-gear-grid .wide{grid-column:1/-1}}
+
+.pdf-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pdf-actions button{flex:1 1 170px}
+.pdf-note{font-size:11px;color:#66716b;line-height:1.4;margin-top:7px}
+#printReport{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff!important;color:#111!important}
+  .app,.bottom,.toast{display:none!important}
+  #printReport{display:block!important;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:#17231e}
+  #printReport h1{font-size:22px;margin:0 0 3mm}
+  #printReport h2{font-size:15px;margin:7mm 0 2mm;border-bottom:1px solid #cfd7d1;padding-bottom:2mm}
+  #printReport h3{font-size:12px;margin:4mm 0 1.5mm}
+  #printReport p{font-size:10.5px;line-height:1.4;margin:1.5mm 0}
+  #printReport .pr-sub{color:#68736c;font-size:9.5px}
+  #printReport .pr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2mm;margin:3mm 0}
+  #printReport .pr-stat{border:1px solid #d8ded9;border-radius:3mm;padding:2.5mm}
+  #printReport .pr-stat b{display:block;font-size:13px}
+  #printReport .pr-stat span{font-size:8.5px;color:#657069}
+  #printReport table{width:100%;border-collapse:collapse;font-size:9.5px;margin:2mm 0 4mm}
+  #printReport th,#printReport td{border-bottom:1px solid #dfe4e0;padding:1.8mm 1.2mm;text-align:left;vertical-align:top}
+  #printReport th{font-size:8.5px;color:#59635d}
+  #printReport .pr-badge{display:inline-block;padding:1mm 2mm;border-radius:999px;background:#edf2ee;font-size:8.5px;font-weight:700}
+  #printReport .pr-warn{background:#fff2d9}
+  #printReport .pr-ok{background:#e4f1e9}
+  #printReport .pr-muted{color:#6c7771}
+  #printReport .pr-section{break-inside:avoid}
+  #printReport .pr-stage{break-inside:avoid}
+  #printReport .pr-elevation{width:100%;max-height:48mm;object-fit:contain;border:1px solid #dde3de;border-radius:3mm;margin:2mm 0}
+  #printReport .pr-columns{display:grid;grid-template-columns:1fr 1fr;gap:5mm}
+  #printReport .pr-footer{margin-top:8mm;padding-top:3mm;border-top:1px solid #dfe4e0;font-size:8px;color:#748078}
+}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.3.2</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.3.3</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -390,7 +422,14 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
     </section>
 
     <section id="screen-check" class="screen">
-      <div class="card"><h2>Reise-Check</h2><p class="sub">Was vor der Abfahrt noch offen ist.</p></div>
+      <div class="card">
+        <h2>Reise-Check</h2>
+        <p class="sub">Was vor der Abfahrt noch offen ist.</p>
+        <div class="pdf-actions">
+          <button class="primary" type="button" onclick="printTripReport()">Reiseplan als PDF / drucken</button>
+        </div>
+        <div class="pdf-note">Auf iPad/iPhone öffnet sich der Druckdialog. Dort kannst du über die Druckvorschau „Als PDF sichern“ bzw. teilen.</div>
+      </div>
       <div class="check">
         <div class="card"><h3>🧭 Navigation</h3><div class="ok">bereit</div><p class="sub">GPX offline · Smartphone Backup · Karten offline</p></div>
         <div class="card"><h3>🌦 Wetter</h3><div class="pending">prüfen</div><p class="sub">72 h vor Abfahrt: Regen, Wind, Temperatur.</p></div>
@@ -414,6 +453,137 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
 let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],stageLayers:[],terrain:{status:'idle',stages:[],source:null,warning:null},selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
+
+
+function escapeHTML(v){
+ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+function printTerrainLabel(t){
+ if(!t)return 'offen';
+ if((Number(t.coverage)||0)<50)return `unzureichend (${Math.round(Number(t.coverage)||0)}%)`;
+ const C=terrainCompatibility(t);
+ return `${C.label} (${Math.round(Number(t.coverage)||0)}%)`;
+}
+function printTechLabel(t){
+ const T=technicalDifficulty(t);
+ return T?.label||'offen';
+}
+function printElevationImage(){
+ try{
+   const c=$('elevation');
+   if(c&&c.width&&c.height)return c.toDataURL('image/png');
+ }catch(e){}
+ return '';
+}
+function currentRouteName(){
+ const s=($('start')?.value||'Start').trim();
+ const d=($('dest')?.value||'Ziel').trim();
+ return `${s} → ${d}`;
+}
+function buildPrintReport(){
+ const target=$('printReport'); if(!target)return;
+ const routeReady=!!(state.coords&&state.metrics&&state.stages?.length);
+ const p=bikeProfile();
+ const pack=totalPackedWeight();
+ const missing=missingCriticalGear();
+ const elev=printElevationImage();
+
+ const routeSection=routeReady?`
+   <section class="pr-section">
+     <h2>Route</h2>
+     <div class="pr-grid">
+       <div class="pr-stat"><b>${state.metrics.totalDist.toFixed(0)} km</b><span>Distanz</span></div>
+       <div class="pr-stat"><b>${Math.round(state.metrics.totalGain)} HM</b><span>Anstieg</span></div>
+       <div class="pr-stat"><b>${state.stages.length}</b><span>Etappen</span></div>
+       <div class="pr-stat"><b>${(state.metrics.totalDist/state.stages.length).toFixed(0)} km</b><span>Ø / Tag</span></div>
+     </div>
+     ${elev?`<img class="pr-elevation" src="${elev}" alt="Höhenprofil">`:''}
+   </section>`:
+   `<section class="pr-section"><h2>Route</h2><p class="pr-muted">Noch keine Route berechnet.</p></section>`;
+
+ const stagesSection=routeReady?`
+   <section>
+     <h2>Etappen</h2>
+     <table>
+       <thead><tr><th>Etappe</th><th>Strecke</th><th>Distanz</th><th>HM</th><th>Terrain</th><th>Technik</th></tr></thead>
+       <tbody>
+       ${state.stages.map((s,i)=>{
+         const from=state.stageNames?.[i]||`Etappe ${i+1}`;
+         const to=state.stageNames?.[i+1]||'Etappenziel';
+         const t=terrainForStage(i);
+         return `<tr class="pr-stage">
+           <td><b>${i+1}</b></td>
+           <td>${escapeHTML(from)} → ${escapeHTML(to)}</td>
+           <td>${s.km.toFixed(0)} km</td>
+           <td>${Math.round(s.hm)} HM</td>
+           <td>${escapeHTML(printTerrainLabel(t))}</td>
+           <td>${escapeHTML(printTechLabel(t))}</td>
+         </tr>`;
+       }).join('')}
+       </tbody>
+     </table>
+   </section>`:'';
+
+ const assignments=Object.entries(state.assignments||{}).map(([gid,bid])=>{
+   const g=gear.find(x=>x.id===gid);
+   if(!g)return null;
+   return {g,bag:bags[bid]};
+ }).filter(Boolean);
+
+ const bikeSection=`
+   <section class="pr-section">
+     <h2>Bike & Setup</h2>
+     <div class="pr-grid">
+       <div class="pr-stat"><b>${escapeHTML(p.type)}</b><span>Bike-Typ</span></div>
+       <div class="pr-stat"><b>${p.tireWidth} mm</b><span>Reifenbreite</span></div>
+       <div class="pr-stat"><b>${escapeHTML(p.tubeless==='yes'?'Tubeless':p.tubeless==='no'?'Schlauch':'offen')}</b><span>Reifensystem</span></div>
+       <div class="pr-stat"><b>${p.bikeWeight.toFixed(1)} kg</b><span>Bike-Gewicht</span></div>
+     </div>
+     <p><span class="pr-badge ${currentTerrainConfidence()>=50?'pr-ok':'pr-warn'}">${currentTerrainConfidence()>=50?'Terrain kann berücksichtigt werden':'Terrain noch nicht belastbar'}</span></p>
+   </section>`;
+
+ const packSection=`
+   <section>
+     <h2>Packplan</h2>
+     <div class="pr-grid">
+       <div class="pr-stat"><b>${pack.toFixed(1)} kg</b><span>Gepäck</span></div>
+       <div class="pr-stat"><b>${(p.bikeWeight+pack).toFixed(1)} kg</b><span>Bike + Gepäck</span></div>
+       <div class="pr-stat"><b>${assignments.length}</b><span>gepackte Teile</span></div>
+       <div class="pr-stat"><b>${missing.length}</b><span>offene Pflichtteile</span></div>
+     </div>
+     ${assignments.length?`
+     <table>
+       <thead><tr><th>Gegenstand</th><th>Kategorie</th><th>Tasche</th><th>Gewicht</th><th>Volumen</th></tr></thead>
+       <tbody>${assignments.map(x=>`<tr><td>${escapeHTML(x.g.name)}</td><td>${escapeHTML(x.g.category)}</td><td>${escapeHTML(x.bag?.name||'–')}</td><td>${x.g.kg.toFixed(2)} kg</td><td>${x.g.l.toFixed(1)} l</td></tr>`).join('')}</tbody>
+     </table>`:`<p class="pr-muted">Noch keine Ausrüstung gepackt.</p>`}
+     ${missing.length?`<p><b>Noch offen:</b> ${escapeHTML(missing.join(' · '))}</p>`:'<p><span class="pr-badge pr-ok">Pflichtausrüstung vollständig</span></p>'}
+   </section>`;
+
+ const checkSection=`
+   <section class="pr-section">
+     <h2>Reise-Check</h2>
+     <div class="pr-columns">
+       <div><h3>Navigation</h3><p>GPX offline · Smartphone Backup · Karten offline</p></div>
+       <div><h3>Wetter</h3><p>72 h vor Abfahrt: Regen, Wind und Temperatur prüfen.</p></div>
+       <div><h3>Reservierungen</h3><p>Unterkünfte und Transfers extern bestätigen.</p></div>
+       <div><h3>Strom & Licht</h3><p>Computer · Frontlicht · Rücklicht · Powerbank</p></div>
+     </div>
+   </section>`;
+
+ target.innerHTML=`
+   <h1>ADVENTURE BIKE OS</h1>
+   <p class="pr-sub">Reiseplan · ${escapeHTML(currentRouteName())}</p>
+   ${routeSection}
+   ${stagesSection}
+   ${bikeSection}
+   ${packSection}
+   ${checkSection}
+   <div class="pr-footer">Erstellt mit ADVENTURE BIKE OS · Terrain- und Technikangaben sind Näherungen und ersetzen keine Prüfung vor Ort.</div>`;
+}
+function printTripReport(){
+ buildPrintReport();
+ setTimeout(()=>window.print(),120);
+}
 
 function $(id){return document.getElementById(id)}
 function toast(t){const x=$('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',1400)}
@@ -1432,5 +1602,7 @@ function unpack(id){
  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
+
+<div id="printReport"></div>
 </body>
 </html>
