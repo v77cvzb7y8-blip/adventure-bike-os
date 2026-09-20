@@ -612,7 +612,7 @@ def osm_terrain_batch():
     """Robuste Terrain-Stichproben: kleine parallele Overpass-Abfragen mit einmaligem Fallback."""
     try:
         body=request.get_json(force=True) or {}
-        raw=(body.get("samples") or [])[:16]
+        raw=(body.get("samples") or [])[:20]
         samples=[]
         for p in raw:
             try:
@@ -622,13 +622,13 @@ def osm_terrain_batch():
         if not samples:
             return jsonify(ok=False,elements=[],warning="Keine gültigen Terrain-Stichproben."),400
 
-        chunks=[samples[i:i+4] for i in range(0,len(samples),4)]
+        chunks=[samples[i:i+3] for i in range(0,len(samples),3)]
 
         def build_query(chunk):
-            clauses=[f'way(around:100,{p["lat"]},{p["lon"]})["highway"];' for p in chunk]
-            return '[out:json][timeout:6];('+''.join(clauses)+');out tags geom qt;'
+            clauses=[f'way(around:180,{p["lat"]},{p["lon"]})["highway"];' for p in chunk]
+            return '[out:json][timeout:7];('+''.join(clauses)+');out tags geom qt;'
 
-        def one_request(chunk_index, endpoint_index, timeout=7):
+        def one_request(chunk_index, endpoint_index, timeout=8):
             url=OVERPASS_ENDPOINTS[endpoint_index % len(OVERPASS_ENDPOINTS)]
             q=build_query(chunks[chunk_index])
             try:
@@ -652,7 +652,7 @@ def osm_terrain_batch():
         results={}
         failed=[]
         with ThreadPoolExecutor(max_workers=min(4,len(chunks))) as pool:
-            futures=[pool.submit(one_request,i,i % len(OVERPASS_ENDPOINTS),7) for i in range(len(chunks))]
+            futures=[pool.submit(one_request,i,i % len(OVERPASS_ENDPOINTS),8) for i in range(len(chunks))]
             for fut in as_completed(futures):
                 i,ok,elements,url,error=fut.result()
                 if ok:
@@ -663,7 +663,7 @@ def osm_terrain_batch():
         if failed:
             retry_failed=[]
             with ThreadPoolExecutor(max_workers=min(4,len(failed))) as pool:
-                futures=[pool.submit(one_request,i,(i+1) % len(OVERPASS_ENDPOINTS),5) for i in failed]
+                futures=[pool.submit(one_request,i,(i+1) % len(OVERPASS_ENDPOINTS),6) for i in failed]
                 for fut in as_completed(futures):
                     i,ok,elements,url,error=fut.result()
                     if ok:
@@ -844,7 +844,7 @@ def osm_supply():
 
 @app.get("/")
 def home():
-    return jsonify(service="Adventure Bike OS API", status="ok", version="0.88-terrain-batch-fallback")
+    return jsonify(service="Adventure Bike OS API", status="ok", version="0.89-terrain-confidence")
 
 @app.get("/health")
 def health():
