@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.1.5</title>
+<title>Adventure Bike OS · Mobile 0.1.6</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -45,12 +45,22 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 #map.map-passive{pointer-events:none}
 #map.map-active{pointer-events:auto;outline:3px solid rgba(22,116,84,.16)}
 
+
+.map-shell{position:relative}
+.map-gesture-shield{
+  position:absolute; inset:0; z-index:500;
+  background:transparent;
+  touch-action:pan-y;
+  -webkit-user-select:none; user-select:none;
+}
+.map-gesture-shield.hidden{display:none}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.1.5</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.1.6</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -101,7 +111,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
           <div class="stat"><b id="avgStat">–</b><span>Ø / Tag</span></div>
         </div>
       </div>
-      <div class="card"><h3>Karte</h3><div id="map"></div>
+      <div class="card"><h3>Karte</h3><div class="map-shell"><div id="map"></div><div id="mapShield" class="map-gesture-shield" aria-hidden="true"></div></div>
 <div class="map-actions"><button id="mapToggle" class="map-toggle" type="button" onclick="toggleMapInteraction()">Karte aktivieren</button></div></div>
       <div class="card"><h3>Höhenprofil</h3><canvas id="elevation" class="elev"></canvas><p class="sub">Etappe antippen → Karte zoomt auf den Abschnitt.</p></div>
       <div class="card"><h3>Etappen</h3><div id="stageList"></div></div>
@@ -165,6 +175,7 @@ function go(name){
  $('screen-'+name).classList.add('active');
  document.querySelectorAll('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.nav===name));
  if(name==='stages'&&state.coords){
+   setMapInteraction(false);
    setTimeout(()=>{
      renderRoute();
      if(state.map)state.map.invalidateSize(true);
@@ -238,11 +249,12 @@ async function calculateRoute(){
 
 function setMapInteraction(active){
  state.mapInteractive=!!active;
- const el=$('map'),btn=$('mapToggle');
+ const el=$('map'),btn=$('mapToggle'),shield=$('mapShield');
  if(el){
    el.classList.toggle('map-active',state.mapInteractive);
    el.classList.toggle('map-passive',!state.mapInteractive);
  }
+ if(shield) shield.classList.toggle('hidden',state.mapInteractive);
  if(state.map){
    const handlers=['dragging','touchZoom','doubleClickZoom','boxZoom','keyboard'];
    handlers.forEach(k=>{
