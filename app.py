@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/0.94-lodging-route-via (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/0.941-lodging-hotfix (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -20,6 +20,8 @@ CACHE_TTL_TRANSPORT = 2 * 3600
 _route_cache = {}
 _place_cache = {}
 _transport_cache = {}
+_lodging_cache = {}
+CACHE_TTL_LODGING = 60 * 60
 SUPPLY_CACHE = {}
 SUPPLY_CACHE_TTL = 30 * 60
 _cache_lock = threading.Lock()
@@ -1293,6 +1295,59 @@ def osm_terrain():
     except Exception as e:
         print(f"[OSM-TERRAIN] error {type(e).__name__}: {e}",flush=True)
         return jsonify(ok=False,elements=[],warning="Terrain-Zusatzdaten derzeit nicht erreichbar."),200
+
+
+
+@app.post("/api/lodging-nearby")
+def lodging_nearby():
+    """Lightweight accommodation-only OSM lookup for one stage destination."""
+    try:
+        body=request.get_json(force=True) or {}
+        lat=float(body["lat"]); lon=float(body["lon"])
+        lodging=(body.get("lodging") or "hotel").lower()
+        sleep_regex=(
+            "hotel|guest_house|hostel|motel|camp_site|caravan_site"
+            if lodging=="mixed"
+            else ("camp_site|caravan_site" if lodging=="camping" else "hotel|guest_house|hostel|motel")
+        )
+        key=(round(lat,4),round(lon,4),lodging)
+        cached=_cache_get(_lodging_cache,key,CACHE_TTL_LODGING)
+        if cached is not None:
+            return jsonify(**cached,cached=True)
+
+        errors=[]
+        for radius in (3500,6500):
+            q=(
+                f'[out:json][timeout:8];'
+                f'nwr(around:{radius},{lat},{lon})["tourism"~"{sleep_regex}"];'
+                f'out center tags 80;'
+            )
+            for url in OVERPASS_ENDPOINTS:
+                try:
+                    r=session.post(
+                        url,data={"data":q},
+                        headers={"User-Agent":UA,"Accept":"application/json"},
+                        timeout=10
+                    )
+                    print(f"[LODGING] r={radius} {url} status={r.status_code}",flush=True)
+                    if not r.ok:
+                        errors.append(f"{url}:HTTP{r.status_code}")
+                        continue
+                    elements=(r.json() or {}).get("elements") or []
+                    out={"ok":True,"elements":elements,"source":url,"radius_m":radius}
+                    _cache_set(_lodging_cache,key,out)
+                    # If results exist, return immediately; otherwise widen once.
+                    if elements or radius==6500:
+                        return jsonify(**out)
+                    break
+                except Exception as e:
+                    errors.append(f"{url}:{type(e).__name__}")
+                    print(f"[LODGING] failed {url}: {e}",flush=True)
+
+        return jsonify(ok=False,elements=[],warning="Unterkünfte derzeit nicht erreichbar.",errors=errors[-3:]),200
+    except Exception as e:
+        print(f"[LODGING] error {type(e).__name__}: {e}",flush=True)
+        return jsonify(ok=False,elements=[],warning="Unterkünfte derzeit nicht erreichbar."),200
 
 
 @app.post("/api/osm-supply-batch")
