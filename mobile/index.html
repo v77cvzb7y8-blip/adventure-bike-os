@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.3.1</title>
+<title>Adventure Bike OS · Mobile 0.2.3.2</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -156,12 +156,17 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 }
 .stage-map-btn:active{transform:scale(.98)}
 
+
+.stage{cursor:pointer}
+.stage.active{border-color:#18805d!important;box-shadow:0 0 0 3px rgba(24,128,93,.16)}
+.stage-select-note{font-size:10px;color:#5e7066;margin-top:5px}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.3.1</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.3.2</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -279,7 +284,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
-let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
+let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],stageLayers:[],selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
 
 function $(id){return document.getElementById(id)}
 function toast(t){const x=$('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',1400)}
@@ -491,47 +496,70 @@ function renderMap(){
    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(state.map)
  }
  setMapInteraction(state.mapInteractive);
- state.layers.forEach(l=>l.remove());state.layers=[];
- const latlng=state.coords.map(c=>[c[1],c[0]]);
- const line=L.polyline(latlng,{color:'#2777dd',weight:6}).addTo(state.map);state.layers.push(line);
+
+ state.layers.forEach(l=>l.remove());
+ state.stageLayers.forEach(l=>l.remove());
+ state.layers=[]; state.stageLayers=[];
+
+ const all=state.coords.map(c=>[c[1],c[0]]);
+ const selected=state.selectedStage;
+
+ // Gesamtstrecke als dezente Orientierung im Hintergrund.
+ const base=L.polyline(all,{color:'#8aa39a',weight:5,opacity:selected==null?.38:.22}).addTo(state.map);
+ state.layers.push(base);
+
+ // Jede Etappe erhält eine eigene Kartenebene.
+ state.stages.forEach((st,i)=>{
+   const ll=state.coords.slice(st.s,st.e+1).map(c=>[c[1],c[0]]);
+   const isSel=selected===i;
+   const layer=L.polyline(ll,{
+     color:stageColor(i),
+     weight:isSel?10:6,
+     opacity:selected==null?.92:(isSel?1:.18),
+     lineCap:'round',
+     lineJoin:'round'
+   }).addTo(state.map);
+   state.stageLayers.push(layer);
+ });
+
  state.map.invalidateSize(true);
- requestAnimationFrame(()=>state.map.fitBounds(line.getBounds(),{padding:[15,15]}));
+ requestAnimationFrame(()=>{
+   if(selected!=null && state.stageLayers[selected]){
+     state.map.fitBounds(state.stageLayers[selected].getBounds(),{padding:[24,24],animate:false});
+   }else{
+     state.map.fitBounds(base.getBounds(),{padding:[15,15],animate:false});
+   }
+ });
 }
 function stageColor(i){return ['#2b83ba','#d7191c','#1a9c7c','#e6ab02','#f07b3f','#8064a2','#39806f','#ff7043','#7a568f'][i%9]}
 
 function showStageOnMap(i,ev){
  if(ev){ev.preventDefault();ev.stopPropagation();}
  focusStage(i);
- requestAnimationFrame(()=>{
-   if(state.map){
-     state.map.invalidateSize(true);
-     const st=state.stages[i];
-     if(st){
-       const ll=state.coords.slice(st.s,st.e+1).map(c=>[c[1],c[0]]);
-       const bounds=L.latLngBounds(ll);
-       state.map.fitBounds(bounds,{padding:[24,24],animate:false});
-     }
-   }
+ setTimeout(()=>{
+   if(state.map)state.map.invalidateSize(true);
    const mapCard=$('map')?.closest('.card');
-   if(mapCard) mapCard.scrollIntoView({behavior:'smooth',block:'start'});
- });
+   if(mapCard)mapCard.scrollIntoView({behavior:'smooth',block:'start'});
+ },60);
 }
 
 function focusStage(i){
  setMapInteraction(false);
- const st=state.stages[i];if(!st)return;
- if(!state.map) renderMap();
- if(!state.map)return;
+ const st=state.stages[i]; if(!st)return;
  state.selectedStage=i;
- state.layers.slice(1).forEach(l=>l.remove());state.layers=state.layers.slice(0,1);
- const ll=state.coords.slice(st.s,st.e+1).map(c=>[c[1],c[0]]);
- const l=L.polyline(ll,{color:stageColor(i),weight:9}).addTo(state.map);state.layers.push(l);state.map.fitBounds(l.getBounds(),{padding:[20,20]});
+
+ // Karte komplett aus state.selectedStage neu zeichnen:
+ // ausgewählte Etappe kräftig, alle anderen dezent.
+ renderMap();
+
  document.querySelectorAll('.stage').forEach((e,j)=>e.classList.toggle('active',j===i));
  drawElevation();
- const from=state.stageNames[i]||`Etappe ${i+1}`,to=state.stageNames[i+1]||'Etappenziel';
+
+ const from=state.stageNames[i]||`Etappe ${i+1}`;
+ const to=state.stageNames[i+1]||'Etappenziel';
  $('profileStage').textContent=`Etappe ${i+1}: ${from} → ${to}`;
- const L=stageLoad(st);
- $('profileMeta').textContent=`${st.km.toFixed(0)} km · ${state.heightAvailable?Math.round(st.hm)+' HM':'HM –'} · ${L.label}`;
+ const load=stageLoad(st);
+ $('profileMeta').textContent=`${st.km.toFixed(0)} km · ${state.heightAvailable?Math.round(st.hm)+' HM':'HM –'} · ${load.label}`;
 }
 
 function riderProfile(){
@@ -599,7 +627,7 @@ function renderStages(){
    const to=state.stageNames[i+1]||`Etappenziel ${i+1}`;
    const loading=to.includes('ermittelt');
    const L=stageLoad(s);
-   return `<div class="stage ${state.selectedStage===i?'active':''}" data-stage="${i}">
+   return `<div class="stage ${state.selectedStage===i?'active':''}" data-stage="${i}" onclick="showStageOnMap(${i},event)">
      <div class="stagehead"><b>Etappe ${i+1}</b><span>Tag ${i+1}</span></div>
      <div class="stage-route ${loading?'route-name-loading':''}">${from} → ${to}</div>
      <div class="stage-dayline">Tagesziel: ${(+($('kmday').value)||120).toFixed(0)} km · max. ${Math.round(+($('hmday').value)||1800)} HM</div>
@@ -614,8 +642,9 @@ function renderStages(){
      <div class="loadbar"><i class="${L.score>1.22?'over':L.score>1.02?'warn':''}" style="width:${Math.min(100,L.pct)}%"></i></div>
      <div class="load-reason">${L.reason}</div>
      <div class="stage-actions">
-       <button class="stage-map-btn" type="button" onclick="showStageOnMap(${i},event)">Etappe ${i+1} auf Karte</button>
+       <button class="stage-map-btn" type="button" onclick="event.stopPropagation();showStageOnMap(${i},event)">Etappe ${i+1} auf Karte</button>
      </div>
+     <div class="stage-select-note">Auch die gesamte Etappenkarte ist antippbar.</div>
      ${state.stages.length===2 && i===0 && state.stages[1].km>=target*.45?'<div class="stage-note">Etappen wurden ausgeglichener verteilt, damit kein sehr kurzer Resttag entsteht.</div>':''}
    </div>`;
  }).join('');
