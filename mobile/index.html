@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.1.7</title>
+<title>Adventure Bike OS · Mobile 0.2.0</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -67,12 +67,37 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .map-shell .leaflet-popup-pane{z-index:7}
 .map-shell .leaflet-control{z-index:8}
 
+
+.stage-route{font-size:13px;font-weight:800;margin-top:4px;color:#18382e}
+.stage-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
+.pill{font-size:10px;border:1px solid #d1ddd5;background:#f7faf7;border-radius:999px;padding:5px 7px;color:#5f7167}
+.profile-info{display:flex;justify-content:space-between;gap:8px;align-items:center;margin:8px 0 0}
+.profile-info b{font-size:12px}
+.profile-info span{font-size:11px;color:#6f7a73}
+.baggrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.bagcard{border:1px solid #dbe4dd;border-radius:13px;background:white;padding:10px;cursor:pointer}
+.bagcard.recommended{outline:3px solid rgba(49,182,122,.42)}
+.bagcard.selected-target{outline:3px solid rgba(22,116,84,.6)}
+.bagcard h4{font-size:13px;margin:0 0 4px}
+.bagbar{height:7px;border-radius:999px;background:#e8eee9;overflow:hidden;margin:7px 0 5px}
+.bagbar > i{display:block;height:100%;background:#1e805e;border-radius:inherit}
+.bagbar > i.warn{background:#c3902d}
+.bagbar > i.over{background:#c55245}
+.bagitems{font-size:10px;color:#627269;line-height:1.45}
+.gearrow{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #dce4de;border-radius:12px;background:white;padding:9px 10px;margin:7px 0}
+.gearrow.active{outline:3px solid rgba(49,182,122,.35)}
+.gearrow b{font-size:12px}
+.gearrow .sub{font-size:10px}
+.inlinebtn{border:0;border-radius:999px;background:#eaf3ed;color:#17684c;font-weight:800;padding:7px 9px;font-size:10px}
+.route-name-loading{opacity:.6}
+@media(max-width:390px){.baggrid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.1.7</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.0</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -91,8 +116,8 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
         <button class="primary" onclick="go('plan')">Route planen</button>
       </div>
       <div class="card">
-        <h3>Mobile 0.1</h3>
-        <p class="sub">Dieser Prototyp nutzt denselben Routing-Backend wie die Web-App, ist aber als eigenständiger iPhone-Flow aufgebaut: Route → Etappen → Bike & Packen → Reise-Check.</p>
+        <h3>Mobile 0.2</h3>
+        <p class="sub">Mobile 0.2 verbindet Route, benannte Etappenziele, synchrones Höhenprofil und einen kompakten Bike-Packplan in einem Ablauf.</p>
       </div>
     </section>
 
@@ -125,14 +150,14 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
       </div>
       <div class="card"><h3>Karte</h3><div class="map-shell"><div id="map"></div><div id="mapShield" class="map-gesture-shield" aria-hidden="true"></div></div>
 <div class="map-actions"><button id="mapToggle" class="map-toggle" type="button" onclick="toggleMapInteraction()">Karte aktivieren</button></div></div>
-      <div class="card"><h3>Höhenprofil</h3><canvas id="elevation" class="elev"></canvas><p class="sub">Etappe antippen → Karte zoomt auf den Abschnitt.</p></div>
+      <div class="card"><h3>Höhenprofil</h3><canvas id="elevation" class="elev"></canvas><div class="profile-info"><b id="profileStage">Gesamtroute</b><span id="profileMeta">Etappe antippen → Karte + Profil synchron</span></div></div>
       <div class="card"><h3>Etappen</h3><div id="stageList"></div></div>
     </section>
 
     <section id="screen-bike" class="screen">
       <div class="card">
         <h2>Bike & Packen</h2>
-        <p class="sub">Gegenstand antippen → empfohlene Tasche leuchtet → direkt packen.</p>
+        <p class="sub">Gegenstand antippen → empfohlene Tasche wird markiert. Tippe anschließend direkt auf eine Tasche, um ihn dort zu packen.</p>
         <div class="bike">
           <svg viewBox="0 0 420 250">
             <circle cx="110" cy="175" r="65" fill="none" stroke="#17231e" stroke-width="10"/>
@@ -146,10 +171,10 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
           </svg>
         </div>
         <div id="recommendBox" class="recommend">Wähle einen Gegenstand.</div>
-        <div class="gearlist" id="gearList"></div>
-      </div>
-      <div class="card">
-        <h3>Gepackt</h3><div id="bagContents"></div>
+        <h3 style="margin-top:12px">Ausrüstung</h3>
+        <div id="gearList"></div>
+        <h3 style="margin-top:12px">Taschen</h3>
+        <div id="bagGrid" class="baggrid"></div>
       </div>
     </section>
 
@@ -177,7 +202,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
-let state={coords:null,metrics:null,stages:[],map:null,layers:[],selectedGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
+let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],selectedGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
 
 function $(id){return document.getElementById(id)}
 function toast(t){const x=$('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',1400)}
@@ -235,6 +260,56 @@ async function enrichElevation(coords){
  return {coords,ok:false};
 }
 
+
+function cleanPlaceName(name){
+ const raw=(name||'').trim();
+ if(!raw)return '';
+ const bad=['küstengewässer','festlandsockel','gemeindefreies gebiet','region','county','bezirk','landkreis'];
+ const low=raw.toLowerCase();
+ if(raw.length>34 || bad.some(x=>low.includes(x))) return '';
+ return raw.replace(/\s+kommune$/i,'').replace(/\s+kommun$/i,'').trim();
+}
+async function reversePlaceAt(coord){
+ try{
+   const r=await fetch(API+'/api/reverse',{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({lat:coord[1],lon:coord[0],zoom:12})
+   });
+   const data=await r.json();
+   if(r.ok){
+     const cleaned=cleanPlaceName(data.name||data.display_name||'');
+     if(cleaned)return cleaned;
+   }
+ }catch(e){}
+ return '';
+}
+async function resolveStageNames(){
+ if(!state.coords||!state.stages.length)return;
+ const names=[];
+ const start=$('start').value.trim(),dest=$('dest').value.trim();
+ names.push(start);
+ for(let i=0;i<state.stages.length-1;i++){
+   const st=state.stages[i], span=Math.max(1,st.e-st.s);
+   const probes=[
+     st.e,
+     Math.max(st.s,st.e-Math.round(span*.05)),
+     Math.max(st.s,st.e-Math.round(span*.10)),
+     Math.min(state.coords.length-1,st.e+Math.round(span*.04))
+   ];
+   let found='';
+   for(const p of probes){
+     found=await reversePlaceAt(state.coords[p]);
+     if(found)break;
+   }
+   names.push(found||`Etappenort ${i+1}`);
+ }
+ names.push(dest);
+ state.stageNames=names;
+ localStorage.setItem('abo-mobile-stage-names',JSON.stringify(names));
+ renderStages();
+}
+
 async function calculateRoute(){
  const load=$('routeLoading');load.classList.add('show');
  try{
@@ -251,10 +326,12 @@ async function calculateRoute(){
    const elev=await enrichElevation(coords);
    coords=elev.coords;
    const m=metrics(coords),st=makeStages(coords,m,+$('kmday').value||120,+$('hmday').value||1800);
-   state.coords=coords;state.metrics=m;state.stages=st;state.heightAvailable=elev.ok;
+   state.coords=coords;state.metrics=m;state.stages=st;state.heightAvailable=elev.ok;state.selectedStage=null;
+   state.stageNames=[$('start').value.trim(),...Array(Math.max(0,st.length-1)).fill('Etappenziel wird ermittelt …'),$('dest').value.trim()];
    localStorage.setItem('abo-mobile-route',JSON.stringify({start:$('start').value,dest:$('dest').value,coords,metrics:m,stages:st}));
    go('stages');
    requestAnimationFrame(()=>requestAnimationFrame(()=>renderRoute()));
+   resolveStageNames();
  }catch(e){toast(e.message)}
  finally{load.classList.remove('show')}
 }
@@ -318,53 +395,117 @@ function stageColor(i){return ['#2b83ba','#d7191c','#1a9c7c','#e6ab02','#f07b3f'
 function focusStage(i){
  setMapInteraction(false);
  const st=state.stages[i];if(!st||!state.map)return;
+ state.selectedStage=i;
  state.layers.slice(1).forEach(l=>l.remove());state.layers=state.layers.slice(0,1);
  const ll=state.coords.slice(st.s,st.e+1).map(c=>[c[1],c[0]]);
- const l=L.polyline(ll,{color:stageColor(i),weight:8}).addTo(state.map);state.layers.push(l);state.map.fitBounds(l.getBounds(),{padding:[20,20]});
+ const l=L.polyline(ll,{color:stageColor(i),weight:9}).addTo(state.map);state.layers.push(l);state.map.fitBounds(l.getBounds(),{padding:[20,20]});
  document.querySelectorAll('.stage').forEach((e,j)=>e.classList.toggle('active',j===i));
+ drawElevation();
+ const from=state.stageNames[i]||`Etappe ${i+1}`,to=state.stageNames[i+1]||'Etappenziel';
+ $('profileStage').textContent=`Etappe ${i+1}: ${from} → ${to}`;
+ $('profileMeta').textContent=`${st.km.toFixed(0)} km · ${state.heightAvailable?Math.round(st.hm)+' HM':'HM –'}`;
 }
 function renderStages(){
- $('stageList').innerHTML=state.stages.map((s,i)=>`<div class="stage" onclick="focusStage(${i})"><div class="stagehead"><b>Etappe ${i+1}</b><span>${s.km.toFixed(0)} km · ${state.heightAvailable?Math.round(s.hm)+' HM':'HM –'}</span></div><div class="sub">Antippen, um die Etappe auf der Karte hervorzuheben.</div></div>`).join('');
+ $('stageList').innerHTML=state.stages.map((s,i)=>{
+   const from=state.stageNames[i]||($('start').value.trim()||'Start');
+   const to=state.stageNames[i+1]||`Etappenziel ${i+1}`;
+   const loading=to.includes('ermittelt');
+   return `<div class="stage ${state.selectedStage===i?'active':''}" onclick="focusStage(${i})">
+     <div class="stagehead"><b>Etappe ${i+1}</b><span>${s.km.toFixed(0)} km · ${state.heightAvailable?Math.round(s.hm)+' HM':'HM –'}</span></div>
+     <div class="stage-route ${loading?'route-name-loading':''}">${from} → ${to}</div>
+     <div class="stage-meta"><span class="pill">Karte + Profil</span><span class="pill">${(s.km/Math.max(1,(+$('kmday').value||120))*100).toFixed(0)}% Tagesziel</span></div>
+   </div>`;
+ }).join('');
 }
 function drawElevation(){
  const c=$('elevation'),ctx=c.getContext('2d'),dpr=devicePixelRatio||1,w=c.clientWidth,h=160;c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);
  if(!state.heightAvailable){ctx.fillStyle='#6f7a73';ctx.font='13px sans-serif';ctx.fillText('Höhendaten derzeit nicht verfügbar.',18,32);return;}
  const coords=state.coords,m=state.metrics,vals=coords.map(x=>Number(x[2])||0),lo=Math.min(...vals),hi=Math.max(...vals),pad=18;
  const x=i=>pad+(w-pad*2)*(m.dist[i]/m.totalDist),y=e=>h-pad-(h-pad*2)*((e-lo)/Math.max(1,hi-lo));
- state.stages.forEach((s,i)=>{ctx.fillStyle=stageColor(i)+'18';ctx.fillRect(x(s.s),pad,x(s.e)-x(s.s),h-pad*2);ctx.fillStyle=stageColor(i);ctx.font='11px sans-serif';ctx.fillText('E'+(i+1),x(s.s)+4,16)});
+ state.stages.forEach((s,i)=>{
+   const active=state.selectedStage===i;
+   ctx.fillStyle=stageColor(i)+(active?'3f':'18');
+   ctx.fillRect(x(s.s),pad,x(s.e)-x(s.s),h-pad*2);
+   ctx.fillStyle=stageColor(i);ctx.font=(active?'bold ':'')+'11px sans-serif';ctx.fillText('E'+(i+1),x(s.s)+4,16)
+ });
  ctx.strokeStyle='#176a4d';ctx.lineWidth=2.5;ctx.beginPath();coords.forEach((p,i)=>{const X=x(i),Y=y(p[2]||0);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y)});ctx.stroke();
+ if(state.selectedStage!=null){
+   const s=state.stages[state.selectedStage];
+   ctx.strokeStyle=stageColor(state.selectedStage);ctx.lineWidth=4;ctx.beginPath();
+   for(let i=s.s;i<=s.e;i++){const X=x(i),Y=y(coords[i][2]||0);i===s.s?ctx.moveTo(X,Y):ctx.lineTo(X,Y)}
+   ctx.stroke();
+ }
  c.onclick=e=>{const r=c.getBoundingClientRect(),km=((e.clientX-r.left)/r.width)*m.totalDist;let idx=state.stages.findIndex(s=>km>=m.dist[s.s]&&km<=m.dist[s.e]);if(idx<0)idx=0;focusStage(idx)};
 }
 
 const gear=[
- {id:'jacket',name:'Daunenjacke',bag:'saddle',why:'leicht, voluminös, unterwegs selten nötig'},
- {id:'tool',name:'Werkzeug',bag:'frame',why:'kompakt und schwer – zentral am Bike'},
- {id:'power',name:'Powerbank',bag:'frame',why:'kompakt, geschützt und zentral'},
- {id:'rain',name:'Regenjacke',bag:'handlebar',why:'schnell erreichbar'},
- {id:'snack',name:'Snacks',bag:'top',why:'während der Fahrt schnell erreichbar'}
+ {id:'jacket',name:'Daunenjacke',bag:'saddle',kg:.35,why:'leicht und voluminös'},
+ {id:'tool',name:'Werkzeug',bag:'tool',kg:.55,why:'schwer und kompakt – tief am Bike'},
+ {id:'power',name:'Powerbank',bag:'frame',kg:.3,why:'zentral und geschützt'},
+ {id:'rain',name:'Regenjacke',bag:'handlebar',kg:.3,why:'schnell erreichbar'},
+ {id:'snack',name:'Snacks',bag:'top',kg:.6,why:'während der Fahrt erreichbar'},
+ {id:'firstaid',name:'Erste Hilfe',bag:'frame',kg:.2,why:'geschützt und gut erreichbar'},
+ {id:'shirt',name:'Trikot / Shirt',bag:'saddle',kg:.22,why:'trocken und kompakt verstauen'}
 ];
+const bags={
+ saddle:{name:'Satteltasche',cap:4.5},
+ frame:{name:'Rahmentasche',cap:2.5},
+ handlebar:{name:'Lenkertasche',cap:2.5},
+ top:{name:'Oberrohrtasche',cap:1.0},
+ tool:{name:'Werkzeugtasche',cap:1.0}
+};
 function initGear(){
- $('gearList').innerHTML=gear.map(g=>`<button class="chip" data-gear="${g.id}" onclick="selectGear('${g.id}')">${g.name}</button>`).join('');
+ $('gearList').innerHTML=gear.map(g=>`<div class="gearrow" data-gear="${g.id}" onclick="selectGear('${g.id}')"><div><b>${g.name}</b><div class="sub">${g.kg.toFixed(2)} kg · empfohlen: ${bagName(g.bag)}</div></div><button class="inlinebtn" type="button">wählen</button></div>`).join('');
+ document.querySelectorAll('[data-bag]').forEach(el=>el.addEventListener('click',()=>assignToBag(el.dataset.bag)));
+ const saved=localStorage.getItem('abo-mobile-pack');
+ if(saved){try{state.assignments=JSON.parse(saved)||{}}catch(e){}}
  renderBagContents();
 }
 function selectGear(id){
  state.selectedGear=id;
- document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('selected',x.dataset.gear===id));
- const g=gear.find(x=>x.id===id);document.querySelectorAll('[data-bag]').forEach(x=>x.classList.toggle('rec',x.dataset.bag===g.bag));
- $('recommendBox').innerHTML=`<b>${g.name} → empfohlen: ${bagName(g.bag)}</b><span class="sub">${g.why}</span><br><button class="primary" style="margin-top:8px" onclick="packSelected()">in empfohlene Tasche</button>`;
+ document.querySelectorAll('.gearrow').forEach(x=>x.classList.toggle('active',x.dataset.gear===id));
+ const g=gear.find(x=>x.id===id);
+ document.querySelectorAll('[data-bag]').forEach(x=>x.classList.toggle('rec',x.dataset.bag===g.bag));
+ $('recommendBox').innerHTML=`<b>${g.name}</b><span class="sub">Empfehlung: ${bagName(g.bag)} · ${g.why}</span><br><button class="primary" style="margin-top:8px" onclick="assignToBag('${g.bag}')">in ${bagName(g.bag)} packen</button>`;
+ renderBagContents();
 }
-function bagName(id){return {saddle:'Satteltasche',frame:'Rahmentasche',handlebar:'Lenkertasche',top:'Oberrohrtasche',tool:'Werkzeugtasche'}[id]||id}
-function packSelected(){const g=gear.find(x=>x.id===state.selectedGear);if(!g)return;state.assignments[g.id]=g.bag;toast(`${g.name} → ${bagName(g.bag)}`);renderBagContents();const next=gear.find(x=>!state.assignments[x.id]);if(next)selectGear(next.id);else{$('recommendBox').textContent='Alles gepackt.';document.querySelectorAll('[data-bag]').forEach(x=>x.classList.remove('rec'))}}
+function bagName(id){return bags[id]?.name||id}
+function bagWeight(id){
+ return Object.entries(state.assignments).filter(([,b])=>b===id).reduce((sum,[gid])=>sum+(gear.find(x=>x.id===gid)?.kg||0),0);
+}
+function assignToBag(bag){
+ const g=gear.find(x=>x.id===state.selectedGear);if(!g){toast('Zuerst Gegenstand wählen');return}
+ state.assignments[g.id]=bag;
+ localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
+ toast(`${g.name} → ${bagName(bag)}`);
+ renderBagContents();
+ document.querySelectorAll('[data-bag]').forEach(x=>x.classList.remove('rec'));
+ const next=gear.find(x=>!state.assignments[x.id]);if(next)selectGear(next.id);else{$('recommendBox').textContent='Packplan vollständig.';state.selectedGear=null}
+}
 function renderBagContents(){
- const groups={};Object.entries(state.assignments).forEach(([gid,b])=>(groups[b]??=[]).push(gear.find(x=>x.id===gid)));
- $('bagContents').innerHTML=Object.keys(groups).length?Object.entries(groups).map(([b,items])=>`<div class="stage"><b>${bagName(b)}</b><div class="sub">${items.map(g=>`${g.name} <button class="secondary" style="padding:3px 7px" onclick="unpack('${g.id}')">×</button>`).join(' · ')}</div></div>`).join(''):'<p class="sub">Noch nichts gepackt.</p>';
+ $('bagGrid').innerHTML=Object.entries(bags).map(([id,b])=>{
+   const items=Object.entries(state.assignments).filter(([,bag])=>bag===id).map(([gid])=>gear.find(x=>x.id===gid)).filter(Boolean);
+   const kg=bagWeight(id),pct=Math.round((kg/b.cap)*100),cl=pct>100?'over':pct>80?'warn':'';
+   const rec=gear.find(x=>x.id===state.selectedGear)?.bag===id;
+   return `<div class="bagcard ${rec?'recommended':''}" onclick="assignToBag('${id}')">
+     <h4>${b.name}</h4>
+     <div class="sub">${kg.toFixed(1)} / ${b.cap.toFixed(1)} kg · ${pct}%</div>
+     <div class="bagbar"><i class="${cl}" style="width:${Math.min(100,pct)}%"></i></div>
+     <div class="bagitems">${items.length?items.map(g=>`${g.name} <button class="inlinebtn" onclick="event.stopPropagation();unpack('${g.id}')">×</button>`).join(' · '):'leer'}</div>
+   </div>`;
+ }).join('');
 }
-function unpack(id){delete state.assignments[id];renderBagContents();toast('Gegenstand entfernt')}
+function unpack(id){
+ delete state.assignments[id];
+ localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
+ renderBagContents();
+ toast('Gegenstand entfernt');
+}
 
 (function boot(){
  initGear();
  const saved=localStorage.getItem('abo-mobile-route');
- if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`}catch(e){}}
+ if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest]}catch(e){}}
  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
