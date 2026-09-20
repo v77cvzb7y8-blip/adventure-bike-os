@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.3.1</title>
+<title>Adventure Bike OS · Mobile 0.3.2</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -257,7 +257,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.3.1</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.3.2</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -571,6 +571,7 @@ async function calculateRoute(){
    // A newly calculated route must never inherit Terrain from a previous backend run.
    state.terrain={status:'idle',stages:[],source:null,warning:null};
    localStorage.removeItem('abo-mobile-terrain-v3');
+   localStorage.removeItem('abo-mobile-terrain-v4');
    localStorage.removeItem('abo-mobile-terrain-v3');
    state.stageNames=[$('start').value.trim(),...Array(Math.max(0,st.length-1)).fill('Etappenziel wird ermittelt …'),$('dest').value.trim()];
    localStorage.setItem('abo-mobile-route',JSON.stringify({start:$('start').value,dest:$('dest').value,coords,metrics:m,stages:st}));
@@ -708,73 +709,50 @@ function focusStage(i){
 }
 
 
-function terrainSamples(limit=15){
- if(!state.coords||!state.metrics||!state.stages.length)return [];
- const out=[],total=Math.max(1,state.metrics.totalDist);
- const n=Math.min(limit,Math.max(9,state.stages.length*5));
- for(let j=0;j<n;j++){
-   const target=total*(j+.5)/n;
-   let best=0,bd=Infinity;
-   for(let i=0;i<state.metrics.dist.length;i++){
-     const d=Math.abs(state.metrics.dist[i]-target);
-     if(d<bd){bd=d;best=i}
+function stageTerrainShapes(maxPoints=46){
+ if(!state.coords||!state.stages.length)return [];
+ return state.stages.map((st,stageIndex)=>{
+   const slice=state.coords.slice(st.s,st.e+1);
+   if(slice.length<2)return {stage_index:stageIndex,shape:[]};
+   const n=Math.min(maxPoints,slice.length);
+   const shape=[];
+   for(let j=0;j<n;j++){
+     const idx=Math.round(j*(slice.length-1)/Math.max(1,n-1));
+     const c=slice[idx];
+     shape.push({lat:c[1],lon:c[0]});
    }
-   const c=state.coords[best];
-   let stageIndex=state.stages.findIndex(s=>best>=s.s&&best<=s.e);
-   if(stageIndex<0)stageIndex=Math.min(state.stages.length-1,Math.floor(j*state.stages.length/n));
-   out.push({lat:c[1],lon:c[0],routeIndex:best,stageIndex});
- }
- return out;
-}
-
-function summarizeTerrainMatches(samples,matches){
- const rows=state.stages.map(()=>({
-   paved:0,fine:0,gravel:0,rough:0,unknown:0,
-   path:0,track:0,mtb:0,badSmooth:0,grade45:0,
-   total:0,served:0,matched:0,reliable:0,risk:0,evidence:new Set(),distances:[]
- }));
-
- (matches||[]).forEach(m=>{
-   const i=Math.max(0,Math.min(rows.length-1,+m.stage_index||0));
-   const r=rows[i]; r.total++;
-   if(m.status!=='unavailable')r.served++;
-   if(!m.matched)return;
-   r.matched++;
-   if(m.confidence==='high'||m.confidence==='medium')r.reliable++;
-   const cls=m.surface_class||'unknown';
-   if(r[cls]!==undefined)r[cls]++;
-   else r.unknown++;
-   r.risk+=Number(m.risk)||0;
-   if((m.highway||'')==='path'||(m.highway||'')==='bridleway')r.path++;
-   if((m.highway||'')==='track')r.track++;
-   if((Number(m.mtb_scale)||0)>=1)r.mtb++;
-   if(['very_bad','horrible','very_horrible','impassable'].includes(m.smoothness||''))r.badSmooth++;
-   if(['grade4','grade5'].includes(m.tracktype||''))r.grade45++;
-   (m.evidence||[]).forEach(x=>r.evidence.add(x));
-   if(Number.isFinite(+m.distance_to_way_m))r.distances.push(+m.distance_to_way_m);
- });
-
- return rows.map(r=>{
-   const total=Math.max(1,r.total),matched=Math.max(1,r.matched),pct=(x,d=total)=>Math.round(100*x/Math.max(1,d));
-   const avgDist=r.distances.length?r.distances.reduce((a,b)=>a+b,0)/r.distances.length:null;
-   return {
-     paved:pct(r.paved,matched),fine:pct(r.fine,matched),gravel:pct(r.gravel,matched),rough:pct(r.rough,matched),unknown:pct(r.unknown,matched),
-     path:pct(r.path,matched),track:pct(r.track,matched),
-     mtb:r.mtb,badSmooth:r.badSmooth,grade45:r.grade45,
-     risk:r.matched?r.risk/r.matched:0,
-     coverage:pct(r.reliable),
-     matchedCoverage:pct(r.matched),
-     serviceCoverage:pct(r.served),
-     samples:r.total,
-     matched:r.matched,
-     reliable:r.reliable,
-     avgDistance:avgDist,
-     evidence:[...r.evidence].slice(0,4)
-   };
+   return {stage_index:stageIndex,shape};
  });
 }
 
-async function fetchWithTimeout(url,options={},timeoutMs=22000){
+function normalizeTerrainV2Stage(x){
+ return {
+   paved:Number(x.paved)||0,
+   fine:Number(x.fine)||0,
+   gravel:Number(x.gravel)||0,
+   rough:Number(x.rough)||0,
+   unknown:Number(x.unknown)||0,
+   path:Number(x.path)||0,
+   track:Number(x.track)||0,
+   mtb:0,badSmooth:0,grade45:0,
+   risk:Number(x.risk)||0,
+   coverage:Number(x.coverage)||0,
+   matchedCoverage:x.ok?100:0,
+   serviceCoverage:x.status==='unavailable'?0:100,
+   samples:Number(x.edge_count)||0,
+   matched:Number(x.edge_count)||0,
+   reliable:Number(x.edge_count)||0,
+   avgDistance:null,
+   evidence:[
+     x.technical_share?`${x.technical_share}% technische Wegtypen`:null,
+     x.max_grade?`max. Kantensteigung ${x.max_grade}%`:null,
+     x.way_count?`${x.way_count} OSM-Wege`:null
+   ].filter(Boolean),
+   dataSource:x.source||'Valhalla'
+ };
+}
+
+async function fetchWithTimeout(url,options={},timeoutMs=30000){
  const controller=new AbortController();
  const timer=setTimeout(()=>controller.abort(),timeoutMs);
  try{
@@ -792,31 +770,35 @@ async function analyzeTerrain(force=false){
  state.terrain={status:'loading',stages:[],source:null,warning:null};
  renderStages();
 
- const samples=terrainSamples(9);
  try{
-   const r=await fetchWithTimeout(API+'/api/terrain-match-v1',{
+   const stageShapes=stageTerrainShapes(46);
+   const r=await fetchWithTimeout(API+'/api/terrain-profile-v2',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({samples})
-   },22000);
+     body:JSON.stringify({stages:stageShapes})
+   },30000);
 
    const data=await r.json();
-   if(!r.ok||!data.ok)throw new Error(data.warning||'Terrain-Daten nicht verfügbar');
+   if(!r.ok||!data.ok)throw new Error(data.warning||'Terrain-Profil nicht verfügbar');
 
-   const stages=summarizeTerrainMatches(samples,data.matches||[]);
+   const byIndex=new Map((data.stages||[]).map(x=>[Number(x.stage_index),x]));
+   const stages=state.stages.map((_,i)=>normalizeTerrainV2Stage(byIndex.get(i)||{
+     stage_index:i,status:'unavailable',coverage:0,unknown:100
+   }));
+
    state.terrain={
      status:'ready',
      stages,
-     source:data.source||'OSM',
+     source:data.source||'Valhalla',
      warning:data.warning||null,
-     serviceCoverage:data.service_coverage,
-     matchedCoverage:data.matched_coverage,
-     reliableCoverage:data.reliable_coverage,
-     dataVersion:data.version||'terrain-data-v1'
+     serviceCoverage:Math.round(100*(data.stage_success||0)/Math.max(1,data.stage_total||state.stages.length)),
+     matchedCoverage:Math.round(100*(data.stage_success||0)/Math.max(1,data.stage_total||state.stages.length)),
+     reliableCoverage:Number(data.reliable_coverage)||0,
+     dataVersion:data.version||'terrain-profile-v2'
    };
 
-   localStorage.setItem('abo-mobile-terrain-v3',JSON.stringify({
-     key:`v3|${$('start').value}|${$('dest').value}|${state.metrics.totalDist.toFixed(1)}`,
+   localStorage.setItem('abo-mobile-terrain-v4',JSON.stringify({
+     key:`v4|${$('start').value}|${$('dest').value}|${state.metrics.totalDist.toFixed(1)}`,
      stages,
      source:state.terrain.source,
      serviceCoverage:state.terrain.serviceCoverage,
@@ -828,10 +810,11 @@ async function analyzeTerrain(force=false){
    const timedOut=(e&&e.name==='AbortError');
    state.terrain={
      status:'error',stages:[],source:null,
-     warning:timedOut?'Terrain-Analyse hat zu lange gedauert. Bitte erneut versuchen.':(e.message||'Terrain-Daten nicht verfügbar')
+     warning:timedOut?'Terrain-Profil hat zu lange gedauert. Bitte erneut versuchen.':(e.message||'Terrain-Profil nicht verfügbar')
    };
  }
  renderStages();
+ renderBikeSetup();
  if(state.selectedStage!=null)focusStage(state.selectedStage);
 }
 
@@ -894,7 +877,7 @@ function technicalDifficulty(t){
  const ratio=score/Math.max(.35,skill*comfort);
  let label='technisch passend',cls='tech-ok';
  if(ratio>1.25){label='technisch kritisch';cls='tech-hard'} else if(ratio>.82){label='technisch aufmerksam';cls='tech-watch'}
- return {label,cls,score,reason:(t.evidence||[]).length?`OSM-Hinweise: ${(t.evidence||[]).join(' · ')}`:'Keine expliziten MTB-/Smoothness-Warnungen in den zugeordneten Stichproben.'};
+ return {label,cls,score,reason:(t.evidence||[]).length?`OSM-Hinweise: ${(t.evidence||[]).join(' · ')}`:'Keine expliziten MTB-/Smoothness-Warnungen in den zugeordneten Kanten.'};
 }
 function technicalHTML(i){
  const t=terrainForStage(i), T=technicalDifficulty(t);
@@ -908,7 +891,7 @@ function terrainHTML(i){
  if(state.terrain.status==='loading'){
    return `<div class="terrain-box">
      <div class="terrain-head"><b>Terrain Beta</b><span class="terrain-status">wird analysiert …</span></div>
-     <div class="terrain-summary">Max. Wartezeit ca. 22 Sekunden. Das Backend ordnet jeden Stichpunkt direkt einem OSM-Weg zu.</div>
+     <div class="terrain-summary">Die Route wird direkt auf das Valhalla/OSM-Wegenetz gematcht und abschnittsweise ausgewertet.</div>
    </div>`;
  }
  if(state.terrain.status==='error'){
@@ -924,12 +907,12 @@ function terrainHTML(i){
  const seg=(k,v,cls)=>`<span class="${cls}" style="width:${Math.max(0,v)}%"></span>`;
  const C=terrainCompatibility(t);
  const caution=t.coverage<50
-   ? `<div class="terrain-warning">Nur ${t.coverage}% der Stichproben haben eine hohe oder mittlere Zuordnungsqualität. Deshalb wird Terrain für diese Etappe nicht in die Belastungsbewertung eingerechnet.</div>`
+   ? `<div class="terrain-warning">Nur ${t.coverage}% der gematchten Routenkanten haben verwertbare Oberflächenattribute. Deshalb wird Terrain für diese Etappe nicht in die Belastungsbewertung eingerechnet.</div>`
    : (t.coverage<75
       ? `<div class="terrain-warning">${t.coverage}% Abdeckung: Terrain ist nur teilweise verfügbar und wird deshalb nur abgeschwächt berücksichtigt.</div>`
       : '');
  return `<div class="terrain-box">
-   <div class="terrain-head"><b>Terrain Beta · ${C.label}</b><span class="terrain-status">${t.samples} Stichproben</span></div>
+   <div class="terrain-head"><b>Terrain Beta · ${C.label}</b><span class="terrain-status">${t.samples} Kanten</span></div>
    <div class="terrain-bar">
      ${seg('paved',t.paved,'paved')}${seg('fine',t.fine,'fine')}${seg('gravel',t.gravel,'gravel')}${seg('rough',t.rough,'rough')}${seg('unknown',t.unknown,'unknown')}
    </div>
@@ -940,7 +923,7 @@ function terrainHTML(i){
      <span class="terrain-chip"><i class="terrain-dot rough"></i> grob ${t.rough}%</span>
      <span class="terrain-chip"><i class="terrain-dot unknown"></i> offen ${t.unknown}%</span>
    </div>
-   <div class="terrain-summary">${C.note}. Dienst ${t.serviceCoverage}% · Weg gefunden ${t.matchedCoverage}% · zuverlässig ${t.coverage}%${t.avgDistance!=null?' · Ø '+Math.round(t.avgDistance)+' m zum OSM-Weg':''}. Ab 0.2.8 ordnet das Backend jeden Stichpunkt direkt einem OSM-Weg zu.</div>
+   <div class="terrain-summary">${C.note}. Dienst ${t.serviceCoverage}% · Weg gefunden ${t.matchedCoverage}% · zuverlässig ${t.coverage}%${t.avgDistance!=null?' · Ø '+Math.round(t.avgDistance)+' m zum OSM-Weg':''}. Ab 0.3.2 wird die tatsächliche Routengeometrie abschnittsweise per Map-Matching ausgewertet.</div>
    ${caution}
  </div>`;
 }
@@ -1445,7 +1428,7 @@ function unpack(id){
  restoreBikeProfile();
  initGear();
  const saved=localStorage.getItem('abo-mobile-route');
- if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v3')||'null');const key=`v3|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-data-v1.1'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'OSM',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
+ if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v4')||'null');const key=`v4|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-profile-v2'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'Valhalla',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
