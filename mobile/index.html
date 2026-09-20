@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.1.3</title>
+<title>Adventure Bike OS · Mobile 0.1.4</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -43,7 +43,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.1.3</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.1.4</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -155,7 +155,12 @@ function go(name){
  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
  $('screen-'+name).classList.add('active');
  document.querySelectorAll('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.nav===name));
- if(name==='stages'&&state.map)setTimeout(()=>state.map.invalidateSize(),80);
+ if(name==='stages'&&state.coords){
+   setTimeout(()=>{
+     renderRoute();
+     if(state.map)state.map.invalidateSize(true);
+   },80);
+ }
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -215,9 +220,9 @@ async function calculateRoute(){
    coords=elev.coords;
    const m=metrics(coords),st=makeStages(coords,m,+$('kmday').value||120,+$('hmday').value||1800);
    state.coords=coords;state.metrics=m;state.stages=st;state.heightAvailable=elev.ok;
-   renderRoute();
    localStorage.setItem('abo-mobile-route',JSON.stringify({start:$('start').value,dest:$('dest').value,coords,metrics:m,stages:st}));
    go('stages');
+   requestAnimationFrame(()=>requestAnimationFrame(()=>renderRoute()));
  }catch(e){toast(e.message)}
  finally{load.classList.remove('show')}
 }
@@ -230,10 +235,23 @@ function renderRoute(){
  renderMap();drawElevation();renderStages();
 }
 function renderMap(){
- if(!state.map){state.map=L.map('map',{scrollWheelZoom:false,touchZoom:true});L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(state.map)}
+ if(!state.map){
+   state.map=L.map('map',{
+     scrollWheelZoom:false,
+     touchZoom:false,
+     dragging:false,
+     doubleClickZoom:false,
+     boxZoom:false,
+     keyboard:false,
+     tap:false
+   });
+   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(state.map)
+ }
  state.layers.forEach(l=>l.remove());state.layers=[];
  const latlng=state.coords.map(c=>[c[1],c[0]]);
- const line=L.polyline(latlng,{color:'#2777dd',weight:6}).addTo(state.map);state.layers.push(line);state.map.fitBounds(line.getBounds(),{padding:[15,15]});
+ const line=L.polyline(latlng,{color:'#2777dd',weight:6}).addTo(state.map);state.layers.push(line);
+ state.map.invalidateSize(true);
+ requestAnimationFrame(()=>state.map.fitBounds(line.getBounds(),{padding:[15,15]}));
 }
 function stageColor(i){return ['#2b83ba','#d7191c','#1a9c7c','#e6ab02','#f07b3f','#8064a2','#39806f','#ff7043','#7a568f'][i%9]}
 function focusStage(i){
@@ -284,7 +302,7 @@ function unpack(id){delete state.assignments[id];renderBagContents();toast('Gege
 (function boot(){
  initGear();
  const saved=localStorage.getItem('abo-mobile-route');
- if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;renderRoute()}catch(e){}}
+ if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`}catch(e){}}
  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
