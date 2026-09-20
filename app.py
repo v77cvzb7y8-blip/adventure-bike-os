@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/1.101-weather-batch-hotfix (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/1.102-weather-timezone-fix (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -2157,12 +2157,23 @@ def weather_stage_batch():
                 "wind_speed_10m_max",
                 "wind_gusts_10m_max"
             ]),
-            "timezone":"auto",
+            "timezone":",".join(["auto"]*len(all_points)),
             "forecast_days":16
         }
         r=session.get("https://api.open-meteo.com/v1/forecast",params=params,timeout=15)
         print(f"[WEATHER-BATCH] locations={len(all_points)} status={r.status_code}",flush=True)
-        r.raise_for_status()
+        if not r.ok:
+            try:
+                err=(r.json() or {}).get("reason") or f"Open-Meteo HTTP {r.status_code}"
+            except Exception:
+                err=f"Open-Meteo HTTP {r.status_code}"
+            print(f"[WEATHER-BATCH] upstream-error: {err}",flush=True)
+            return jsonify(
+                ok=False,available=False,
+                reason="Wetterdienst hat die Anfrage abgelehnt.",
+                diagnostic=str(err)[:220],
+                stages=[]
+            ),200
         raw_weather=r.json()
 
         # Multiple locations => list; single location => dict.
