@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.3.4</title>
+<title>Adventure Bike OS · Mobile 0.3.4.1</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -293,7 +293,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.3.4</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.3.4.1</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -745,7 +745,7 @@ async function calculateRoute(){
    // A newly calculated route must never inherit Terrain from a previous backend run.
    state.terrain={status:'idle',stages:[],source:null,warning:null};
    localStorage.removeItem('abo-mobile-terrain-v3');
-   localStorage.removeItem('abo-mobile-terrain-v5');
+   localStorage.removeItem('abo-mobile-terrain-v6');
    localStorage.removeItem('abo-mobile-terrain-v3');
    state.stageNames=[$('start').value.trim(),...Array(Math.max(0,st.length-1)).fill('Etappenziel wird ermittelt …'),$('dest').value.trim()];
    localStorage.setItem('abo-mobile-route',JSON.stringify({start:$('start').value,dest:$('dest').value,coords,metrics:m,stages:st}));
@@ -971,7 +971,7 @@ async function analyzeTerrain(force=false){
 
  try{
    const stageShapes=stageTerrainShapes(46);
-   const r=await fetchWithTimeout(API+'/api/terrain-profile-v2.1',{
+   const r=await fetchWithTimeout(API+'/api/terrain-profile-v2',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
      body:JSON.stringify({stages:stageShapes})
@@ -996,8 +996,8 @@ async function analyzeTerrain(force=false){
      dataVersion:data.version||'terrain-profile-v2.1'
    };
 
-   localStorage.setItem('abo-mobile-terrain-v5',JSON.stringify({
-     key:`v5|${$('start').value}|${$('dest').value}|${state.metrics.totalDist.toFixed(1)}`,
+   localStorage.setItem('abo-mobile-terrain-v6',JSON.stringify({
+     key:`v6|${$('start').value}|${$('dest').value}|${state.metrics.totalDist.toFixed(1)}`,
      stages,
      source:state.terrain.source,
      serviceCoverage:state.terrain.serviceCoverage,
@@ -1647,7 +1647,7 @@ function unpack(id){
  restoreBikeProfile();
  initGear();
  const saved=localStorage.getItem('abo-mobile-route');
- if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v5')||'null');const key=`v5|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-profile-v2.1'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'Valhalla',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
+ if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v6')||'null');const key=`v6|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-profile-v2.1'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'Valhalla',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
