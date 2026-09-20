@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.2.5</title>
+<title>Adventure Bike OS · Mobile 0.2.5.1</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -197,7 +197,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.2.5</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.2.5.1</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -693,6 +693,17 @@ function summarizeTerrain(samples,elements){
  });
 }
 
+
+async function fetchWithTimeout(url,options={},timeoutMs=18000){
+ const controller=new AbortController();
+ const timer=setTimeout(()=>controller.abort(),timeoutMs);
+ try{
+   return await fetch(url,{...options,signal:controller.signal});
+ }finally{
+   clearTimeout(timer);
+ }
+}
+
 async function analyzeTerrain(force=false){
  if(!state.coords||!state.stages.length)return;
  if(state.terrain.status==='loading')return;
@@ -703,11 +714,11 @@ async function analyzeTerrain(force=false){
 
  const samples=terrainSamples(16);
  try{
-   const r=await fetch(API+'/api/osm-terrain-batch',{
+   const r=await fetchWithTimeout(API+'/api/osm-terrain-batch',{
      method:'POST',
      headers:{'Content-Type':'application/json'},
      body:JSON.stringify({samples:samples.map(s=>({lat:s.lat,lon:s.lon}))})
-   });
+   },18000);
    const data=await r.json();
    if(!r.ok || !data.ok)throw new Error(data.warning||'Terrain-Daten nicht verfügbar');
    const stages=summarizeTerrain(samples,data.elements||[]);
@@ -717,7 +728,15 @@ async function analyzeTerrain(force=false){
      stages,source:state.terrain.source
    }));
  }catch(e){
-   state.terrain={status:'error',stages:[],source:null,warning:e.message||'Terrain-Daten nicht verfügbar'};
+   const timedOut=(e && e.name==='AbortError');
+   state.terrain={
+     status:'error',
+     stages:[],
+     source:null,
+     warning:timedOut
+       ? 'Terrain-Analyse hat zu lange gedauert. Bitte erneut versuchen.'
+       : (e.message||'Terrain-Daten nicht verfügbar')
+   };
  }
  renderStages();
  if(state.selectedStage!=null)focusStage(state.selectedStage);
@@ -744,10 +763,17 @@ function terrainCompatibility(t){
 function terrainHTML(i){
  const t=terrainForStage(i);
  if(state.terrain.status==='loading'){
-   return `<div class="terrain-box"><div class="terrain-head"><b>Terrain Beta</b><span class="terrain-status">wird analysiert …</span></div></div>`;
+   return `<div class="terrain-box">
+     <div class="terrain-head"><b>Terrain Beta</b><span class="terrain-status">wird analysiert …</span></div>
+     <div class="terrain-summary">Max. Wartezeit ca. 18 Sekunden. Danach kannst du die Analyse erneut starten.</div>
+   </div>`;
  }
  if(state.terrain.status==='error'){
-   return `<div class="terrain-box"><div class="terrain-head"><b>Terrain Beta</b><button class="terrain-btn" onclick="event.stopPropagation();analyzeTerrain(true)">erneut laden</button></div><div class="terrain-summary">Terrain-Daten konnten gerade nicht geladen werden. Distanz/HM-Bewertung bleibt aktiv.</div></div>`;
+   return `<div class="terrain-box">
+     <div class="terrain-head"><b>Terrain Beta</b><button class="terrain-btn" onclick="event.stopPropagation();analyzeTerrain(true)">erneut versuchen</button></div>
+     <div class="terrain-summary">${state.terrain.warning||'Terrain-Daten konnten gerade nicht geladen werden.'}</div>
+     <div class="terrain-warning">Die Etappenbewertung läuft trotzdem weiter – aktuell mit Distanz und Höhenmetern.</div>
+   </div>`;
  }
  if(!t){
    return `<div class="terrain-box"><div class="terrain-head"><b>Terrain Beta</b><button class="terrain-btn" onclick="event.stopPropagation();analyzeTerrain(true)">analysieren</button></div><div class="terrain-summary">OSM-Untergrunddaten noch nicht geladen.</div></div>`;
