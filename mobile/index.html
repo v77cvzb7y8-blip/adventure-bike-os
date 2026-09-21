@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.6.1</title>
+<title>Adventure Bike OS · Mobile 0.7.0</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -380,12 +380,27 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .trip-date-summary b{color:#173d30}
 .trip-date-summary.ok{background:#eef7f1;border-color:#cfe3d5;color:#346047}
 .trip-date-summary.warn{background:#fff7e8;border-color:#ead7ab;color:#715a26}
+
+.setup-context{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.setup-context span{font-size:8px;font-weight:900;padding:4px 7px;border-radius:999px;background:#edf1ee;color:#56635b}
+.setup-context span.warn{background:#f5edd7;color:#765d18}
+.setup-context span.ok{background:#e7f1e9;color:#356846}
+.bag-profile-box{margin-top:12px;border:1px solid #dfe6e1;border-radius:14px;padding:10px;background:#fbfcfb}
+.bag-profile-box summary{font-size:11px;font-weight:900;cursor:pointer}
+.bag-profile-grid{display:grid;gap:7px;margin-top:9px}
+.bag-profile-row{display:grid;grid-template-columns:1fr 75px 75px;gap:6px;align-items:end;border-top:1px solid #e8ece9;padding-top:7px}
+.bag-profile-row:first-child{border-top:0;padding-top:0}
+.bag-profile-row b{font-size:9px}
+.bag-profile-row small{display:block;font-size:8px;color:#728078;margin-top:2px}
+.bag-profile-row label{font-size:7px}
+.bag-profile-row input{width:100%;box-sizing:border-box}
+.setup-item .setup-tag{display:inline-block;margin-top:4px;font-size:7px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;color:#68736d}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.6.1</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.7.0</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -489,18 +504,31 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
           <div class="setup-head"><b>Dein Bike</b><span class="setup-badge" id="bikeProfileStatus">Profil speichern</span></div>
           <div class="bike-profile-grid">
             <div><label>Bike-Typ</label><select id="bikeType" onchange="saveBikeProfile();renderBikeSetup()"><option value="gravel">Gravel</option><option value="mtb">MTB</option><option value="touring">Touring</option><option value="road">Road / Allroad</option></select></div>
+            <div><label>Laufrad</label><select id="wheelSize" onchange="saveBikeProfile();renderBikeSetup()"><option value="700c">700C / 29"</option><option value="650b">650B / 27.5"</option><option value="26">26"</option><option value="other">anderes</option></select></div>
             <div><label>Reifenbreite (mm)</label><input id="tireWidth" type="number" min="25" max="80" step="1" value="40" onchange="saveBikeProfile();renderBikeSetup()"></div>
             <div><label>Reifensystem</label><select id="tubeless" onchange="saveBikeProfile();renderBikeSetup()"><option value="yes">Tubeless</option><option value="no">Schlauch</option><option value="unknown">noch offen</option></select></div>
             <div><label>Bike-Gewicht (kg)</label><input id="bikeWeight" type="number" min="6" max="30" step="0.1" value="10.5" onchange="saveBikeProfile();renderBikeSetup()"></div>
+            <div><label>Fahrergewicht (kg)</label><input id="riderWeight" type="number" min="35" max="180" step="1" placeholder="optional" onchange="saveBikeProfile();renderBikeSetup()"></div>
+            <div><label>Kettenblatt · Zähne</label><input id="chainringTeeth" type="number" min="20" max="60" step="1" value="40" onchange="saveBikeProfile();renderBikeSetup()"></div>
+            <div><label>größtes Ritzel · Zähne</label><input id="largestCogTeeth" type="number" min="25" max="60" step="1" value="44" onchange="saveBikeProfile();renderBikeSetup()"></div>
+            <div><label>Gabel-Aufnahmen</label><select id="forkMounts" onchange="saveBikeProfile();renderBikeSetup()"><option value="yes">vorhanden</option><option value="no">keine</option><option value="unknown">nicht sicher</option></select></div>
+            <div><label>Rahmen-Aufnahmen</label><select id="frameMounts" onchange="saveBikeProfile();renderBikeSetup()"><option value="yes">vorhanden</option><option value="no">keine</option><option value="unknown">nicht sicher</option></select></div>
           </div>
           <div class="bike-summary">
             <div class="stat"><b id="bikeRouteDays">–</b><span>Tourtage</span></div>
             <div class="stat"><b id="bikePackKg">0.0 kg</b><span>Gepäck</span></div>
             <div class="stat"><b id="bikeSystemKg">–</b><span>Bike + Gepäck</span></div>
+            <div class="stat"><b id="bikeGrossKg">–</b><span>mit Fahrer</span></div>
           </div>
+          <div id="bikeSetupContext" class="setup-context"></div>
           <div id="bikeSetupCheck" class="setup-list" style="margin-top:10px"></div>
           <div id="bikeRouteFit" class="route-fit-note"></div>
         </div>
+        <details class="bag-profile-box">
+          <summary>Taschenprofil · Volumen & Belastungsgrenzen</summary>
+          <div class="sub" style="margin-top:6px">Die Werte dienen als deine persönlichen Planungsgrenzen. Herstellergrenzen haben Vorrang.</div>
+          <div id="bagProfileGrid" class="bag-profile-grid"></div>
+        </details>
         <div class="pack-mode-row">
           <button class="primary" type="button" onclick="applyRecommendedSetup()">Empfohlenes Setup übernehmen</button>
           <button class="secondary" type="button" onclick="startEmptySetup()">Leer starten</button>
@@ -2740,27 +2768,42 @@ function drawElevation(){
 
 
 function bikeProfile(){
+ const riderRaw=+($('riderWeight')?.value||0);
  return {
    type:$('bikeType')?.value||'gravel',
+   wheelSize:$('wheelSize')?.value||'700c',
    tireWidth:Math.max(25,Math.min(80,+($('tireWidth')?.value||40))),
    tubeless:$('tubeless')?.value||'unknown',
-   bikeWeight:Math.max(6,Math.min(30,+($('bikeWeight')?.value||10.5)))
+   bikeWeight:Math.max(6,Math.min(30,+($('bikeWeight')?.value||10.5))),
+   riderWeight:riderRaw>0?Math.max(35,Math.min(180,riderRaw)):null,
+   chainringTeeth:Math.max(20,Math.min(60,+($('chainringTeeth')?.value||40))),
+   largestCogTeeth:Math.max(25,Math.min(60,+($('largestCogTeeth')?.value||44))),
+   forkMounts:$('forkMounts')?.value||'unknown',
+   frameMounts:$('frameMounts')?.value||'unknown'
  };
 }
 function saveBikeProfile(){
- localStorage.setItem('abo-mobile-bike-profile',JSON.stringify(bikeProfile()));
+ localStorage.setItem('abo-mobile-bike-profile-v2',JSON.stringify(bikeProfile()));
  const el=$('bikeProfileStatus');if(el)el.textContent='gespeichert';
 }
 function restoreBikeProfile(){
  try{
-   const p=JSON.parse(localStorage.getItem('abo-mobile-bike-profile')||'null');if(!p)return;
+   const p=JSON.parse(localStorage.getItem('abo-mobile-bike-profile-v2')||localStorage.getItem('abo-mobile-bike-profile')||'null');
+   if(!p)return;
    if(p.type&&$('bikeType'))$('bikeType').value=p.type;
+   if(p.wheelSize&&$('wheelSize'))$('wheelSize').value=p.wheelSize;
    if(p.tireWidth&&$('tireWidth'))$('tireWidth').value=p.tireWidth;
    if(p.tubeless&&$('tubeless'))$('tubeless').value=p.tubeless;
    if(p.bikeWeight&&$('bikeWeight'))$('bikeWeight').value=p.bikeWeight;
+   if(p.riderWeight&&$('riderWeight'))$('riderWeight').value=p.riderWeight;
+   if(p.chainringTeeth&&$('chainringTeeth'))$('chainringTeeth').value=p.chainringTeeth;
+   if(p.largestCogTeeth&&$('largestCogTeeth'))$('largestCogTeeth').value=p.largestCogTeeth;
+   if(p.forkMounts&&$('forkMounts'))$('forkMounts').value=p.forkMounts;
+   if(p.frameMounts&&$('frameMounts'))$('frameMounts').value=p.frameMounts;
    const el=$('bikeProfileStatus');if(el)el.textContent='gespeichert';
  }catch(e){}
 }
+
 function totalPackedWeight(){
  return Object.keys(state.assignments||{}).reduce((sum,gid)=>sum+(gear.find(x=>x.id===gid)?.kg||0),0);
 }
@@ -2777,44 +2820,189 @@ function currentTerrainConfidence(){
  const vals=state.terrain.stages.map(x=>Number(x.coverage)||0);
  return vals.reduce((a,b)=>a+b,0)/vals.length;
 }
+function routeTerrainSummary(){
+ const tc=currentTerrainConfidence();
+ const rows=state.terrain?.stages||[];
+ if(tc<50||!rows.length)return {confidence:tc,reliable:false,gravel:null,rough:null};
+ let weight=0,gravel=0,rough=0;
+ rows.forEach((x,i)=>{
+   const w=Math.max(.1,Number(state.stages?.[i]?.km)||Number(x.distance_km)||1);
+   weight+=w;gravel+=w*(Number(x.gravel)||0);rough+=w*(Number(x.rough)||0);
+ });
+ return {confidence:tc,reliable:true,gravel:gravel/weight,rough:rough/weight};
+}
+function weatherSetupSummary(){
+ const rows=(state.weather?.stages||[]).filter(x=>x?.available);
+ const rank={none:0,watch:1,high:2};
+ const worst=name=>rows.reduce((best,x)=>{
+   const v=x.signals?.[name]||'none';
+   return (rank[v]||0)>(rank[best]||0)?v:best;
+ },'none');
+ return {available:rows.length,rain:worst('rain'),cold:worst('cold'),heat:worst('heat'),wind:worst('wind')};
+}
+function knownCampingNights(){
+ const nights=Math.max(0,(state.stages?.length||1)-1);
+ let known=0,unknown=0;
+ for(let i=0;i<nights;i++){
+   const sel=state.lodging?.selected?.[i];
+   if(sel){if(lodgingCategory(sel.type)==='camping')known++;continue}
+   const mode=stageLodgingMode(i);
+   if(mode==='camping')known++;
+   else if(mode==='mixed')unknown++;
+ }
+ return {known,unknown,total:nights};
+}
+function lowGearRatio(p=bikeProfile()){
+ return p.largestCogTeeth>0?p.chainringTeeth/p.largestCogTeeth:null;
+}
+function heavyItemsInBag(id,threshold=.5){
+ return Object.entries(state.assignments||{})
+   .filter(([,bag])=>bag===id)
+   .map(([gid])=>gear.find(x=>x.id===gid))
+   .filter(g=>g&&Number(g.kg)>=threshold)
+   .sort((a,b)=>b.kg-a.kg);
+}
+function freeBagCapacity(id){
+ return {
+   kg:Math.max(0,(bags[id]?.cap||0)-bagWeight(id)),
+   liters:Math.max(0,(bags[id]?.liters||0)-bagVolume(id))
+ };
+}
+function setupSignals(){
+ const p=bikeProfile(),pack=totalPackedWeight(),days=(state.stages||[]).length||0;
+ const zones=packedZoneWeights(),zoneTotal=Math.max(.01,zones.rear+zones.center+zones.front);
+ const terrain=routeTerrainSummary(),weather=weatherSetupSummary(),camp=knownCampingNights();
+ const ratio=lowGearRatio(p),routeKm=Number(state.metrics?.totalDist)||0,hm=Number(state.metrics?.totalGain)||0;
+ const avgHm=days?hm/days:0,maxStageHm=Math.max(0,...(state.stages||[]).map(x=>Number(x.hm)||0));
+ return {
+   profile:p,pack,days,routeKm,hm,avgHm,maxStageHm,ratio,terrain,weather,camp,zones,
+   rearPct:Math.round(zones.rear/zoneTotal*100),
+   centerPct:Math.round(zones.center/zoneTotal*100),
+   frontPct:Math.round(zones.front/zoneTotal*100),
+   fullSystem:p.bikeWeight+pack+(p.riderWeight||0),
+   bikePack:p.bikeWeight+pack
+ };
+}
+function setupRecommendations(){
+ const s=setupSignals(),items=[];
+ const add=(kind,title,text,tag)=>items.push({kind,title,text,tag});
+ const missing=missingCriticalGear();
+ const overW=Object.entries(bags).filter(([id,b])=>bagWeight(id)>b.cap);
+ const overV=Object.entries(bags).filter(([id,b])=>bagVolume(id)>b.liters);
+
+ if(!state.metrics){
+   add('open','Route fehlt','Route laden, damit Bike und Gepäck auf die konkrete Reise bezogen bewertet werden.','Kontext');
+ }else{
+   add('ok','Tour-Kontext verbunden',`${s.routeKm.toFixed(0)} km · ${Math.round(s.hm)} HM · ${s.days||1} Reisetage.`,'Route');
+ }
+
+ if(s.pack===0){
+   add('open','Packplan noch leer','Ohne Gepäck kann die Lastverteilung noch nicht bewertet werden.','Gepäck');
+ }else if(overW.length||overV.length){
+   const names=[...new Set([...overW.map(([id])=>bagName(id)),...overV.map(([id])=>bagName(id))])];
+   add('warn','Taschenlimit überschritten',names.join(' · '),'Kapazität');
+ }else if(s.frontPct>45){
+   add('warn','Frontlast prüfen',`${s.frontPct}% des gepackten Gewichts liegt vorne. Lenkung und Kontrolle können unter hoher Frontlast leiden.`,'Handling');
+ }else if(s.rearPct>55){
+   add('warn','Hecklast prüfen',`${s.rearPct}% des gepackten Gewichts liegt hinten. Schwere Teile möglichst zentral platzieren.`,'Handling');
+ }else{
+   add('ok','Lastverteilung plausibel',`Hinten ${s.rearPct}% · Mitte ${s.centerPct}% · vorne ${s.frontPct}%.`,'Handling');
+ }
+
+ const heavyFront=heavyItemsInBag('handlebar');
+ const heavyRear=heavyItemsInBag('saddle');
+ const frameFree=freeBagCapacity('frame');
+ const movable=[...heavyFront,...heavyRear].filter(g=>g.id!=='snack'&&g.id!=='water');
+ if(movable.length&&frameFree.kg>=Math.min(...movable.map(g=>g.kg))){
+   const g=movable[0];
+   add('open',`${g.name} zentraler packen`,`${g.name} liegt ${state.assignments[g.id]==='handlebar'?'vorn':'hinten'}. Falls Platz vorhanden: Rahmentasche bevorzugen.`,'Packposition');
+ }
+
+ if(s.ratio!=null){
+   const ratioText=`${s.profile.chainringTeeth}/${s.profile.largestCogTeeth} = ${s.ratio.toFixed(2)}`;
+   if(s.pack>=7 && (s.avgHm>=1400||s.maxStageHm>=1800) && s.ratio>1.0){
+     add('warn','Leichtesten Gang prüfen',`${ratioText}. Bei voller Beladung und den geplanten Höhenmetern ist eine ausreichend leichte Übersetzung besonders relevant.`,'Antrieb');
+   }else{
+     add('ok','Übersetzung erfasst',`${ratioText}. Keine automatische Eignungsfreigabe – Steigung, Fahrer und Untergrund bleiben entscheidend.`,'Antrieb');
+   }
+ }
+
+ if(s.terrain.reliable){
+   const rough=Number(s.terrain.rough)||0,gravel=Number(s.terrain.gravel)||0,w=s.profile.tireWidth;
+   if((rough>=12&&w<40)||((rough+gravel)>=45&&w<35)){
+     add('warn','Reifenbreite zur Route prüfen',`${w} mm bei ca. ${Math.round(gravel)}% Gravel und ${Math.round(rough)}% grobem Untergrund in den belastbaren Terrain-Daten.`,'Terrain');
+   }else{
+     add('ok','Reifen / Terrain abgeglichen',`${w} mm · ca. ${Math.round(gravel)}% Gravel · ${Math.round(rough)}% grob · Terrain-Abdeckung ${Math.round(s.terrain.confidence)}%.`,'Terrain');
+   }
+   if(s.profile.tubeless==='no'&&(rough+gravel)>=35){
+     add('open','Pannenschutz bewusst planen','Schlauchsystem auf längeren Gravel-/Rough-Anteilen: Ersatzschlauch, Pumpe und Reparaturstrategie prüfen.','Reifen');
+   }
+ }else{
+   add('open','Terrain-Aussage begrenzt',`Terrain-Abdeckung ${Math.round(s.terrain.confidence)}%. Reifenprofil und Luftdruck werden deshalb weiterhin nicht automatisch bewertet.`,'Vertrauen');
+ }
+
+ if(s.weather.rain==='watch'||s.weather.rain==='high'){
+   const rainBag=state.assignments?.rain;
+   if(rainBag&&['top','handlebar'].includes(rainBag)){
+     add('ok','Regenschutz erreichbar','Regenrisiko erkannt; Regenjacke liegt in einer schnell erreichbaren Zone.','Wetter');
+   }else{
+     add('open','Regenschutz schnell erreichbar packen','Regenrisiko erkannt. Regenjacke nicht tief unter Schlaf-/Kleidungsvolumen verstauen.','Wetter');
+   }
+ }
+ if(s.weather.cold==='high'||s.weather.cold==='watch'){
+   add('open','Kältereserve berücksichtigen','Mindestens ein Reisetag hat ein Kältesignal. Wärmeschicht und trockene Reserve bleiben im nächsten Pack-Intelligence-Schritt relevant.','Wetter');
+ }
+
+ if(s.camp.known>0){
+   const mountText=s.profile.forkMounts==='yes'||s.profile.frameMounts==='yes'
+     ?'Zusätzliche Aufnahmen sind vorhanden und können später in die Volumenplanung einfließen.'
+     :'Zusätzliche Montagepunkte sind nicht bestätigt.';
+   add('open',`${s.camp.known} Campingnacht${s.camp.known===1?'':'en'} erkannt`,`${mountText} Schlafsystem wird in 0.7.1 explizit berücksichtigt.`,'Camping');
+ }
+
+ if(missing.length){
+   add('warn','Pflichtausrüstung offen',missing.join(' · '),'Sicherheit');
+ }else if(s.pack>0){
+   add('ok','Basis-Ausrüstung vollständig','Die aktuell als Pflicht markierte Grundausrüstung ist gepackt.','Sicherheit');
+ }
+
+ return {signals:s,items};
+}
 function renderBikeSetup(){
  if(!$('bikeSetupCheck'))return;
- const p=bikeProfile(),pack=totalPackedWeight(),system=p.bikeWeight+pack,days=(state.stages||[]).length||0;
- const zones=packedZoneWeights(),total=Math.max(.01,zones.rear+zones.center+zones.front);
- const rearPct=Math.round(zones.rear/total*100),frontPct=Math.round(zones.front/total*100);
- const missing=missingCriticalGear(),tc=currentTerrainConfidence();
+ const {signals:s,items}=setupRecommendations();
 
- if($('bikeRouteDays'))$('bikeRouteDays').textContent=days?String(days):'–';
- if($('bikePackKg'))$('bikePackKg').textContent=pack.toFixed(1)+' kg';
- if($('bikeSystemKg'))$('bikeSystemKg').textContent=system.toFixed(1)+' kg';
+ if($('bikeRouteDays'))$('bikeRouteDays').textContent=s.days?String(s.days):'–';
+ if($('bikePackKg'))$('bikePackKg').textContent=s.pack.toFixed(1)+' kg';
+ if($('bikeSystemKg'))$('bikeSystemKg').textContent=s.bikePack.toFixed(1)+' kg';
+ if($('bikeGrossKg'))$('bikeGrossKg').textContent=s.profile.riderWeight?s.fullSystem.toFixed(1)+' kg':'–';
 
- const items=[];
- if(pack===0)items.push({kind:'open',title:'Packplan noch leer',text:'Packe deine Ausrüstung, damit Gewichtsverteilung und Reserven bewertet werden können.'});
- else if(rearPct>55)items.push({kind:'warn',title:'Hecklastig',text:`${rearPct}% des gepackten Gewichts liegt hinten. Schweres möglichst zentraler verteilen.`});
- else if(frontPct>45)items.push({kind:'warn',title:'Frontlastig',text:`${frontPct}% des gepackten Gewichts liegt vorne. Lenkertasche nicht unnötig schwer beladen.`});
- else items.push({kind:'ok',title:'Gewicht grundsätzlich ausgewogen',text:`Hinten ${rearPct}% · Mitte ${Math.round(zones.center/total*100)}% · vorne ${frontPct}%.`});
+ if($('bikeSetupContext')){
+   const chips=[];
+   if(s.routeKm)chips.push(`<span class="ok">${s.routeKm.toFixed(0)} km · ${Math.round(s.hm)} HM</span>`);
+   chips.push(`<span>${s.profile.tireWidth} mm · ${s.profile.tubeless==='yes'?'Tubeless':s.profile.tubeless==='no'?'Schlauch':'System offen'}</span>`);
+   if(s.terrain.reliable)chips.push(`<span class="ok">Terrain ${Math.round(s.terrain.confidence)}%</span>`);
+   else chips.push(`<span class="warn">Terrain ${Math.round(s.terrain.confidence)}%</span>`);
+   if(s.weather.available)chips.push(`<span>${s.weather.available}/${s.days||s.weather.available} Wettertage</span>`);
+   if(s.camp.known)chips.push(`<span>${s.camp.known}× Camping</span>`);
+   $('bikeSetupContext').innerHTML=chips.join('');
+ }
 
- if(missing.length)items.push({kind:'warn',title:'Noch offen',text:missing.join(' · ')});
- else if(pack>0)items.push({kind:'ok',title:'Basis-Ausrüstung vorhanden',text:'Werkzeug, Erste Hilfe, Regenlage und Energieversorgung sind im Packplan berücksichtigt.'});
+ $('bikeSetupCheck').innerHTML=items.map(x=>`<div class="setup-item">
+   <i class="setup-dot ${x.kind==='warn'?'warn':x.kind==='open'?'open':''}"></i>
+   <div><b>${escapeHTML(x.title)}</b>${escapeHTML(x.text)}${x.tag?`<span class="setup-tag">${escapeHTML(x.tag)}</span>`:''}</div>
+ </div>`).join('');
 
- if(tc>=50)items.push({kind:'ok',title:'Terrain kann berücksichtigt werden',text:`Ø zuverlässige Terrain-Abdeckung ${Math.round(tc)}%. Reifen-/Technikhinweise können mit der Route gekoppelt werden.`});
- else items.push({kind:'open',title:'Terrain noch nicht belastbar',text:'Reifenprofil, Luftdruck und technische Bike-Eignung werden bewusst noch nicht bewertet.'});
-
- $('bikeSetupCheck').innerHTML=items.map(x=>`<div class="setup-item"><i class="setup-dot ${x.kind==='warn'?'warn':x.kind==='open'?'open':''}"></i><div><b>${x.title}</b>${x.text}</div></div>`).join('');
-
- const routeKm=state.metrics?.totalDist||0,hm=state.metrics?.totalGain||0;
  let routeText='Noch keine Route geladen.';
- if(routeKm>0){
-   routeText=`Aktuelle Route: ${routeKm.toFixed(0)} km · ${Math.round(hm)} HM · ${days||1} Etappen. `;
-   if(days>=3)routeText+='Mehrtagestour: Packgewicht und Reparaturreserve sind besonders relevant. ';
-   routeText+=p.tireWidth<32?'Die Reifenbreite ist schmal; ohne verlässliche Terrain-Daten erfolgt noch keine Eignungsbewertung.':'Reifenbreite ist erfasst; die endgültige Setup-Empfehlung wartet auf belastbare Terrain-Daten.';
+ if(s.routeKm){
+   routeText=`Setup Intelligence liest Route, Terrain, Wetter, Übernachtungsart und deinen aktuellen Packplan. Empfehlungen bleiben Hinweise und überschreiben keine Entscheidung automatisch.`;
  }
  if($('bikeRouteFit'))$('bikeRouteFit').textContent=routeText;
 
  const old=document.getElementById('bikeBalanceBox');if(old)old.remove();
- if(pack>0){
+ if(s.pack>0){
    const box=document.createElement('div');box.id='bikeBalanceBox';box.className='weight-balance';
-   box.innerHTML=`<div class="weight-zone"><span>Hinten</span><b>${zones.rear.toFixed(1)} kg</b></div><div class="weight-zone"><span>Mitte</span><b>${zones.center.toFixed(1)} kg</b></div><div class="weight-zone"><span>Vorne</span><b>${zones.front.toFixed(1)} kg</b></div>`;
+   box.innerHTML=`<div class="weight-zone"><span>Hinten</span><b>${s.zones.rear.toFixed(1)} kg</b></div><div class="weight-zone"><span>Mitte</span><b>${s.zones.center.toFixed(1)} kg</b></div><div class="weight-zone"><span>Vorne</span><b>${s.zones.front.toFixed(1)} kg</b></div>`;
    $('bikeSetupCheck').insertAdjacentElement('afterend',box);
  }
 }
@@ -2833,12 +3021,40 @@ let gear=[
  {id:'water',name:'Zusatzwasser',category:'Verpflegung',bag:'frame',kg:1.00,l:1.0,required:'optional',why:'schwer – möglichst zentral'}
 ];
 const bags={
- saddle:{name:'Satteltasche',cap:4.5,liters:12},
- frame:{name:'Rahmentasche',cap:2.5,liters:5},
- handlebar:{name:'Lenkertasche',cap:2.5,liters:8},
- top:{name:'Oberrohrtasche',cap:1.0,liters:1.5},
- tool:{name:'Werkzeugtasche',cap:1.0,liters:1.2}
+ saddle:{name:'Satteltasche',cap:4.5,liters:12,zone:'rear',role:'leicht / komprimierbar'},
+ frame:{name:'Rahmentasche',cap:2.5,liters:5,zone:'center',role:'schwer / kompakt'},
+ handlebar:{name:'Lenkertasche',cap:2.5,liters:8,zone:'front',role:'leicht / voluminös'},
+ top:{name:'Oberrohrtasche',cap:1.0,liters:1.5,zone:'center',role:'schneller Zugriff'},
+ tool:{name:'Werkzeugtasche',cap:1.0,liters:1.2,zone:'center',role:'Werkzeug / Ersatzteile'}
 };
+function restoreBagProfile(){
+ try{
+   const p=JSON.parse(localStorage.getItem('abo-mobile-bag-profile-v1')||'null');
+   if(!p)return;
+   Object.entries(p).forEach(([id,v])=>{
+     if(!bags[id]||!v)return;
+     const liters=Number(v.liters),cap=Number(v.cap);
+     if(Number.isFinite(liters)&&liters>0)bags[id].liters=Math.min(40,liters);
+     if(Number.isFinite(cap)&&cap>0)bags[id].cap=Math.min(20,cap);
+   });
+ }catch(e){}
+}
+function saveBagProfileValue(id,key,value){
+ if(!bags[id]||!['liters','cap'].includes(key))return;
+ const n=Number(value);if(!Number.isFinite(n)||n<=0)return;
+ bags[id][key]=key==='liters'?Math.min(40,n):Math.min(20,n);
+ const out={};Object.entries(bags).forEach(([bid,b])=>out[bid]={liters:b.liters,cap:b.cap});
+ localStorage.setItem('abo-mobile-bag-profile-v1',JSON.stringify(out));
+ renderBagContents();renderBikeSetup();
+}
+function renderBagProfile(){
+ const el=$('bagProfileGrid');if(!el)return;
+ el.innerHTML=Object.entries(bags).map(([id,b])=>`<div class="bag-profile-row">
+   <div><b>${escapeHTML(b.name)}</b><small>${escapeHTML(b.role||'')}</small></div>
+   <div><label>Liter</label><input type="number" min="0.2" max="40" step="0.1" value="${Number(b.liters).toFixed(1)}" onchange="saveBagProfileValue('${id}','liters',this.value)"></div>
+   <div><label>max. kg</label><input type="number" min="0.2" max="20" step="0.1" value="${Number(b.cap).toFixed(1)}" onchange="saveBagProfileValue('${id}','cap',this.value)"></div>
+ </div>`).join('');
+}
 
 
 function restoreCustomGear(){
@@ -2913,6 +3129,15 @@ function renderPackHealth(){
  }
  el.innerHTML=`<b>${title}</b><div class="small">${msg}</div>`;
 }
+
+function gearPackingMeta(g){
+ const id=g?.id||'',cat=g?.category||'';
+ if(id==='snack'||id==='rain'||id==='light')return {access:'schnell',load:'leicht/mittel'};
+ if(id==='tool'||id==='water')return {access:'Pause',load:'schwer'};
+ if(id==='power'||id==='firstaid'||id==='tube'||id==='pump')return {access:'Pause',load:'kompakt'};
+ if(cat==='Kleidung')return {access:'abends',load:'leicht'};
+ return {access:'normal',load:Number(g?.kg)>=.5?'schwer':'leicht/mittel'};
+}
 function renderGearList(){
  const categories=['Reparatur','Sicherheit','Kleidung','Elektronik','Verpflegung','Sonstiges'];
  $('gearList').innerHTML=categories.map(cat=>{
@@ -2926,7 +3151,7 @@ function renderGearList(){
      return `<div class="gearrow ${active?'active':''}" data-gear="${g.id}">
        <div style="width:100%">
          <div class="gear-row-main">
-           <div><b>${g.name}</b><div class="gear-meta">${g.kg.toFixed(2)} kg · ${g.l.toFixed(1)} l · empfohlen: ${bagName(g.bag)}</div>
+           <div><b>${g.name}</b><div class="gear-meta">${g.kg.toFixed(2)} kg · ${g.l.toFixed(1)} l · empfohlen: ${bagName(g.bag)} · ${gearPackingMeta(g).load} · Zugriff: ${gearPackingMeta(g).access}</div>
              <div class="gear-badges"><span class="gear-badge ${req?'required':'optional'}">${req?'Pflicht':'optional'}</span>${packed?'<span class="gear-badge packed">gepackt</span>':''}</div>
              ${g.custom?`<button class="custom-remove" onclick="removeCustomGear('${g.id}',event)">löschen</button>`:''}
            </div>
@@ -3103,6 +3328,8 @@ function unpack(id){
  }catch(e){}
  restoreRiderProfile();
  restoreBikeProfile();
+ restoreBagProfile();
+ renderBagProfile();
  restoreLodgingPrefs();
  restoreTripPrefs();
  restoreLodgingSelections();
