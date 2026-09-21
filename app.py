@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/1.103-weather-stability (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/1.104-weather-http-fix (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -1936,37 +1936,90 @@ def _weather_level(value, watch, high, reverse=False):
     return "none"
 
 def _weather_point_forecast(lat, lon, target_str, role="route"):
+    """
+    Fetch one forecast point using a fresh HTTP request per worker.
+
+    Do not reuse the global requests.Session here: this function is called
+    concurrently and a shared Session adds avoidable connection-pool state.
+    A smaller second request is used as a fallback if the full variable set
+    is rejected or times out.
+    """
     key=(round(float(lat),3),round(float(lon),3),target_str)
     cached=_cache_get(_weather_cache,key,CACHE_TTL_WEATHER)
     if cached is not None:
         return dict(cached, cached=True, role=role)
 
-    params={
+    base={
         "latitude":float(lat),
         "longitude":float(lon),
-        "daily":",".join([
-            "weather_code",
-            "temperature_2m_max",
-            "temperature_2m_min",
-            "precipitation_probability_max",
-            "precipitation_sum",
-            "wind_speed_10m_max",
-            "wind_gusts_10m_max"
-        ]),
         "timezone":"auto",
         "forecast_days":16
     }
-    r=session.get("https://api.open-meteo.com/v1/forecast",params=params,timeout=12)
-    print(f"[WEATHER-CORE] {lat:.4f},{lon:.4f} date={target_str} role={role} status={r.status_code}",flush=True)
-    r.raise_for_status()
-    daily=(r.json() or {}).get("daily") or {}
+    full_daily=[
+        "weather_code",
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "precipitation_probability_max",
+        "precipitation_sum",
+        "wind_speed_10m_max",
+        "wind_gusts_10m_max"
+    ]
+    minimal_daily=[
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "precipitation_probability_max",
+        "wind_speed_10m_max"
+    ]
+
+    last_error=None
+    payload=None
+    used="full"
+
+    for attempt,daily in enumerate((full_daily,minimal_daily),start=1):
+        params=dict(base)
+        params["daily"]=",".join(daily)
+        try:
+            r=requests.get(
+                "https://api.open-meteo.com/v1/forecast",
+                params=params,
+                headers={"User-Agent":UA,"Accept":"application/json","Connection":"close"},
+                timeout=10
+            )
+            print(
+                f"[WEATHER-POINT] attempt={attempt} {lat:.4f},{lon:.4f} "
+                f"date={target_str} role={role} status={r.status_code}",
+                flush=True
+            )
+            if not r.ok:
+                try:
+                    reason=(r.json() or {}).get("reason") or f"HTTP {r.status_code}"
+                except Exception:
+                    reason=f"HTTP {r.status_code}"
+                last_error=f"Open-Meteo {reason}"
+                continue
+            payload=r.json() or {}
+            used="full" if attempt==1 else "minimal"
+            break
+        except Exception as e:
+            last_error=f"{type(e).__name__}: {e}"
+            print(f"[WEATHER-POINT] attempt={attempt} error={last_error}",flush=True)
+
+    if payload is None:
+        raise requests.RequestException(last_error or "Open-Meteo nicht erreichbar")
+
+    daily=payload.get("daily") or {}
     times=daily.get("time") or []
     if target_str not in times:
-        return {"available":False,"date":target_str,"role":role}
-    i=times.index(target_str)
+        return {
+            "available":False,
+            "date":target_str,
+            "role":role,
+            "reason":"Datum nicht im Wetterdatensatz."
+        }
 
-    def pick(key):
-        vals=daily.get(key) or []
+    i=times.index(target_str)
+    def pick(name):
+        vals=daily.get(name) or []
         return vals[i] if i < len(vals) else None
 
     out={
@@ -1982,10 +2035,12 @@ def _weather_point_forecast(lat, lon, target_str, role="route"):
         "precipitation_mm":pick("precipitation_sum"),
         "wind_kmh":pick("wind_speed_10m_max"),
         "gust_kmh":pick("wind_gusts_10m_max"),
-        "source":"Open-Meteo"
+        "source":"Open-Meteo",
+        "request_profile":used
     }
     _cache_set(_weather_cache,key,out)
     return out
+
 
 def _weather_stage_summary(date_str, samples, horizon_days):
     available=[x for x in samples if x.get("available")]
@@ -2132,7 +2187,7 @@ def weather_stage_batch():
         # Bound the worker count to avoid excessive outbound connections.
         # With <=10 stages x 3 points this caps concurrency at 8.
         if jobs:
-            with ThreadPoolExecutor(max_workers=min(8,len(jobs))) as pool:
+            with ThreadPoolExecutor(max_workers=min(4,len(jobs))) as pool:
                 futs={
                     pool.submit(
                         _weather_point_forecast,
@@ -2149,7 +2204,8 @@ def weather_stage_batch():
                         else:
                             stage_errors[si].append(f"{role}:no-data")
                     except Exception as e:
-                        stage_errors[si].append(f"{role}:{type(e).__name__}")
+                        msg=str(e).replace("\n"," ").strip()
+                        stage_errors[si].append(f"{role}:{type(e).__name__}:{msg[:140]}")
 
         output=[]
         for st in prepared:
@@ -2197,8 +2253,8 @@ def weather_stage_batch():
                 "sampling":"stage-start + high-point + stage-end",
                 "signals":["rain","wind","heat","cold"],
                 "forecast_horizon_days":15,
-                "request_mode":"parallel-single-location",
-                "max_workers":8
+                "request_mode":"parallel-fresh-http",
+                "max_workers":4
             }
         )
     except Exception as e:
