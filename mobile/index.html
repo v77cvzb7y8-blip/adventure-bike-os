@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.5.0.6</title>
+<title>Adventure Bike OS · Mobile 0.6.0</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -368,12 +368,19 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .weather-status.high{background:#f5dfdd;color:#8b3c34}
 .weather-status.open{background:#edf0ee;color:#657069}
 .weather-note{font-size:9px;color:#6d7972;line-height:1.4;margin-top:7px}
+
+.route-core{border:1px solid #dfe6e1;border-radius:14px;padding:10px;margin-bottom:10px;background:#fbfcfb}
+.route-mode-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.route-mode-tabs button{border:1px solid #d7dfda;background:#fff;border-radius:10px;padding:9px 6px;font-size:9px;font-weight:900}.route-mode-tabs button.active{background:#0f5d46;color:#fff;border-color:#0f5d46}
+.route-mode-hint{margin-top:8px;line-height:1.4}.gpx-import-box{margin-top:10px;padding:9px;border:1px dashed #bdcbc3;border-radius:10px;background:#fff}.gpx-import-box input{width:100%;margin-bottom:6px}
+.via-planner{margin-top:12px;border:1px solid #dfe6e1;border-radius:14px;padding:10px;background:#fbfcfb}.via-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.via-head h3{margin:0 0 3px}
+.via-list-row{display:grid;grid-template-columns:24px 1fr 112px 32px;gap:6px;align-items:center;margin-top:8px}.via-order{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#e6efe9;font-size:9px;font-weight:900;color:#285f49}.via-list-row input,.via-list-row select{min-width:0}.via-remove{padding:6px!important;min-width:0!important}.via-note{margin-top:8px;line-height:1.45}
+.route-map-legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:8px;font-weight:800;color:#5f6b64}.route-map-legend span{background:#f1f4f2;border-radius:999px;padding:4px 7px}.route-point-icon{background:transparent;border:0}.route-point-badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#fff;border:3px solid #0f5d46;color:#0f5d46;font-size:9px;font-weight:1000;box-shadow:0 1px 4px rgba(0,0,0,.18)}.route-point-badge.overnight{border-color:#8a5b18;color:#8a5b18;background:#fff8e9}.route-point-badge.destination{border-color:#222;color:#222}.route-source-pill{display:inline-block;margin-top:5px;border-radius:999px;padding:4px 7px;font-size:8px;font-weight:900;background:#edf1ee;color:#56635b}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.5.0.6</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.6.0</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -400,9 +407,21 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
     <section id="screen-plan" class="screen">
       <div class="card">
         <h2>Route planen</h2><p class="sub">Nur die wichtigsten Eingaben. Details können später ergänzt werden.</p>
+        <div class="route-core">
+          <div class="route-mode-tabs">
+            <button id="routeModePoint" type="button" class="active" onclick="setRouteMode('point')">A → B</button>
+            <button id="routeModeLoop" type="button" onclick="setRouteMode('loop')">Rundkurs</button>
+            <button id="routeModeGpx" type="button" onclick="setRouteMode('gpx')">GPX importieren</button>
+          </div>
+          <div id="routeModeHint" class="sub route-mode-hint">Start und Ziel festlegen. Optionale Zwischenziele werden in deiner Reihenfolge angefahren.</div>
+          <div id="gpxImportBox" class="gpx-import-box" style="display:none">
+            <input id="gpxImport" type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" onchange="importGPXFile(this.files?.[0])">
+            <div class="sub">Die Original-Geometrie bleibt erhalten. Adventure Bike OS analysiert darauf Etappen, Terrain, Wetter und Reiseplanung.</div>
+          </div>
+        </div>
         <div class="grid2">
-          <div><label>Start</label><input id="start" value="Innsbruck"/></div>
-          <div><label>Ziel</label><input id="dest" value="München"/></div>
+          <div><label>Start</label><input id="start" value="Innsbruck" oninput="routeStartChanged()"/></div>
+          <div id="destField"><label>Ziel</label><input id="dest" value="München"/></div>
           <div><label>km / Tag</label><input id="kmday" type="number" value="120"/></div>
           <div><label>max. HM / Tag</label><input id="hmday" type="number" value="1800"/></div>
           <div><label>Routing</label><select id="profile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schneller Asphalt</option></select></div>
@@ -411,6 +430,11 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
           <div><label>Preiskategorie</label><select id="priceLevel" onchange="saveLodgingPrefs()"><option value="any">egal</option><option value="budget">sparsam</option><option value="mid" selected>mittel</option><option value="comfort">komfortabel</option></select></div>
           <div><label>max. € / Nacht</label><input id="nightBudget" type="number" min="0" step="10" value="90" onchange="saveLodgingPrefs()"></div>
           <div><label>Unterkunftsbudget gesamt €</label><input id="lodgingBudgetTotal" type="number" min="0" step="25" placeholder="optional" onchange="saveLodgingPrefs()"></div>
+        </div>
+        <div id="viaPlanner" class="via-planner">
+          <div class="via-head"><div><h3>Zwischenziele</h3><div class="sub">Fixe Orte, Sehenswürdigkeiten oder Gebiete in gewünschter Reihenfolge.</div></div><button class="secondary" type="button" onclick="addRouteWaypoint()">+ Zwischenziel</button></div>
+          <div id="viaList"></div>
+          <div class="sub via-note"><b>Via</b> = Route muss dort vorbeiführen. <b>Etappenstopp</b> = Ort wird zusätzlich als feste Tagesgrenze behandelt.</div>
         </div>
         <div class="sub" style="margin-top:8px">Budget dient als Planungsziel. OSM liefert meist keine verlässlichen Live-Preise; konkrete Preise werden deshalb erst nach Prüfung der Unterkunft bewertet.</div>
         <div class="sub" style="margin-top:6px">Wetter wird pro Etappe entlang der Route ausgewertet. Außerhalb des Detail-Prognosefensters zeigt Adventure Bike OS bewusst noch keine scheinpräzisen Wetterwerte.</div>
@@ -445,7 +469,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
         </div>
       </div>
       <div class="card"><h3>Karte</h3><div class="map-shell"><div id="map"></div><div id="mapShield" class="map-gesture-shield" aria-hidden="true"></div></div>
-<div class="map-actions"><button id="mapToggle" class="map-toggle" type="button" onclick="toggleMapInteraction()">Karte aktivieren</button></div><div class="terrain-map-legend"><span><i style="background:#3a7f5f"></i>befestigt</span><span><i style="background:#9a8b63"></i>fein</span><span><i style="background:#c8863b"></i>Gravel</span><span><i style="background:#b64b3b"></i>grob</span><span><i style="background:#9aa39d"></i>offen</span></div></div>
+<div class="map-actions"><button id="mapToggle" class="map-toggle" type="button" onclick="toggleMapInteraction()">Karte aktivieren</button></div><div class="route-map-legend"><span>● Start/Ziel</span><span>① Via</span><span>🌙 Etappenstopp</span></div><div class="terrain-map-legend"><span><i style="background:#3a7f5f"></i>befestigt</span><span><i style="background:#9a8b63"></i>fein</span><span><i style="background:#c8863b"></i>Gravel</span><span><i style="background:#b64b3b"></i>grob</span><span><i style="background:#9aa39d"></i>offen</span></div></div>
       <div class="card"><h3>Höhenprofil</h3><canvas id="elevation" class="elev"></canvas><div class="profile-info"><b id="profileStage">Gesamtroute</b><span id="profileMeta">Etappe antippen → Karte + Profil synchron</span></div></div>
       <div class="card"><h3>Etappen</h3><div id="stageList"></div></div>
     </section>
@@ -548,7 +572,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
-let state={coords:null,metrics:null,stages:[],stageNames:[],selectedStage:null,map:null,layers:[],stageLayers:[],terrainLayers:[],lodgingLayers:[],terrain:{status:'idle',stages:[],source:null,warning:null},lodging:{results:{},status:{},selected:{},stageMode:{},searchInfo:{}},weather:{status:'idle',startDate:'',stages:[],source:null,reason:null,routeKey:null},stageAnchors:[],routeStart:null,routeRerouting:false,selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
+let state={coords:null,metrics:null,stages:[],stageNames:[],stageNameLocks:{},selectedStage:null,map:null,layers:[],stageLayers:[],terrainLayers:[],lodgingLayers:[],routePointLayers:[],routePlan:{type:'point',source:'generated',waypoints:[],orderedPoints:[],importName:''},terrain:{status:'idle',stages:[],source:null,warning:null},lodging:{results:{},status:{},selected:{},stageMode:{},searchInfo:{}},weather:{status:'idle',startDate:'',stages:[],source:null,reason:null,routeKey:null},stageAnchors:[],routeStart:null,routeRerouting:false,selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
 
 
 function escapeHTML(v){
@@ -588,6 +612,38 @@ function safeFileName(v){
    .slice(0,80);
  return s||'adventure-bike-os';
 }
+
+function saveRoutePlanDraft(){try{localStorage.setItem('abo-mobile-route-plan-v1',JSON.stringify({type:state.routePlan?.type||'point',waypoints:state.routePlan?.waypoints||[]}))}catch(e){}}
+function restoreRoutePlanDraft(){try{const p=JSON.parse(localStorage.getItem('abo-mobile-route-plan-v1')||'null');if(!p)return;state.routePlan.type=['point','loop','gpx'].includes(p.type)?p.type:'point';state.routePlan.waypoints=Array.isArray(p.waypoints)?p.waypoints.slice(0,8):[]}catch(e){}}
+function routeStartChanged(){if(state.routePlan?.type==='loop'&&$('dest'))$('dest').value=$('start').value}
+function setRouteMode(mode){
+ if(!['point','loop','gpx'].includes(mode))mode='point';state.routePlan.type=mode;if(mode!=='gpx')state.routePlan.source='generated';
+ if($('destField'))$('destField').style.display=mode==='loop'||mode==='gpx'?'none':'';
+ if($('viaPlanner'))$('viaPlanner').style.display=mode==='gpx'?'none':'';
+ if($('gpxImportBox'))$('gpxImportBox').style.display=mode==='gpx'?'block':'none';
+ ['point','loop','gpx'].forEach(x=>{const e=$('routeMode'+x[0].toUpperCase()+x.slice(1));if(e)e.classList.toggle('active',x===mode)});
+ if($('routeModeHint'))$('routeModeHint').textContent=mode==='loop'?'Start und Rückkehr sind identisch. Füge mindestens ein Zwischenziel hinzu; mehrere Punkte ergeben einen kontrollierten Rundkurs.':mode==='gpx'?'Bestehenden GPX-Track übernehmen. Die Track-Geometrie wird nicht neu geroutet.':'Start und Ziel festlegen. Optionale Zwischenziele werden in deiner Reihenfolge angefahren.';
+ if(mode==='loop')routeStartChanged();saveRoutePlanDraft();renderRouteWaypointList();
+}
+function addRouteWaypoint(){if((state.routePlan.waypoints||[]).length>=8){toast('Maximal 8 Zwischenziele');return}state.routePlan.waypoints=[...(state.routePlan.waypoints||[]),{name:'',kind:'via'}];saveRoutePlanDraft();renderRouteWaypointList()}
+function updateRouteWaypoint(i,key,value){const w=state.routePlan.waypoints?.[i];if(!w)return;w[key]=value;saveRoutePlanDraft()}
+function removeRouteWaypoint(i){state.routePlan.waypoints=(state.routePlan.waypoints||[]).filter((_,j)=>j!==i);saveRoutePlanDraft();renderRouteWaypointList()}
+function renderRouteWaypointList(){
+ const e=$('viaList');if(!e)return;const rows=state.routePlan.waypoints||[];
+ e.innerHTML=rows.length?rows.map((w,i)=>`<div class="via-list-row"><span class="via-order">${i+1}</span><input value="${escapeHTML(w.name||'')}" placeholder="Ort / POI / Gebiet" oninput="updateRouteWaypoint(${i},'name',this.value)"><select onchange="updateRouteWaypoint(${i},'kind',this.value)"><option value="via" ${w.kind!=='overnight'?'selected':''}>Via</option><option value="overnight" ${w.kind==='overnight'?'selected':''}>Etappenstopp</option></select><button class="secondary via-remove" type="button" onclick="removeRouteWaypoint(${i})">×</button></div>`).join(''):'<div class="sub" style="margin-top:8px">Noch keine Zwischenziele. Die direkte Route bleibt unverändert.</div>';
+}
+function routeDisplayTitle(){const s=($('start')?.value||'Start').trim()||'Start',d=($('dest')?.value||'Ziel').trim()||'Ziel';if(state.routePlan?.source==='imported')return state.routePlan.importName||'Importierte GPX-Route';if(state.routePlan?.type==='loop')return `Rundkurs · ${s}`;return `${s} → ${d}`}
+function routeSourceLabel(){if(state.routePlan?.source==='imported')return 'GPX · Originaltrack';if(state.routePlan?.type==='loop')return 'Rundkurs · über fixe Zwischenziele';if((state.routePlan?.waypoints||[]).filter(x=>String(x.name||'').trim()).length)return 'A → B · über Zwischenziele';return 'A → B · direkt'}
+function nearestCoordIndex(coords,point,startAt=0){let best=Math.max(0,startAt),bestD=Infinity;for(let i=Math.max(0,startAt);i<coords.length;i++){const c=coords[i],d=hav(c,[Number(point.lon),Number(point.lat)]);if(d<bestD){bestD=d;best=i}}return best}
+function makeStagesWithFixedStops(coords,m,target,maxhm,fixedEnds=[]){const b=[...new Set((fixedEnds||[]).map(Number).filter(x=>x>0&&x<coords.length))].sort((a,b)=>a-b);if(!b.includes(coords.length-1))b.push(coords.length-1);const out=[];let start=0;b.forEach(end=>{if(end<=start)return;const slice=coords.slice(start,end+1),mm=metrics(slice),local=makeStages(slice,mm,target,maxhm);local.forEach(st=>out.push({s:start+st.s,e:start+st.e,km:st.km,hm:st.hm}));start=end});return out.length?out:makeStages(coords,m,target,maxhm)}
+function buildStageLocks(stages,orderedPoints){const locks={};(orderedPoints||[]).filter(x=>x.kind==='overnight').forEach(p=>{const idx=Number(p.route_index);if(!Number.isFinite(idx))return;let si=stages.findIndex(st=>Math.abs(st.e-idx)<=2);if(si<0){let d=Infinity;stages.forEach((st,i)=>{const x=Math.abs(st.e-idx);if(x<d){d=x;si=i}})}locks[si+1]=p.name||p.label||`Etappenstopp ${si+1}`});return locks}
+function resetTripAnalysisForNewRoute(){state.terrain={status:'idle',stages:[],source:null,warning:null};state.lodging={results:{},status:{},selected:{},stageMode:{},searchInfo:{}};invalidateWeather('Neue Route');['abo-mobile-weather-v6','abo-mobile-lodging-stage-modes','abo-mobile-lodging-selected','abo-mobile-terrain-v3','abo-mobile-terrain-v6'].forEach(k=>localStorage.removeItem(k))}
+function saveCurrentRoute(){localStorage.setItem('abo-mobile-route',JSON.stringify({start:$('start')?.value||'',dest:$('dest')?.value||'',coords:state.coords,metrics:state.metrics,stages:state.stages,stageAnchors:state.stageAnchors,routeStart:state.routeStart,routePlan:state.routePlan,stageNameLocks:state.stageNameLocks}))}
+function parseGPX(text){const doc=new DOMParser().parseFromString(text,'application/xml');if(doc.querySelector('parsererror'))throw new Error('GPX konnte nicht gelesen werden.');const tr=[...doc.querySelectorAll('trkpt')],pts=tr.length?tr:[...doc.querySelectorAll('rtept')];if(pts.length<2)throw new Error('GPX enthält keinen nutzbaren Track.');const coords=pts.map(n=>{const lat=Number(n.getAttribute('lat')),lon=Number(n.getAttribute('lon')),el=n.querySelector('ele'),ele=el?Number(el.textContent):NaN;return Number.isFinite(ele)?[lon,lat,ele]:[lon,lat]}).filter(c=>Number.isFinite(c[0])&&Number.isFinite(c[1]));if(coords.length<2)throw new Error('GPX enthält zu wenige gültige Punkte.');const name=(doc.querySelector('metadata > name')?.textContent||doc.querySelector('trk > name')?.textContent||'').trim();return {coords,name}}
+async function importGPXFile(file){
+ if(!file)return;const load=$('routeLoading');load.classList.add('show');load.textContent='GPX wird analysiert …';
+ try{const parsed=parseGPX(await file.text());let coords=parsed.coords;const elev=await enrichElevation(coords);coords=elev.coords;const m=metrics(coords),st=makeStages(coords,m,+$('kmday').value||120,+$('hmday').value||1800),loop=hav(coords[0],coords[coords.length-1])<2;const startName=await reversePlaceAt(coords[0])||'GPX Start',endName=loop?startName:(await reversePlaceAt(coords[coords.length-1])||'GPX Ziel');$('start').value=startName;$('dest').value=endName;state.coords=coords;state.metrics=m;state.stages=st;state.heightAvailable=elev.ok;state.selectedStage=null;state.routePlan={type:loop?'loop':'gpx',source:'imported',waypoints:[],orderedPoints:[{name:startName,label:startName,lat:coords[0][1],lon:coords[0][0],kind:'start',route_index:0},{name:endName,label:endName,lat:coords[coords.length-1][1],lon:coords[coords.length-1][0],kind:'destination',route_index:coords.length-1}],importName:parsed.name||file.name.replace(/\.gpx$/i,'')};state.stageNameLocks={};initStageAnchors();resetTripAnalysisForNewRoute();state.stageNames=[startName,...Array(Math.max(0,st.length-1)).fill('Etappenziel wird ermittelt …'),endName];saveCurrentRoute();localStorage.setItem('abo-mobile-stage-names',JSON.stringify(state.stageNames));go('stages');requestAnimationFrame(()=>requestAnimationFrame(()=>{renderRoute();renderBikeSetup()}));resolveStageNames();setTimeout(()=>analyzeTerrain(true),250);if(tripStartDate())setTimeout(()=>loadWeather(true),450);toast('GPX übernommen · Originaltrack bleibt erhalten')}catch(e){toast(e.message||'GPX konnte nicht importiert werden')}finally{load.classList.remove('show');load.textContent='Route wird berechnet …'}
+}
 function buildGPX(){
  if(!state.coords||state.coords.length<2)throw new Error('Noch keine Route zum Exportieren vorhanden.');
 
@@ -598,6 +654,12 @@ function buildGPX(){
 
  const first=state.coords[0],last=state.coords[state.coords.length-1];
  wpts.push({lat:first[1],lon:first[0],ele:first[2],name:startName,type:'Start'});
+
+ (state.routePlan?.orderedPoints||[]).slice(1,-1).forEach((p,i)=>{
+   if(Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lon))){
+     wpts.push({lat:Number(p.lat),lon:Number(p.lon),name:p.name||p.label||`Zwischenziel ${i+1}`,type:p.kind==='overnight'?'Fester Etappenstopp':'Via-Punkt'});
+   }
+ });
 
  Object.entries(state.lodging?.selected||{})
    .sort((a,b)=>Number(a[0])-Number(b[0]))
@@ -1028,11 +1090,7 @@ function printElevationImage(){
  }catch(e){}
  return '';
 }
-function currentRouteName(){
- const s=($('start')?.value||'Start').trim();
- const d=($('dest')?.value||'Ziel').trim();
- return `${s} → ${d}`;
-}
+function currentRouteName(){return routeDisplayTitle();}
 function buildPrintReport(){
  const target=$('printReport'); if(!target)return;
  const routeReady=!!(state.coords&&state.metrics&&state.stages?.length);
@@ -1279,69 +1337,17 @@ async function reversePlaceAt(coord){
  return '';
 }
 async function resolveStageNames(){
- if(!state.coords||!state.stages.length)return;
- const names=[], start=$('start').value.trim(),dest=$('dest').value.trim();
- names.push(start);
- for(let i=0;i<state.stages.length-1;i++){
-   const st=state.stages[i], span=Math.max(1,st.e-st.s);
-   const offsets=[0,-.03,.03,-.07,.07,-.12,.12];
-   let found='';
-   for(const off of offsets){
-     const p=Math.max(st.s,Math.min(state.coords.length-1,st.e+Math.round(span*off)));
-     const candidate=await reversePlaceAt(state.coords[p]);
-     if(candidate && candidate!==names[names.length-1] && candidate!==dest){
-       found=candidate;break;
-     }
-   }
-   names.push(found||`Etappenziel ${i+1}`);
- }
- names.push(dest);
- state.stageNames=names;
- localStorage.setItem('abo-mobile-stage-names',JSON.stringify(names));
- renderStages();
- if(state.selectedStage!=null) focusStage(state.selectedStage);
+ if(!state.coords||!state.stages.length)return;const names=[],start=$('start').value.trim(),dest=$('dest').value.trim();names.push(start);
+ for(let i=0;i<state.stages.length-1;i++){const locked=state.stageNameLocks?.[i+1];if(locked){names.push(locked);continue}const st=state.stages[i],span=Math.max(1,st.e-st.s),offsets=[0,-.03,.03,-.07,.07,-.12,.12];let found='';for(const off of offsets){const p=Math.max(st.s,Math.min(state.coords.length-1,st.e+Math.round(span*off))),candidate=await reversePlaceAt(state.coords[p]);if(candidate&&candidate!==names[names.length-1]&&candidate!==dest){found=candidate;break}}names.push(found||`Etappenziel ${i+1}`)}
+ names.push(dest);state.stageNames=names;localStorage.setItem('abo-mobile-stage-names',JSON.stringify(names));saveCurrentRoute();renderStages();if(state.selectedStage!=null)focusStage(state.selectedStage);
 }
-
 async function calculateRoute(){
- saveRiderProfile();
- const load=$('routeLoading');load.classList.add('show');
- try{
-   const r=await fetch(API+'/api/route',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start:$('start').value,destination:$('dest').value,profile:$('profile').value})});
-   const data=await r.json(); if(!r.ok)throw new Error(data.error||'Route nicht verfügbar');
-   let coords =
-     data.coords ||
-     data.coordinates ||
-     data.route?.coords ||
-     data.geometry?.coordinates ||
-     data.route?.geometry?.coordinates ||
-     [];
-   if(!Array.isArray(coords)||!coords.length)throw new Error('Keine Routengeometrie erhalten');
-   const elev=await enrichElevation(coords);
-   coords=elev.coords;
-   const m=metrics(coords),st=makeStages(coords,m,+$('kmday').value||120,+$('hmday').value||1800);
-   state.coords=coords;state.metrics=m;state.stages=st;state.heightAvailable=elev.ok;state.selectedStage=null;
-   initStageAnchors();
-   // A newly calculated route must never inherit Terrain from a previous backend run.
-   state.terrain={status:'idle',stages:[],source:null,warning:null};
-   state.lodging={results:{},status:{},selected:{},stageMode:{},searchInfo:{}};
-   invalidateWeather('Neue Route');
-   localStorage.removeItem('abo-mobile-weather-v6');
-   localStorage.removeItem('abo-mobile-lodging-stage-modes');
-   localStorage.removeItem('abo-mobile-lodging-selected');
-   localStorage.removeItem('abo-mobile-terrain-v3');
-   localStorage.removeItem('abo-mobile-terrain-v6');
-   localStorage.removeItem('abo-mobile-terrain-v3');
-   state.stageNames=[$('start').value.trim(),...Array(Math.max(0,st.length-1)).fill('Etappenziel wird ermittelt …'),$('dest').value.trim()];
-   localStorage.setItem('abo-mobile-route',JSON.stringify({start:$('start').value,dest:$('dest').value,coords,metrics:m,stages:st,stageAnchors:state.stageAnchors,routeStart:state.routeStart}));
-   go('stages');
-   requestAnimationFrame(()=>requestAnimationFrame(()=>{renderRoute();renderBikeSetup();}));
-   resolveStageNames();
-   setTimeout(()=>analyzeTerrain(true),250);
-   if(tripStartDate())setTimeout(()=>loadWeather(true),450);
- }catch(e){toast(e.message)}
- finally{load.classList.remove('show')}
+ saveRiderProfile();const mode=state.routePlan?.type||'point';if(mode==='gpx'){toast('Bitte zuerst eine GPX-Datei auswählen.');return}const load=$('routeLoading');load.classList.add('show');load.textContent='Persönliche Route wird berechnet …';
+ try{const start=$('start').value.trim(),destination=mode==='loop'?start:$('dest').value.trim(),waypoints=(state.routePlan.waypoints||[]).map(x=>({name:String(x.name||'').trim(),kind:x.kind==='overnight'?'overnight':'via'})).filter(x=>x.name);if(mode==='loop'&&!waypoints.length)throw new Error('Rundkurs: Bitte mindestens ein Zwischenziel hinzufügen.');
+ const r=await fetchWithTimeout(API+'/api/route-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start,destination,loop:mode==='loop',waypoints,profile:$('profile').value})},60000),data=await r.json();if(!r.ok)throw new Error(data.error||'Persönliche Route nicht verfügbar');let coords=data.geometry?.coordinates||[];if(!Array.isArray(coords)||coords.length<2)throw new Error('Keine Routengeometrie erhalten');const elev=await enrichElevation(coords);coords=elev.coords;const m=metrics(coords),ordered=Array.isArray(data.ordered_points)?data.ordered_points:[],fixedEnds=ordered.filter(x=>x.kind==='overnight').map(x=>Number(x.route_index)).filter(Number.isFinite),st=makeStagesWithFixedStops(coords,m,+$('kmday').value||120,+$('hmday').value||1800,fixedEnds);
+ state.coords=coords;state.metrics=m;state.stages=st;state.heightAvailable=elev.ok;state.selectedStage=null;state.routePlan={type:mode,source:'generated',waypoints,orderedPoints:ordered,importName:''};state.stageNameLocks=buildStageLocks(st,ordered);if(mode==='loop')$('dest').value=start;initStageAnchors();resetTripAnalysisForNewRoute();state.stageNames=[start,...Array.from({length:Math.max(0,st.length-1)},(_,i)=>state.stageNameLocks[i+1]||'Etappenziel wird ermittelt …'),destination];localStorage.setItem('abo-mobile-stage-names',JSON.stringify(state.stageNames));saveRoutePlanDraft();saveCurrentRoute();go('stages');requestAnimationFrame(()=>requestAnimationFrame(()=>{renderRoute();renderBikeSetup()}));resolveStageNames();setTimeout(()=>analyzeTerrain(true),250);if(tripStartDate())setTimeout(()=>loadWeather(true),450)
+ }catch(e){toast(e.message||'Route konnte nicht berechnet werden')}finally{load.classList.remove('show');load.textContent='Route wird berechnet …'}
 }
-
 function setMapInteraction(active){
  state.mapInteractive=!!active;
  const el=$('map'),btn=$('mapToggle'),shield=$('mapShield');
@@ -1371,8 +1377,9 @@ function toggleMapInteraction(){setMapInteraction(!state.mapInteractive);}
 
 function renderRoute(){
  if(!state.coords)return;
- const s=$('start').value,d=$('dest').value,m=state.metrics,st=state.stages;
- $('routeTitle').textContent=`${s} → ${d}`;$('homeTitle').textContent=`${s} → ${d}`;
+ const m=state.metrics,st=state.stages,title=routeDisplayTitle();
+ $('routeTitle').innerHTML=`${escapeHTML(title)}<br><span class="route-source-pill">${escapeHTML(routeSourceLabel())}</span>`;
+ $('homeTitle').textContent=title;
  $('homeMeta').textContent=`${m.totalDist.toFixed(0)} km · ${Math.round(m.totalGain)} HM · ${st.length} Etappen`;
  $('distStat').textContent=m.totalDist.toFixed(0)+' km';$('hmStat').textContent=state.heightAvailable?Math.round(m.totalGain)+' HM':'–';$('stageStat').textContent=st.length;$('avgStat').textContent=(m.totalDist/st.length).toFixed(0)+' km';
  renderMap();drawElevation();renderStages();
@@ -1399,7 +1406,8 @@ function renderMap(){
  state.stageLayers.forEach(l=>l.remove());
  (state.terrainLayers||[]).forEach(l=>l.remove());
  (state.lodgingLayers||[]).forEach(l=>l.remove());
- state.layers=[]; state.stageLayers=[]; state.terrainLayers=[]; state.lodgingLayers=[];
+ (state.routePointLayers||[]).forEach(l=>l.remove());
+ state.layers=[]; state.stageLayers=[]; state.terrainLayers=[]; state.lodgingLayers=[]; state.routePointLayers=[];
 
  const all=state.coords.map(c=>[c[1],c[0]]);
  const selected=state.selectedStage;
@@ -1440,6 +1448,15 @@ function renderMap(){
      });
    });
  }
+
+ // Persönliche Route: Start, Zwischenziele, feste Etappenstopps und Ziel.
+ (state.routePlan?.orderedPoints||[]).forEach((p,i,arr)=>{
+   if(!Number.isFinite(Number(p.lat))||!Number.isFinite(Number(p.lon)))return;
+   const isStart=i===0,isDest=i===arr.length-1,cls=p.kind==='overnight'?'overnight':(isDest?'destination':''),
+         label=isStart?'S':(isDest?'Z':(p.kind==='overnight'?'🌙':String(i))),
+         icon=L.divIcon({className:'route-point-icon',html:`<div class="route-point-badge ${cls}">${label}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
+   const mr=L.marker([p.lat,p.lon],{icon,interactive:true}).addTo(state.map);mr.bindTooltip(escapeHTML(p.name||p.label||'Zwischenziel'),{direction:'top'});state.routePointLayers.push(mr);
+ });
 
  // Unterkünfte / Camping als Kartenmarker
  if(state.lodging){
@@ -2120,19 +2137,21 @@ function stagesFromLegEnds(coords,m,ends){
  return out;
 }
 function currentViaPoints(){
- if(!state.routeStart||!state.stageAnchors?.length)initStageAnchors();
- const pts=[state.routeStart];
- state.stageAnchors.forEach((anchor,i)=>{
-   const sel=state.lodging?.selected?.[i];
-   pts.push(sel?{lat:sel.lat,lon:sel.lon}:{lat:anchor.lat,lon:anchor.lon});
- });
- return pts;
+ if(!state.routeStart||!state.stageAnchors?.length)initStageAnchors();const candidates=[{lat:state.routeStart.lat,lon:state.routeStart.lon,kind:'start'}];
+ (state.routePlan?.orderedPoints||[]).slice(1,-1).forEach(p=>{if(Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lon)))candidates.push({lat:Number(p.lat),lon:Number(p.lon),kind:'user'})});
+ state.stageAnchors.forEach((anchor,i)=>{const sel=state.lodging?.selected?.[i],p=sel?{lat:sel.lat,lon:sel.lon}:{lat:anchor.lat,lon:anchor.lon};candidates.push({...p,kind:'stage'})});
+ const first=candidates.shift(),interior=candidates.map(p=>({...p,_idx:nearestCoordIndex(state.coords,p,0)})).sort((a,b)=>a._idx-b._idx),out=[{lat:first.lat,lon:first.lon}];
+ interior.forEach(p=>{const prev=out[out.length-1];if(hav([prev.lon,prev.lat],[p.lon,p.lat])>.08)out.push({lat:p.lat,lon:p.lon})});return out;
 }
 function refreshLodgingRouteDistances(){
  Object.values(state.lodging?.results||{}).forEach(rows=>(rows||[]).forEach(x=>x.routeDistance=distancePointToRouteKm(x)));
  Object.values(state.lodging?.selected||{}).forEach(x=>x.routeDistance=distancePointToRouteKm(x));
 }
 async function rerouteThroughLodgings(changedStage=null){
+ if(state.routePlan?.source==='imported'){
+   const sel=changedStage!=null?state.lodging?.selected?.[changedStage]:null;if(sel)sel.routeApplied=false;
+   saveLodgingSelections();renderStagesKeepProfile();renderMap();toast('GPX-Originaltrack bleibt unverändert. Unterkunft wird nur vorgemerkt.');return;
+ }
  if(!state.coords||!state.stages?.length||state.routeRerouting)return;
  const expectedStages=state.stageAnchors?.length||state.stages.length;
  const points=currentViaPoints();
@@ -2151,11 +2170,8 @@ async function rerouteThroughLodgings(changedStage=null){
    const elev=await enrichElevation(coords);
    coords=elev.coords;
    const m=metrics(coords);
-   let ends=Array.isArray(data.leg_end_indices)?data.leg_end_indices.slice(0,expectedStages):[];
-   if(ends.length!==expectedStages){
-     const temp=makeStages(coords,m,m.totalDist/expectedStages,Math.max(500,m.totalGain/expectedStages*1.6));
-     ends=temp.map(x=>x.e);
-   }
+   const targets=state.stageAnchors.map((anchor,i)=>{const sel=state.lodging?.selected?.[i];return sel?{lat:sel.lat,lon:sel.lon}:anchor});
+   let cursor=0;const ends=targets.map((p,i)=>{const idx=nearestCoordIndex(coords,p,cursor);cursor=Math.min(coords.length-1,idx+1);return i===targets.length-1?coords.length-1:idx});
    const stages=stagesFromLegEnds(coords,m,ends);
    state.coords=coords;state.metrics=m;state.stages=stages;state.heightAvailable=elev.ok;
 
@@ -2175,7 +2191,8 @@ async function rerouteThroughLodgings(changedStage=null){
    localStorage.setItem('abo-mobile-stage-names',JSON.stringify(state.stageNames));
    localStorage.setItem('abo-mobile-route',JSON.stringify({
      start:$('start').value,dest:$('dest').value,coords,metrics:m,stages,
-     stageAnchors:state.stageAnchors,routeStart:state.routeStart
+     stageAnchors:state.stageAnchors,routeStart:state.routeStart,
+     routePlan:state.routePlan,stageNameLocks:state.stageNameLocks
    }));
    saveLodgingSelections();
    renderRoute();renderBikeSetup();
@@ -2890,6 +2907,8 @@ function unpack(id){
 }
 
 (function boot(){
+ restoreRoutePlanDraft();
+ setRouteMode(state.routePlan.type||'point');
  try{
    ['abo-mobile-weather-v1','abo-mobile-weather-v2','abo-mobile-weather-v3','abo-mobile-weather-v4']
      .forEach(k=>localStorage.removeItem(k));
@@ -2902,7 +2921,8 @@ function unpack(id){
  restoreStageLodgingModes();
  initGear();
  const saved=localStorage.getItem('abo-mobile-route');
- if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);state.stageAnchors=x.stageAnchors||[];state.routeStart=x.routeStart||null;if(!state.stageAnchors.length||!state.routeStart)initStageAnchors();$('start').value=x.start;$('dest').value=x.dest;$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v6')||'null');const key=`v6|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-profile-v2.1'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'Valhalla',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
+ if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);state.stageAnchors=x.stageAnchors||[];state.routeStart=x.routeStart||null;state.routePlan=x.routePlan||state.routePlan;state.stageNameLocks=x.stageNameLocks||{};if(!state.stageAnchors.length||!state.routeStart)initStageAnchors();$('start').value=x.start;$('dest').value=x.dest;setRouteMode(state.routePlan.type||'point');$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v6')||'null');const key=`v6|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-profile-v2.1'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'Valhalla',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
+ renderRouteWaypointList();
  if(state.coords&&tripStartDate())setTimeout(()=>loadWeather(false),350);
  if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{
