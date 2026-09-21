@@ -1,4 +1,4 @@
-const C='abo-mobile-0-7-1-v1';
+const C='abo-mobile-0-7-2-v1';
 const APP_PREFIX='abo-mobile-';
 
 self.addEventListener('install',event=>{

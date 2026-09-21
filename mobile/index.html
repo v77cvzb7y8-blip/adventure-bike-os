@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.7.1</title>
+<title>Adventure Bike OS · Mobile 0.7.2</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -413,12 +413,15 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .gear-badge.recommended{background:#f5edd7;color:#765d18}
 .gear-badge.context-off{background:#edf0ee;color:#6c756f}
 .gear-reason{font-size:8px;color:#6e7b73;margin-top:4px;line-height:1.35}
+
+.bagcard.bag-unavailable{opacity:.68;border-style:dashed;background:#faf8f6}
+.bagcard.bag-unavailable h4{color:#8b3c34}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.7.1</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.7.2</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -529,8 +532,8 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
             <div><label>Fahrergewicht (kg)</label><input id="riderWeight" type="number" min="35" max="180" step="1" placeholder="optional" onchange="saveBikeProfile();renderBikeSetup()"></div>
             <div><label>Kettenblatt · Zähne</label><input id="chainringTeeth" type="number" min="20" max="60" step="1" value="40" onchange="saveBikeProfile();renderBikeSetup()"></div>
             <div><label>größtes Ritzel · Zähne</label><input id="largestCogTeeth" type="number" min="25" max="60" step="1" value="44" onchange="saveBikeProfile();renderBikeSetup()"></div>
-            <div><label>Gabel-Aufnahmen</label><select id="forkMounts" onchange="saveBikeProfile();renderBikeSetup()"><option value="yes">vorhanden</option><option value="no">keine</option><option value="unknown">nicht sicher</option></select></div>
-            <div><label>Rahmen-Aufnahmen</label><select id="frameMounts" onchange="saveBikeProfile();renderBikeSetup()"><option value="yes">vorhanden</option><option value="no">keine</option><option value="unknown">nicht sicher</option></select></div>
+            <div><label>Gabel-Aufnahmen</label><select id="forkMounts" onchange="saveBikeProfile();refreshBagAvailability()"><option value="yes">vorhanden</option><option value="no">keine</option><option value="unknown">nicht sicher</option></select></div>
+            <div><label>Rahmen-Aufnahmen</label><select id="frameMounts" onchange="saveBikeProfile();refreshBagAvailability()"><option value="yes">vorhanden</option><option value="no">keine</option><option value="unknown">nicht sicher</option></select></div>
           </div>
           <div class="bike-summary">
             <div class="stat"><b id="bikeRouteDays">–</b><span>Tourtage</span></div>
@@ -572,6 +575,10 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
             <rect data-bag="handlebar" class="bag" x="268" y="54" rx="10" width="58" height="55"/><text x="297" y="80" text-anchor="middle" fill="white" font-weight="800">L</text><text data-filltext="handlebar" class="bag-label" x="297" y="96" text-anchor="middle">0%</text>
             <rect data-bag="top" class="bag" x="213" y="82" rx="8" width="58" height="24"/><text x="242" y="94" text-anchor="middle" fill="white" font-size="11" font-weight="800">OT</text><text data-filltext="top" class="bag-label" x="242" y="103" text-anchor="middle">0%</text>
             <rect data-bag="tool" class="bag" x="154" y="114" rx="8" width="32" height="42"/><text x="170" y="134" text-anchor="middle" fill="white" font-size="11" font-weight="800">W</text><text data-filltext="tool" class="bag-label" x="170" y="149" text-anchor="middle">0%</text>
+            <g id="forkCargoVisual" style="display:none">
+              <rect data-bag="forkL" class="bag" x="286" y="112" rx="7" width="26" height="40"/><text x="299" y="130" text-anchor="middle" fill="white" font-size="9" font-weight="800">GL</text><text data-filltext="forkL" class="bag-label" x="299" y="144" text-anchor="middle">0%</text>
+              <rect data-bag="forkR" class="bag" x="320" y="112" rx="7" width="26" height="40"/><text x="333" y="130" text-anchor="middle" fill="white" font-size="9" font-weight="800">GR</text><text data-filltext="forkR" class="bag-label" x="333" y="144" text-anchor="middle">0%</text>
+            </g>
           </svg>
         </div>
         <div id="bikePackFocus" class="pack-focus"><b>Direkt am Bike packen</b>Gegenstand wählen → empfohlene Tasche leuchtet → Tasche antippen.</div>
@@ -2836,7 +2843,11 @@ function totalPackedWeight(){
 }
 function packedZoneWeights(){
  const w=id=>bagWeight(id);
- return {rear:w('saddle'),center:w('frame')+w('tool')+w('top')*.35,front:w('handlebar')+w('top')*.65};
+ return {
+   rear:w('saddle'),
+   center:w('frame')+w('tool')+w('top')*.35,
+   front:w('handlebar')+w('forkL')+w('forkR')+w('top')*.65
+ };
 }
 function missingCriticalGear(){
  const packed=new Set(Object.keys(state.assignments||{}));
@@ -2916,6 +2927,7 @@ function setupRecommendations(){
  const missing=missingCriticalGear();
  const overW=Object.entries(bags).filter(([id,b])=>bagWeight(id)>b.cap);
  const overV=Object.entries(bags).filter(([id,b])=>bagVolume(id)>b.liters);
+ const unavailablePacked=Object.entries(bags).filter(([id])=>!bagAvailable(id)&&(bagWeight(id)>0||bagVolume(id)>0));
 
  if(!state.metrics){
    add('open','Route fehlt','Route laden, damit Bike und Gepäck auf die konkrete Reise bezogen bewertet werden.','Kontext');
@@ -3058,12 +3070,33 @@ let gear=[
  {id:'sealant',name:'Tubeless-Dichtmilch Reserve',category:'Reparatur',bag:'frame',kg:.12,l:0.15,required:'conditional',why:'bei Tubeless auf längerer Reise'}
 ];
 const bags={
- saddle:{name:'Satteltasche',cap:4.5,liters:12,zone:'rear',role:'leicht / komprimierbar'},
- frame:{name:'Rahmentasche',cap:2.5,liters:5,zone:'center',role:'schwer / kompakt'},
- handlebar:{name:'Lenkertasche',cap:2.5,liters:8,zone:'front',role:'leicht / voluminös'},
- top:{name:'Oberrohrtasche',cap:1.0,liters:1.5,zone:'center',role:'schneller Zugriff'},
- tool:{name:'Werkzeugtasche',cap:1.0,liters:1.2,zone:'center',role:'Werkzeug / Ersatzteile'}
+ saddle:{name:'Satteltasche',cap:4.5,liters:12,zone:'rear',role:'leicht / komprimierbar',mount:'base'},
+ frame:{name:'Rahmentasche',cap:2.5,liters:5,zone:'center',role:'schwer / kompakt',mount:'base'},
+ handlebar:{name:'Lenkertasche',cap:2.5,liters:8,zone:'front',role:'leicht / voluminös',mount:'base'},
+ top:{name:'Oberrohrtasche',cap:1.0,liters:1.5,zone:'center',role:'schneller Zugriff',mount:'base'},
+ tool:{name:'Werkzeugtasche',cap:1.0,liters:1.2,zone:'center',role:'Werkzeug / Ersatzteile',mount:'base'},
+ forkL:{name:'Gabeltasche links',cap:1.5,liters:3.0,zone:'front',role:'kompakt / Wasser / Reserve',mount:'fork'},
+ forkR:{name:'Gabeltasche rechts',cap:1.5,liters:3.0,zone:'front',role:'kompakt / Wasser / Reserve',mount:'fork'}
 };
+function bagAvailable(id){
+ const b=bags[id];if(!b)return false;
+ if(b.mount==='fork')return bikeProfile().forkMounts==='yes';
+ return true;
+}
+function availableBagEntries(){
+ return Object.entries(bags).filter(([id])=>bagAvailable(id));
+}
+function visibleBagEntries(){
+ return Object.entries(bags).filter(([id])=>bagAvailable(id)||bagWeight(id)>0||bagVolume(id)>0);
+}
+function refreshBagAvailability(){
+ renderBagProfile();
+ renderBagContents();
+ renderGearList();
+ renderPackHealth();
+ renderBikeSetup();
+ renderPackIntelligence();
+}
 function restoreBagProfile(){
  try{
    const p=JSON.parse(localStorage.getItem('abo-mobile-bag-profile-v1')||'null');
@@ -3086,11 +3119,14 @@ function saveBagProfileValue(id,key,value){
 }
 function renderBagProfile(){
  const el=$('bagProfileGrid');if(!el)return;
- el.innerHTML=Object.entries(bags).map(([id,b])=>`<div class="bag-profile-row">
+ const rows=availableBagEntries();
+ el.innerHTML=rows.map(([id,b])=>`<div class="bag-profile-row">
    <div><b>${escapeHTML(b.name)}</b><small>${escapeHTML(b.role||'')}</small></div>
    <div><label>Liter</label><input type="number" min="0.2" max="40" step="0.1" value="${Number(b.liters).toFixed(1)}" onchange="saveBagProfileValue('${id}','liters',this.value)"></div>
    <div><label>max. kg</label><input type="number" min="0.2" max="20" step="0.1" value="${Number(b.cap).toFixed(1)}" onchange="saveBagProfileValue('${id}','cap',this.value)"></div>
- </div>`).join('');
+ </div>`).join('') + (bikeProfile().forkMounts==='yes'
+   ?'<div class="sub" style="margin-top:6px">Gabel-Aufnahmen aktiv: zwei zusätzliche Cargo-Taschen sind verfügbar und direkt packbar.</div>'
+   :'<div class="sub" style="margin-top:6px">Gabeltaschen werden eingeblendet, sobald „Gabel-Aufnahmen: vorhanden“ gewählt ist.</div>');
 }
 
 
@@ -3246,11 +3282,13 @@ function recommendedGear(){
 }
 function bagCandidateOrder(g){
  const id=g.id,meta=gearPackingMeta(g);
- if(['sleepbag','shelter','drybag'].includes(id))return [g.bag,'saddle','handlebar','frame'];
- if(id==='mat')return ['saddle','handlebar','frame'];
- if(meta.load==='schwer')return [g.bag,'frame','tool','top','saddle','handlebar'];
- if(meta.access==='schnell')return [g.bag,'top','handlebar','frame','saddle'];
- return [g.bag,'saddle','handlebar','frame','top','tool'];
+ if(id==='water')return ['frame','forkL','forkR','top','saddle','handlebar'];
+ if(['tool','tube','pump','sealant','chainlube'].includes(id))return [g.bag,'frame','tool','forkL','forkR','top','saddle'];
+ if(['sleepbag','shelter','drybag'].includes(id))return [g.bag,'saddle','handlebar','forkL','forkR','frame'];
+ if(id==='mat')return ['saddle','handlebar','forkL','forkR','frame'];
+ if(meta.load==='schwer')return [g.bag,'frame','tool','forkL','forkR','top','saddle','handlebar'];
+ if(meta.access==='schnell')return [g.bag,'top','handlebar','frame','forkL','forkR','saddle'];
+ return [g.bag,'saddle','handlebar','frame','forkL','forkR','top','tool'];
 }
 function smartRecommendedAssignments(){
  const chosen={};
@@ -3260,10 +3298,10 @@ function smartRecommendedAssignments(){
    return Number(b.kg)-Number(a.kg);
  });
  const used={};
- Object.keys(bags).forEach(id=>used[id]={kg:0,l:0});
+ availableBagEntries().forEach(([id])=>used[id]={kg:0,l:0});
 
  items.forEach(g=>{
-   const candidates=[...new Set(bagCandidateOrder(g).filter(id=>bags[id]))];
+   const candidates=[...new Set(bagCandidateOrder(g).filter(id=>bags[id]&&bagAvailable(id)))];
    let best=candidates[0]||g.bag,bestScore=Infinity;
    candidates.forEach(id=>{
      const b=bags[id],nextKg=used[id].kg+g.kg,nextL=used[id].l+g.l;
@@ -3297,7 +3335,7 @@ function packRecommendationTotals(){
 }
 function packCapacityPreview(){
  const rec=smartRecommendedAssignments(),used={};
- Object.keys(bags).forEach(id=>used[id]={kg:0,l:0});
+ availableBagEntries().forEach(([id])=>used[id]={kg:0,l:0});
  Object.entries(rec).forEach(([gid,bid])=>{
    const g=gear.find(x=>x.id===gid);if(!g||!used[bid])return;
    used[bid].kg+=g.kg;used[bid].l+=g.l;
@@ -3372,6 +3410,9 @@ function renderPackHealth(){
  if(missing.length){
    title=`${missing.length} Pflichtteil${missing.length>1?'e':''} fehlt`;
    msg=missing.map(g=>g.name).join(' · ');
+ }else if(unavailablePacked.length){
+   title='Aufnahme prüfen';
+   msg=`Gepäck liegt in nicht verfügbarer Tasche: ${unavailablePacked.map(([id])=>bagName(id)).join(' · ')}`;
  }else if(overW.length||overV.length){
    title='Kapazität prüfen';
    const names=[...new Set([...overW.map(([id])=>bagName(id)),...overV.map(([id])=>bagName(id))])];
@@ -3400,7 +3441,7 @@ function renderGearList(){
    return `<div class="gear-section"><h4>${cat}</h4>${items.map(g=>{
      const packed=!!state.assignments[g.id],decision=gearDecision(g),req=decision.status==='required',rec=decision.status==='recommended',off=decision.status==='context-off',active=state.selectedGear===g.id;
      const q=active?`<div class="quick-pack">
-       ${Object.entries(bags).map(([bid,b])=>`<button class="${bid===g.bag?'rec':''}" onclick="quickAssign('${g.id}','${bid}',event)">${b.name}</button>`).join('')}
+       ${availableBagEntries().map(([bid,b])=>`<button class="${bid===g.bag?'rec':''}" onclick="quickAssign('${g.id}','${bid}',event)">${b.name}</button>`).join('')}
      </div>`:'';
      return `<div class="gearrow ${active?'active':''}" data-gear="${g.id}">
        <div style="width:100%">
@@ -3499,6 +3540,10 @@ function bagWeight(id){
  return Object.entries(state.assignments).filter(([,b])=>b===id).reduce((sum,[gid])=>sum+(gear.find(x=>x.id===gid)?.kg||0),0);
 }
 function assignToBag(bag){
+ if(!bagAvailable(bag)){
+   toast('Diese Tasche ist ohne passende Aufnahme nicht verfügbar');
+   return;
+ }
  const gid=state.movingGear||state.selectedGear;
  const g=gear.find(x=>x.id===gid);
  if(!g){toast('Zuerst Gegenstand wählen');return}
@@ -3518,7 +3563,9 @@ function assignToBag(bag){
  renderGearList();
 }
 function renderBikeBagState(){
- Object.entries(bags).forEach(([id,b])=>{
+ const forkOn=bikeProfile().forkMounts==='yes';
+ const forkVisual=$('forkCargoVisual');if(forkVisual)forkVisual.style.display=forkOn?'':'none';
+ visibleBagEntries().forEach(([id,b])=>{
    const pct=Math.round((bagWeight(id)/b.cap)*100);
    const t=document.querySelector(`[data-filltext="${id}"]`);
    if(t){
@@ -3542,7 +3589,7 @@ function renderBikeBagState(){
 }
 
 function renderBagContents(){
- $('bagGrid').innerHTML=Object.entries(bags).map(([id,b])=>{
+ $('bagGrid').innerHTML=visibleBagEntries().map(([id,b])=>{
    const items=Object.entries(state.assignments).filter(([,bag])=>bag===id).map(([gid])=>gear.find(x=>x.id===gid)).filter(Boolean);
    const kg=bagWeight(id),vol=bagVolume(id);
    const pct=Math.round((kg/b.cap)*100),vpct=Math.round((vol/b.liters)*100);
@@ -3551,8 +3598,9 @@ function renderBagContents(){
    const cl=pct>100?'over':pct>80?'warn':'',vcl=vpct>100?'over':vpct>80?'warn':'';
    const rec=gear.find(x=>x.id===state.selectedGear)?.bag===id && !state.movingGear;
    const move=!!state.movingGear;
-   return `<div class="bagcard ${rec?'recommended':''} ${move?'move-target':''}" onclick="assignToBag('${id}')">
-     <h4>${b.name}</h4>
+   const inactive=!bagAvailable(id);
+   return `<div class="bagcard ${rec?'recommended':''} ${move&&!inactive?'move-target':''} ${inactive?'bag-unavailable':''}" onclick="${inactive?'void(0)':`assignToBag('${id}')`}">
+     <h4>${b.name}${inactive?' · Aufnahme fehlt':''}</h4>
      <div class="sub">${kg.toFixed(1)} / ${b.cap.toFixed(1)} kg</div>
      <div class="bagbar dual"><i class="used ${cl}" style="width:${used}%"></i><i class="freepart" style="width:${free}%"></i></div>
      <div class="filllabels"><span class="filled">${pct}% Gewicht</span><span class="free">${Math.max(0,100-pct)}% frei</span></div>
@@ -3560,7 +3608,7 @@ function renderBagContents(){
      <div class="bagbar dual volume"><i class="used ${vcl}" style="width:${vused}%"></i><i class="freepart" style="width:${vfree}%"></i></div>
      <div class="filllabels"><span class="filled">${vpct}% Volumen</span><span class="free">${Math.max(0,100-vpct)}% frei</span></div>
      <div class="bagitems">${items.length?items.map(g=>`<button class="bagitembtn ${state.movingGear===g.id?'active':''}" onclick="event.stopPropagation();startMove('${g.id}')">${g.name} ↔</button>`).join(''):'leer'}</div>
-     ${items.length?'<div class="movehint">Gegenstand antippen → direkt verschieben</div>':''}
+     ${inactive&&items.length?'<div class="movehint" style="color:#8b3c34">Aufnahme ist aktuell deaktiviert – Inhalt bitte umpacken.</div>':items.length?'<div class="movehint">Gegenstand antippen → direkt verschieben</div>':''}
    </div>`;
  }).join('');
  renderBikeBagState();
@@ -3590,6 +3638,7 @@ function unpack(id){
  restoreBikeProfile();
  restoreBagProfile();
  renderBagProfile();
+ renderBikeBagState();
  restoreLodgingPrefs();
  restoreTripPrefs();
  restoreLodgingSelections();
