@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.6.0</title>
+<title>Adventure Bike OS · Mobile 0.6.1</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -375,12 +375,17 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .via-planner{margin-top:12px;border:1px solid #dfe6e1;border-radius:14px;padding:10px;background:#fbfcfb}.via-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.via-head h3{margin:0 0 3px}
 .via-list-row{display:grid;grid-template-columns:24px 1fr 112px 32px;gap:6px;align-items:center;margin-top:8px}.via-order{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#e6efe9;font-size:9px;font-weight:900;color:#285f49}.via-list-row input,.via-list-row select{min-width:0}.via-remove{padding:6px!important;min-width:0!important}.via-note{margin-top:8px;line-height:1.45}
 .route-map-legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:8px;font-weight:800;color:#5f6b64}.route-map-legend span{background:#f1f4f2;border-radius:999px;padding:4px 7px}.route-point-icon{background:transparent;border:0}.route-point-badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#fff;border:3px solid #0f5d46;color:#0f5d46;font-size:9px;font-weight:1000;box-shadow:0 1px 4px rgba(0,0,0,.18)}.route-point-badge.overnight{border-color:#8a5b18;color:#8a5b18;background:#fff8e9}.route-point-badge.destination{border-color:#222;color:#222}.route-source-pill{display:inline-block;margin-top:5px;border-radius:999px;padding:4px 7px;font-size:8px;font-weight:900;background:#edf1ee;color:#56635b}
+
+.trip-date-summary{margin-top:8px;border:1px solid #dfe6e1;border-radius:11px;padding:8px 9px;background:#f7faf8;font-size:9px;line-height:1.45;color:#5d6962}
+.trip-date-summary b{color:#173d30}
+.trip-date-summary.ok{background:#eef7f1;border-color:#cfe3d5;color:#346047}
+.trip-date-summary.warn{background:#fff7e8;border-color:#ead7ab;color:#715a26}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.6.0</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.6.1</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -425,7 +430,8 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
           <div><label>km / Tag</label><input id="kmday" type="number" value="120"/></div>
           <div><label>max. HM / Tag</label><input id="hmday" type="number" value="1800"/></div>
           <div><label>Routing</label><select id="profile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schneller Asphalt</option></select></div>
-          <div><label>Reisestart</label><input id="tripStartDate" type="date" onchange="saveTripPrefs();weatherDateChanged()"></div>
+          <div><label>Reise von</label><input id="tripStartDate" type="date" onchange="saveTripPrefs();tripDateRangeChanged('start')"></div>
+          <div><label>Reise bis</label><input id="tripEndDate" type="date" onchange="saveTripPrefs();tripDateRangeChanged('end')"></div>
           <div><label>Übernachtung</label><select id="lodging" onchange="saveLodgingPrefs()"><option>Hotel / Pension</option><option>Camping / Zelt</option><option>Gemischt</option></select></div>
           <div><label>Preiskategorie</label><select id="priceLevel" onchange="saveLodgingPrefs()"><option value="any">egal</option><option value="budget">sparsam</option><option value="mid" selected>mittel</option><option value="comfort">komfortabel</option></select></div>
           <div><label>max. € / Nacht</label><input id="nightBudget" type="number" min="0" step="10" value="90" onchange="saveLodgingPrefs()"></div>
@@ -438,6 +444,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
         </div>
         <div class="sub" style="margin-top:8px">Budget dient als Planungsziel. OSM liefert meist keine verlässlichen Live-Preise; konkrete Preise werden deshalb erst nach Prüfung der Unterkunft bewertet.</div>
         <div class="sub" style="margin-top:6px">Wetter wird pro Etappe entlang der Route ausgewertet. Außerhalb des Detail-Prognosefensters zeigt Adventure Bike OS bewusst noch keine scheinpräzisen Wetterwerte.</div>
+        <div id="tripDateSummary" class="trip-date-summary">Kein fixes Bis-Datum gewählt. Etappen werden wie bisher aus km/Tag und max. HM/Tag abgeleitet.</div>
 
         <div class="fitnessbox">
           <h3>Fahrerprofil · Beta</h3>
@@ -636,13 +643,136 @@ function routeDisplayTitle(){const s=($('start')?.value||'Start').trim()||'Start
 function routeSourceLabel(){if(state.routePlan?.source==='imported')return 'GPX · Originaltrack';if(state.routePlan?.type==='loop')return 'Rundkurs · über fixe Zwischenziele';if((state.routePlan?.waypoints||[]).filter(x=>String(x.name||'').trim()).length)return 'A → B · über Zwischenziele';return 'A → B · direkt'}
 function nearestCoordIndex(coords,point,startAt=0){let best=Math.max(0,startAt),bestD=Infinity;for(let i=Math.max(0,startAt);i<coords.length;i++){const c=coords[i],d=hav(c,[Number(point.lon),Number(point.lat)]);if(d<bestD){bestD=d;best=i}}return best}
 function makeStagesWithFixedStops(coords,m,target,maxhm,fixedEnds=[]){const b=[...new Set((fixedEnds||[]).map(Number).filter(x=>x>0&&x<coords.length))].sort((a,b)=>a-b);if(!b.includes(coords.length-1))b.push(coords.length-1);const out=[];let start=0;b.forEach(end=>{if(end<=start)return;const slice=coords.slice(start,end+1),mm=metrics(slice),local=makeStages(slice,mm,target,maxhm);local.forEach(st=>out.push({s:start+st.s,e:start+st.e,km:st.km,hm:st.hm}));start=end});return out.length?out:makeStages(coords,m,target,maxhm)}
+
+function routeLoadScore(km,hm,targetKm,maxHm){
+ const dk=Math.max(1,Number(targetKm)||80),dh=Math.max(100,Number(maxHm)||1200);
+ return km/dk + hm/dh;
+}
+function splitSegmentByDays(coords,m,start,end,days,targetKm,maxHm){
+ days=Math.max(1,Math.min(Math.floor(days),Math.max(1,end-start)));
+ if(days===1)return [{s:start,e:end,km:m.dist[end]-m.dist[start],hm:m.gain[end]-m.gain[start]}];
+
+ const baseDist=m.dist[start],baseGain=m.gain[start];
+ const totalKm=m.dist[end]-baseDist,totalHm=m.gain[end]-baseGain;
+ const totalScore=Math.max(.001,routeLoadScore(totalKm,totalHm,targetKm,maxHm));
+ const cuts=[start];
+ let last=start;
+
+ for(let part=1;part<days;part++){
+   const target=totalScore*(part/days);
+   const remaining=days-part;
+   const maxIdx=end-remaining;
+   let best=null;
+   for(let i=last+1;i<=maxIdx;i++){
+     const km=m.dist[i]-baseDist,hm=m.gain[i]-baseGain;
+     const score=routeLoadScore(km,hm,targetKm,maxHm);
+     const delta=Math.abs(score-target);
+     if(!best||delta<best.delta)best={i,delta};
+   }
+   if(!best)break;
+   cuts.push(best.i);last=best.i;
+ }
+ cuts.push(end);
+
+ const out=[];
+ for(let i=1;i<cuts.length;i++){
+   const s=cuts[i-1],e=cuts[i];
+   if(e>s)out.push({s,e,km:m.dist[e]-m.dist[s],hm:m.gain[e]-m.gain[s]});
+ }
+ return out;
+}
+function makeStagesForTripDays(coords,m,days,targetKm,maxHm,fixedEnds=[]){
+ days=Math.max(1,Math.floor(Number(days)||1));
+ const maxPossible=Math.max(1,coords.length-1);
+ days=Math.min(days,maxPossible);
+
+ const boundaries=[...new Set(
+   (fixedEnds||[]).map(Number).filter(x=>Number.isFinite(x)&&x>0&&x<coords.length-1)
+ )].sort((a,b)=>a-b);
+ boundaries.push(coords.length-1);
+
+ const segments=[];let segStart=0;
+ boundaries.forEach(segEnd=>{
+   if(segEnd>segStart){
+     const km=m.dist[segEnd]-m.dist[segStart],hm=m.gain[segEnd]-m.gain[segStart];
+     segments.push({start:segStart,end:segEnd,km,hm,load:routeLoadScore(km,hm,targetKm,maxHm)});
+     segStart=segEnd;
+   }
+ });
+
+ if(days<segments.length){
+   throw new Error(`${segments.length-1} feste Etappenstopps benötigen mindestens ${segments.length} Reisetage.`);
+ }
+
+ const allocation=segments.map(()=>1);
+ let extra=days-segments.length;
+ while(extra>0){
+   let best=0,bestNeed=-Infinity;
+   segments.forEach((seg,i)=>{
+     const need=seg.load/allocation[i];
+     if(need>bestNeed){bestNeed=need;best=i}
+   });
+   allocation[best]++;extra--;
+ }
+
+ const out=[];
+ segments.forEach((seg,i)=>{
+   out.push(...splitSegmentByDays(coords,m,seg.start,seg.end,allocation[i],targetKm,maxHm));
+ });
+ if(out.length!==days)throw new Error(`Etappenaufteilung ergab ${out.length} statt ${days} Reisetagen.`);
+ return out;
+}
+function currentFixedStageEnds(){
+ return (state.routePlan?.orderedPoints||[])
+   .filter(x=>x.kind==='overnight')
+   .map(x=>Number(x.route_index))
+   .filter(Number.isFinite);
+}
+function buildStagesForCurrentPlan(coords,m,fixedEnds=[]){
+ const targetKm=+$('kmday').value||120,maxHm=+$('hmday').value||1800;
+ const days=tripDayCount();
+ return days
+   ?makeStagesForTripDays(coords,m,days,targetKm,maxHm,fixedEnds)
+   :makeStagesWithFixedStops(coords,m,targetKm,maxHm,fixedEnds);
+}
+function replanStagesForDates(){
+ const err=tripDateRangeError();if(err){toast(err);return}
+ try{
+   const oldCount=state.stages?.length||0;
+   const st=buildStagesForCurrentPlan(state.coords,state.metrics,currentFixedStageEnds());
+   state.stages=st;state.selectedStage=null;
+   state.stageNameLocks=buildStageLocks(st,state.routePlan?.orderedPoints||[]);
+   initStageAnchors();
+
+   // Stage-dependent information cannot safely survive a changed day split.
+   resetTripAnalysisForNewRoute();
+
+   const start=$('start').value.trim(),dest=$('dest').value.trim();
+   state.stageNames=[
+     start,
+     ...Array.from({length:Math.max(0,st.length-1)},(_,i)=>state.stageNameLocks[i+1]||'Etappenziel wird ermittelt …'),
+     dest
+   ];
+   localStorage.setItem('abo-mobile-stage-names',JSON.stringify(state.stageNames));
+   saveCurrentRoute();
+   renderRoute();renderBikeSetup();renderTripDateSummary();
+   resolveStageNames();
+   setTimeout(()=>analyzeTerrain(true),250);
+   if(tripStartDate())setTimeout(()=>loadWeather(true),450);
+   toast(oldCount===st.length?`Zeitraum aktualisiert · ${st.length} Etappen`:`Neu auf ${st.length} Reisetage verteilt`);
+ }catch(e){
+   toast(e.message||'Etappen konnten nicht neu verteilt werden');
+ }
+}
 function buildStageLocks(stages,orderedPoints){const locks={};(orderedPoints||[]).filter(x=>x.kind==='overnight').forEach(p=>{const idx=Number(p.route_index);if(!Number.isFinite(idx))return;let si=stages.findIndex(st=>Math.abs(st.e-idx)<=2);if(si<0){let d=Infinity;stages.forEach((st,i)=>{const x=Math.abs(st.e-idx);if(x<d){d=x;si=i}})}locks[si+1]=p.name||p.label||`Etappenstopp ${si+1}`});return locks}
-function resetTripAnalysisForNewRoute(){state.terrain={status:'idle',stages:[],source:null,warning:null};state.lodging={results:{},status:{},selected:{},stageMode:{},searchInfo:{}};invalidateWeather('Neue Route');['abo-mobile-weather-v6','abo-mobile-lodging-stage-modes','abo-mobile-lodging-selected','abo-mobile-terrain-v3','abo-mobile-terrain-v6'].forEach(k=>localStorage.removeItem(k))}
-function saveCurrentRoute(){localStorage.setItem('abo-mobile-route',JSON.stringify({start:$('start')?.value||'',dest:$('dest')?.value||'',coords:state.coords,metrics:state.metrics,stages:state.stages,stageAnchors:state.stageAnchors,routeStart:state.routeStart,routePlan:state.routePlan,stageNameLocks:state.stageNameLocks}))}
+function resetTripAnalysisForNewRoute(){state.terrain={status:'idle',stages:[],source:null,warning:null};state.lodging={results:{},status:{},selected:{},stageMode:{},searchInfo:{}};invalidateWeather('Neue Route');['abo-mobile-weather-v7','abo-mobile-lodging-stage-modes','abo-mobile-lodging-selected','abo-mobile-terrain-v3','abo-mobile-terrain-v6'].forEach(k=>localStorage.removeItem(k))}
+function saveCurrentRoute(){localStorage.setItem('abo-mobile-route',JSON.stringify({start:$('start')?.value||'',dest:$('dest')?.value||'',coords:state.coords,metrics:state.metrics,stages:state.stages,stageAnchors:state.stageAnchors,routeStart:state.routeStart,routePlan:state.routePlan,stageNameLocks:state.stageNameLocks,tripDates:tripPrefs()}))}
 function parseGPX(text){const doc=new DOMParser().parseFromString(text,'application/xml');if(doc.querySelector('parsererror'))throw new Error('GPX konnte nicht gelesen werden.');const tr=[...doc.querySelectorAll('trkpt')],pts=tr.length?tr:[...doc.querySelectorAll('rtept')];if(pts.length<2)throw new Error('GPX enthält keinen nutzbaren Track.');const coords=pts.map(n=>{const lat=Number(n.getAttribute('lat')),lon=Number(n.getAttribute('lon')),el=n.querySelector('ele'),ele=el?Number(el.textContent):NaN;return Number.isFinite(ele)?[lon,lat,ele]:[lon,lat]}).filter(c=>Number.isFinite(c[0])&&Number.isFinite(c[1]));if(coords.length<2)throw new Error('GPX enthält zu wenige gültige Punkte.');const name=(doc.querySelector('metadata > name')?.textContent||doc.querySelector('trk > name')?.textContent||'').trim();return {coords,name}}
 async function importGPXFile(file){
  if(!file)return;const load=$('routeLoading');load.classList.add('show');load.textContent='GPX wird analysiert …';
- try{const parsed=parseGPX(await file.text());let coords=parsed.coords;const elev=await enrichElevation(coords);coords=elev.coords;const m=metrics(coords),st=makeStages(coords,m,+$('kmday').value||120,+$('hmday').value||1800),loop=hav(coords[0],coords[coords.length-1])<2;const startName=await reversePlaceAt(coords[0])||'GPX Start',endName=loop?startName:(await reversePlaceAt(coords[coords.length-1])||'GPX Ziel');$('start').value=startName;$('dest').value=endName;state.coords=coords;state.metrics=m;state.stages=st;state.heightAvailable=elev.ok;state.selectedStage=null;state.routePlan={type:loop?'loop':'gpx',source:'imported',waypoints:[],orderedPoints:[{name:startName,label:startName,lat:coords[0][1],lon:coords[0][0],kind:'start',route_index:0},{name:endName,label:endName,lat:coords[coords.length-1][1],lon:coords[coords.length-1][0],kind:'destination',route_index:coords.length-1}],importName:parsed.name||file.name.replace(/\.gpx$/i,'')};state.stageNameLocks={};initStageAnchors();resetTripAnalysisForNewRoute();state.stageNames=[startName,...Array(Math.max(0,st.length-1)).fill('Etappenziel wird ermittelt …'),endName];saveCurrentRoute();localStorage.setItem('abo-mobile-stage-names',JSON.stringify(state.stageNames));go('stages');requestAnimationFrame(()=>requestAnimationFrame(()=>{renderRoute();renderBikeSetup()}));resolveStageNames();setTimeout(()=>analyzeTerrain(true),250);if(tripStartDate())setTimeout(()=>loadWeather(true),450);toast('GPX übernommen · Originaltrack bleibt erhalten')}catch(e){toast(e.message||'GPX konnte nicht importiert werden')}finally{load.classList.remove('show');load.textContent='Route wird berechnet …'}
+ try{const parsed=parseGPX(await file.text());let coords=parsed.coords;const elev=await enrichElevation(coords);coords=elev.coords;const m=metrics(coords);
+ const rangeErr=tripDateRangeError();if(rangeErr)throw new Error(rangeErr);
+ const days=tripDayCount(),st=days?makeStagesForTripDays(coords,m,days,+$('kmday').value||120,+$('hmday').value||1800,[]):makeStages(coords,m,+$('kmday').value||120,+$('hmday').value||1800),loop=hav(coords[0],coords[coords.length-1])<2;const startName=await reversePlaceAt(coords[0])||'GPX Start',endName=loop?startName:(await reversePlaceAt(coords[coords.length-1])||'GPX Ziel');$('start').value=startName;$('dest').value=endName;state.coords=coords;state.metrics=m;state.stages=st;state.heightAvailable=elev.ok;state.selectedStage=null;state.routePlan={type:loop?'loop':'gpx',source:'imported',waypoints:[],orderedPoints:[{name:startName,label:startName,lat:coords[0][1],lon:coords[0][0],kind:'start',route_index:0},{name:endName,label:endName,lat:coords[coords.length-1][1],lon:coords[coords.length-1][0],kind:'destination',route_index:coords.length-1}],importName:parsed.name||file.name.replace(/\.gpx$/i,'')};state.stageNameLocks={};initStageAnchors();resetTripAnalysisForNewRoute();state.stageNames=[startName,...Array(Math.max(0,st.length-1)).fill('Etappenziel wird ermittelt …'),endName];saveCurrentRoute();localStorage.setItem('abo-mobile-stage-names',JSON.stringify(state.stageNames));go('stages');requestAnimationFrame(()=>requestAnimationFrame(()=>{renderRoute();renderBikeSetup()}));resolveStageNames();setTimeout(()=>analyzeTerrain(true),250);if(tripStartDate())setTimeout(()=>loadWeather(true),450);toast('GPX übernommen · Originaltrack bleibt erhalten')}catch(e){toast(e.message||'GPX konnte nicht importiert werden')}finally{load.classList.remove('show');load.textContent='Route wird berechnet …'}
 }
 function buildGPX(){
  if(!state.coords||state.coords.length<2)throw new Error('Noch keine Route zum Exportieren vorhanden.');
@@ -742,18 +872,74 @@ async function exportGPX(){
 function tripStartDate(){
  return String($('tripStartDate')?.value||'').trim();
 }
+function tripEndDate(){
+ return String($('tripEndDate')?.value||'').trim();
+}
+function parseISODateUTC(iso){
+ const p=String(iso||'').split('-').map(Number);
+ if(p.length!==3||p.some(x=>!Number.isFinite(x)))return null;
+ const d=new Date(Date.UTC(p[0],p[1]-1,p[2]));
+ return Number.isNaN(d.getTime())?null:d;
+}
+function tripDayCount(){
+ const a=parseISODateUTC(tripStartDate()),b=parseISODateUTC(tripEndDate());
+ if(!a||!b)return null;
+ const diff=Math.round((b-a)/86400000);
+ return diff>=0?diff+1:null;
+}
+function tripDateRangeError(){
+ const s=tripStartDate(),e=tripEndDate();
+ if(!s&&!e)return '';
+ if(!s&&e)return 'Bitte zuerst ein Startdatum wählen.';
+ if(s&&!e)return '';
+ return tripDayCount()==null?'Das Bis-Datum muss am oder nach dem Startdatum liegen.':'';
+}
 function tripPrefs(){
- return {startDate:tripStartDate()};
+ return {startDate:tripStartDate(),endDate:tripEndDate()};
 }
 function saveTripPrefs(){
- localStorage.setItem('abo-mobile-trip-prefs-v1',JSON.stringify(tripPrefs()));
+ localStorage.setItem('abo-mobile-trip-prefs-v2',JSON.stringify(tripPrefs()));
 }
 function restoreTripPrefs(){
  try{
-   const p=JSON.parse(localStorage.getItem('abo-mobile-trip-prefs-v1')||'null');
-   if(p?.startDate&&$('tripStartDate'))$('tripStartDate').value=p.startDate;
+   const p=JSON.parse(localStorage.getItem('abo-mobile-trip-prefs-v2')||localStorage.getItem('abo-mobile-trip-prefs-v1')||'null');
+   if(!p)return;
+   if(p.startDate&&$('tripStartDate'))$('tripStartDate').value=p.startDate;
+   if(p.endDate&&$('tripEndDate'))$('tripEndDate').value=p.endDate;
  }catch(e){}
 }
+function renderTripDateSummary(){
+ const el=$('tripDateSummary');if(!el)return;
+ const err=tripDateRangeError(),days=tripDayCount();
+ el.className='trip-date-summary';
+ if(err){
+   el.classList.add('warn');
+   el.innerHTML=`<b>Zeitraum prüfen:</b> ${escapeHTML(err)}`;
+   return;
+ }
+ if(days){
+   el.classList.add('ok');
+   let extra='';
+   if(state.metrics&&state.stages?.length){
+     const avgKm=state.metrics.totalDist/days,avgHm=state.metrics.totalGain/days;
+     extra=` · rechnerisch Ø ${avgKm.toFixed(0)} km / ${Math.round(avgHm)} HM pro Tag`;
+   }
+   el.innerHTML=`<b>${days} Reisetag${days===1?'':'e'}</b> · ${escapeHTML(tripStartDate())} bis ${escapeHTML(tripEndDate())}${extra}. Etappen werden auf diese Tageszahl verteilt; km/Tag und max. HM/Tag steuern die Belastungsverteilung.`;
+ }else{
+   el.innerHTML='Kein fixes Bis-Datum gewählt. Etappen werden wie bisher aus km/Tag und max. HM/Tag abgeleitet.';
+ }
+}
+function tripDateRangeChanged(which){
+ renderTripDateSummary();
+ const err=tripDateRangeError();
+ if(err){toast(err);return}
+ if(state.coords&&state.stages?.length){
+   replanStagesForDates();
+ }else if(which==='start'&&tripStartDate()){
+   weatherDateChanged();
+ }
+}
+
 function addDaysISO(iso,days){
  if(!iso)return '';
  const p=iso.split('-').map(Number);
@@ -767,11 +953,11 @@ function weatherRouteKey(){
    const c=state.coords?.[s.e];
    return c?`${Number(c[0]).toFixed(3)},${Number(c[1]).toFixed(3)}`:'x';
  }).join('|');
- return `w1|${tripStartDate()}|${state.stages.length}|${Number(state.metrics?.totalDist||0).toFixed(1)}|${ends}`;
+ return `w2|${tripStartDate()}|${tripEndDate()}|${state.stages.length}|${Number(state.metrics?.totalDist||0).toFixed(1)}|${ends}`;
 }
 function weatherCacheRead(){
  try{
-   const x=JSON.parse(localStorage.getItem('abo-mobile-weather-v6')||'null');
+   const x=JSON.parse(localStorage.getItem('abo-mobile-weather-v7')||'null');
    if(!x||x.key!==weatherRouteKey()||!x.ts||Date.now()-x.ts>30*60*1000)return null;
    return x.data||null;
  }catch(e){return null}
@@ -779,7 +965,7 @@ function weatherCacheRead(){
 function weatherCacheWrite(data){
  try{
    const key=weatherRouteKey(); if(!key)return;
-   localStorage.setItem('abo-mobile-weather-v6',JSON.stringify({key,ts:Date.now(),data}));
+   localStorage.setItem('abo-mobile-weather-v7',JSON.stringify({key,ts:Date.now(),data}));
  }catch(e){}
 }
 function invalidateWeather(reason='Route geändert'){
@@ -1344,7 +1530,9 @@ async function resolveStageNames(){
 async function calculateRoute(){
  saveRiderProfile();const mode=state.routePlan?.type||'point';if(mode==='gpx'){toast('Bitte zuerst eine GPX-Datei auswählen.');return}const load=$('routeLoading');load.classList.add('show');load.textContent='Persönliche Route wird berechnet …';
  try{const start=$('start').value.trim(),destination=mode==='loop'?start:$('dest').value.trim(),waypoints=(state.routePlan.waypoints||[]).map(x=>({name:String(x.name||'').trim(),kind:x.kind==='overnight'?'overnight':'via'})).filter(x=>x.name);if(mode==='loop'&&!waypoints.length)throw new Error('Rundkurs: Bitte mindestens ein Zwischenziel hinzufügen.');
- const r=await fetchWithTimeout(API+'/api/route-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start,destination,loop:mode==='loop',waypoints,profile:$('profile').value})},60000),data=await r.json();if(!r.ok)throw new Error(data.error||'Persönliche Route nicht verfügbar');let coords=data.geometry?.coordinates||[];if(!Array.isArray(coords)||coords.length<2)throw new Error('Keine Routengeometrie erhalten');const elev=await enrichElevation(coords);coords=elev.coords;const m=metrics(coords),ordered=Array.isArray(data.ordered_points)?data.ordered_points:[],fixedEnds=ordered.filter(x=>x.kind==='overnight').map(x=>Number(x.route_index)).filter(Number.isFinite),st=makeStagesWithFixedStops(coords,m,+$('kmday').value||120,+$('hmday').value||1800,fixedEnds);
+ const r=await fetchWithTimeout(API+'/api/route-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start,destination,loop:mode==='loop',waypoints,profile:$('profile').value})},60000),data=await r.json();if(!r.ok)throw new Error(data.error||'Persönliche Route nicht verfügbar');let coords=data.geometry?.coordinates||[];if(!Array.isArray(coords)||coords.length<2)throw new Error('Keine Routengeometrie erhalten');const elev=await enrichElevation(coords);coords=elev.coords;const m=metrics(coords),ordered=Array.isArray(data.ordered_points)?data.ordered_points:[],fixedEnds=ordered.filter(x=>x.kind==='overnight').map(x=>Number(x.route_index)).filter(Number.isFinite);
+ const rangeErr=tripDateRangeError();if(rangeErr)throw new Error(rangeErr);
+ const st=buildStagesForCurrentPlan(coords,m,fixedEnds);
  state.coords=coords;state.metrics=m;state.stages=st;state.heightAvailable=elev.ok;state.selectedStage=null;state.routePlan={type:mode,source:'generated',waypoints,orderedPoints:ordered,importName:''};state.stageNameLocks=buildStageLocks(st,ordered);if(mode==='loop')$('dest').value=start;initStageAnchors();resetTripAnalysisForNewRoute();state.stageNames=[start,...Array.from({length:Math.max(0,st.length-1)},(_,i)=>state.stageNameLocks[i+1]||'Etappenziel wird ermittelt …'),destination];localStorage.setItem('abo-mobile-stage-names',JSON.stringify(state.stageNames));saveRoutePlanDraft();saveCurrentRoute();go('stages');requestAnimationFrame(()=>requestAnimationFrame(()=>{renderRoute();renderBikeSetup()}));resolveStageNames();setTimeout(()=>analyzeTerrain(true),250);if(tripStartDate())setTimeout(()=>loadWeather(true),450)
  }catch(e){toast(e.message||'Route konnte nicht berechnet werden')}finally{load.classList.remove('show');load.textContent='Route wird berechnet …'}
 }
@@ -1380,7 +1568,7 @@ function renderRoute(){
  const m=state.metrics,st=state.stages,title=routeDisplayTitle();
  $('routeTitle').innerHTML=`${escapeHTML(title)}<br><span class="route-source-pill">${escapeHTML(routeSourceLabel())}</span>`;
  $('homeTitle').textContent=title;
- $('homeMeta').textContent=`${m.totalDist.toFixed(0)} km · ${Math.round(m.totalGain)} HM · ${st.length} Etappen`;
+ $('homeMeta').textContent=`${m.totalDist.toFixed(0)} km · ${Math.round(m.totalGain)} HM · ${st.length} Etappen${tripDayCount()?` · ${tripStartDate()}–${tripEndDate()}`:''}`;
  $('distStat').textContent=m.totalDist.toFixed(0)+' km';$('hmStat').textContent=state.heightAvailable?Math.round(m.totalGain)+' HM':'–';$('stageStat').textContent=st.length;$('avgStat').textContent=(m.totalDist/st.length).toFixed(0)+' km';
  renderMap();drawElevation();renderStages();
 }
@@ -2923,6 +3111,7 @@ function unpack(id){
  const saved=localStorage.getItem('abo-mobile-route');
  if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);state.stageAnchors=x.stageAnchors||[];state.routeStart=x.routeStart||null;state.routePlan=x.routePlan||state.routePlan;state.stageNameLocks=x.stageNameLocks||{};if(!state.stageAnchors.length||!state.routeStart)initStageAnchors();$('start').value=x.start;$('dest').value=x.dest;setRouteMode(state.routePlan.type||'point');$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v6')||'null');const key=`v6|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-profile-v2.1'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'Valhalla',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
  renderRouteWaypointList();
+ renderTripDateSummary();
  if(state.coords&&tripStartDate())setTimeout(()=>loadWeather(false),350);
  if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{
