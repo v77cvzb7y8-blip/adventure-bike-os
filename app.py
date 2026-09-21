@@ -10,7 +10,7 @@ CORS(app, origins=[
     "http://127.0.0.1:*"
 ])
 
-UA = "AdventureBikeOS-MVP/1.102-weather-timezone-fix (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
+UA = "AdventureBikeOS-MVP/1.103-weather-stability (prototype; GitHub: v77cvzb7y8-blip/adventure-bike-os)"
 session = requests.Session()
 session.headers.update({"User-Agent": UA, "Accept": "application/json"})
 
@@ -2055,10 +2055,14 @@ def _weather_stage_summary(date_str, samples, horizon_days):
 @app.post("/api/weather-stage-batch")
 def weather_stage_batch():
     """
-    Stage-aware weather with ONE Open-Meteo multi-location request.
+    Stable stage-aware weather.
 
-    This avoids the previous N-stages x route-samples request fan-out which
-    could exceed the mobile timeout on a cold/slow free backend.
+    Each route sample is requested individually from Open-Meteo, but all
+    requests for the whole trip run concurrently in one bounded thread pool.
+    This avoids the fragile multi-location request path while also avoiding
+    slow sequential stage-by-stage calls.
+
+    A stage remains usable if at least one of its sample points succeeds.
     """
     try:
         body=request.get_json(force=True) or {}
@@ -2067,6 +2071,7 @@ def weather_stage_batch():
             return jsonify(ok=False,available=False,reason="Keine Etappen angegeben.",stages=[]),400
 
         from datetime import date as _date, datetime as _dt
+        from concurrent.futures import ThreadPoolExecutor, as_completed
 
         def parse_date(s):
             try:
@@ -2076,8 +2081,7 @@ def weather_stage_batch():
 
         today=_date.today()
         prepared=[]
-        all_points=[]
-        point_map={}  # rounded coordinate -> global location index
+        jobs=[]
 
         for si,raw in enumerate(raw_stages):
             date_str=str(raw.get("date") or "")
@@ -2085,7 +2089,7 @@ def weather_stage_batch():
             if target is None:
                 prepared.append({
                     "stage_index":si,"date":date_str,"horizon_days":None,
-                    "skip_reason":"Ungültiges Reisedatum.","point_indices":[]
+                    "skip_reason":"Ungültiges Reisedatum.","points":[]
                 })
                 continue
 
@@ -2093,143 +2097,97 @@ def weather_stage_batch():
             if horizon < 0:
                 prepared.append({
                     "stage_index":si,"date":date_str,"horizon_days":horizon,
-                    "skip_reason":"Das Reisedatum liegt in der Vergangenheit.","point_indices":[]
+                    "skip_reason":"Das Reisedatum liegt in der Vergangenheit.","points":[]
                 })
                 continue
             if horizon > 15:
                 prepared.append({
                     "stage_index":si,"date":date_str,"horizon_days":horizon,
-                    "skip_reason":"Detailprognose noch nicht verfügbar.","point_indices":[]
+                    "skip_reason":"Detailprognose noch nicht verfügbar.","points":[]
                 })
                 continue
 
-            indices=[]
+            points=[]
             for p in (raw.get("points") or [])[:3]:
                 try:
                     lat=float(p["lat"]); lon=float(p["lon"])
                     role=str(p.get("role") or "route")
                 except (KeyError,TypeError,ValueError):
                     continue
-                key=(round(lat,4),round(lon,4))
-                if key not in point_map:
-                    point_map[key]=len(all_points)
-                    all_points.append({"lat":lat,"lon":lon})
-                indices.append({"index":point_map[key],"role":role})
+                point={"lat":lat,"lon":lon,"role":role}
+                points.append(point)
+                jobs.append((si,date_str,point))
 
             prepared.append({
                 "stage_index":si,"date":date_str,"horizon_days":horizon,
-                "skip_reason":None if indices else "Keine gültigen Wetterpunkte für diese Etappe.",
-                "point_indices":indices
+                "skip_reason":None if points else "Keine gültigen Wetterpunkte für diese Etappe.",
+                "points":points
             })
 
-        # If every requested stage is outside forecast range, answer immediately.
-        if not all_points:
-            stages=[]
-            for st in prepared:
-                stages.append({
-                    "available":False,
-                    "stage_index":st["stage_index"],
-                    "date":st["date"],
-                    "horizon_days":st["horizon_days"],
-                    "reason":st["skip_reason"] or "Keine Wetterpunkte."
-                })
-            return jsonify(
-                ok=True,available=False,source="Open-Meteo",stages=stages,
-                architecture={
-                    "sampling":"stage-start + high-point + stage-end",
-                    "signals":["rain","wind","heat","cold"],
-                    "forecast_horizon_days":15,
-                    "request_mode":"single-multi-location"
+        # Results by stage index. We keep point-level errors separate so a
+        # single failed route sample does not poison the whole stage.
+        stage_samples={i:[] for i in range(len(prepared))}
+        stage_errors={i:[] for i in range(len(prepared))}
+
+        # Bound the worker count to avoid excessive outbound connections.
+        # With <=10 stages x 3 points this caps concurrency at 8.
+        if jobs:
+            with ThreadPoolExecutor(max_workers=min(8,len(jobs))) as pool:
+                futs={
+                    pool.submit(
+                        _weather_point_forecast,
+                        point["lat"],point["lon"],date_str,point["role"]
+                    ):(si,point["role"])
+                    for si,date_str,point in jobs
                 }
-            )
-
-        # Open-Meteo supports comma-separated coordinates and returns one result
-        # object per coordinate when multiple locations are requested.
-        params={
-            "latitude":",".join(str(p["lat"]) for p in all_points),
-            "longitude":",".join(str(p["lon"]) for p in all_points),
-            "daily":",".join([
-                "weather_code",
-                "temperature_2m_max",
-                "temperature_2m_min",
-                "precipitation_probability_max",
-                "precipitation_sum",
-                "wind_speed_10m_max",
-                "wind_gusts_10m_max"
-            ]),
-            "timezone":",".join(["auto"]*len(all_points)),
-            "forecast_days":16
-        }
-        r=session.get("https://api.open-meteo.com/v1/forecast",params=params,timeout=15)
-        print(f"[WEATHER-BATCH] locations={len(all_points)} status={r.status_code}",flush=True)
-        if not r.ok:
-            try:
-                err=(r.json() or {}).get("reason") or f"Open-Meteo HTTP {r.status_code}"
-            except Exception:
-                err=f"Open-Meteo HTTP {r.status_code}"
-            print(f"[WEATHER-BATCH] upstream-error: {err}",flush=True)
-            return jsonify(
-                ok=False,available=False,
-                reason="Wetterdienst hat die Anfrage abgelehnt.",
-                diagnostic=str(err)[:220],
-                stages=[]
-            ),200
-        raw_weather=r.json()
-
-        # Multiple locations => list; single location => dict.
-        locations=raw_weather if isinstance(raw_weather,list) else [raw_weather]
-        if len(locations) != len(all_points):
-            raise ValueError(f"Open-Meteo locations mismatch {len(locations)}!={len(all_points)}")
-
-        def sample_for(location_index,date_str,role):
-            data=locations[location_index] or {}
-            daily=data.get("daily") or {}
-            times=daily.get("time") or []
-            if date_str not in times:
-                return {"available":False,"date":date_str,"role":role}
-            di=times.index(date_str)
-
-            def pick(key):
-                vals=daily.get(key) or []
-                return vals[di] if di < len(vals) else None
-
-            p=all_points[location_index]
-            return {
-                "available":True,
-                "date":date_str,
-                "role":role,
-                "lat":p["lat"],"lon":p["lon"],
-                "weather_code":pick("weather_code"),
-                "tmax":pick("temperature_2m_max"),
-                "tmin":pick("temperature_2m_min"),
-                "rain_probability":pick("precipitation_probability_max"),
-                "precipitation_mm":pick("precipitation_sum"),
-                "wind_kmh":pick("wind_speed_10m_max"),
-                "gust_kmh":pick("wind_gusts_10m_max"),
-                "source":"Open-Meteo"
-            }
+                for fut in as_completed(futs):
+                    si,role=futs[fut]
+                    try:
+                        sample=fut.result()
+                        if sample.get("available"):
+                            stage_samples[si].append(sample)
+                        else:
+                            stage_errors[si].append(f"{role}:no-data")
+                    except Exception as e:
+                        stage_errors[si].append(f"{role}:{type(e).__name__}")
 
         output=[]
         for st in prepared:
+            si=st["stage_index"]
             if st["skip_reason"]:
                 output.append({
                     "available":False,
-                    "stage_index":st["stage_index"],
+                    "stage_index":si,
                     "date":st["date"],
                     "horizon_days":st["horizon_days"],
                     "reason":st["skip_reason"]
                 })
                 continue
 
-            samples=[
-                sample_for(x["index"],st["date"],x["role"])
-                for x in st["point_indices"]
-            ]
+            samples=stage_samples.get(si) or []
+            errors=stage_errors.get(si) or []
+
+            if not samples:
+                output.append({
+                    "available":False,
+                    "stage_index":si,
+                    "date":st["date"],
+                    "horizon_days":st["horizon_days"],
+                    "reason":"Wetterdienst für diese Etappe derzeit nicht erreichbar.",
+                    "sample_errors":errors[:3]
+                })
+                continue
+
             summary=_weather_stage_summary(st["date"],samples,st["horizon_days"])
-            summary["stage_index"]=st["stage_index"]
+            summary["stage_index"]=si
+            summary["sample_requested"]=len(st["points"])
+            summary["sample_success"]=len(samples)
+            if errors:
+                summary["partial_errors"]=errors[:3]
             output.append(summary)
 
         any_available=any(x.get("available") for x in output)
+
         return jsonify(
             ok=True,
             available=any_available,
@@ -2239,13 +2197,15 @@ def weather_stage_batch():
                 "sampling":"stage-start + high-point + stage-end",
                 "signals":["rain","wind","heat","cold"],
                 "forecast_horizon_days":15,
-                "request_mode":"single-multi-location"
+                "request_mode":"parallel-single-location",
+                "max_workers":8
             }
         )
     except Exception as e:
-        print(f"[WEATHER-BATCH] ERROR: {type(e).__name__}: {e}",flush=True)
+        print(f"[WEATHER-STABILITY] ERROR: {type(e).__name__}: {e}",flush=True)
         return jsonify(
-            ok=False,available=False,
+            ok=False,
+            available=False,
             reason="Wetterdaten derzeit nicht verfügbar.",
             diagnostic=type(e).__name__,
             stages=[]
