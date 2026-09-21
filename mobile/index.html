@@ -3405,7 +3405,7 @@ function renderPackHealth(){
  const missingRec=recommended.filter(g=>!packed.has(g.id));
  const overW=Object.entries(bags).filter(([id,b])=>bagWeight(id)>b.cap);
  const overV=Object.entries(bags).filter(([id,b])=>bagVolume(id)>b.liters);
-
+  const unavailablePacked=Object.entries(bags).filter(([id])=>!bagAvailable(id)&&(bagWeight(id)>0||bagVolume(id)>0));
  let title='Packplan bereit',msg='Pflichtausrüstung vollständig und alle Taschen innerhalb der hinterlegten Grenzen.';
  if(missing.length){
    title=`${missing.length} Pflichtteil${missing.length>1?'e':''} fehlt`;
