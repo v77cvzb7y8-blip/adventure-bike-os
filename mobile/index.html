@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.5.0.5</title>
+<title>Adventure Bike OS · Mobile 0.5.0.6</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -373,7 +373,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.5.0.5</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.5.0.6</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -709,7 +709,7 @@ function weatherRouteKey(){
 }
 function weatherCacheRead(){
  try{
-   const x=JSON.parse(localStorage.getItem('abo-mobile-weather-v5')||'null');
+   const x=JSON.parse(localStorage.getItem('abo-mobile-weather-v6')||'null');
    if(!x||x.key!==weatherRouteKey()||!x.ts||Date.now()-x.ts>30*60*1000)return null;
    return x.data||null;
  }catch(e){return null}
@@ -717,7 +717,7 @@ function weatherCacheRead(){
 function weatherCacheWrite(data){
  try{
    const key=weatherRouteKey(); if(!key)return;
-   localStorage.setItem('abo-mobile-weather-v5',JSON.stringify({key,ts:Date.now(),data}));
+   localStorage.setItem('abo-mobile-weather-v6',JSON.stringify({key,ts:Date.now(),data}));
  }catch(e){}
 }
 function invalidateWeather(reason='Route geändert'){
@@ -791,7 +791,7 @@ function weatherHTML(i){
      <div class="weather-stat"><span>Wind</span><b>${Number.isFinite(Number(w.wind_kmh))?Math.round(w.wind_kmh)+' km/h':'–'}</b></div>
    </div>
    ${active.length?`<div class="weather-signals">${active.map(([k,v])=>`<span class="weather-signal ${v}">${escapeHTML(weatherSignalLabel(k,v))}</span>`).join('')}</div>`:''}
-   <div class="weather-note">${Number.isFinite(Number(w.precipitation_mm))?`Niederschlag bis ${Number(w.precipitation_mm).toFixed(1)} mm · `:''}${Number.isFinite(Number(w.gust_kmh))?`Böen bis ${Math.round(w.gust_kmh)} km/h · `:''}${w.sample_success&&w.sample_requested?`${w.sample_success}/${w.sample_requested} Routenpunkte · `:`${w.sample_count||0} Routenpunkte · `}${escapeHTML(weatherBandText(w.forecast_band,Number(w.horizon_days)||0))}${w.partial_errors?.length?' · Teilweise Datenlücke':''}.</div>
+   <div class="weather-note">${Number.isFinite(Number(w.precipitation_mm))?`Niederschlag bis ${Number(w.precipitation_mm).toFixed(1)} mm · `:''}${Number.isFinite(Number(w.gust_kmh))?`Böen bis ${Math.round(w.gust_kmh)} km/h · `:''}${w.sample_success&&w.sample_requested?`${w.sample_success}/${w.sample_requested} Routenpunkte · `:`${w.sample_count||0} Routenpunkte · `}${escapeHTML(weatherBandText(w.forecast_band,Number(w.horizon_days)||0))}${w.source?` · ${escapeHTML(w.source)}`:''}${w.partial_errors?.length?' · Teilweise Datenlücke':''}.</div>
  </div>`;
 }
 function renderWeatherCheck(){
@@ -839,6 +839,113 @@ function renderWeatherCheck(){
    textEl.textContent=`${available.length}/${state.stages.length} Etappen mit Detailprognose. Weitere Tage werden näher an der Reise verfügbar.`;
  }
 }
+
+function weatherLevelClient(value,watch,high,reverse=false){
+ const v=Number(value);
+ if(!Number.isFinite(v))return 'none';
+ if(reverse){
+   if(v<=high)return 'high';
+   if(v<=watch)return 'watch';
+ }else{
+   if(v>=high)return 'high';
+   if(v>=watch)return 'watch';
+ }
+ return 'none';
+}
+function summarizeWeatherStageClient(date,samples){
+ const available=(samples||[]).filter(x=>x?.available);
+ if(!available.length){
+   return {available:false,date,reason:'Wetterdienst für diese Etappe derzeit nicht erreichbar.'};
+ }
+ const vals=(key)=>available.map(x=>Number(x[key])).filter(Number.isFinite);
+ const min=(a)=>a.length?Math.min(...a):null;
+ const max=(a)=>a.length?Math.max(...a):null;
+ const tmin=min(vals('tmin')),tmax=max(vals('tmax'));
+ const rain=max(vals('rain_probability')),precip=max(vals('precipitation_mm'));
+ const wind=max(vals('wind_kmh')),gust=max(vals('gust_kmh'));
+ const rank={none:0,watch:1,high:2};
+ const rainS=[weatherLevelClient(rain,35,60),weatherLevelClient(precip,1,3)].sort((a,b)=>rank[b]-rank[a])[0];
+ const windS=[weatherLevelClient(wind,30,45),weatherLevelClient(gust,45,65)].sort((a,b)=>rank[b]-rank[a])[0];
+ const heatS=weatherLevelClient(tmax,26,30);
+ const coldS=weatherLevelClient(tmin,8,3,true);
+ const signals={rain:rainS,wind:windS,heat:heatS,cold:coldS};
+ const sev=Math.max(...Object.values(signals).map(x=>rank[x]||0));
+ return {
+   available:true,date,
+   horizon_days:null,forecast_band:'short',
+   tmin,tmax,rain_probability:rain,precipitation_mm:precip,
+   wind_kmh:wind,gust_kmh:gust,
+   signals,overall:sev>=2?'high':sev===1?'watch':'ok',
+   sample_count:available.length,
+   sample_requested:(samples||[]).length,
+   sample_success:available.length,
+   source:'Open-Meteo direct'
+ };
+}
+async function fetchWeatherPointDirect(p,date){
+ const q=new URLSearchParams({
+   latitude:String(p.lat),
+   longitude:String(p.lon),
+   daily:'temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max',
+   timezone:'auto',
+   forecast_days:'16'
+ });
+ const ctrl=new AbortController();
+ const timer=setTimeout(()=>ctrl.abort(),10000);
+ try{
+   const r=await fetch('https://api.open-meteo.com/v1/forecast?'+q.toString(),{
+     method:'GET',
+     cache:'no-store',
+     signal:ctrl.signal
+   });
+   if(!r.ok)throw new Error('Open-Meteo HTTP '+r.status);
+   const data=await r.json();
+   const d=data?.daily||{}, times=d.time||[];
+   if(!times.includes(date)){
+     return {available:false,date,role:p.role,reason:'Datum nicht im Wetterdatensatz.'};
+   }
+   const i=times.indexOf(date), pick=(k)=>Array.isArray(d[k])?d[k][i]:null;
+   return {
+     available:true,date,role:p.role,
+     tmax:pick('temperature_2m_max'),
+     tmin:pick('temperature_2m_min'),
+     rain_probability:pick('precipitation_probability_max'),
+     precipitation_mm:pick('precipitation_sum'),
+     wind_kmh:pick('wind_speed_10m_max'),
+     gust_kmh:pick('wind_gusts_10m_max'),
+     source:'Open-Meteo direct'
+   };
+ }finally{
+   clearTimeout(timer);
+ }
+}
+async function loadWeatherDirect(start){
+ const rows=[];
+ for(let i=0;i<state.stages.length;i++){
+   const date=addDaysISO(start,i);
+   const points=stageWeatherPoints(i);
+   const settled=await Promise.allSettled(points.map(p=>fetchWeatherPointDirect(p,date)));
+   const samples=settled.map(x=>x.status==='fulfilled'?x.value:null).filter(Boolean);
+   const anyServiceFailure=settled.some(x=>x.status==='rejected');
+   let summary=summarizeWeatherStageClient(date,samples);
+   // If Open-Meteo answered but the requested date is outside the returned forecast,
+   // that is not a service failure.
+   const allNoDate=samples.length>0 && samples.every(x=>!x.available && x.reason==='Datum nicht im Wetterdatensatz.');
+   if(!summary.available && allNoDate){
+     summary={available:false,date,reason:'Detailprognose noch nicht verfügbar.'};
+   }else if(!summary.available && anyServiceFailure){
+     summary.reason='Wetterdienst direkt nicht erreichbar.';
+   }
+   summary.stage_index=i;
+   rows.push(summary);
+ }
+ return {
+   ok:true,
+   available:rows.some(x=>x.available),
+   source:'Open-Meteo direct',
+   stages:rows
+ };
+}
 async function loadWeather(force=false){
  const start=tripStartDate();
  if(!start||!state.coords||!state.stages?.length){
@@ -859,28 +966,43 @@ async function loadWeather(force=false){
  renderStagesKeepProfile();renderWeatherCheck();
 
  const payload={stages:state.stages.map((st,i)=>({date:addDaysISO(start,i),points:stageWeatherPoints(i)}))};
+
  try{
-   const r=await fetchWithTimeout(API+'/api/weather-stage-batch',{
-     method:'POST',
-     headers:{'Content-Type':'application/json'},
-     body:JSON.stringify(payload)
-   },32000);
-   const data=await r.json();
-   if(!r.ok||!data.ok){
-     const detail=data?.diagnostic?` (${data.diagnostic})`:'';
-     throw new Error((data.reason||'Wetter nicht verfügbar')+detail);
+   // Primary path: browser -> Open-Meteo directly.
+   let data=await loadWeatherDirect(start);
+
+   // Only if every stage failed because the service could not be reached,
+   // try our backend as a fallback. "Forecast not yet available" is not retried.
+   const rows=Array.isArray(data.stages)?data.stages:[];
+   const directServiceFailure=rows.length>0 && rows.every(x=>
+     !x.available && String(x.reason||'').includes('nicht erreichbar')
+   );
+
+   if(directServiceFailure){
+     const r=await fetchWithTimeout(API+'/api/weather-stage-batch',{
+       method:'POST',
+       headers:{'Content-Type':'application/json'},
+       body:JSON.stringify(payload)
+     },32000);
+     const fallback=await r.json();
+     if(r.ok&&fallback?.ok&&Array.isArray(fallback.stages)&&fallback.stages.length===state.stages.length){
+       data=fallback;
+     }
    }
+
    const stages=Array.isArray(data.stages)?data.stages:[];
    if(stages.length!==state.stages.length)throw new Error('Wetterantwort unvollständig');
-   const next={
-     status:'ready',startDate:start,
-     stages,
+
+   state.weather={
+     status:'ready',startDate:start,stages,
      source:data.source||'Open-Meteo',reason:data.reason||null,routeKey:key
    };
-   state.weather=next;
-   weatherCacheWrite(next);
+   weatherCacheWrite(state.weather);
  }catch(e){
-   state.weather={status:'error',startDate:start,stages:[],source:null,reason:e.message||'Wetter nicht verfügbar',routeKey:key};
+   state.weather={
+     status:'error',startDate:start,stages:[],source:null,
+     reason:e?.message||'Wetterdaten konnten nicht geladen werden.',routeKey:key
+   };
  }
  renderStagesKeepProfile();renderWeatherCheck();
 }
@@ -1203,7 +1325,7 @@ async function calculateRoute(){
    state.terrain={status:'idle',stages:[],source:null,warning:null};
    state.lodging={results:{},status:{},selected:{},stageMode:{},searchInfo:{}};
    invalidateWeather('Neue Route');
-   localStorage.removeItem('abo-mobile-weather-v5');
+   localStorage.removeItem('abo-mobile-weather-v6');
    localStorage.removeItem('abo-mobile-lodging-stage-modes');
    localStorage.removeItem('abo-mobile-lodging-selected');
    localStorage.removeItem('abo-mobile-terrain-v3');
