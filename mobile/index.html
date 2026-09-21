@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.5.0.2</title>
+<title>Adventure Bike OS · Mobile 0.5.0.3</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -373,7 +373,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.5.0.2</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.5.0.3</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -709,7 +709,7 @@ function weatherRouteKey(){
 }
 function weatherCacheRead(){
  try{
-   const x=JSON.parse(localStorage.getItem('abo-mobile-weather-v3')||'null');
+   const x=JSON.parse(localStorage.getItem('abo-mobile-weather-v4')||'null');
    if(!x||x.key!==weatherRouteKey()||!x.ts||Date.now()-x.ts>30*60*1000)return null;
    return x.data||null;
  }catch(e){return null}
@@ -717,7 +717,7 @@ function weatherCacheRead(){
 function weatherCacheWrite(data){
  try{
    const key=weatherRouteKey(); if(!key)return;
-   localStorage.setItem('abo-mobile-weather-v3',JSON.stringify({key,ts:Date.now(),data}));
+   localStorage.setItem('abo-mobile-weather-v4',JSON.stringify({key,ts:Date.now(),data}));
  }catch(e){}
 }
 function invalidateWeather(reason='Route geändert'){
@@ -773,7 +773,10 @@ function weatherHTML(i){
    return `<div class="weather-box"><div class="weather-head"><b>🌦 Wetter · Tag ${i+1}</b><span class="weather-status open">offen</span></div><div class="weather-note">${escapeHTML(date)} · Wetter noch nicht geladen.</div></div>`;
  }
  if(!w.available){
-   return `<div class="weather-box"><div class="weather-head"><b>🌦 Wetter · Tag ${i+1}</b><span class="weather-status open">noch offen</span></div><div class="weather-note">${escapeHTML(date)} · ${escapeHTML(w.reason||'Noch keine Detailprognose verfügbar.')}</div></div>`;
+   const retry=(w.reason||'').includes('derzeit nicht erreichbar')
+     ?` <button type="button" class="secondary" onclick="event.stopPropagation();loadWeather(true)" style="margin-top:6px">erneut laden</button>`
+     :'';
+   return `<div class="weather-box"><div class="weather-head"><b>🌦 Wetter · Tag ${i+1}</b><span class="weather-status open">noch offen</span></div><div class="weather-note">${escapeHTML(date)} · ${escapeHTML(w.reason||'Noch keine Detailprognose verfügbar.')}${retry}</div></div>`;
  }
  const cls=w.overall==='high'?'high':w.overall==='watch'?'watch':'';
  const statusText=w.overall==='high'?'Wetter relevant':w.overall==='watch'?'beobachten':'unauffällig';
@@ -787,7 +790,7 @@ function weatherHTML(i){
      <div class="weather-stat"><span>Wind</span><b>${Number.isFinite(Number(w.wind_kmh))?Math.round(w.wind_kmh)+' km/h':'–'}</b></div>
    </div>
    ${active.length?`<div class="weather-signals">${active.map(([k,v])=>`<span class="weather-signal ${v}">${escapeHTML(weatherSignalLabel(k,v))}</span>`).join('')}</div>`:''}
-   <div class="weather-note">${Number.isFinite(Number(w.precipitation_mm))?`Niederschlag bis ${Number(w.precipitation_mm).toFixed(1)} mm · `:''}${Number.isFinite(Number(w.gust_kmh))?`Böen bis ${Math.round(w.gust_kmh)} km/h · `:''}${w.sample_count||0} Routenpunkte · ${escapeHTML(weatherBandText(w.forecast_band,Number(w.horizon_days)||0))}.</div>
+   <div class="weather-note">${Number.isFinite(Number(w.precipitation_mm))?`Niederschlag bis ${Number(w.precipitation_mm).toFixed(1)} mm · `:''}${Number.isFinite(Number(w.gust_kmh))?`Böen bis ${Math.round(w.gust_kmh)} km/h · `:''}${w.sample_success&&w.sample_requested?`${w.sample_success}/${w.sample_requested} Routenpunkte · `:`${w.sample_count||0} Routenpunkte · `}${escapeHTML(weatherBandText(w.forecast_band,Number(w.horizon_days)||0))}${w.partial_errors?.length?' · Teilweise Datenlücke':''}.</div>
  </div>`;
 }
 function renderWeatherCheck(){
@@ -1199,7 +1202,7 @@ async function calculateRoute(){
    state.terrain={status:'idle',stages:[],source:null,warning:null};
    state.lodging={results:{},status:{},selected:{},stageMode:{},searchInfo:{}};
    invalidateWeather('Neue Route');
-   localStorage.removeItem('abo-mobile-weather-v3');
+   localStorage.removeItem('abo-mobile-weather-v4');
    localStorage.removeItem('abo-mobile-lodging-stage-modes');
    localStorage.removeItem('abo-mobile-lodging-selected');
    localStorage.removeItem('abo-mobile-terrain-v3');
