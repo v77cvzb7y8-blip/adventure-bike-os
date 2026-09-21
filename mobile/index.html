@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.7.0</title>
+<title>Adventure Bike OS · Mobile 0.7.1</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -395,12 +395,30 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .bag-profile-row label{font-size:7px}
 .bag-profile-row input{width:100%;box-sizing:border-box}
 .setup-item .setup-tag{display:inline-block;margin-top:4px;font-size:7px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;color:#68736d}
+
+.pack-intelligence{margin-top:12px;border:1px solid #cfded5;border-radius:14px;padding:11px;background:#f7faf8}
+.pack-intel-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.pack-intel-head b{display:block;font-size:12px;color:#173d30}
+.pack-intel-head span{display:block;font-size:8px;color:#6b7770;margin-top:2px}
+.pack-intel-context{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.pack-intel-context span{font-size:8px;font-weight:900;border-radius:999px;padding:4px 7px;background:#edf1ee;color:#56635b}
+.pack-intel-context span.warn{background:#f5edd7;color:#765d18}.pack-intel-context span.high{background:#f5dfdd;color:#8b3c34}.pack-intel-context span.ok{background:#e7f1e9;color:#356846}
+.pack-intel-summary{margin-top:9px;display:grid;gap:6px}
+.pack-intel-item{border-top:1px solid #e1e8e3;padding-top:6px;font-size:9px;line-height:1.4;color:#56635b}
+.pack-intel-item:first-child{border-top:0;padding-top:0}
+.pack-intel-item b{display:block;color:#223c32;font-size:9px;margin-bottom:1px}
+.pack-intel-item.required b{color:#8b3c34}.pack-intel-item.recommended b{color:#765d18}.pack-intel-item.remove b{color:#56635b}
+.pack-intel-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.pack-intel-actions button{font-size:8px}
+.gear-badge.recommended{background:#f5edd7;color:#765d18}
+.gear-badge.context-off{background:#edf0ee;color:#6c756f}
+.gear-reason{font-size:8px;color:#6e7b73;margin-top:4px;line-height:1.35}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.7.0</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.7.1</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -529,8 +547,17 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
           <div class="sub" style="margin-top:6px">Die Werte dienen als deine persönlichen Planungsgrenzen. Herstellergrenzen haben Vorrang.</div>
           <div id="bagProfileGrid" class="bag-profile-grid"></div>
         </details>
+        <div class="pack-intelligence">
+          <div class="pack-intel-head">
+            <div><b>Pack Intelligence</b><span>Route + Wetter + Übernachtung + Bike</span></div>
+            <button class="secondary" type="button" onclick="renderPackIntelligence()">neu bewerten</button>
+          </div>
+          <div id="packIntelContext" class="pack-intel-context"></div>
+          <div id="packIntelSummary" class="pack-intel-summary"></div>
+          <div id="packIntelActions" class="pack-intel-actions"></div>
+        </div>
         <div class="pack-mode-row">
-          <button class="primary" type="button" onclick="applyRecommendedSetup()">Empfohlenes Setup übernehmen</button>
+          <button class="primary" type="button" onclick="applyRecommendedSetup()">Intelligenten Vorschlag übernehmen</button>
           <button class="secondary" type="button" onclick="startEmptySetup()">Leer starten</button>
         </div>
         <div class="pack-mode-note" id="packModeNote">Beim ersten Öffnen wird ein sinnvoller Vorschlag angezeigt, aber erst nach „übernehmen“ gespeichert.</div>
@@ -3005,6 +3032,7 @@ function renderBikeSetup(){
    box.innerHTML=`<div class="weight-zone"><span>Hinten</span><b>${s.zones.rear.toFixed(1)} kg</b></div><div class="weight-zone"><span>Mitte</span><b>${s.zones.center.toFixed(1)} kg</b></div><div class="weight-zone"><span>Vorne</span><b>${s.zones.front.toFixed(1)} kg</b></div>`;
    $('bikeSetupCheck').insertAdjacentElement('afterend',box);
  }
+ renderPackIntelligence();
 }
 
 let gear=[
@@ -3019,6 +3047,15 @@ let gear=[
  {id:'light',name:'Licht / Backup-Licht',category:'Elektronik',bag:'top',kg:.18,l:0.3,required:'multi',why:'leicht erreichbar'},
  {id:'snack',name:'Snacks',category:'Verpflegung',bag:'top',kg:.60,l:1.0,required:'always',why:'während der Fahrt erreichbar'},
  {id:'water',name:'Zusatzwasser',category:'Verpflegung',bag:'frame',kg:1.00,l:1.0,required:'optional',why:'schwer – möglichst zentral'}
+,
+ {id:'sleepbag',name:'Schlafsack / Quilt',category:'Camping',bag:'handlebar',kg:.75,l:5.5,required:'conditional',why:'leicht und voluminös – trocken verstauen'},
+ {id:'mat',name:'Isomatte',category:'Camping',bag:'saddle',kg:.45,l:3.0,required:'conditional',why:'leicht und komprimierbar'},
+ {id:'shelter',name:'Zelt / Shelter',category:'Camping',bag:'handlebar',kg:1.10,l:4.5,required:'conditional',why:'leicht bis mittel, voluminös'},
+ {id:'rainpants',name:'Regenhose',category:'Kleidung',bag:'saddle',kg:.22,l:1.2,required:'conditional',why:'wetterabhängige Reserve'},
+ {id:'drybag',name:'Drybag / wasserdichte Innenhülle',category:'Sonstiges',bag:'handlebar',kg:.16,l:0.5,required:'conditional',why:'Schutz für trockene Wechsel- und Schlafsachen'},
+ {id:'chainlube',name:'Kettenöl / Mini-Pflege',category:'Reparatur',bag:'tool',kg:.08,l:0.15,required:'conditional',why:'bei Nässe oder längerer Reise sinnvoll'},
+ {id:'warmgloves',name:'Warme Handschuhe / Wärmereserve',category:'Kleidung',bag:'saddle',kg:.12,l:0.8,required:'conditional',why:'bei Kältesignal als Reserve'},
+ {id:'sealant',name:'Tubeless-Dichtmilch Reserve',category:'Reparatur',bag:'frame',kg:.12,l:0.15,required:'conditional',why:'bei Tubeless auf längerer Reise'}
 ];
 const bags={
  saddle:{name:'Satteltasche',cap:4.5,liters:12,zone:'rear',role:'leicht / komprimierbar'},
@@ -3098,34 +3135,250 @@ function quickAssign(gid,bag,ev){
  state.selectedGear=gid;state.movingGear=null;
  assignToBag(bag);
 }
-function isRequiredGear(g){
+function packContext(){
  const days=(state.stages||[]).length||1;
- return g.required==='always' || (g.required==='multi' && days>=2);
+ const weather=weatherSetupSummary();
+ const camp=knownCampingNights();
+ const terrain=routeTerrainSummary();
+ const bike=bikeProfile();
+ const routeKm=Number(state.metrics?.totalDist)||0;
+ const hm=Number(state.metrics?.totalGain)||0;
+ return {days,weather,camp,terrain,bike,routeKm,hm};
+}
+function gearDecision(g,ctx=packContext()){
+ const d={status:'optional',reason:'persönliche Reserve / Komfort'};
+ const id=g.id;
+
+ // Core safety / repair items stay conservative and predictable.
+ if(['tool','tube','pump','firstaid','snack'].includes(id)){
+   return {status:'required',reason:'Grundausrüstung für Panne, Sicherheit oder Energie'};
+ }
+ if(id==='light'){
+   return ctx.days>=2
+     ?{status:'required',reason:'Mehrtagestour: Licht / Backup-Licht als Basis'}
+     :{status:'recommended',reason:'Sichtbarkeit und Reserve für späte Rückkehr'};
+ }
+ if(id==='shirt'){
+   return ctx.days>=2
+     ?{status:'recommended',reason:`${ctx.days} Reisetage: trockene Wechsel-/Abendschicht sinnvoll`}
+     :d;
+ }
+ if(id==='power'){
+   return ctx.days>=2
+     ?{status:'recommended',reason:`${ctx.days} Reisetage: Energieversorgung für Navigation / Telefon`}
+     :d;
+ }
+ if(id==='rain'){
+   if(ctx.weather.rain==='high')return {status:'required',reason:'hohes Regensignal auf mindestens einer Etappe'};
+   if(ctx.weather.rain==='watch')return {status:'recommended',reason:'Regenrisiko auf der Reise'};
+   return ctx.days>=2
+     ?{status:'recommended',reason:'Mehrtagestour: Wetterschutz als Reserve'}
+     :d;
+ }
+ if(id==='rainpants'){
+   if(ctx.weather.rain==='high')return {status:'recommended',reason:'hohes Regensignal: zusätzlicher Unterkörperschutz prüfen'};
+   return d;
+ }
+ if(id==='drybag'){
+   if(ctx.weather.rain==='high' && (ctx.camp.known>0||ctx.camp.unknown>0))
+     return {status:'recommended',reason:'Regen + mögliche Campingnacht: trockene Schlaf-/Wechselsachen schützen'};
+   if(ctx.weather.rain==='watch'&&ctx.camp.known>0)
+     return {status:'recommended',reason:'Camping + Regenrisiko'};
+   return d;
+ }
+ if(id==='jacket'){
+   if(ctx.weather.cold==='high')return {status:'required',reason:'deutliches Kältesignal auf der Route'};
+   if(ctx.weather.cold==='watch')return {status:'recommended',reason:'kühler Reisetag / Hochpunkt'};
+   return ctx.days>=3
+     ?{status:'recommended',reason:'Mehrtagestour: Wärmereserve sinnvoll'}
+     :d;
+ }
+ if(id==='warmgloves'){
+   return ctx.weather.cold==='high'
+     ?{status:'recommended',reason:'Kältesignal: Hände als exponierte Reserve absichern'}
+     :d;
+ }
+
+ // Camping: only hard-require if the user explicitly chose/selected camping.
+ if(['sleepbag','mat','shelter'].includes(id)){
+   if(ctx.camp.known>0){
+     return {status:'required',reason:`${ctx.camp.known} bestätigte/geplante Campingnacht${ctx.camp.known===1?'':'en'}`};
+   }
+   if(ctx.camp.unknown>0){
+     return {status:'recommended',reason:'Übernachtungsform noch gemischt/offen – Campingausrüstung vorsorglich prüfen'};
+   }
+   return {status:'context-off',reason:'aktuell keine Campingnacht geplant'};
+ }
+
+ if(id==='sealant'){
+   if(ctx.bike.tubeless==='yes' && ctx.days>=2)
+     return {status:'recommended',reason:'Tubeless + Mehrtagestour: kleine Dichtmilchreserve'};
+   return ctx.bike.tubeless==='no'
+     ?{status:'context-off',reason:'Schlauchsystem – Dichtmilchreserve nicht passend'}
+     :d;
+ }
+ if(id==='chainlube'){
+   if(ctx.weather.rain==='high'||ctx.weather.rain==='watch')
+     return {status:'recommended',reason:'Nässe kann Kettenpflege unterwegs erforderlich machen'};
+   if(ctx.days>=4||ctx.routeKm>=350)
+     return {status:'recommended',reason:'längere Reise: Mini-Pflege als Reserve'};
+   return d;
+ }
+ if(id==='water'){
+   if(ctx.weather.heat==='high')return {status:'recommended',reason:'Hitzerisiko: zusätzliche Wasserkapazität prüfen'};
+   if(ctx.weather.heat==='watch')return {status:'recommended',reason:'warme Etappe: Wasserreserve prüfen'};
+   return {status:'optional',reason:'Versorgungsabstände sind noch nicht zuverlässig gekoppelt'};
+ }
+
+ // Legacy rule fallback for custom / future items.
+ if(g.required==='always')return {status:'required',reason:'als Basisausrüstung markiert'};
+ if(g.required==='multi'&&ctx.days>=2)return {status:'recommended',reason:'für Mehrtagestouren markiert'};
+ return d;
+}
+function isRequiredGear(g){
+ return gearDecision(g).status==='required';
+}
+function isRecommendedGear(g){
+ return gearDecision(g).status==='recommended';
+}
+function recommendedGear(){
+ return gear.filter(g=>['required','recommended'].includes(gearDecision(g).status));
+}
+function bagCandidateOrder(g){
+ const id=g.id,meta=gearPackingMeta(g);
+ if(['sleepbag','shelter','drybag'].includes(id))return [g.bag,'saddle','handlebar','frame'];
+ if(id==='mat')return ['saddle','handlebar','frame'];
+ if(meta.load==='schwer')return [g.bag,'frame','tool','top','saddle','handlebar'];
+ if(meta.access==='schnell')return [g.bag,'top','handlebar','frame','saddle'];
+ return [g.bag,'saddle','handlebar','frame','top','tool'];
+}
+function smartRecommendedAssignments(){
+ const chosen={};
+ const items=recommendedGear().slice().sort((a,b)=>{
+   const sa=gearDecision(a).status==='required'?0:1,sb=gearDecision(b).status==='required'?0:1;
+   if(sa!==sb)return sa-sb;
+   return Number(b.kg)-Number(a.kg);
+ });
+ const used={};
+ Object.keys(bags).forEach(id=>used[id]={kg:0,l:0});
+
+ items.forEach(g=>{
+   const candidates=[...new Set(bagCandidateOrder(g).filter(id=>bags[id]))];
+   let best=candidates[0]||g.bag,bestScore=Infinity;
+   candidates.forEach(id=>{
+     const b=bags[id],nextKg=used[id].kg+g.kg,nextL=used[id].l+g.l;
+     const overKg=Math.max(0,nextKg-b.cap)/Math.max(.1,b.cap);
+     const overL=Math.max(0,nextL-b.liters)/Math.max(.1,b.liters);
+     const fill=(nextKg/b.cap+nextL/b.liters)*.15;
+     const preferred=id===g.bag?-.12:0;
+     const score=overKg*4+overL*4+fill+preferred;
+     if(score<bestScore){bestScore=score;best=id}
+   });
+   chosen[g.id]=best;
+   used[best].kg+=g.kg;used[best].l+=g.l;
+ });
+ return chosen;
 }
 function recommendedAssignments(){
- const out={};
- gear.forEach(g=>{if(isRequiredGear(g)||g.required==='optional')out[g.id]=g.bag;});
- return out;
+ return smartRecommendedAssignments();
 }
 function bagVolume(id){
  return Object.entries(state.assignments).filter(([,b])=>b===id).reduce((sum,[gid])=>sum+(gear.find(x=>x.id===gid)?.l||0),0);
 }
-function renderPackHealth(){
- const el=$('packHealth'); if(!el)return;
- const required=gear.filter(isRequiredGear);
+function packRecommendationTotals(){
+ const items=recommendedGear();
+ return {
+   count:items.length,
+   required:items.filter(g=>gearDecision(g).status==='required').length,
+   recommended:items.filter(g=>gearDecision(g).status==='recommended').length,
+   kg:items.reduce((s,g)=>s+Number(g.kg||0),0),
+   liters:items.reduce((s,g)=>s+Number(g.l||0),0)
+ };
+}
+function packCapacityPreview(){
+ const rec=smartRecommendedAssignments(),used={};
+ Object.keys(bags).forEach(id=>used[id]={kg:0,l:0});
+ Object.entries(rec).forEach(([gid,bid])=>{
+   const g=gear.find(x=>x.id===gid);if(!g||!used[bid])return;
+   used[bid].kg+=g.kg;used[bid].l+=g.l;
+ });
+ const over=Object.entries(used).filter(([id,v])=>v.kg>bags[id].cap||v.l>bags[id].liters);
+ return {used,over};
+}
+function renderPackIntelligence(){
+ const context=$('packIntelContext'),summary=$('packIntelSummary'),actions=$('packIntelActions');
+ if(!context||!summary||!actions)return;
+ const ctx=packContext(),tot=packRecommendationTotals(),preview=packCapacityPreview();
+ const chips=[];
+ chips.push(`<span class="ok">${ctx.days} Tag${ctx.days===1?'':'e'}</span>`);
+ if(ctx.weather.available){
+   const rain=ctx.weather.rain==='high'?'high':ctx.weather.rain==='watch'?'warn':'ok';
+   chips.push(`<span class="${rain}">Regen ${escapeHTML(ctx.weather.rain)}</span>`);
+   const cold=ctx.weather.cold==='high'?'high':ctx.weather.cold==='watch'?'warn':'ok';
+   chips.push(`<span class="${cold}">Kälte ${escapeHTML(ctx.weather.cold)}</span>`);
+   const heat=ctx.weather.heat==='high'?'high':ctx.weather.heat==='watch'?'warn':'ok';
+   chips.push(`<span class="${heat}">Hitze ${escapeHTML(ctx.weather.heat)}</span>`);
+ }else chips.push('<span>Wetter offen</span>');
+ if(ctx.camp.known)chips.push(`<span class="warn">${ctx.camp.known}× Camping</span>`);
+ else if(ctx.camp.unknown)chips.push(`<span>${ctx.camp.unknown}× Übernachtung offen</span>`);
+ else chips.push('<span>ohne Camping</span>');
+ if(ctx.terrain.reliable)chips.push(`<span class="ok">Terrain ${Math.round(ctx.terrain.confidence)}%</span>`);
+ else chips.push(`<span>Terrain ${Math.round(ctx.terrain.confidence)}%</span>`);
+ context.innerHTML=chips.join('');
+
  const packed=new Set(Object.keys(state.assignments||{}));
+ const missingReq=gear.filter(g=>gearDecision(g).status==='required'&&!packed.has(g.id));
+ const missingRec=gear.filter(g=>gearDecision(g).status==='recommended'&&!packed.has(g.id));
+ const contextOffPacked=gear.filter(g=>gearDecision(g).status==='context-off'&&packed.has(g.id));
+ const rows=[];
+ rows.push(`<div class="pack-intel-item"><b>Vorschlag: ${tot.count} Teile · ${tot.kg.toFixed(1)} kg · ca. ${tot.liters.toFixed(1)} L</b>${tot.required} Pflicht · ${tot.recommended} situationsabhängig empfohlen. Gewichte/Volumen sind Planwerte der hinterlegten Ausrüstung.</div>`);
+ if(missingReq.length)rows.push(`<div class="pack-intel-item required"><b>${missingReq.length} Pflichtteil${missingReq.length>1?'e':''} fehlt</b>${missingReq.map(g=>escapeHTML(g.name)).join(' · ')}</div>`);
+ else rows.push('<div class="pack-intel-item"><b>Pflichtteile im aktuellen Packplan vorhanden</b>Basis für die aktuelle Reise ist abgedeckt.</div>');
+ if(missingRec.length)rows.push(`<div class="pack-intel-item recommended"><b>${missingRec.length} Empfehlung${missingRec.length>1?'en':''} noch nicht gepackt</b>${missingRec.slice(0,6).map(g=>escapeHTML(g.name)).join(' · ')}${missingRec.length>6?' …':''}</div>`);
+ if(contextOffPacked.length)rows.push(`<div class="pack-intel-item remove"><b>${contextOffPacked.length} Teil${contextOffPacked.length>1?'e':''} aktuell nicht aus dem Reisekontext nötig</b>${contextOffPacked.map(g=>escapeHTML(g.name)).join(' · ')}. Nicht automatisch entfernen – bewusst entscheiden.</div>`);
+ if(preview.over.length){
+   rows.push(`<div class="pack-intel-item required"><b>Vorschlag überschreitet Taschenlimit</b>${preview.over.map(([id])=>escapeHTML(bagName(id))).join(' · ')}. Taschenprofil oder Ausrüstung anpassen.</div>`);
+ }else{
+   rows.push('<div class="pack-intel-item"><b>Vorschlag passt in hinterlegte Taschenlimits</b>Gewicht und Volumen bleiben innerhalb deiner Planungsgrenzen.</div>');
+ }
+ summary.innerHTML=rows.join('');
+
+ actions.innerHTML=`
+   <button class="primary" type="button" onclick="applyRecommendedSetup()">Vorschlag übernehmen</button>
+   <button class="secondary" type="button" onclick="packOnlyMissingRecommendations()">nur Fehlendes ergänzen</button>`;
+}
+function packOnlyMissingRecommendations(){
+ const rec=smartRecommendedAssignments();
+ let added=0;
+ Object.entries(rec).forEach(([gid,bid])=>{
+   if(!state.assignments[gid]){state.assignments[gid]=bid;added++}
+ });
+ localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
+ localStorage.setItem('abo-mobile-pack-mode','custom');
+ renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();renderPackIntelligence();
+ toast(added?`${added} Empfehlung${added===1?'':'en'} ergänzt`:'Keine fehlenden Empfehlungen');
+}
+function renderPackHealth(){
+ const el=$('packHealth');if(!el)return;
+ const packed=new Set(Object.keys(state.assignments||{}));
+ const required=gear.filter(g=>gearDecision(g).status==='required');
+ const recommended=gear.filter(g=>gearDecision(g).status==='recommended');
  const missing=required.filter(g=>!packed.has(g.id));
+ const missingRec=recommended.filter(g=>!packed.has(g.id));
  const overW=Object.entries(bags).filter(([id,b])=>bagWeight(id)>b.cap);
  const overV=Object.entries(bags).filter(([id,b])=>bagVolume(id)>b.liters);
- let title='Packplan bereit';
- let msg='Pflichtausrüstung vollständig und alle Taschen innerhalb der hinterlegten Grenzen.';
+
+ let title='Packplan bereit',msg='Pflichtausrüstung vollständig und alle Taschen innerhalb der hinterlegten Grenzen.';
  if(missing.length){
    title=`${missing.length} Pflichtteil${missing.length>1?'e':''} fehlt`;
    msg=missing.map(g=>g.name).join(' · ');
- } else if(overW.length||overV.length){
+ }else if(overW.length||overV.length){
    title='Kapazität prüfen';
    const names=[...new Set([...overW.map(([id])=>bagName(id)),...overV.map(([id])=>bagName(id))])];
    msg=`Grenze überschritten: ${names.join(' · ')}`;
+ }else if(missingRec.length){
+   title=`Basis bereit · ${missingRec.length} Empfehlung${missingRec.length>1?'en':''} offen`;
+   msg=missingRec.slice(0,5).map(g=>g.name).join(' · ')+(missingRec.length>5?' …':'');
  }
  el.innerHTML=`<b>${title}</b><div class="small">${msg}</div>`;
 }
@@ -3134,17 +3387,18 @@ function gearPackingMeta(g){
  const id=g?.id||'',cat=g?.category||'';
  if(id==='snack'||id==='rain'||id==='light')return {access:'schnell',load:'leicht/mittel'};
  if(id==='tool'||id==='water')return {access:'Pause',load:'schwer'};
- if(id==='power'||id==='firstaid'||id==='tube'||id==='pump')return {access:'Pause',load:'kompakt'};
+ if(['power','firstaid','tube','pump','sealant','chainlube'].includes(id))return {access:'Pause',load:'kompakt'};
+ if(['sleepbag','shelter','mat','drybag'].includes(id))return {access:'abends',load:'leicht/mittel'};
  if(cat==='Kleidung')return {access:'abends',load:'leicht'};
  return {access:'normal',load:Number(g?.kg)>=.5?'schwer':'leicht/mittel'};
 }
 function renderGearList(){
- const categories=['Reparatur','Sicherheit','Kleidung','Elektronik','Verpflegung','Sonstiges'];
+ const categories=['Reparatur','Sicherheit','Camping','Kleidung','Elektronik','Verpflegung','Sonstiges'];
  $('gearList').innerHTML=categories.map(cat=>{
    const items=gear.filter(g=>g.category===cat);
    if(!items.length)return '';
    return `<div class="gear-section"><h4>${cat}</h4>${items.map(g=>{
-     const packed=!!state.assignments[g.id],req=isRequiredGear(g),active=state.selectedGear===g.id;
+     const packed=!!state.assignments[g.id],decision=gearDecision(g),req=decision.status==='required',rec=decision.status==='recommended',off=decision.status==='context-off',active=state.selectedGear===g.id;
      const q=active?`<div class="quick-pack">
        ${Object.entries(bags).map(([bid,b])=>`<button class="${bid===g.bag?'rec':''}" onclick="quickAssign('${g.id}','${bid}',event)">${b.name}</button>`).join('')}
      </div>`:'';
@@ -3152,7 +3406,7 @@ function renderGearList(){
        <div style="width:100%">
          <div class="gear-row-main">
            <div><b>${g.name}</b><div class="gear-meta">${g.kg.toFixed(2)} kg · ${g.l.toFixed(1)} l · empfohlen: ${bagName(g.bag)} · ${gearPackingMeta(g).load} · Zugriff: ${gearPackingMeta(g).access}</div>
-             <div class="gear-badges"><span class="gear-badge ${req?'required':'optional'}">${req?'Pflicht':'optional'}</span>${packed?'<span class="gear-badge packed">gepackt</span>':''}</div>
+             <div class="gear-badges"><span class="gear-badge ${req?'required':rec?'recommended':off?'context-off':'optional'}">${req?'Pflicht':rec?'empfohlen':off?'aktuell nicht nötig':'optional'}</span>${packed?'<span class="gear-badge packed">gepackt</span>':''}</div><div class="gear-reason">${escapeHTML(decision.reason||'')}</div>
              ${g.custom?`<button class="custom-remove" onclick="removeCustomGear('${g.id}',event)">löschen</button>`:''}
            </div>
            <button class="inlinebtn" type="button" onclick="event.stopPropagation();selectGear('${g.id}')">${active?'schließen':(packed?'umpacken':'packen')}</button>
@@ -3164,12 +3418,17 @@ function renderGearList(){
  }).join('');
 }
 function applyRecommendedSetup(){
- state.assignments=recommendedAssignments();
+ const next=recommendedAssignments();
+ Object.entries(state.assignments||{}).forEach(([gid,bid])=>{
+   const g=gear.find(x=>x.id===gid);
+   if(g?.custom)next[gid]=bid;
+ });
+ state.assignments=next;
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
  localStorage.setItem('abo-mobile-pack-mode','recommended');
  state.selectedGear=null;state.movingGear=null;
  clearBagHighlights();
- renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();
+ renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();renderPackIntelligence();
  const note=$('packModeNote');if(note)note.textContent='Empfohlenes Setup übernommen. Du kannst jeden Gegenstand danach frei verschieben.';
  toast('Empfohlenes Setup übernommen');
 }
@@ -3178,7 +3437,7 @@ function startEmptySetup(){
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
  localStorage.setItem('abo-mobile-pack-mode','empty');
  clearBagHighlights();
- renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();
+ renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();renderPackIntelligence();
  const note=$('packModeNote');if(note)note.textContent='Leerer Packplan. Pflichtteile werden markiert, aber nichts wird automatisch gepackt.';
  toast('Leerer Packplan');
 }
@@ -3196,6 +3455,7 @@ function initGear(){
  renderGearList();
  renderBagContents();
  renderPackHealth();
+ renderPackIntelligence();
  const note=$('packModeNote');
  if(note){
    if(!saved)note.textContent='Empfohlener Vorschlag wird angezeigt, ist aber noch nicht gespeichert. „Übernehmen“ speichert ihn.';
