@@ -103,6 +103,9 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .bagcard.recommended{outline:3px solid rgba(49,182,122,.42)}
 .bagcard.selected-target{outline:3px solid rgba(22,116,84,.6)}
 .bagcard h4{font-size:13px;margin:0 0 4px}
+.bag-visual-row{display:flex;justify-content:flex-end;margin-top:7px}
+.bag-visual-btn{border:1px solid #d8e1dc;border-radius:999px;background:#fff;color:#315f4d;font-weight:900;padding:6px 8px;font-size:9px}
+.bag-visual-btn.mounted{background:#e3f2e9;color:#236345;border-color:#c5dfcf}
 .bagbar{height:7px;border-radius:999px;background:#e8eee9;overflow:hidden;margin:7px 0 5px}
 .bagbar > i{display:block;height:100%;background:#1e805e;border-radius:inherit}
 .bagbar > i.warn{background:#c3902d}
@@ -690,7 +693,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
-let state={coords:null,metrics:null,stages:[],stageNames:[],stageNameLocks:{},selectedStage:null,map:null,layers:[],stageLayers:[],terrainLayers:[],lodgingLayers:[],routePointLayers:[],routePlan:{type:'point',source:'generated',waypoints:[],orderedPoints:[],importName:''},terrain:{status:'idle',stages:[],source:null,warning:null},lodging:{results:{},status:{},selected:{},stageMode:{},searchInfo:{}},weather:{status:'idle',startDate:'',stages:[],source:null,reason:null,routeKey:null},stageAnchors:[],routeStart:null,routeRerouting:false,selectedGear:null,movingGear:null,assignments:{},packedChecklist:{},heightAvailable:false,mapInteractive:false};
+let state={coords:null,metrics:null,stages:[],stageNames:[],stageNameLocks:{},selectedStage:null,map:null,layers:[],stageLayers:[],terrainLayers:[],lodgingLayers:[],routePointLayers:[],routePlan:{type:'point',source:'generated',waypoints:[],orderedPoints:[],importName:''},terrain:{status:'idle',stages:[],source:null,warning:null},lodging:{results:{},status:{},selected:{},stageMode:{},searchInfo:{}},weather:{status:'idle',startDate:'',stages:[],source:null,reason:null,routeKey:null},stageAnchors:[],routeStart:null,routeRerouting:false,selectedGear:null,movingGear:null,assignments:{},packedChecklist:{},bagVisualMounted:{},heightAvailable:false,mapInteractive:false};
 
 
 function escapeHTML(v){
@@ -3356,6 +3359,37 @@ function bagAvailable(id){
 function availableBagEntries(){
  return Object.entries(bags).filter(([id])=>bagAvailable(id));
 }
+function restoreBagVisualMounted(){
+ try{
+   const saved=JSON.parse(localStorage.getItem('abo-mobile-bag-visual-v1')||'{}');
+   state.bagVisualMounted=saved&&typeof saved==='object'&&!Array.isArray(saved)?saved:{};
+ }catch(e){state.bagVisualMounted={}}
+}
+function persistBagVisualMounted(){
+ localStorage.setItem('abo-mobile-bag-visual-v1',JSON.stringify(state.bagVisualMounted||{}));
+}
+function bagHasContent(id){
+ return bagWeight(id)>0||bagVolume(id)>0;
+}
+function bagVisualShown(id){
+ if(!bagAvailable(id))return false;
+ if(bagHasContent(id))return true;
+ if(state.bagVisualMounted?.[id]===true)return true;
+ const g=gear.find(x=>x.id===(state.movingGear||state.selectedGear));
+ if(g&&state.movingGear)return true;
+ if(g&&g.bag===id)return true;
+ return false;
+}
+function toggleBagVisualMounted(id,ev){
+ if(ev){ev.preventDefault();ev.stopPropagation()}
+ if(!bags[id]||!bagAvailable(id)){toast('Diese Tasche ist aktuell nicht verfügbar');return}
+ if(bagHasContent(id)){toast('Befüllte Taschen bleiben automatisch am Bike sichtbar');return}
+ state.bagVisualMounted[id]=state.bagVisualMounted?.[id]!==true;
+ persistBagVisualMounted();
+ renderBikeBagState();
+ renderBagContents();
+ toast(state.bagVisualMounted[id]?`${bagName(id)} am Bike eingeblendet`:`${bagName(id)} vom Bike ausgeblendet`);
+}
 function visibleBagEntries(){
  return Object.entries(bags).filter(([id])=>bagAvailable(id)||bagWeight(id)>0||bagVolume(id)>0);
 }
@@ -4071,11 +4105,16 @@ function assignToBag(bag){
 function renderBikeBagState(){
  const forkOn=bikeProfile().forkMounts==='yes';
  const forkVisual=$('forkCargoVisual');if(forkVisual)forkVisual.style.display=forkOn?'':'none';
- const forkLVisual=$('forkLVisual');if(forkLVisual)forkLVisual.style.display=forkOn&&bagAvailable('forkL')?'':'none';
- const forkRVisual=$('forkRVisual');if(forkRVisual)forkRVisual.style.display=forkOn&&bagAvailable('forkR')?'':'none';
  Object.entries(bags).forEach(([id,b])=>{
    const pct=Math.round((bagWeight(id)/b.cap)*100);
    const active=bagAvailable(id);
+   const shown=bagVisualShown(id);
+   const nodes=[
+     document.querySelector(`[data-bag="${id}"]`),
+     document.querySelector(`[data-bag-label="${id}"]`),
+     document.querySelector(`[data-filltext="${id}"]`)
+   ].filter(Boolean);
+   nodes.forEach(node=>node.style.display=shown?'':'none');
    const t=document.querySelector(`[data-filltext="${id}"]`);
    if(t){
      t.textContent=`${pct}%`;
@@ -4088,17 +4127,20 @@ function renderBikeBagState(){
    const rect=document.querySelector(`[data-bag="${id}"]`);
    if(rect){
      rect.classList.toggle('inventory-off',!active&&b.mount!=='fork');
-     rect.setAttribute('aria-label',`${b.name}, ${active?'aktiv':'deaktiviert'}, ${pct}% gefüllt`);
+     rect.setAttribute('aria-label',`${b.name}, ${shown?'am Bike':'ausgeblendet'}, ${pct}% gefüllt`);
    }
  });
+ const forkLVisual=$('forkLVisual');if(forkLVisual)forkLVisual.style.display=forkOn&&bagVisualShown('forkL')?'':'none';
+ const forkRVisual=$('forkRVisual');if(forkRVisual)forkRVisual.style.display=forkOn&&bagVisualShown('forkR')?'':'none';
  const focus=$('bikePackFocus');
  if(focus){
    const gid=state.movingGear||state.selectedGear, g=gear.find(x=>x.id===gid);
    if(g){
      const mode=state.movingGear?'verschieben':'packen';
-     focus.innerHTML=`<b>${g.name} ${mode}</b>${state.movingGear?'Tippe die Zieltasche direkt am Bike.':'Empfohlen: '+bagName(g.bag)+' – diese Tasche ist am Bike markiert.'}`;
+     focus.innerHTML=`<b>${g.name} ${mode}</b>${state.movingGear?'Tippe die Zieltasche direkt am Bike.':'Empfohlen: '+bagName(g.bag)+' – diese Tasche wird am Bike eingeblendet.'}`;
    }else{
-     focus.innerHTML='<b>Direkt am Bike packen</b>Gegenstand wählen → empfohlene Tasche leuchtet → Tasche antippen.';
+     const mounted=Object.keys(bags).filter(id=>bagVisualShown(id)).length;
+     focus.innerHTML=`<b>${mounted} Tasche${mounted===1?'':'n'} am Bike</b>Leere Taschen werden automatisch ausgeblendet. Bei Bedarf kannst du sie unten einzeln einblenden.`;
    }
  }
 }
@@ -4125,6 +4167,7 @@ function renderBagContents(){
      <div class="bagbar dual volume"><i class="used ${vcl}" style="width:${vused}%"></i><i class="freepart" style="width:${vfree}%"></i></div>
      <div class="filllabels"><span class="filled">${vpct}% Volumen</span><span class="free">${Math.max(0,100-vpct)}% frei</span></div>
      <div class="bagitems">${items.length?items.map(g=>`<button class="bagitembtn ${state.movingGear===g.id?'active':''}" onclick="event.stopPropagation();startMove('${g.id}')">${g.name} ↔</button>`).join(''):'leer'}</div>
+     ${!inactive&&!items.length?`<div class="bag-visual-row"><button class="bag-visual-btn ${state.bagVisualMounted?.[id]===true?'mounted':''}" type="button" onclick="toggleBagVisualMounted('${id}',event)">${state.bagVisualMounted?.[id]===true?'✓ Am Bike · entfernen':'Am Bike anzeigen'}</button></div>`:''}
      ${items.length?`<div class="bag-check-row"><span class="${bagCheck.done===bagCheck.total?'done':''}">${bagCheck.done}/${bagCheck.total} eingepackt</span><button class="pack-check-btn ${bagCheck.done===bagCheck.total?'done':''}" type="button" onclick="markBagPackedChecklist('${id}',event)">${bagCheck.done===bagCheck.total?'✓ Tasche fertig':'Alle einpacken'}</button></div>`:''}
      ${inactive&&items.length?`<div class="movehint" style="color:#8b3c34">${bagMountAvailable(id)?'Tasche ist aktuell deaktiviert':'Passende Aufnahme ist aktuell nicht bestätigt'} – Inhalt bitte umpacken.</div>`:items.length?'<div class="movehint">Gegenstand antippen → direkt verschieben</div>':''}
    </div>`;
@@ -4156,6 +4199,7 @@ function unpack(id){
  restoreRiderProfile();
  restoreBikeProfile();
  restoreBagProfile();
+ restoreBagVisualMounted();
  renderBagProfile();
  renderBikeBagState();
  restoreLodgingPrefs();
