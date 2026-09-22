@@ -1216,23 +1216,58 @@ function travelReadinessSnapshot(){
    pack,nights,booked
  };
 }
+function departureDateContext(){
+ const start=parseISODateUTC(tripStartDate());
+ const end=parseISODateUTC(tripEndDate());
+ if(!start)return {status:'undated',daysToStart:null,daysToEnd:null,label:'Reisedatum noch offen'};
+ const now=new Date();
+ const today=new Date(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()));
+ const daysToStart=Math.round((start-today)/86400000);
+ const daysToEnd=end?Math.round((end-today)/86400000):null;
+ if(daysToStart===0)return {status:'today',daysToStart,daysToEnd,label:'Abfahrt heute'};
+ if(daysToStart===1)return {status:'tomorrow',daysToStart,daysToEnd,label:'Abfahrt morgen'};
+ if(daysToStart>1)return {status:'future',daysToStart,daysToEnd,label:`Abfahrt in ${daysToStart} Tagen`};
+ if(daysToEnd==null||daysToEnd>=0)return {status:'underway',daysToStart,daysToEnd,label:'Reise läuft'};
+ return {status:'past',daysToStart,daysToEnd,label:'Reisezeitraum beendet'};
+}
 function departureAssistantSnapshot(){
  const snap=travelReadinessSnapshot();
  const byKey=Object.fromEntries(snap.items.map(x=>[x.key,x]));
+ const when=departureDateContext();
  const tasks=[];
- const push=(key,label,detail,action)=>tasks.push({key,label,detail,action,state:byKey[key]?.state||'open'});
+ const close=Number.isFinite(when.daysToStart)&&when.daysToStart>=0&&when.daysToStart<=3;
+ const imminent=Number.isFinite(when.daysToStart)&&when.daysToStart>=0&&when.daysToStart<=1;
+ const push=(key,label,detail,action,priority)=>tasks.push({key,label,detail,action,priority,state:byKey[key]?.state||'open'});
 
- if(byKey.navigation?.state==='open')push('navigation','Route vorbereiten','Route berechnen oder GPX importieren.','navigation');
- if(byKey.weather?.state==='open'){
-   const label=!tripStartDate()?'Reisedatum setzen':'Wetter aktualisieren';
-   const detail=!tripStartDate()?'Ohne Reisedatum kann keine Etappenprognose erstellt werden.':'Prognose für alle Etappen vollständig laden.';
-   push('weather',label,detail,'weather');
+ if(byKey.navigation?.state==='open'){
+   push('navigation','Route vorbereiten',close?'Route jetzt finalisieren oder GPX importieren.':'Route berechnen oder GPX importieren.','navigation',close?90:60);
  }
- if(byKey.lodging?.state==='open')push('lodging','Übernachtungen klären',`${snap.booked}/${snap.nights} Zwischenübernachtungen reserviert.`,'lodging');
- if(byKey.packing?.state==='open')push('packing','Packen abschließen',snap.pack.total?`${snap.pack.done}/${snap.pack.total} Gegenstände tatsächlich eingepackt.`:'Packplan erstellen und anschließend abhaken.','packing');
- if(byKey.weather?.state==='hint')push('weather','Wetterhinweise prüfen',byKey.weather.detail||'Wetterdetails der Etappen vor der Abfahrt prüfen.','weather');
+ if(byKey.weather?.state==='open'){
+   const missingDate=!tripStartDate();
+   const label=missingDate?'Reisedatum setzen':'Wetter aktualisieren';
+   const detail=missingDate
+     ?'Ohne Reisedatum kann keine Etappenprognose erstellt werden.'
+     :(imminent?'Prognose heute noch einmal für alle Etappen aktualisieren.':'Prognose für alle Etappen vollständig laden.');
+   push('weather',label,detail,'weather',missingDate?95:(imminent?100:close?75:45));
+ }
+ if(byKey.lodging?.state==='open'){
+   const detail=`${snap.booked}/${snap.nights} Zwischenübernachtungen reserviert.${close?' Vor der Abfahrt verbindlich klären.':''}`;
+   push('lodging','Übernachtungen klären',detail,'lodging',close?85:55);
+ }
+ if(byKey.packing?.state==='open'){
+   const base=snap.pack.total?`${snap.pack.done}/${snap.pack.total} Gegenstände tatsächlich eingepackt.`:'Packplan erstellen und anschließend abhaken.';
+   const detail=imminent?`${base} ${when.status==='today'?'Vor dem Losfahren abschließen.':'Morgen geht es los – heute abschließen.'}`:base;
+   push('packing','Packen abschließen',detail,'packing',imminent?95:close?80:40);
+ }
+ if(byKey.weather?.state==='hint'){
+   const detail=imminent
+     ?`${byKey.weather.detail||'Wetterhinweise vorhanden'}. Vor der Abfahrt heute erneut ansehen.`
+     :(byKey.weather.detail||'Wetterdetails der Etappen vor der Abfahrt prüfen.');
+   push('weather','Wetterhinweise prüfen',detail,'weather',imminent?98:close?82:50);
+ }
 
- return {snap,tasks,primary:tasks[0]||null};
+ tasks.sort((a,b)=>b.priority-a.priority);
+ return {snap,tasks,primary:tasks[0]||null,when};
 }
 function renderDepartureAssistant(){
  const titleEl=$('departureTitle'),textEl=$('departureText'),listEl=$('departureList'),actionEl=$('departureAction');
@@ -1241,22 +1276,32 @@ function renderDepartureAssistant(){
  const open=d.snap.items.filter(x=>x.state==='open');
  const hints=d.snap.items.filter(x=>x.state==='hint');
 
- if(open.length){
-   titleEl.textContent=`Noch ${open.length} Schritt${open.length===1?'':'e'} bis bereit`;
-   textEl.textContent=d.primary?`Priorität: ${d.primary.label}. Danach die weiteren offenen Punkte abschließen.`:'Offene Punkte vor der Abfahrt abschließen.';
+ if(d.when.status==='underway'){
+   titleEl.textContent='Reise läuft';
+   textEl.textContent=open.length||hints.length
+     ?`Aktueller Check: ${open.length} offen${hints.length?` · ${hints.length} Hinweis${hints.length===1?'':'e'}`:''}.`
+     :'Alle hinterlegten Reise-Checks sind vollständig.';
+ }else if(d.when.status==='past'){
+   titleEl.textContent='Reisezeitraum beendet';
+   textEl.textContent='Der hinterlegte Reisezeitraum liegt in der Vergangenheit. Für eine neue Reise das Datum aktualisieren.';
+ }else if(open.length){
+   titleEl.textContent=`${d.when.label} · ${open.length} offen`;
+   textEl.textContent=d.primary?`Jetzt sinnvoll: ${d.primary.label}. Danach die weiteren offenen Punkte abschließen.`:'Offene Punkte vor der Abfahrt abschließen.';
  }else if(hints.length){
-   titleEl.textContent='Bereit · Hinweise vor Abfahrt prüfen';
+   titleEl.textContent=`${d.when.label} · Hinweise prüfen`;
    textEl.textContent='Die Planung ist vollständig. Wetterhinweise vor dem Losfahren noch einmal ansehen.';
  }else{
-   titleEl.textContent='Bereit für die Abfahrt';
-   textEl.textContent='Route, Wetter, Reservierungen und Pack-Check sind vollständig.';
+   titleEl.textContent=d.when.status==='undated'?'Bereit · Reisedatum noch offen':`${d.when.label} · bereit`;
+   textEl.textContent=d.when.status==='undated'
+     ?'Route, Reservierungen und Pack-Check sind vollständig. Für den Wettercheck noch das Reisedatum setzen.'
+     :'Route, Wetter, Reservierungen und Pack-Check sind vollständig.';
  }
 
  listEl.innerHTML=d.tasks.length
    ?d.tasks.slice(0,4).map(x=>`<div class="departure-item ${x.state}"><span>${x.state==='hint'?'!':'○'}</span><div><b>${escapeHTML(x.label)}</b><br>${escapeHTML(x.detail)}</div></div>`).join('')
    :'<div class="departure-item ready"><span>✓</span><div><b>Keine offenen Aufgaben</b><br>Der Reise-Check ist vollständig.</div></div>';
 
- if(d.primary){
+ if(d.primary&&d.when.status!=='past'){
    actionEl.hidden=false;
    actionEl.textContent=d.primary.label;
    actionEl.onclick=()=>runCheckAction(d.primary.action);
