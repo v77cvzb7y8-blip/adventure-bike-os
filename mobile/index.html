@@ -44,6 +44,8 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .readiness-items span.ready{background:#e7f1e9;color:#356846}
 .readiness-items span.hint{background:#f5edd7;color:#765d18}
 .readiness-items span.open{background:#f2dfdc;color:#8b3c34}
+.check-action{width:100%;margin-top:9px}
+.check-action[hidden]{display:none}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(255,253,247,.97);border-top:1px solid #d7ddd8;padding:7px 5px calc(7px + env(safe-area-inset-bottom));z-index:40}
 .bottom button{border:0;background:transparent;font-size:9px;color:#53645b;padding:6px 2px}.bottom button b{display:block;font-size:20px;margin-bottom:2px}.bottom button.active{color:var(--g2);font-weight:800}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#132b21;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;display:none;z-index:100}
@@ -641,14 +643,15 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
       <div class="check">
         <div class="card"><h3>🧭 Navigation</h3><div id="navigationCheckStatus" class="pending">Route fehlt</div>
           <p id="navigationCheckText" class="sub">Finale Route berechnen und anschließend als GPX exportieren.</p>
-          <div class="nav-export-actions">
+          <button id="navigationCheckAction" class="secondary check-action" type="button" onclick="runCheckAction('navigation')">Route planen</button>
+          <div id="navigationExportActions" class="nav-export-actions">
             <button class="primary" type="button" onclick="exportGPX()">GPX teilen / exportieren</button>
           </div>
           <div class="nav-export-note">Für Garmin: GPX speichern/teilen und anschließend in Garmin Connect importieren bzw. an den Edge synchronisieren.</div>
         </div>
-        <div class="card"><h3>🌦 Wetter</h3><div id="weatherCheckStatus" class="pending">Reisedatum fehlt</div><p id="weatherCheckText" class="sub">Reisestart im Plan eintragen. Wetter wird danach pro Etappe entlang der Route ausgewertet.</p></div>
-        <div class="card"><h3>🏨 Reservierungen</h3><div id="lodgingCheckStatus" class="pending">noch offen</div><p class="sub" id="lodgingCheckText">Unterkünfte an den Etappenzielen auswählen und Reservierungen bestätigen.</p></div>
-        <div class="card"><h3>🎒 Pack-Check</h3><div id="packCheckStatus" class="pending">noch offen</div><p class="sub" id="packCheckText">Packplan im Bike-Bereich erstellen und Gegenstände beim Einpacken abhaken.</p><button class="secondary" type="button" onclick="go('bike')">Zum Packen</button></div>
+        <div class="card"><h3>🌦 Wetter</h3><div id="weatherCheckStatus" class="pending">Reisedatum fehlt</div><p id="weatherCheckText" class="sub">Reisestart im Plan eintragen. Wetter wird danach pro Etappe entlang der Route ausgewertet.</p><button id="weatherCheckAction" class="secondary check-action" type="button" onclick="runCheckAction('weather')">Wetter prüfen</button></div>
+        <div class="card"><h3>🏨 Reservierungen</h3><div id="lodgingCheckStatus" class="pending">noch offen</div><p class="sub" id="lodgingCheckText">Unterkünfte an den Etappenzielen auswählen und Reservierungen bestätigen.</p><button id="lodgingCheckAction" class="secondary check-action" type="button" onclick="runCheckAction('lodging')">Unterkunft wählen</button></div>
+        <div class="card"><h3>🎒 Pack-Check</h3><div id="packCheckStatus" class="pending">noch offen</div><p class="sub" id="packCheckText">Packplan im Bike-Bereich erstellen und Gegenstände beim Einpacken abhaken.</p><button id="packCheckAction" class="secondary check-action" type="button" onclick="runCheckAction('packing')">Zum Packen</button></div>
         <div class="card"><h3>🔋 Strom & Licht</h3><div class="ok">Basis vorhanden</div><p class="sub">Computer · Frontlicht · Rücklicht · Powerbank</p></div>
       </div>
     </section>
@@ -1130,10 +1133,28 @@ function weatherHTML(i){
    <div class="weather-note">${Number.isFinite(Number(w.precipitation_mm))?`Niederschlag bis ${Number(w.precipitation_mm).toFixed(1)} mm · `:''}${Number.isFinite(Number(w.gust_kmh))?`Böen bis ${Math.round(w.gust_kmh)} km/h · `:''}${w.sample_success&&w.sample_requested?`${w.sample_success}/${w.sample_requested} Routenpunkte · `:`${w.sample_count||0} Routenpunkte · `}${escapeHTML(weatherBandText(w.forecast_band,Number(w.horizon_days)||0))}${w.source?` · ${escapeHTML(w.source)}`:''}${w.partial_errors?.length?' · Teilweise Datenlücke':''}.</div>
  </div>`;
 }
+function setCheckAction(id,show,label){
+ const el=$(id);
+ if(!el)return;
+ el.hidden=!show;
+ if(label)el.textContent=label;
+}
+function runCheckAction(kind){
+ if(kind==='navigation'){go('plan');return}
+ if(kind==='lodging'){go(state.stages?.length?'stages':'plan');return}
+ if(kind==='packing'){go('bike');return}
+ if(kind==='weather'){
+   if(!state.stages?.length||!tripStartDate()){go('plan');return}
+   go('stages');
+   setTimeout(()=>loadWeather(true),120);
+ }
+}
 function renderNavigationCheck(){
- const statusEl=$('navigationCheckStatus'),textEl=$('navigationCheckText');
+ const statusEl=$('navigationCheckStatus'),textEl=$('navigationCheckText'),exportEl=$('navigationExportActions');
  if(!statusEl||!textEl)return;
  const ready=Array.isArray(state.coords)&&state.coords.length>1&&Array.isArray(state.stages)&&state.stages.length>0;
+ setCheckAction('navigationCheckAction',!ready,'Route planen');
+ if(exportEl)exportEl.style.display=ready?'':'none';
  if(ready){
    statusEl.textContent='bereit';statusEl.className='ok';
    textEl.textContent='Finale Route ist vorhanden. GPX kann für die Navigation exportiert werden.';
@@ -1202,21 +1223,25 @@ function renderWeatherCheck(){
  const statusEl=$('weatherCheckStatus'),textEl=$('weatherCheckText');
  if(!statusEl||!textEl)return;
  if(!tripStartDate()){
+   setCheckAction('weatherCheckAction',true,'Reisedatum setzen');
    statusEl.textContent='Reisedatum fehlt';statusEl.className='pending';
    textEl.textContent='Reisestart im Plan eintragen. Wetter wird danach pro Etappe entlang der Route ausgewertet.';
    return;
  }
  if(!state.stages?.length){
+   setCheckAction('weatherCheckAction',true,'Route planen');
    statusEl.textContent='Route fehlt';statusEl.className='pending';
    textEl.textContent='Zuerst Route berechnen; Wetter wird anschließend den einzelnen Etappen zugeordnet.';
    return;
  }
  if(state.weather?.status==='loading'){
+   setCheckAction('weatherCheckAction',false);
    statusEl.textContent='wird geladen';statusEl.className='pending';
    textEl.textContent='Start, Hochpunkt und Ziel jeder Etappe werden geprüft.';
    return;
  }
  if(state.weather?.status==='error'){
+   setCheckAction('weatherCheckAction',true,'Wetter erneut prüfen');
    statusEl.textContent='Ladefehler';statusEl.className='pending';
    textEl.textContent=(state.weather.reason||'Wetterdaten konnten nicht geladen werden.')+' Bitte Wetter in einer Etappe erneut laden.';
    return;
@@ -1226,16 +1251,18 @@ function renderWeatherCheck(){
  const high=available.filter(x=>x.overall==='high');
  const watch=available.filter(x=>x.overall==='watch');
  const open=rows.filter(x=>x&&!x.available);
+ const complete=rows.length>0&&available.length===state.stages.length;
+ setCheckAction('weatherCheckAction',!complete,'Wetter prüfen');
  if(!rows.length){
    statusEl.textContent='noch offen';statusEl.className='pending';
    textEl.textContent='Wetterdaten noch nicht geladen.';
- }else if(high.length&&available.length===state.stages.length){
+ }else if(high.length&&complete){
    statusEl.textContent='bereit mit Hinweis';statusEl.className='pending';
    textEl.textContent=`${high.length} Etappe${high.length>1?'n':''} mit deutlichem Wettersignal. Prognose ist vollständig geprüft – Details und passende Ausrüstung beachten.`;
- }else if(watch.length&&available.length===state.stages.length){
+ }else if(watch.length&&complete){
    statusEl.textContent='bereit mit Hinweis';statusEl.className='pending';
    textEl.textContent=`${watch.length} Etappe${watch.length>1?'n':''} mit Wetterhinweis. Prognose ist vollständig geprüft – Bedingungen im Etappen-Detail beachten.`;
- }else if(available.length===state.stages.length){
+ }else if(complete){
    statusEl.textContent='geprüft';statusEl.className='ok';
    textEl.textContent='Für alle Etappen liegt aktuell eine Detailprognose ohne auffälliges Wettersignal vor.';
  }else{
@@ -2211,13 +2238,14 @@ function renderLodgingCheck(){
  const statusEl=$('lodgingCheckStatus'),textEl=$('lodgingCheckText');
  if(!statusEl||!textEl)return;
  const nights=Math.max(0,(state.stages?.length||0)-1);
- if(!nights){statusEl.textContent='nicht nötig';statusEl.className='ok';textEl.textContent='Keine Zwischenübernachtung erforderlich.';return}
+ if(!nights){setCheckAction('lodgingCheckAction',false);statusEl.textContent='nicht nötig';statusEl.className='ok';textEl.textContent='Keine Zwischenübernachtung erforderlich.';return}
  let selected=0,booked=0;
  for(let i=0;i<nights;i++){
    const x=state.lodging?.selected?.[i];
    if(x){selected++;if(x.status==='booked')booked++}
  }
  const p=lodgingPrefs(),spent=selectedLodgingSpend(),budgetTxt=p.totalBudget?` · ${spent.toFixed(0)}/${p.totalBudget.toFixed(0)} € eingetragen`:spent?` · ${spent.toFixed(0)} € eingetragen`:'';
+ setCheckAction('lodgingCheckAction',booked!==nights,selected?'Reservierungen prüfen':'Unterkunft wählen');
  if(booked===nights){statusEl.textContent='bereit';statusEl.className='ok';textEl.textContent=`${booked}/${nights} Zwischenübernachtungen als reserviert markiert${budgetTxt}.`}
  else if(selected){statusEl.textContent=`${booked}/${nights} reserviert`;statusEl.className='pending';textEl.textContent=`${selected}/${nights} Unterkünfte vorgemerkt. Reservierungsstatus noch prüfen${budgetTxt}.`}
  else{statusEl.textContent='noch offen';statusEl.className='pending';textEl.textContent=`Für ${nights} Zwischenübernachtung${nights>1?'en':''} noch keine Unterkunft ausgewählt.`}
@@ -3652,11 +3680,13 @@ function renderPackCheck(){
  if(!statusEl||!textEl)return;
  const check=packedChecklistStats();
  if(!check.total){
+   setCheckAction('packCheckAction',true,'Packplan erstellen');
    statusEl.textContent='Packplan fehlt';statusEl.className='pending';
    textEl.textContent='Im Bike-Bereich zuerst einen Packplan erstellen oder den intelligenten Vorschlag übernehmen.';
    return;
  }
  const open=Math.max(0,check.total-check.done);
+ setCheckAction('packCheckAction',open>0,'Zum Packen');
  if(!open){
    statusEl.textContent='bereit';statusEl.className='ok';
    textEl.textContent=`${check.done}/${check.total} geplante Gegenstände sind als tatsächlich eingepackt markiert.`;
