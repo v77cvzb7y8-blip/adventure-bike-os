@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.7.2</title>
+<title>Adventure Bike OS · Mobile 0.7.3</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -440,7 +440,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.7.2</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.7.3</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -1689,6 +1689,28 @@ async function resolveStageNames(){
  if(!state.coords||!state.stages.length)return;const names=[],start=$('start').value.trim(),dest=$('dest').value.trim();names.push(start);
  for(let i=0;i<state.stages.length-1;i++){const locked=state.stageNameLocks?.[i+1];if(locked){names.push(locked);continue}const st=state.stages[i],span=Math.max(1,st.e-st.s),offsets=[0,-.03,.03,-.07,.07,-.12,.12];let found='';for(const off of offsets){const p=Math.max(st.s,Math.min(state.coords.length-1,st.e+Math.round(span*off))),candidate=await reversePlaceAt(state.coords[p]);if(candidate&&candidate!==names[names.length-1]&&candidate!==dest){found=candidate;break}}names.push(found||`Etappenziel ${i+1}`)}
  names.push(dest);state.stageNames=names;localStorage.setItem('abo-mobile-stage-names',JSON.stringify(names));saveCurrentRoute();renderStages();if(state.selectedStage!=null)focusStage(state.selectedStage);
+}
+function stageNamesNeedRepair(){
+ if(!state.coords||!state.stages?.length)return false;
+ const expected=state.stages.length+1;
+ if(!Array.isArray(state.stageNames)||state.stageNames.length!==expected)return true;
+ return state.stageNames.slice(1,-1).some(x=>{
+   const v=String(x||'').trim().toLowerCase();
+   return !v || v==='etappenziel' || v.startsWith('etappenziel ') || v.includes('wird ermittelt');
+ });
+}
+function repairSavedStageNames(){
+ if(!stageNamesNeedRepair())return;
+ const start=$('start')?.value?.trim()||'Start';
+ const dest=$('dest')?.value?.trim()||'Ziel';
+ state.stageNames=[
+   start,
+   ...Array.from({length:Math.max(0,state.stages.length-1)},(_,i)=>state.stageNameLocks?.[i+1]||'Etappenziel wird ermittelt …'),
+   dest
+ ];
+ localStorage.setItem('abo-mobile-stage-names',JSON.stringify(state.stageNames));
+ renderStages();
+ setTimeout(()=>resolveStageNames().catch(()=>{}),250);
 }
 async function calculateRoute(){
  saveRiderProfile();const mode=state.routePlan?.type||'point';if(mode==='gpx'){toast('Bitte zuerst eine GPX-Datei auswählen.');return}const load=$('routeLoading');load.classList.add('show');load.textContent='Persönliche Route wird berechnet …';
@@ -3903,9 +3925,12 @@ function unpack(id){
  if(saved){try{const x=JSON.parse(saved);state.coords=x.coords;state.metrics=x.metrics;state.stages=x.stages;state.heightAvailable=hasUsefulElevation(x.coords||[]);state.stageAnchors=x.stageAnchors||[];state.routeStart=x.routeStart||null;state.routePlan=x.routePlan||state.routePlan;state.stageNameLocks=x.stageNameLocks||{};if(!state.stageAnchors.length||!state.routeStart)initStageAnchors();$('start').value=x.start;$('dest').value=x.dest;setRouteMode(state.routePlan.type||'point');$('homeTitle').textContent=`${x.start} → ${x.dest}`;$('homeMeta').textContent=`${x.metrics.totalDist.toFixed(0)} km · ${Math.round(x.metrics.totalGain)} HM · ${x.stages.length} Etappen`;const sn=localStorage.getItem('abo-mobile-stage-names');state.stageNames=sn?JSON.parse(sn):[x.start,...Array(Math.max(0,x.stages.length-1)).fill('Etappenziel'),x.dest];const tr=JSON.parse(localStorage.getItem('abo-mobile-terrain-v6')||'null');const key=`v6|${x.start}|${x.dest}|${x.metrics.totalDist.toFixed(1)}`;if(tr&&tr.key===key&&tr.dataVersion==='terrain-profile-v2.1'&&Array.isArray(tr.stages))state.terrain={status:'ready',stages:tr.stages,source:tr.source||'Valhalla',warning:null,serviceCoverage:tr.serviceCoverage,matchedCoverage:tr.matchedCoverage,reliableCoverage:tr.reliableCoverage,dataVersion:tr.dataVersion}}catch(e){}}
  renderRouteWaypointList();
  renderTripDateSummary();
- if(state.coords&&tripStartDate())setTimeout(()=>loadWeather(false),350);
+ if(state.coords){
+   repairSavedStageNames();
+   if(tripStartDate())setTimeout(()=>loadWeather(false),350);
+ }
  if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=0.7.3-fix1',{updateViaCache:'none'}).then(reg=>{
     reg.update().catch(()=>{});
   }).catch(()=>{});
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
