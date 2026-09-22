@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
 <title>ROAM · Web Prototype</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -13,14 +14,9 @@
   --mixed:#bd955d; --soft:#ece7dc; --danger:#9e5b45;
 }
 *{box-sizing:border-box}
-html{background:#ded8cc}
+html,body,.app{background:var(--paper)!important;color-scheme:light}
 body{
   margin:0;color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:
-    radial-gradient(circle at 20% 10%,rgba(255,255,255,.38),transparent 28%),
-    radial-gradient(circle at 75% 30%,rgba(76,83,67,.035),transparent 26%),
-    repeating-radial-gradient(circle at 0 0,rgba(60,52,43,.025) 0 1px,transparent 1px 4px),
-    var(--paper);
   min-height:100vh;
 }
 button,input,select{font:inherit}
@@ -93,7 +89,7 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
 .tabs button{border:0;background:transparent;padding:9px 0 11px;color:#686d66}
 .tabs button.active{color:var(--forest);font-weight:800;border-bottom:2px solid var(--rust)}
 .route-visual-card{overflow:hidden}
-.map-wrap{position:relative;height:500px;background:#dfe1d2;border-bottom:1px solid var(--line)}
+.map-wrap{position:relative;height:520px;background:#e7e5dc;border-bottom:1px solid var(--line)}
 #routeMapLeaflet{width:100%;height:100%;display:block;background:#dfe1d2}
 #routeMapLeaflet .leaflet-container{font:inherit}
 #routeMapLeaflet .leaflet-control-zoom{border:1px solid rgba(56,62,54,.18);box-shadow:0 4px 14px rgba(50,45,38,.08);border-radius:9px;overflow:hidden}
@@ -319,8 +315,9 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
         <div class="map-wrap" id="mapWrap">
           <div id="routeMapLeaflet" aria-label="Topografische Routenkarte"></div>
           <select id="mapStyleSelect" class="map-style-select" aria-label="Kartenstil">
-            <option value="topo">Topo</option>
+            <option value="esri">Esri Topo</option>
             <option value="osm">OSM</option>
+            <option value="opentopo">OpenTopo</option>
           </select>
           <div class="map-scale-note">Karte ↔ Höhenprofil synchron</div>
           <div class="route-map-legend">
@@ -487,80 +484,125 @@ function showScreen(name){
 document.querySelectorAll('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.go)));
 
-const points=[
- {p:0,name:'Innsbruck',alt:575,terrain:'Gravel',temp:'18°',wind:'8 km/h W',grade:'2%'},
- {p:.18,name:'Kühtai',alt:2020,terrain:'Gravel',temp:'12°',wind:'16 km/h W',grade:'6%'},
- {p:.34,name:'Ötztal',alt:890,terrain:'Asphalt',temp:'17°',wind:'9 km/h SW',grade:'1%'},
- {p:.50,name:'Jaufenpass',alt:1842,terrain:'Trail',temp:'16°',wind:'14 km/h W',grade:'7%'},
- {p:.68,name:'Brixen',alt:560,terrain:'Mixed',temp:'20°',wind:'6 km/h S',grade:'-2%'},
- {p:.82,name:'Trento',alt:194,terrain:'Gravel',temp:'21°',wind:'18 km/h S',grade:'3%'},
- {p:1,name:'Gardasee',alt:65,terrain:'Gravel',temp:'22°',wind:'10 km/h S',grade:'-3%'}
-];
 const routeGeo=[
- [47.2692,11.4041],
- [47.2148,11.0238],
- [47.2030,10.8970],
- [46.8330,11.3200],
- [46.7160,11.6560],
- [46.4980,11.3540],
- [46.0748,11.1217],
- [45.8850,10.8410]
+ [47.2692,11.4041],[47.2500,11.3500],[47.2250,11.2850],[47.2150,11.2150],
+ [47.2050,11.1550],[47.2148,11.0238],[47.2050,10.9650],[47.2030,10.8970],
+ [47.1550,10.9300],[47.1050,10.9600],[47.0550,10.9850],[47.0000,11.0100],
+ [46.9550,11.0400],[46.9200,11.0750],[46.9050,11.0950],[46.8750,11.1500],
+ [46.8450,11.2200],[46.8250,11.2750],[46.8390,11.3220],[46.8700,11.3700],
+ [46.8970,11.4310],[46.8550,11.5000],[46.8050,11.5700],[46.7600,11.6200],
+ [46.7160,11.6560],[46.6750,11.6100],[46.6400,11.5650],[46.6050,11.5150],
+ [46.5600,11.4550],[46.4980,11.3540],[46.4450,11.3000],[46.3900,11.2700],
+ [46.3350,11.2450],[46.2850,11.2250],[46.2400,11.2130],[46.1850,11.1900],
+ [46.1300,11.1550],[46.0748,11.1217],[46.0150,11.0950],[45.9600,11.0700],
+ [45.9100,11.0500],[45.8900,11.0400],[45.8700,11.0000],[45.8500,10.9600],
+ [45.8600,10.9150],[45.8760,10.8910],[45.8850,10.8410]
 ];
-let roamMap=null,roamCursor=null,topoLayer=null,osmLayer=null;
-const routeSegmentColors=['#a2573c','#a2573c','#525756','#718260','#bd955d','#a2573c','#a2573c'];
 
+function geoDistKm(a,b){
+ const R=6371,toRad=x=>x*Math.PI/180;
+ const dLat=toRad(b[0]-a[0]),dLon=toRad(b[1]-a[1]);
+ const la1=toRad(a[0]),la2=toRad(b[0]);
+ const h=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;
+ return 2*R*Math.asin(Math.sqrt(h));
+}
+const routeCum=[0];
+for(let i=1;i<routeGeo.length;i++)routeCum.push(routeCum[i-1]+geoDistKm(routeGeo[i-1],routeGeo[i]));
+const routeGeoTotal=routeCum[routeCum.length-1];
+
+function pAtRouteIndex(i){return routeGeoTotal?routeCum[i]/routeGeoTotal:0}
 function interpGeo(p){
- const scaled=p*(routeGeo.length-1),i=Math.min(routeGeo.length-2,Math.floor(scaled)),t=scaled-i;
- const a=routeGeo[i],b=routeGeo[i+1];
+ p=Math.max(0,Math.min(1,p));
+ const target=p*routeGeoTotal;
+ let i=1;
+ while(i<routeCum.length&&routeCum[i]<target)i++;
+ i=Math.min(routeCum.length-1,i);
+ const prev=routeCum[i-1],next=routeCum[i],t=next>prev?(target-prev)/(next-prev):0;
+ const a=routeGeo[i-1],b=routeGeo[i];
  return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
 }
+function terrainAtP(p){
+ if(p<.20)return {name:'Gravel',color:'#a2573c'};
+ if(p<.34)return {name:'Asphalt',color:'#525756'};
+ if(p<.49)return {name:'Trail',color:'#718260'};
+ if(p<.62)return {name:'Mixed',color:'#bd955d'};
+ if(p<.77)return {name:'Asphalt',color:'#525756'};
+ if(p<.88)return {name:'Trail',color:'#718260'};
+ return {name:'Gravel',color:'#a2573c'};
+}
+const points=[
+ {p:0,name:'Innsbruck',alt:575,temp:'18°',wind:'8 km/h W',grade:'2%'},
+ {p:.16,name:'Kühtai',alt:2020,temp:'12°',wind:'16 km/h W',grade:'6%'},
+ {p:.25,name:'Ötztal',alt:890,temp:'17°',wind:'9 km/h SW',grade:'1%'},
+ {p:.43,name:'Jaufenpass',alt:2094,temp:'10°',wind:'22 km/h W',grade:'8%'},
+ {p:.55,name:'Brixen',alt:560,temp:'20°',wind:'6 km/h S',grade:'-2%'},
+ {p:.72,name:'Bozen',alt:262,temp:'22°',wind:'7 km/h S',grade:'-1%'},
+ {p:.86,name:'Trento',alt:194,temp:'21°',wind:'18 km/h S',grade:'3%'},
+ {p:1,name:'Gardasee',alt:65,temp:'22°',wind:'10 km/h S',grade:'-3%'}
+].map(x=>({...x,terrain:terrainAtP(x.p).name}));
+
+let roamMap=null,roamCursor=null,esriLayer=null,osmLayer=null,openTopoLayer=null;
+
 function initRouteMap(){
  if(roamMap||!document.getElementById('routeMapLeaflet')||typeof L==='undefined')return;
  roamMap=L.map('routeMapLeaflet',{zoomControl:true,scrollWheelZoom:true,attributionControl:true});
- topoLayer=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
-   maxZoom:17,
-   attribution:'Map data © OpenStreetMap contributors · Map style © OpenTopoMap'
+
+ esriLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{
+   maxZoom:19,
+   attribution:'Tiles © Esri · Map data contributors'
  });
  osmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
    maxZoom:19,
    attribution:'© OpenStreetMap contributors'
  });
- topoLayer.addTo(roamMap);
+ openTopoLayer=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
+   maxZoom:17,
+   attribution:'Map data © OpenStreetMap contributors · Map style © OpenTopoMap'
+ });
+ esriLayer.addTo(roamMap);
 
- L.polyline(routeGeo,{color:'#f6f2e9',weight:10,opacity:.96,lineCap:'round'}).addTo(roamMap);
+ L.polyline(routeGeo,{color:'#f8f4ec',weight:8,opacity:.97,lineCap:'round',lineJoin:'round'}).addTo(roamMap);
  for(let i=0;i<routeGeo.length-1;i++){
-   L.polyline([routeGeo[i],routeGeo[i+1]],{color:routeSegmentColors[i],weight:6,opacity:1,lineCap:'round'}).addTo(roamMap);
+   const p=(pAtRouteIndex(i)+pAtRouteIndex(i+1))/2;
+   const terrain=terrainAtP(p);
+   L.polyline([routeGeo[i],routeGeo[i+1]],{
+     color:terrain.color,weight:4.5,opacity:1,lineCap:'round',lineJoin:'round'
+   }).addTo(roamMap);
  }
- L.circleMarker(routeGeo[0],{radius:10,color:'#f8f5ed',weight:4,fillColor:'#556244',fillOpacity:1}).bindTooltip('Innsbruck',{direction:'right',offset:[10,0],permanent:true,className:'roam-place-label'}).addTo(roamMap);
- L.circleMarker(routeGeo[routeGeo.length-1],{radius:9,color:'#f8f5ed',weight:4,fillColor:'#a2573c',fillOpacity:1}).bindTooltip('Gardasee',{direction:'left',offset:[-10,0],permanent:true,className:'roam-place-label'}).addTo(roamMap);
- [[47.2148,11.0238,'Kühtai'],[46.7160,11.6560,'Brixen'],[46.0748,11.1217,'Trento']].forEach(([lat,lng,label])=>{
-   L.circleMarker([lat,lng],{radius:5,color:'#f8f5ed',weight:3,fillColor:'#556244',fillOpacity:1}).bindTooltip(label,{direction:'top',offset:[0,-4],opacity:.9}).addTo(roamMap);
- });
- roamCursor=L.circleMarker(interpGeo(.5),{radius:8,color:'#a2573c',weight:4,fillColor:'#f8f5ed',fillOpacity:1,zIndexOffset:1000}).addTo(roamMap);
- roamCursor.bindTooltip('',{permanent:true,direction:'top',offset:[0,-12],className:'roam-map-tip',opacity:1}).openTooltip();
- roamMap.fitBounds(L.latLngBounds(routeGeo).pad(.12));
 
- roamMap.on('mousemove',e=>{
-   const p=nearestRouteProgress(e.latlng);
-   updateLinked(p,'map');
+ L.circleMarker(routeGeo[0],{radius:9,color:'#f8f5ed',weight:4,fillColor:'#556244',fillOpacity:1})
+  .bindTooltip('Innsbruck',{direction:'right',offset:[9,0],permanent:true,className:'roam-place-label'}).addTo(roamMap);
+ L.circleMarker(routeGeo[routeGeo.length-1],{radius:9,color:'#f8f5ed',weight:4,fillColor:'#a2573c',fillOpacity:1})
+  .bindTooltip('Gardasee',{direction:'left',offset:[-9,0],permanent:true,className:'roam-place-label'}).addTo(roamMap);
+
+ [[47.2148,11.0238,'Kühtai'],[46.8390,11.3220,'Jaufenpass'],[46.7160,11.6560,'Brixen'],[46.4980,11.3540,'Bozen'],[46.0748,11.1217,'Trento']]
+ .forEach(([lat,lng,label])=>{
+   L.circleMarker([lat,lng],{radius:4.5,color:'#f8f5ed',weight:2.5,fillColor:'#556244',fillOpacity:1})
+    .bindTooltip(label,{direction:'top',offset:[0,-4],opacity:.92}).addTo(roamMap);
  });
- roamMap.on('click',e=>{
-   const p=nearestRouteProgress(e.latlng);
-   updateLinked(p,'map');
- });
+
+ roamCursor=L.circleMarker(interpGeo(.55),{radius:7,color:'#a2573c',weight:4,fillColor:'#f8f5ed',fillOpacity:1}).addTo(roamMap);
+ roamCursor.bindTooltip('',{permanent:true,direction:'top',offset:[0,-10],className:'roam-map-tip',opacity:1}).openTooltip();
+
+ roamMap.fitBounds(L.latLngBounds(routeGeo).pad(.08));
+
+ roamMap.on('mousemove',e=>updateLinked(nearestRouteProgress(e.latlng),'map'));
+ roamMap.on('click',e=>updateLinked(nearestRouteProgress(e.latlng),'map'));
 
  const select=document.getElementById('mapStyleSelect');
  if(select)select.addEventListener('change',()=>{
-   if(select.value==='osm'){if(roamMap.hasLayer(topoLayer))roamMap.removeLayer(topoLayer);osmLayer.addTo(roamMap)}
-   else{if(roamMap.hasLayer(osmLayer))roamMap.removeLayer(osmLayer);topoLayer.addTo(roamMap)}
+   [esriLayer,osmLayer,openTopoLayer].forEach(layer=>{if(layer&&roamMap.hasLayer(layer))roamMap.removeLayer(layer)});
+   if(select.value==='osm')osmLayer.addTo(roamMap);
+   else if(select.value==='opentopo')openTopoLayer.addTo(roamMap);
+   else esriLayer.addTo(roamMap);
  });
- updateLinked(.5,'init');
+ updateLinked(.55,'init');
 }
 function nearestRouteProgress(latlng){
- if(!roamMap)return .5;
+ if(!roamMap)return .55;
  const target=roamMap.latLngToContainerPoint(latlng);
- let best={d:Infinity,p:.5};
- const samples=180;
+ let best={d:Infinity,p:.55};
+ const samples=320;
  for(let i=0;i<=samples;i++){
    const p=i/samples,pos=interpGeo(p),pt=roamMap.latLngToContainerPoint(pos);
    const dx=pt.x-target.x,dy=pt.y-target.y,d=dx*dx+dy*dy;
@@ -569,25 +611,36 @@ function nearestRouteProgress(latlng){
  return best.p;
 }
 function interpElevY(p){
- const peaks=[[0,175],[.1,125],[.18,91],[.28,136],[.38,122],[.45,77],[.52,145],[.62,115],[.68,82],[.76,133],[.82,54],[.9,87],[1,166]];
- for(let i=0;i<peaks.length-1;i++){if(p>=peaks[i][0]&&p<=peaks[i+1][0]){const t=(p-peaks[i][0])/(peaks[i+1][0]-peaks[i][0]);return peaks[i][1]+(peaks[i+1][1]-peaks[i][1])*t}}
+ const peaks=[[0,175],[.08,150],[.16,90],[.22,135],[.30,112],[.40,72],[.48,148],[.55,118],[.63,158],[.72,112],[.79,80],[.86,132],[.91,55],[.96,115],[1,166]];
+ for(let i=0;i<peaks.length-1;i++){
+   if(p>=peaks[i][0]&&p<=peaks[i+1][0]){
+     const t=(p-peaks[i][0])/(peaks[i+1][0]-peaks[i][0]);
+     return peaks[i][1]+(peaks[i+1][1]-peaks[i][1])*t;
+   }
+ }
  return 166;
 }
 function nearestPoint(p){return points.reduce((a,b)=>Math.abs(b.p-p)<Math.abs(a.p-p)?b:a)}
 function updateLinked(p,source){
  p=Math.max(0,Math.min(1,p));
- const d=nearestPoint(p),km=Math.round(p*312);
+ const d=nearestPoint(p),km=Math.round(p*312),terrain=terrainAtP(p);
  if(roamCursor){
    roamCursor.setLatLng(interpGeo(p));
-   roamCursor.setTooltipContent(`<div class="roam-tip-inner"><b>km ${km} · ${d.name}</b><small>${d.alt.toLocaleString('de-DE')} m</small><div class="roam-tip-meta"><i class="dot ${d.terrain.toLowerCase()}"></i><span>${d.terrain}</span><span>·</span><span>${d.temp}</span></div></div>`);
+   roamCursor.setTooltipContent(`<div class="roam-tip-inner"><b>km ${km} · ${d.name}</b><small>${d.alt.toLocaleString('de-DE')} m</small><div class="roam-tip-meta"><i class="dot ${terrain.name.toLowerCase()}"></i><span>${terrain.name}</span><span>·</span><span>${d.temp}</span></div></div>`);
  }
  const xprof=55+p*(970-55),yprof=interpElevY(p);
- document.getElementById('profileLine').setAttribute('x1',xprof);document.getElementById('profileLine').setAttribute('x2',xprof);
- const pm=document.getElementById('profileMarker');pm.setAttribute('cx',xprof);pm.setAttribute('cy',yprof);
- document.getElementById('pointName').textContent=d.name;document.getElementById('pointKm').textContent=`km ${km}`;
- document.getElementById('pointAlt').textContent=d.alt.toLocaleString('de-DE')+' m';document.getElementById('pointTerrain').textContent=d.terrain;
- document.getElementById('pointGrade').textContent=d.grade;document.getElementById('pointWind').textContent=d.wind;
- document.getElementById('weatherTemp').textContent=d.temp;document.getElementById('weatherText').textContent=`leicht bewölkt · ${d.wind}`;
+ document.getElementById('profileLine').setAttribute('x1',xprof);
+ document.getElementById('profileLine').setAttribute('x2',xprof);
+ const pm=document.getElementById('profileMarker');
+ pm.setAttribute('cx',xprof);pm.setAttribute('cy',yprof);
+ document.getElementById('pointName').textContent=d.name;
+ document.getElementById('pointKm').textContent=`km ${km}`;
+ document.getElementById('pointAlt').textContent=d.alt.toLocaleString('de-DE')+' m';
+ document.getElementById('pointTerrain').textContent=terrain.name;
+ document.getElementById('pointGrade').textContent=d.grade;
+ document.getElementById('pointWind').textContent=d.wind;
+ document.getElementById('weatherTemp').textContent=d.temp;
+ document.getElementById('weatherText').textContent=`leicht bewölkt · ${d.wind}`;
 }
 function pointerToP(el,e){
  const r=el.getBoundingClientRect();
