@@ -237,6 +237,9 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .gear-badge.required{background:#fff1d8;color:#7a5514}
 .gear-badge.optional{background:#edf3f0;color:#567064}
 .gear-badge.packed{background:#dff0e7;color:#236345}
+.gear-badge.loaded{background:#d8eee1;color:#1f6343}
+.pack-check-btn{border:1px solid #d8e1dc;border-radius:999px;background:#fff;color:#526159;font-weight:900;padding:6px 8px;font-size:9px;white-space:nowrap}
+.pack-check-btn.done{background:#e3f2e9;color:#236345;border-color:#c5dfcf}
 .volume-line{font-size:10px;color:#657069;margin-top:2px}
 .bagbar.volume{margin-top:5px}
 .bagbar.volume .used{opacity:.55}
@@ -643,7 +646,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const API='https://adventure-bike-os-api.onrender.com';
-let state={coords:null,metrics:null,stages:[],stageNames:[],stageNameLocks:{},selectedStage:null,map:null,layers:[],stageLayers:[],terrainLayers:[],lodgingLayers:[],routePointLayers:[],routePlan:{type:'point',source:'generated',waypoints:[],orderedPoints:[],importName:''},terrain:{status:'idle',stages:[],source:null,warning:null},lodging:{results:{},status:{},selected:{},stageMode:{},searchInfo:{}},weather:{status:'idle',startDate:'',stages:[],source:null,reason:null,routeKey:null},stageAnchors:[],routeStart:null,routeRerouting:false,selectedGear:null,movingGear:null,assignments:{},heightAvailable:false,mapInteractive:false};
+let state={coords:null,metrics:null,stages:[],stageNames:[],stageNameLocks:{},selectedStage:null,map:null,layers:[],stageLayers:[],terrainLayers:[],lodgingLayers:[],routePointLayers:[],routePlan:{type:'point',source:'generated',waypoints:[],orderedPoints:[],importName:''},terrain:{status:'idle',stages:[],source:null,warning:null},lodging:{results:{},status:{},selected:{},stageMode:{},searchInfo:{}},weather:{status:'idle',startDate:'',stages:[],source:null,reason:null,routeKey:null},stageAnchors:[],routeStart:null,routeRerouting:false,selectedGear:null,movingGear:null,assignments:{},packedChecklist:{},heightAvailable:false,mapInteractive:false};
 
 
 function escapeHTML(v){
@@ -3175,6 +3178,7 @@ function removeCustomGear(id,ev){
  if(ev){ev.preventDefault();ev.stopPropagation()}
  gear=gear.filter(g=>g.id!==id);
  delete state.assignments[id];
+ delete state.packedChecklist[id];persistPackedChecklist();
  saveCustomGear();
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
  renderBagContents();
@@ -3489,6 +3493,11 @@ function renderPackHealth(){
    title=`Basis bereit · ${missingRec.length} Empfehlung${missingRec.length>1?'en':''} offen`;
    msg=missingRec.slice(0,5).map(g=>g.name).join(' · ')+(missingRec.length>5?' …':'');
  }
+ const check=packedChecklistStats();
+ if(check.total){
+   msg+=` · Reise-Check: ${check.done}/${check.total} tatsächlich eingepackt.`;
+   if(check.done===check.total)title=title==='Packplan bereit'?'Abfahrbereit · Packliste vollständig':title;
+ }
  el.innerHTML=`<b>${title}</b><div class="small">${msg}</div>`;
 }
 
@@ -3501,13 +3510,40 @@ function gearPackingMeta(g){
  if(cat==='Kleidung')return {access:'abends',load:'leicht'};
  return {access:'normal',load:Number(g?.kg)>=.5?'schwer':'leicht/mittel'};
 }
+function restorePackedChecklist(){
+ try{
+   const saved=JSON.parse(localStorage.getItem('abo-mobile-packed-check-v1')||'{}');
+   state.packedChecklist=saved&&typeof saved==='object'&&!Array.isArray(saved)?saved:{};
+ }catch(e){state.packedChecklist={}}
+}
+function persistPackedChecklist(){
+ localStorage.setItem('abo-mobile-packed-check-v1',JSON.stringify(state.packedChecklist||{}));
+}
+function reconcilePackedChecklist(persist=true){
+ const assigned=new Set(Object.keys(state.assignments||{}));
+ Object.keys(state.packedChecklist||{}).forEach(id=>{if(!assigned.has(id))delete state.packedChecklist[id]});
+ if(persist)persistPackedChecklist();
+}
+function packedChecklistStats(){
+ const ids=Object.keys(state.assignments||{}).filter(id=>gear.some(g=>g.id===id));
+ return {total:ids.length,done:ids.filter(id=>state.packedChecklist?.[id]===true).length};
+}
+function togglePackedChecklist(id,ev){
+ if(ev){ev.preventDefault();ev.stopPropagation()}
+ if(!state.assignments?.[id]){toast('Gegenstand zuerst einer Tasche zuordnen');return}
+ state.packedChecklist[id]=state.packedChecklist[id]!==true;
+ persistPackedChecklist();
+ renderGearList();
+ renderPackHealth();
+ toast(state.packedChecklist[id]?'Als eingepackt markiert':'Pack-Haken entfernt');
+}
 function renderGearList(){
  const categories=['Reparatur','Sicherheit','Camping','Kleidung','Elektronik','Verpflegung','Sonstiges'];
  $('gearList').innerHTML=categories.map(cat=>{
    const items=gear.filter(g=>g.category===cat);
    if(!items.length)return '';
    return `<div class="gear-section"><h4>${cat}</h4>${items.map(g=>{
-     const packed=!!state.assignments[g.id],decision=gearDecision(g),req=decision.status==='required',rec=decision.status==='recommended',off=decision.status==='context-off',active=state.selectedGear===g.id;
+     const packed=!!state.assignments[g.id],loaded=state.packedChecklist?.[g.id]===true,decision=gearDecision(g),req=decision.status==='required',rec=decision.status==='recommended',off=decision.status==='context-off',active=state.selectedGear===g.id;
      const q=active?`<div class="quick-pack">
        ${availableBagEntries().map(([bid,b])=>`<button class="${bid===g.bag?'rec':''}" onclick="quickAssign('${g.id}','${bid}',event)">${b.name}</button>`).join('')}
      </div>`:'';
@@ -3515,10 +3551,10 @@ function renderGearList(){
        <div style="width:100%">
          <div class="gear-row-main">
            <div><b>${g.name}</b><div class="gear-meta">${g.kg.toFixed(2)} kg · ${g.l.toFixed(1)} l · empfohlen: ${bagName(g.bag)} · ${gearPackingMeta(g).load} · Zugriff: ${gearPackingMeta(g).access}</div>
-             <div class="gear-badges"><span class="gear-badge ${req?'required':rec?'recommended':off?'context-off':'optional'}">${req?'Pflicht':rec?'empfohlen':off?'aktuell nicht nötig':'optional'}</span>${packed?'<span class="gear-badge packed">gepackt</span>':''}</div><div class="gear-reason">${escapeHTML(decision.reason||'')}</div>
+             <div class="gear-badges"><span class="gear-badge ${req?'required':rec?'recommended':off?'context-off':'optional'}">${req?'Pflicht':rec?'empfohlen':off?'aktuell nicht nötig':'optional'}</span>${packed?'<span class="gear-badge packed">geplant</span>':''}${loaded?'<span class="gear-badge loaded">✓ eingepackt</span>':''}</div><div class="gear-reason">${escapeHTML(decision.reason||'')}</div>
              ${g.custom?`<button class="custom-remove" onclick="removeCustomGear('${g.id}',event)">löschen</button>`:''}
            </div>
-           <button class="inlinebtn" type="button" onclick="event.stopPropagation();selectGear('${g.id}')">${active?'schließen':(packed?'umpacken':'packen')}</button>
+           <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">${packed?`<button class="pack-check-btn ${loaded?'done':''}" type="button" onclick="togglePackedChecklist('${g.id}',event)">${loaded?'✓ eingepackt':'○ einpacken'}</button>`:''}<button class="inlinebtn" type="button" onclick="event.stopPropagation();selectGear('${g.id}')">${active?'schließen':(packed?'umpacken':'packen')}</button></div>
          </div>
          ${q}
        </div>
@@ -3534,6 +3570,7 @@ function applyRecommendedSetup(){
  });
  state.assignments=next;
  lastPackIntelActivatedBag=null;
+ reconcilePackedChecklist();
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
  localStorage.setItem('abo-mobile-pack-mode','recommended');
  state.selectedGear=null;state.movingGear=null;
@@ -3544,6 +3581,7 @@ function applyRecommendedSetup(){
 }
 function startEmptySetup(){
  state.assignments={};state.selectedGear=null;state.movingGear=null;
+ state.packedChecklist={};persistPackedChecklist();
  lastPackIntelActivatedBag=null;
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
  localStorage.setItem('abo-mobile-pack-mode','empty');
@@ -3562,6 +3600,8 @@ function initGear(){
    // First visit: show a recommended preview, but don't persist it until accepted.
    state.assignments=recommendedAssignments();
  }
+ restorePackedChecklist();
+ reconcilePackedChecklist();
  document.querySelectorAll('[data-bag]').forEach(el=>el.addEventListener('click',()=>assignToBag(el.dataset.bag)));
  // Ein zentraler Render-Pass verhindert doppelte DOM-Aktualisierungen beim Start.
  renderBagContents();
@@ -3696,6 +3736,7 @@ function renderBagContents(){
 }
 function unpack(id){
  delete state.assignments[id];
+ delete state.packedChecklist[id];persistPackedChecklist();
  if(state.movingGear===id)state.movingGear=null;
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
  localStorage.setItem('abo-mobile-pack-mode','custom');
