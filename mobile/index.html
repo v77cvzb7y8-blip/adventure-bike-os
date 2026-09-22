@@ -632,6 +632,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
         </div>
         <div class="card"><h3>🌦 Wetter</h3><div id="weatherCheckStatus" class="pending">Reisedatum fehlt</div><p id="weatherCheckText" class="sub">Reisestart im Plan eintragen. Wetter wird danach pro Etappe entlang der Route ausgewertet.</p></div>
         <div class="card"><h3>🏨 Reservierungen</h3><div id="lodgingCheckStatus" class="pending">noch offen</div><p class="sub" id="lodgingCheckText">Unterkünfte an den Etappenzielen auswählen und Reservierungen bestätigen.</p></div>
+        <div class="card"><h3>🎒 Pack-Check</h3><div id="packCheckStatus" class="pending">noch offen</div><p class="sub" id="packCheckText">Packplan im Bike-Bereich erstellen und Gegenstände beim Einpacken abhaken.</p><button class="secondary" type="button" onclick="go('bike')">Zum Packen</button></div>
         <div class="card"><h3>🔋 Strom & Licht</h3><div class="ok">Basis vorhanden</div><p class="sub">Computer · Frontlicht · Rücklicht · Powerbank</p></div>
       </div>
     </section>
@@ -1490,6 +1491,11 @@ function go(name){
  $('screen-'+name).classList.add('active');
  document.querySelectorAll('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.nav===name));
  if(name==='bike')setTimeout(()=>renderBikeSetup(),30);
+ if(name==='check'){
+   renderWeatherCheck();
+   renderLodgingCheck();
+   renderPackCheck();
+ }
  if(name==='stages'&&state.coords){
    setMapInteraction(false);
    setTimeout(()=>{
@@ -3503,6 +3509,7 @@ function renderPackHealth(){
    if(check.done===check.total)title=title==='Packplan bereit'?'Abfahrbereit · Packliste vollständig':title;
  }
  el.innerHTML=`<b>${title}</b><div class="small">${msg}</div>`;
+ renderPackCheck();
 }
 
 function gearPackingMeta(g){
@@ -3531,6 +3538,24 @@ function reconcilePackedChecklist(persist=true){
 function packedChecklistStats(){
  const ids=Object.keys(state.assignments||{}).filter(id=>gear.some(g=>g.id===id));
  return {total:ids.length,done:ids.filter(id=>state.packedChecklist?.[id]===true).length};
+}
+function renderPackCheck(){
+ const statusEl=$('packCheckStatus'),textEl=$('packCheckText');
+ if(!statusEl||!textEl)return;
+ const check=packedChecklistStats();
+ if(!check.total){
+   statusEl.textContent='Packplan fehlt';statusEl.className='pending';
+   textEl.textContent='Im Bike-Bereich zuerst einen Packplan erstellen oder den intelligenten Vorschlag übernehmen.';
+   return;
+ }
+ const open=Math.max(0,check.total-check.done);
+ if(!open){
+   statusEl.textContent='bereit';statusEl.className='ok';
+   textEl.textContent=`${check.done}/${check.total} geplante Gegenstände sind als tatsächlich eingepackt markiert.`;
+ }else{
+   statusEl.textContent=`${check.done}/${check.total} eingepackt`;statusEl.className='pending';
+   textEl.textContent=`Noch ${open} Gegenstand${open===1?'':'e'} offen. Im Bike-Bereich einzeln oder taschenweise abhaken.`;
+ }
 }
 function bagPackedChecklistStats(id){
  const ids=Object.entries(state.assignments||{}).filter(([,bid])=>bid===id).map(([gid])=>gid).filter(gid=>gear.some(g=>g.id===gid));
