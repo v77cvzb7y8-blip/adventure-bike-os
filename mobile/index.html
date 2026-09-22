@@ -38,10 +38,12 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .readiness-head b{font-size:17px}
 .readiness-badge{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px;background:#f5edd7;color:#765d18;white-space:nowrap}
 .readiness-badge.ready{background:#e3f2e9;color:#236345}
+.readiness-badge.hint{background:#f5edd7;color:#765d18}
 .readiness-items{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .readiness-items span{font-size:9px;font-weight:900;padding:5px 7px;border-radius:999px;background:#f1f3f2;color:#67736d}
 .readiness-items span.ready{background:#e7f1e9;color:#356846}
-.readiness-items span.open{background:#f5edd7;color:#765d18}
+.readiness-items span.hint{background:#f5edd7;color:#765d18}
+.readiness-items span.open{background:#f2dfdc;color:#8b3c34}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(255,253,247,.97);border-top:1px solid #d7ddd8;padding:7px 5px calc(7px + env(safe-area-inset-bottom));z-index:40}
 .bottom button{border:0;background:transparent;font-size:9px;color:#53645b;padding:6px 2px}.bottom button b{display:block;font-size:20px;margin-bottom:2px}.bottom button.active{color:var(--g2);font-weight:800}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#132b21;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;display:none;z-index:100}
@@ -1146,9 +1148,11 @@ function travelReadinessSnapshot(){
 
  const weatherRows=state.weather?.stages||[];
  const weatherAvailable=weatherRows.filter(x=>x?.available);
- const weatherSignals=weatherAvailable.filter(x=>x.overall==='high'||x.overall==='watch');
- const weather=!!tripStartDate()&&stages.length>0&&state.weather?.status!=='loading'&&state.weather?.status!=='error'
-   && weatherRows.length>0&&weatherAvailable.length===stages.length&&weatherSignals.length===0;
+ const weatherHigh=weatherAvailable.filter(x=>x.overall==='high');
+ const weatherWatch=weatherAvailable.filter(x=>x.overall==='watch');
+ const weatherComplete=!!tripStartDate()&&stages.length>0&&state.weather?.status!=='loading'&&state.weather?.status!=='error'
+   && weatherRows.length>0&&weatherAvailable.length===stages.length;
+ const weatherState=!weatherComplete?'open':(weatherHigh.length||weatherWatch.length)?'hint':'ready';
 
  const nights=Math.max(0,stages.length-1);
  let booked=0;
@@ -1163,10 +1167,10 @@ function travelReadinessSnapshot(){
 
  return {
    items:[
-     {key:'navigation',label:'Navigation',ready:navigation},
-     {key:'weather',label:'Wetter',ready:weather},
-     {key:'lodging',label:'Reservierungen',ready:lodging},
-     {key:'packing',label:'Packen',ready:packing}
+     {key:'navigation',label:'Navigation',state:navigation?'ready':'open'},
+     {key:'weather',label:'Wetter',state:weatherState,detail:weatherHigh.length?`${weatherHigh.length} deutlich${weatherHigh.length===1?'es':'e'} Signal${weatherHigh.length===1?'':'e'}`:weatherWatch.length?`${weatherWatch.length} Hinweis${weatherWatch.length===1?'':'e'}`:''},
+     {key:'lodging',label:'Reservierungen',state:lodging?'ready':'open'},
+     {key:'packing',label:'Packen',state:packing?'ready':'open'}
    ],
    pack,nights,booked
  };
@@ -1175,17 +1179,24 @@ function renderOverallCheck(){
  const titleEl=$('overallCheckTitle'),badgeEl=$('overallCheckBadge'),textEl=$('overallCheckText'),itemsEl=$('overallCheckItems');
  if(!titleEl||!badgeEl||!textEl||!itemsEl)return;
  const snap=travelReadinessSnapshot();
- const open=snap.items.filter(x=>!x.ready);
- if(!open.length){
+ const open=snap.items.filter(x=>x.state==='open');
+ const hints=snap.items.filter(x=>x.state==='hint');
+ const complete=snap.items.length-open.length;
+ if(!open.length&&!hints.length){
    titleEl.textContent='Abfahrbereit';
    badgeEl.textContent='4/4 bereit';badgeEl.className='readiness-badge ready';
    textEl.textContent='Navigation, Wetter, Reservierungen und Pack-Check sind vollständig.';
+ }else if(!open.length&&hints.length){
+   titleEl.textContent='Abfahrbereit · Hinweise beachten';
+   badgeEl.textContent='4/4 geprüft';badgeEl.className='readiness-badge hint';
+   textEl.textContent=`Alle Bereiche sind vorbereitet. Hinweis: ${hints.map(x=>x.detail?`${x.label} (${x.detail})`:x.label).join(' · ')}. Details vor der Abfahrt prüfen.`;
  }else{
    titleEl.textContent=`Noch ${open.length} Punkt${open.length===1?'':'e'} offen`;
-   badgeEl.textContent=`${4-open.length}/4 bereit`;badgeEl.className='readiness-badge';
-   textEl.textContent=`Offen: ${open.map(x=>x.label).join(' · ')}. Die Detailkarten darunter zeigen, was noch zu tun ist.`;
+   badgeEl.textContent=`${complete}/4 geprüft`;badgeEl.className='readiness-badge';
+   const hintText=hints.length?` Bereits geprüft mit Hinweis: ${hints.map(x=>x.label).join(' · ')}.`:'';
+   textEl.textContent=`Offen: ${open.map(x=>x.label).join(' · ')}.${hintText} Die Detailkarten darunter zeigen, was noch zu tun ist.`;
  }
- itemsEl.innerHTML=snap.items.map(x=>`<span class="${x.ready?'ready':'open'}">${x.ready?'✓':'○'} ${escapeHTML(x.label)}</span>`).join('');
+ itemsEl.innerHTML=snap.items.map(x=>`<span class="${x.state}">${x.state==='ready'?'✓':x.state==='hint'?'!':'○'} ${escapeHTML(x.label)}</span>`).join('');
 }
 function renderWeatherCheck(){
  const statusEl=$('weatherCheckStatus'),textEl=$('weatherCheckText');
@@ -1218,12 +1229,12 @@ function renderWeatherCheck(){
  if(!rows.length){
    statusEl.textContent='noch offen';statusEl.className='pending';
    textEl.textContent='Wetterdaten noch nicht geladen.';
- }else if(high.length){
-   statusEl.textContent=`${high.length} Etappe${high.length>1?'n':''} relevant`;statusEl.className='pending';
-   textEl.textContent='Mindestens ein Wetterfaktor ist deutlich ausgeprägt. Details direkt in den Etappen prüfen.';
- }else if(watch.length){
-   statusEl.textContent='beobachten';statusEl.className='pending';
-   textEl.textContent=`${watch.length} Etappe${watch.length>1?'n':''} mit Wetterhinweis. ${open.length?'Weitere Tage liegen noch außerhalb des Detailfensters.':''}`;
+ }else if(high.length&&available.length===state.stages.length){
+   statusEl.textContent='bereit mit Hinweis';statusEl.className='pending';
+   textEl.textContent=`${high.length} Etappe${high.length>1?'n':''} mit deutlichem Wettersignal. Prognose ist vollständig geprüft – Details und passende Ausrüstung beachten.`;
+ }else if(watch.length&&available.length===state.stages.length){
+   statusEl.textContent='bereit mit Hinweis';statusEl.className='pending';
+   textEl.textContent=`${watch.length} Etappe${watch.length>1?'n':''} mit Wetterhinweis. Prognose ist vollständig geprüft – Bedingungen im Etappen-Detail beachten.`;
  }else if(available.length===state.stages.length){
    statusEl.textContent='geprüft';statusEl.className='ok';
    textEl.textContent='Für alle Etappen liegt aktuell eine Detailprognose ohne auffälliges Wettersignal vor.';
