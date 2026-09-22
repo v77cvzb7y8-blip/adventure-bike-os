@@ -3097,11 +3097,8 @@ function visibleBagEntries(){
 }
 function refreshBagAvailability(){
  renderBagProfile();
+ // renderBagContents() aktualisiert zusätzlich Gear-Liste, Pack-Health, Bike-Setup und Pack Intelligence.
  renderBagContents();
- renderGearList();
- renderPackHealth();
- renderBikeSetup();
- renderPackIntelligence();
 }
 function restoreBagProfile(){
  try{
@@ -3125,7 +3122,7 @@ function saveBagProfileValue(id,key,value){
  const n=Number(value);if(!Number.isFinite(n)||n<=0)return;
  bags[id][key]=key==='liters'?Math.min(40,n):Math.min(20,n);
  persistBagProfile();
- renderBagContents();renderBikeSetup();
+ renderBagContents();
 }
 function saveBagEnabled(id,value){
  if(!bags[id])return;
@@ -3180,7 +3177,7 @@ function removeCustomGear(id,ev){
  delete state.assignments[id];
  saveCustomGear();
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
- renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();
+ renderBagContents();
  toast('Gegenstand entfernt');
 }
 function quickAssign(gid,bag,ev){
@@ -3458,7 +3455,7 @@ function packOnlyMissingRecommendations(){
  });
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
  localStorage.setItem('abo-mobile-pack-mode','custom');
- renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();renderPackIntelligence();
+ renderBagContents();
  toast(added?`${added} Empfehlung${added===1?'':'en'} ergänzt`:'Keine fehlenden Empfehlungen');
 }
 function renderPackHealth(){
@@ -3471,14 +3468,19 @@ function renderPackHealth(){
  const overW=Object.entries(bags).filter(([id,b])=>bagWeight(id)>b.cap);
  const overV=Object.entries(bags).filter(([id,b])=>bagVolume(id)>b.liters);
  const unavailablePacked=Object.entries(bags).filter(([id])=>!bagAvailable(id)&&(bagWeight(id)>0||bagVolume(id)>0));
+ const mountMissingPacked=unavailablePacked.filter(([id])=>!bagMountAvailable(id));
+ const disabledPacked=unavailablePacked.filter(([id])=>bagMountAvailable(id)&&bags[id]?.enabled===false);
 
  let title='Packplan bereit',msg='Pflichtausrüstung vollständig und alle Taschen innerhalb der hinterlegten Grenzen.';
  if(missing.length){
    title=`${missing.length} Pflichtteil${missing.length>1?'e':''} fehlt`;
    msg=missing.map(g=>g.name).join(' · ');
  }else if(unavailablePacked.length){
-   title='Aufnahme prüfen';
-   msg=`Gepäck liegt in nicht verfügbarer Tasche: ${unavailablePacked.map(([id])=>bagName(id)).join(' · ')}`;
+   title=mountMissingPacked.length?'Aufnahme prüfen':'Taschenstatus prüfen';
+   const notes=[];
+   if(mountMissingPacked.length)notes.push(`Aufnahme fehlt: ${mountMissingPacked.map(([id])=>bagName(id)).join(' · ')}`);
+   if(disabledPacked.length)notes.push(`Tasche deaktiviert: ${disabledPacked.map(([id])=>bagName(id)).join(' · ')}`);
+   msg=notes.join(' · ');
  }else if(overW.length||overV.length){
    title='Kapazität prüfen';
    const names=[...new Set([...overW.map(([id])=>bagName(id)),...overV.map(([id])=>bagName(id))])];
@@ -3536,7 +3538,7 @@ function applyRecommendedSetup(){
  localStorage.setItem('abo-mobile-pack-mode','recommended');
  state.selectedGear=null;state.movingGear=null;
  clearBagHighlights();
- renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();renderPackIntelligence();
+ renderBagContents();
  const note=$('packModeNote');if(note)note.textContent='Empfohlenes Setup übernommen. Du kannst jeden Gegenstand danach frei verschieben.';
  toast('Empfohlenes Setup übernommen');
 }
@@ -3546,7 +3548,7 @@ function startEmptySetup(){
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
  localStorage.setItem('abo-mobile-pack-mode','empty');
  clearBagHighlights();
- renderGearList();renderBagContents();renderPackHealth();renderBikeSetup();renderPackIntelligence();
+ renderBagContents();
  const note=$('packModeNote');if(note)note.textContent='Leerer Packplan. Pflichtteile werden markiert, aber nichts wird automatisch gepackt.';
  toast('Leerer Packplan');
 }
@@ -3561,10 +3563,8 @@ function initGear(){
    state.assignments=recommendedAssignments();
  }
  document.querySelectorAll('[data-bag]').forEach(el=>el.addEventListener('click',()=>assignToBag(el.dataset.bag)));
- renderGearList();
+ // Ein zentraler Render-Pass verhindert doppelte DOM-Aktualisierungen beim Start.
  renderBagContents();
- renderPackHealth();
- renderPackIntelligence();
  const note=$('packModeNote');
  if(note){
    if(!saved)note.textContent='Empfohlener Vorschlag wird angezeigt, ist aber noch nicht gespeichert. „Übernehmen“ speichert ihn.';
@@ -3608,8 +3608,12 @@ function bagWeight(id){
  return Object.entries(state.assignments).filter(([,b])=>b===id).reduce((sum,[gid])=>sum+(gear.find(x=>x.id===gid)?.kg||0),0);
 }
 function assignToBag(bag){
- if(!bagAvailable(bag)){
+ if(!bagMountAvailable(bag)){
    toast('Diese Tasche ist ohne passende Aufnahme nicht verfügbar');
+   return;
+ }
+ if(!bagAvailable(bag)){
+   toast('Diese Tasche ist deaktiviert – zuerst im Taschenprofil aktivieren');
    return;
  }
  const gid=state.movingGear||state.selectedGear;
@@ -3621,14 +3625,10 @@ function assignToBag(bag){
  localStorage.setItem('abo-mobile-pack-mode','custom');
  toast(old && old!==bag ? `${g.name}: ${bagName(old)} → ${bagName(bag)}` : `${g.name} → ${bagName(bag)}`);
  state.movingGear=null;
- clearBagHighlights();
- renderGearList();
- renderBagContents();
- renderPackHealth();
- renderBikeSetup();
  state.selectedGear=null;
+ clearBagHighlights();
  $('recommendBox').textContent='Gegenstand wählen → Tasche direkt darunter auswählen.';
- renderGearList();
+ renderBagContents();
 }
 function renderBikeBagState(){
  const forkOn=bikeProfile().forkMounts==='yes';
@@ -3676,8 +3676,9 @@ function renderBagContents(){
    const rec=gear.find(x=>x.id===state.selectedGear)?.bag===id && !state.movingGear;
    const move=!!state.movingGear;
    const inactive=!bagAvailable(id);
+   const inactiveReason=inactive?(bagMountAvailable(id)?'Tasche deaktiviert':'Aufnahme fehlt'):'';
    return `<div class="bagcard ${rec?'recommended':''} ${move&&!inactive?'move-target':''} ${inactive?'bag-unavailable':''}" onclick="${inactive?'void(0)':`assignToBag('${id}')`}">
-     <h4>${b.name}${inactive?' · Aufnahme fehlt':''}</h4>
+     <h4>${b.name}${inactive?` · ${inactiveReason}`:''}</h4>
      <div class="sub">${kg.toFixed(1)} / ${b.cap.toFixed(1)} kg</div>
      <div class="bagbar dual"><i class="used ${cl}" style="width:${used}%"></i><i class="freepart" style="width:${free}%"></i></div>
      <div class="filllabels"><span class="filled">${pct}% Gewicht</span><span class="free">${Math.max(0,100-pct)}% frei</span></div>
@@ -3685,7 +3686,7 @@ function renderBagContents(){
      <div class="bagbar dual volume"><i class="used ${vcl}" style="width:${vused}%"></i><i class="freepart" style="width:${vfree}%"></i></div>
      <div class="filllabels"><span class="filled">${vpct}% Volumen</span><span class="free">${Math.max(0,100-vpct)}% frei</span></div>
      <div class="bagitems">${items.length?items.map(g=>`<button class="bagitembtn ${state.movingGear===g.id?'active':''}" onclick="event.stopPropagation();startMove('${g.id}')">${g.name} ↔</button>`).join(''):'leer'}</div>
-     ${inactive&&items.length?'<div class="movehint" style="color:#8b3c34">Aufnahme ist aktuell deaktiviert – Inhalt bitte umpacken.</div>':items.length?'<div class="movehint">Gegenstand antippen → direkt verschieben</div>':''}
+     ${inactive&&items.length?`<div class="movehint" style="color:#8b3c34">${bagMountAvailable(id)?'Tasche ist aktuell deaktiviert':'Passende Aufnahme ist aktuell nicht bestätigt'} – Inhalt bitte umpacken.</div>`:items.length?'<div class="movehint">Gegenstand antippen → direkt verschieben</div>':''}
    </div>`;
  }).join('');
  renderBikeBagState();
