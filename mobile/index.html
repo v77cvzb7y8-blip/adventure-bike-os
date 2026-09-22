@@ -3358,10 +3358,27 @@ function packCapacityPreview(){
  const over=Object.entries(used).filter(([id,v])=>v.kg>bags[id].cap||v.l>bags[id].liters);
  return {used,over};
 }
+function inactiveBagCapacityOptions(){
+ return Object.entries(bags)
+   .filter(([id])=>bagMountAvailable(id)&&!bagAvailable(id))
+   .map(([id,b])=>({id,name:b.name,kg:Number(b.cap)||0,liters:Number(b.liters)||0,mount:b.mount||'base'}))
+   .sort((a,b)=>(b.liters-a.liters)||(b.kg-a.kg));
+}
+function activateBagFromPackIntel(id){
+ if(!bags[id])return;
+ if(!bagMountAvailable(id)){
+   toast('Passende Aufnahme zuerst im Bike-Profil bestätigen');
+   return;
+ }
+ bags[id].enabled=true;
+ persistBagProfile();
+ refreshBagAvailability();
+ toast(`${bagName(id)} aktiviert`);
+}
 function renderPackIntelligence(){
  const context=$('packIntelContext'),summary=$('packIntelSummary'),actions=$('packIntelActions');
  if(!context||!summary||!actions)return;
- const ctx=packContext(),tot=packRecommendationTotals(),preview=packCapacityPreview();
+ const ctx=packContext(),tot=packRecommendationTotals(),preview=packCapacityPreview(),expansion=inactiveBagCapacityOptions();
  const chips=[];
  chips.push(`<span class="ok">${ctx.days} Tag${ctx.days===1?'':'e'}</span>`);
  if(ctx.weather.available){
@@ -3390,15 +3407,26 @@ function renderPackIntelligence(){
  if(missingRec.length)rows.push(`<div class="pack-intel-item recommended"><b>${missingRec.length} Empfehlung${missingRec.length>1?'en':''} noch nicht gepackt</b>${missingRec.slice(0,6).map(g=>escapeHTML(g.name)).join(' · ')}${missingRec.length>6?' …':''}</div>`);
  if(contextOffPacked.length)rows.push(`<div class="pack-intel-item remove"><b>${contextOffPacked.length} Teil${contextOffPacked.length>1?'e':''} aktuell nicht aus dem Reisekontext nötig</b>${contextOffPacked.map(g=>escapeHTML(g.name)).join(' · ')}. Nicht automatisch entfernen – bewusst entscheiden.</div>`);
  if(preview.over.length){
-   rows.push(`<div class="pack-intel-item required"><b>Vorschlag überschreitet Taschenlimit</b>${preview.over.map(([id])=>escapeHTML(bagName(id))).join(' · ')}. Taschenprofil oder Ausrüstung anpassen.</div>`);
+   rows.push(`<div class="pack-intel-item required"><b>Vorschlag überschreitet Taschenlimit</b>${preview.over.map(([id])=>escapeHTML(bagName(id))).join(' · ')}. Pack Intelligence prüft zuerst vorhandene, aber deaktivierte Taschen.</div>`);
+   if(expansion.length){
+     rows.push(`<div class="pack-intel-item recommended"><b>Zusätzliche Kapazität verfügbar</b>${expansion.map(x=>`${escapeHTML(x.name)}: ${x.liters.toFixed(1)} L · ${x.kg.toFixed(1)} kg`).join(' · ')}. Aktivierung bleibt deine Entscheidung.</div>`);
+   }else if(ctx.bike.forkMounts!=='yes'){
+     rows.push('<div class="pack-intel-item"><b>Gabel-Cargo nur bei bestätigter Aufnahme</b>Falls dein Bike Gabel-Aufnahmen besitzt, im Bike-Profil auf „vorhanden“ stellen. Erst dann können Gabeltaschen als zusätzliche Kapazität angeboten werden.</div>');
+   }else{
+     rows.push('<div class="pack-intel-item"><b>Keine deaktivierte Zusatztasche verfügbar</b>Taschenprofil, Ausrüstung oder persönliche Kapazitätsgrenzen prüfen.</div>');
+   }
  }else{
    rows.push('<div class="pack-intel-item"><b>Vorschlag passt in hinterlegte Taschenlimits</b>Gewicht und Volumen bleiben innerhalb deiner Planungsgrenzen.</div>');
  }
  summary.innerHTML=rows.join('');
 
+ const expansionButtons=preview.over.length&&expansion.length
+   ? expansion.slice(0,3).map(x=>`<button class="secondary" type="button" onclick="activateBagFromPackIntel('${x.id}')">${escapeHTML(x.name)} aktivieren</button>`).join('')
+   :'';
  actions.innerHTML=`
    <button class="primary" type="button" onclick="applyRecommendedSetup()">Vorschlag übernehmen</button>
-   <button class="secondary" type="button" onclick="packOnlyMissingRecommendations()">nur Fehlendes ergänzen</button>`;
+   <button class="secondary" type="button" onclick="packOnlyMissingRecommendations()">nur Fehlendes ergänzen</button>
+   ${expansionButtons}`;
 }
 function packOnlyMissingRecommendations(){
  const rec=smartRecommendedAssignments();
@@ -3420,6 +3448,7 @@ function renderPackHealth(){
  const missingRec=recommended.filter(g=>!packed.has(g.id));
  const overW=Object.entries(bags).filter(([id,b])=>bagWeight(id)>b.cap);
  const overV=Object.entries(bags).filter(([id,b])=>bagVolume(id)>b.liters);
+ const unavailablePacked=Object.entries(bags).filter(([id])=>!bagAvailable(id)&&(bagWeight(id)>0||bagVolume(id)>0));
 
  let title='Packplan bereit',msg='Pflichtausrüstung vollständig und alle Taschen innerhalb der hinterlegten Grenzen.';
  if(missing.length){
