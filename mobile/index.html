@@ -98,6 +98,8 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
   stroke-width:5!important;
   filter:drop-shadow(0 0 7px rgba(242,184,75,.75));
 }
+.bag.inventory-off{opacity:.28;stroke-dasharray:6 4;filter:none!important}
+.bag-label.inventory-off,.bag-name.inventory-off{opacity:.28}
 .bag.move-target{
   stroke:#2ba877!important;
   stroke-width:5!important;
@@ -570,14 +572,14 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
             <circle cx="110" cy="175" r="65" fill="none" stroke="#17231e" stroke-width="10"/>
             <circle cx="315" cy="175" r="65" fill="none" stroke="#17231e" stroke-width="10"/>
             <path d="M110 175 L175 85 L245 175 L110 175 M175 85 L270 90 L245 175 M270 90 L315 175" fill="none" stroke="#9b8559" stroke-width="10"/>
-            <rect data-bag="saddle" class="bag" x="140" y="52" rx="10" width="70" height="38"/><text x="175" y="70" text-anchor="middle" fill="white" font-weight="800">S</text><text data-filltext="saddle" class="bag-label" x="175" y="83" text-anchor="middle">0%</text>
-            <rect data-bag="frame" class="bag" x="180" y="112" rx="10" width="80" height="52"/><text x="220" y="137" text-anchor="middle" fill="white" font-weight="800">R</text><text data-filltext="frame" class="bag-label" x="220" y="153" text-anchor="middle">0%</text>
-            <rect data-bag="handlebar" class="bag" x="268" y="54" rx="10" width="58" height="55"/><text x="297" y="80" text-anchor="middle" fill="white" font-weight="800">L</text><text data-filltext="handlebar" class="bag-label" x="297" y="96" text-anchor="middle">0%</text>
-            <rect data-bag="top" class="bag" x="213" y="82" rx="8" width="58" height="24"/><text x="242" y="94" text-anchor="middle" fill="white" font-size="11" font-weight="800">OT</text><text data-filltext="top" class="bag-label" x="242" y="103" text-anchor="middle">0%</text>
-            <rect data-bag="tool" class="bag" x="154" y="114" rx="8" width="32" height="42"/><text x="170" y="134" text-anchor="middle" fill="white" font-size="11" font-weight="800">W</text><text data-filltext="tool" class="bag-label" x="170" y="149" text-anchor="middle">0%</text>
+            <rect data-bag="saddle" class="bag" x="140" y="52" rx="10" width="70" height="38"/><text data-bag-label="saddle" class="bag-name" x="175" y="70" text-anchor="middle" fill="white" font-weight="800">S</text><text data-filltext="saddle" class="bag-label" x="175" y="83" text-anchor="middle">0%</text>
+            <rect data-bag="frame" class="bag" x="180" y="112" rx="10" width="80" height="52"/><text data-bag-label="frame" class="bag-name" x="220" y="137" text-anchor="middle" fill="white" font-weight="800">R</text><text data-filltext="frame" class="bag-label" x="220" y="153" text-anchor="middle">0%</text>
+            <rect data-bag="handlebar" class="bag" x="268" y="54" rx="10" width="58" height="55"/><text data-bag-label="handlebar" class="bag-name" x="297" y="80" text-anchor="middle" fill="white" font-weight="800">L</text><text data-filltext="handlebar" class="bag-label" x="297" y="96" text-anchor="middle">0%</text>
+            <rect data-bag="top" class="bag" x="213" y="82" rx="8" width="58" height="24"/><text data-bag-label="top" class="bag-name" x="242" y="94" text-anchor="middle" fill="white" font-size="11" font-weight="800">OT</text><text data-filltext="top" class="bag-label" x="242" y="103" text-anchor="middle">0%</text>
+            <rect data-bag="tool" class="bag" x="154" y="114" rx="8" width="32" height="42"/><text data-bag-label="tool" class="bag-name" x="170" y="134" text-anchor="middle" fill="white" font-size="11" font-weight="800">W</text><text data-filltext="tool" class="bag-label" x="170" y="149" text-anchor="middle">0%</text>
             <g id="forkCargoVisual" style="display:none">
-              <rect data-bag="forkL" class="bag" x="286" y="112" rx="7" width="26" height="40"/><text x="299" y="130" text-anchor="middle" fill="white" font-size="9" font-weight="800">GL</text><text data-filltext="forkL" class="bag-label" x="299" y="144" text-anchor="middle">0%</text>
-              <rect data-bag="forkR" class="bag" x="320" y="112" rx="7" width="26" height="40"/><text x="333" y="130" text-anchor="middle" fill="white" font-size="9" font-weight="800">GR</text><text data-filltext="forkR" class="bag-label" x="333" y="144" text-anchor="middle">0%</text>
+              <g id="forkLVisual"><rect data-bag="forkL" class="bag" x="286" y="112" rx="7" width="26" height="40"/><text data-bag-label="forkL" class="bag-name" x="299" y="130" text-anchor="middle" fill="white" font-size="9" font-weight="800">GL</text><text data-filltext="forkL" class="bag-label" x="299" y="144" text-anchor="middle">0%</text></g>
+              <g id="forkRVisual"><rect data-bag="forkR" class="bag" x="320" y="112" rx="7" width="26" height="40"/><text data-bag-label="forkR" class="bag-name" x="333" y="130" text-anchor="middle" fill="white" font-size="9" font-weight="800">GR</text><text data-filltext="forkR" class="bag-label" x="333" y="144" text-anchor="middle">0%</text></g>
             </g>
           </svg>
         </div>
@@ -3631,16 +3633,25 @@ function assignToBag(bag){
 function renderBikeBagState(){
  const forkOn=bikeProfile().forkMounts==='yes';
  const forkVisual=$('forkCargoVisual');if(forkVisual)forkVisual.style.display=forkOn?'':'none';
- visibleBagEntries().forEach(([id,b])=>{
+ const forkLVisual=$('forkLVisual');if(forkLVisual)forkLVisual.style.display=forkOn&&bagAvailable('forkL')?'':'none';
+ const forkRVisual=$('forkRVisual');if(forkRVisual)forkRVisual.style.display=forkOn&&bagAvailable('forkR')?'':'none';
+ Object.entries(bags).forEach(([id,b])=>{
    const pct=Math.round((bagWeight(id)/b.cap)*100);
+   const active=bagAvailable(id);
    const t=document.querySelector(`[data-filltext="${id}"]`);
    if(t){
      t.textContent=`${pct}%`;
      t.classList.toggle('warn',pct>80&&pct<=100);
      t.classList.toggle('over',pct>100);
+     t.classList.toggle('inventory-off',!active&&b.mount!=='fork');
    }
+   const label=document.querySelector(`[data-bag-label="${id}"]`);
+   if(label)label.classList.toggle('inventory-off',!active&&b.mount!=='fork');
    const rect=document.querySelector(`[data-bag="${id}"]`);
-   if(rect) rect.setAttribute('aria-label',`${b.name}, ${pct}% gefüllt`);
+   if(rect){
+     rect.classList.toggle('inventory-off',!active&&b.mount!=='fork');
+     rect.setAttribute('aria-label',`${b.name}, ${active?'aktiv':'deaktiviert'}, ${pct}% gefüllt`);
+   }
  });
  const focus=$('bikePackFocus');
  if(focus){
