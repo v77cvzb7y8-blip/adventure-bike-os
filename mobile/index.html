@@ -3364,6 +3364,15 @@ function inactiveBagCapacityOptions(){
    .map(([id,b])=>({id,name:b.name,kg:Number(b.cap)||0,liters:Number(b.liters)||0,mount:b.mount||'base'}))
    .sort((a,b)=>(b.liters-a.liters)||(b.kg-a.kg));
 }
+let lastPackIntelActivatedBag=null;
+function activatedBagRecommendation(id){
+ if(!id||!bags[id]||!bagAvailable(id))return [];
+ const rec=smartRecommendedAssignments();
+ return Object.entries(rec)
+   .filter(([,bid])=>bid===id)
+   .map(([gid])=>gear.find(g=>g.id===gid))
+   .filter(Boolean);
+}
 function activateBagFromPackIntel(id){
  if(!bags[id])return;
  if(!bagMountAvailable(id)){
@@ -3371,14 +3380,16 @@ function activateBagFromPackIntel(id){
    return;
  }
  bags[id].enabled=true;
+ lastPackIntelActivatedBag=id;
  persistBagProfile();
  refreshBagAvailability();
- toast(`${bagName(id)} aktiviert`);
+ toast(`${bagName(id)} aktiviert · Vorschlag neu berechnet`);
 }
 function renderPackIntelligence(){
  const context=$('packIntelContext'),summary=$('packIntelSummary'),actions=$('packIntelActions');
  if(!context||!summary||!actions)return;
  const ctx=packContext(),tot=packRecommendationTotals(),preview=packCapacityPreview(),expansion=inactiveBagCapacityOptions();
+ const activatedItems=activatedBagRecommendation(lastPackIntelActivatedBag);
  const chips=[];
  chips.push(`<span class="ok">${ctx.days} Tag${ctx.days===1?'':'e'}</span>`);
  if(ctx.weather.available){
@@ -3406,6 +3417,14 @@ function renderPackIntelligence(){
  else rows.push('<div class="pack-intel-item"><b>Pflichtteile im aktuellen Packplan vorhanden</b>Basis für die aktuelle Reise ist abgedeckt.</div>');
  if(missingRec.length)rows.push(`<div class="pack-intel-item recommended"><b>${missingRec.length} Empfehlung${missingRec.length>1?'en':''} noch nicht gepackt</b>${missingRec.slice(0,6).map(g=>escapeHTML(g.name)).join(' · ')}${missingRec.length>6?' …':''}</div>`);
  if(contextOffPacked.length)rows.push(`<div class="pack-intel-item remove"><b>${contextOffPacked.length} Teil${contextOffPacked.length>1?'e':''} aktuell nicht aus dem Reisekontext nötig</b>${contextOffPacked.map(g=>escapeHTML(g.name)).join(' · ')}. Nicht automatisch entfernen – bewusst entscheiden.</div>`);
+ if(lastPackIntelActivatedBag&&bags[lastPackIntelActivatedBag]?.enabled!==false){
+   if(activatedItems.length){
+     const moveNames=activatedItems.map(g=>escapeHTML(g.name)).join(' · ');
+     rows.push(`<div class="pack-intel-item recommended"><b>Neu verteilt: ${escapeHTML(bagName(lastPackIntelActivatedBag))}</b>Der neu berechnete Vorschlag würde hier ${activatedItems.length} Teil${activatedItems.length===1?'':'e'} einplanen: ${moveNames}. Dein gespeicherter Packplan wurde noch nicht verändert.</div>`);
+   }else{
+     rows.push(`<div class="pack-intel-item"><b>${escapeHTML(bagName(lastPackIntelActivatedBag))} aktiviert</b>Nach der Neuberechnung wird die zusätzliche Tasche aktuell nicht benötigt. Dein gespeicherter Packplan bleibt unverändert.</div>`);
+   }
+ }
  if(preview.over.length){
    rows.push(`<div class="pack-intel-item required"><b>Vorschlag überschreitet Taschenlimit</b>${preview.over.map(([id])=>escapeHTML(bagName(id))).join(' · ')}. Pack Intelligence prüft zuerst vorhandene, aber deaktivierte Taschen.</div>`);
    if(expansion.length){
@@ -3423,8 +3442,9 @@ function renderPackIntelligence(){
  const expansionButtons=preview.over.length&&expansion.length
    ? expansion.slice(0,3).map(x=>`<button class="secondary" type="button" onclick="activateBagFromPackIntel('${x.id}')">${escapeHTML(x.name)} aktivieren</button>`).join('')
    :'';
+ const applyLabel=lastPackIntelActivatedBag?'Neu verteilten Vorschlag übernehmen':'Vorschlag übernehmen';
  actions.innerHTML=`
-   <button class="primary" type="button" onclick="applyRecommendedSetup()">Vorschlag übernehmen</button>
+   <button class="primary" type="button" onclick="applyRecommendedSetup()">${applyLabel}</button>
    <button class="secondary" type="button" onclick="packOnlyMissingRecommendations()">nur Fehlendes ergänzen</button>
    ${expansionButtons}`;
 }
@@ -3509,6 +3529,7 @@ function applyRecommendedSetup(){
    if(g?.custom)next[gid]=bid;
  });
  state.assignments=next;
+ lastPackIntelActivatedBag=null;
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
  localStorage.setItem('abo-mobile-pack-mode','recommended');
  state.selectedGear=null;state.movingGear=null;
@@ -3519,6 +3540,7 @@ function applyRecommendedSetup(){
 }
 function startEmptySetup(){
  state.assignments={};state.selectedGear=null;state.movingGear=null;
+ lastPackIntelActivatedBag=null;
  localStorage.setItem('abo-mobile-pack',JSON.stringify(state.assignments));
  localStorage.setItem('abo-mobile-pack-mode','empty');
  clearBagHighlights();
