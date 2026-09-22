@@ -100,6 +100,38 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
  background:rgba(250,247,239,.95);padding:9px 34px 9px 12px;color:var(--forest);font-weight:700;font-size:12px;
  box-shadow:0 5px 16px rgba(50,45,38,.08)
 }
+.map-tools{
+ position:absolute;left:14px;top:14px;z-index:710;display:flex;gap:8px;align-items:center
+}
+.map-tool{
+ min-height:42px;border:1px solid rgba(56,62,54,.16);border-radius:10px;background:rgba(250,247,239,.96);
+ color:var(--forest);font-weight:800;font-size:11px;padding:0 12px;box-shadow:0 5px 16px rgba(50,45,38,.08)
+}
+.map-tool.icon{width:42px;padding:0;font-size:18px}
+.map-wrap.map-fullscreen{
+ position:fixed!important;inset:0!important;height:100dvh!important;width:100vw!important;z-index:9999!important;
+ border:0!important;border-radius:0!important;background:#e7e5dc!important
+}
+.map-wrap.map-fullscreen #routeMapLeaflet{height:100%!important}
+.map-wrap.map-fullscreen .map-scale-note{bottom:18px}
+.map-wrap.map-fullscreen .route-map-legend{bottom:18px}
+.map-wrap.map-fullscreen .map-style-select{top:18px;right:18px}
+.map-wrap.map-fullscreen .map-tools{top:18px;left:18px}
+body.map-open{overflow:hidden!important}
+#routeMapLeaflet .leaflet-control-zoom a{
+ width:44px!important;height:44px!important;line-height:42px!important;font-size:23px!important
+}
+#routeMapLeaflet .leaflet-control-zoom{margin-top:72px!important;margin-left:14px!important}
+.touch-hint{
+ display:none;position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:705;
+ background:rgba(250,247,239,.94);border:1px solid rgba(56,62,54,.14);border-radius:999px;
+ padding:7px 10px;font-size:10px;color:#626861;pointer-events:none
+}
+@media (hover:none),(pointer:coarse){
+ .touch-hint{display:block}
+ .map-scale-note{display:none}
+ #routeMapLeaflet .leaflet-control-zoom{margin-top:76px!important}
+}
 .map-scale-note{
  position:absolute;left:15px;bottom:14px;z-index:650;background:rgba(250,247,239,.87);border:1px solid rgba(56,62,54,.12);
  border-radius:8px;padding:6px 8px;font-size:9px;color:#646a63;pointer-events:none
@@ -227,7 +259,7 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
   .topbar{padding:0 15px;height:auto;min-height:66px;gap:10px}.wordmark{font-size:20px}.mark{width:31px;height:31px}.nav{overflow:auto}
   .nav button{padding:8px 9px;font-size:11px}.top-actions{display:none}.shell{padding:18px 12px 42px}
   h1{font-size:35px}.kpi-grid,.stage-stat-grid,.stage-mini,.action-grid,.weather-row{grid-template-columns:1fr 1fr}
-  .side{grid-template-columns:1fr}.map-wrap{height:340px}.bag-overview{grid-template-columns:1fr 1fr}
+  .side{grid-template-columns:1fr}.map-wrap{height:430px}.bag-overview{grid-template-columns:1fr 1fr}
   .org-row{grid-template-columns:90px 1fr}.org-row .status-ok{grid-column:2}
 }
 </style>
@@ -314,6 +346,11 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
       <div class="card route-visual-card">
         <div class="map-wrap" id="mapWrap">
           <div id="routeMapLeaflet" aria-label="Topografische Routenkarte"></div>
+          <div class="map-tools">
+            <button id="fitRouteBtn" class="map-tool" type="button">Route anzeigen</button>
+            <button id="fullMapBtn" class="map-tool icon" type="button" aria-label="Karte Vollbild">⛶</button>
+          </div>
+          <div class="touch-hint">Mit 2 Fingern zoomen · Tippen = Streckenpunkt</div>
           <select id="mapStyleSelect" class="map-style-select" aria-label="Kartenstil">
             <option value="esri">Esri Topo</option>
             <option value="osm">OSM</option>
@@ -545,7 +582,19 @@ let roamMap=null,roamCursor=null,esriLayer=null,osmLayer=null,openTopoLayer=null
 
 function initRouteMap(){
  if(roamMap||!document.getElementById('routeMapLeaflet')||typeof L==='undefined')return;
- roamMap=L.map('routeMapLeaflet',{zoomControl:true,scrollWheelZoom:true,attributionControl:true});
+ const isTouch=window.matchMedia('(hover:none), (pointer:coarse)').matches;
+ roamMap=L.map('routeMapLeaflet',{
+   zoomControl:true,
+   scrollWheelZoom:!isTouch,
+   touchZoom:true,
+   doubleClickZoom:true,
+   dragging:true,
+   boxZoom:!isTouch,
+   keyboard:!isTouch,
+   zoomSnap:.25,
+   zoomDelta:.5,
+   attributionControl:true
+ });
 
  esriLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{
    maxZoom:19,
@@ -584,10 +633,37 @@ function initRouteMap(){
  roamCursor=L.circleMarker(interpGeo(.55),{radius:7,color:'#a2573c',weight:4,fillColor:'#f8f5ed',fillOpacity:1}).addTo(roamMap);
  roamCursor.bindTooltip('',{permanent:true,direction:'top',offset:[0,-10],className:'roam-map-tip',opacity:1}).openTooltip();
 
- roamMap.fitBounds(L.latLngBounds(routeGeo).pad(.08));
+ const routeBounds=L.latLngBounds(routeGeo);
+ function fitRoute(){
+   roamMap.fitBounds(routeBounds,{padding:[32,32],animate:true,maxZoom:11});
+ }
+ fitRoute();
 
- roamMap.on('mousemove',e=>updateLinked(nearestRouteProgress(e.latlng),'map'));
+ const canHover=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+ if(canHover){
+   roamMap.on('mousemove',e=>updateLinked(nearestRouteProgress(e.latlng),'map'));
+ }
  roamMap.on('click',e=>updateLinked(nearestRouteProgress(e.latlng),'map'));
+
+ // Wider invisible interaction line: easier to tap/click without changing the visual route.
+ L.polyline(routeGeo,{color:'#000',weight:22,opacity:0,interactive:true})
+  .on('click',e=>{L.DomEvent.stopPropagation(e);updateLinked(nearestRouteProgress(e.latlng),'map')})
+  .addTo(roamMap);
+
+ const fitBtn=document.getElementById('fitRouteBtn');
+ if(fitBtn)fitBtn.addEventListener('click',e=>{e.stopPropagation();fitRoute()});
+
+ const fullBtn=document.getElementById('fullMapBtn');
+ const wrap=document.getElementById('mapWrap');
+ function setFullMap(on){
+   wrap.classList.toggle('map-fullscreen',on);
+   document.body.classList.toggle('map-open',on);
+   fullBtn.textContent=on?'×':'⛶';
+   fullBtn.setAttribute('aria-label',on?'Vollbild schließen':'Karte Vollbild');
+   setTimeout(()=>{roamMap.invalidateSize();if(on)fitRoute()},80);
+ }
+ if(fullBtn)fullBtn.addEventListener('click',e=>{e.stopPropagation();setFullMap(!wrap.classList.contains('map-fullscreen'))});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&wrap.classList.contains('map-fullscreen'))setFullMap(false)});
 
  const select=document.getElementById('mapStyleSelect');
  if(select)select.addEventListener('change',()=>{
