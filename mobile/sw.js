@@ -1,4 +1,4 @@
-const C='abo-mobile-0-7-2-v1';
+const C='abo-mobile-0-7-3-fix1';
 const APP_PREFIX='abo-mobile-';
 
 self.addEventListener('install',event=>{
@@ -59,7 +59,7 @@ self.addEventListener('fetch',event=>{
       const hit=await cache.match(event.request);
       if(hit)return hit;
       try{
-        const fresh=await fetch(event.request);
+        const fresh=await fetch(event.request,{cache:'no-store'});
         if(fresh && fresh.ok)cache.put(event.request,fresh.clone()).catch(()=>{});
         return fresh;
       }catch(err){
