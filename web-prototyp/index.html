@@ -127,6 +127,13 @@ body.map-open{overflow:hidden!important}
  background:rgba(250,247,239,.94);border:1px solid rgba(56,62,54,.14);border-radius:999px;
  padding:7px 10px;font-size:10px;color:#626861;pointer-events:none
 }
+.route-geometry-status{
+ position:absolute;left:14px;bottom:48px;z-index:706;background:rgba(250,247,239,.95);
+ border:1px solid rgba(56,62,54,.14);border-radius:999px;padding:7px 10px;font-size:10px;
+ font-weight:750;color:#596159;box-shadow:0 4px 14px rgba(50,45,38,.06);pointer-events:none
+}
+.route-geometry-status.ok{color:#3e5f45}
+.route-geometry-status.warn{color:#7b533b}
 @media (hover:none),(pointer:coarse){
  .touch-hint{display:block}
  .map-scale-note{display:none}
@@ -336,7 +343,7 @@ body.map-open{overflow:hidden!important}
 
 <section class="screen" id="screen-route">
   <div class="route-title-row">
-    <div><div class="eyebrow">Route</div><h1>Gravel Traverse Tirol</h1><div class="route-meta">312 km · +4.850 m · 4 Etappen · 53% Gravel</div></div>
+    <div><div class="eyebrow">Route</div><h1 id="routePageTitle">Gravel Traverse Tirol</h1><div class="route-meta" id="routeMetaText">Routengeometrie wird geladen …</div></div>
     <div class="btn-row"><button class="btn">GPX exportieren</button><button class="btn primary">Route speichern</button></div>
   </div>
   <div class="tabs"><button class="active">Übersicht</button><button>Karte</button><button>Höhe</button><button>Terrain</button><button>Waypoints</button><button>Etappen</button></div>
@@ -351,6 +358,7 @@ body.map-open{overflow:hidden!important}
             <button id="fullMapBtn" class="map-tool icon" type="button" aria-label="Karte Vollbild">⛶</button>
           </div>
           <div class="touch-hint">Mit 2 Fingern zoomen · Tippen = Streckenpunkt</div>
+          <div id="routeGeometryStatus" class="route-geometry-status">Routengeometrie wird geladen …</div>
           <select id="mapStyleSelect" class="map-style-select" aria-label="Kartenstil">
             <option value="esri">Esri Topo</option>
             <option value="osm">OSM</option>
@@ -373,12 +381,12 @@ body.map-open{overflow:hidden!important}
           <svg id="elevationSvg" viewBox="0 0 1000 220" preserveAspectRatio="none">
             <rect width="1000" height="220" fill="#f8f5ed"/>
             <g stroke="#ded7cb" stroke-width="1"><line x1="55" x2="970" y1="40" y2="40"/><line x1="55" x2="970" y1="85" y2="85"/><line x1="55" x2="970" y1="130" y2="130"/><line x1="55" x2="970" y1="175" y2="175"/></g>
-            <path d="M55,175 L95,158 L135,126 L175,148 L220,91 L265,136 L305,112 L345,151 L390,122 L430,77 L475,145 L520,118 L565,160 L610,115 L650,82 L695,133 L740,101 L780,54 L820,127 L860,87 L905,139 L970,166 L970,180 L55,180 Z" fill="#9da392" opacity=".74"/>
-            <path d="M55,175 L95,158 L135,126 L175,148 L220,91 L265,136 L305,112 L345,151 L390,122 L430,77 L475,145 L520,118 L565,160 L610,115 L650,82 L695,133 L740,101 L780,54 L820,127 L860,87 L905,139 L970,166" fill="none" stroke="#556244" stroke-width="2"/>
-            <g><rect x="55" y="181" width="184" height="10" fill="#a2573c"/><rect x="239" y="181" width="160" height="10" fill="#525756"/><rect x="399" y="181" width="167" height="10" fill="#718260"/><rect x="566" y="181" width="125" height="10" fill="#bd955d"/><rect x="691" y="181" width="279" height="10" fill="#a2573c"/></g>
+            <path id="profileArea" d="" fill="#9da392" opacity=".74"/>
+            <path id="profileStroke" d="" fill="none" stroke="#556244" stroke-width="2"/>
+            <g id="profileTerrainBars"></g>
             <line id="profileLine" x1="516" x2="516" y1="22" y2="191" stroke="#a2573c" stroke-width="2" stroke-dasharray="6 5"/>
             <circle id="profileMarker" cx="516" cy="118" r="7" fill="#f8f5ed" stroke="#a2573c" stroke-width="4"/>
-            <g font-size="12" font-family="Inter, sans-serif" fill="#71766f"><text x="10" y="45">2.5k</text><text x="20" y="90">1.5k</text><text x="28" y="135">1k</text><text x="24" y="180">500m</text><text x="55" y="210">0</text><text x="275" y="210">80</text><text x="505" y="210">160</text><text x="735" y="210">240</text><text x="940" y="210">312 km</text></g>
+            <g font-size="12" font-family="Inter, sans-serif" fill="#71766f"><text id="elevTickTop" x="10" y="45">–</text><text id="elevTickMid" x="20" y="90">–</text><text id="elevTickLow" x="28" y="135">–</text><text x="24" y="180">0m</text><text x="55" y="210">0</text><text id="distTick1" x="275" y="210">–</text><text id="distTick2" x="505" y="210">–</text><text id="distTick3" x="735" y="210">–</text><text id="distTick4" x="930" y="210">– km</text></g>
           </svg>
           <div class="terrain-legend"><span class="legend-item"><i class="dot gravel"></i>Gravel 53%</span><span class="legend-item"><i class="dot asphalt"></i>Asphalt 28%</span><span class="legend-item"><i class="dot trail"></i>Trail 13%</span><span class="legend-item"><i class="dot mixed"></i>Mixed 6%</span></div>
         </div>
@@ -521,20 +529,22 @@ function showScreen(name){
 document.querySelectorAll('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.go)));
 
-const routeGeo=[
- [47.2692,11.4041],[47.2500,11.3500],[47.2250,11.2850],[47.2150,11.2150],
- [47.2050,11.1550],[47.2148,11.0238],[47.2050,10.9650],[47.2030,10.8970],
- [47.1550,10.9300],[47.1050,10.9600],[47.0550,10.9850],[47.0000,11.0100],
- [46.9550,11.0400],[46.9200,11.0750],[46.9050,11.0950],[46.8750,11.1500],
- [46.8450,11.2200],[46.8250,11.2750],[46.8390,11.3220],[46.8700,11.3700],
- [46.8970,11.4310],[46.8550,11.5000],[46.8050,11.5700],[46.7600,11.6200],
- [46.7160,11.6560],[46.6750,11.6100],[46.6400,11.5650],[46.6050,11.5150],
- [46.5600,11.4550],[46.4980,11.3540],[46.4450,11.3000],[46.3900,11.2700],
- [46.3350,11.2450],[46.2850,11.2250],[46.2400,11.2130],[46.1850,11.1900],
- [46.1300,11.1550],[46.0748,11.1217],[46.0150,11.0950],[45.9600,11.0700],
- [45.9100,11.0500],[45.8900,11.0400],[45.8700,11.0000],[45.8500,10.9600],
- [45.8600,10.9150],[45.8760,10.8910],[45.8850,10.8410]
+const API='https://adventure-bike-os-api.onrender.com';
+
+const FALLBACK_ROUTE=[
+ [47.2692,11.4041],[47.2148,11.0238],[46.8390,11.3220],[46.7160,11.6560],
+ [46.4980,11.3540],[46.0748,11.1217],[45.8850,10.8410]
 ];
+
+let routeGeo=[];
+let routeElev=[];
+let routeCum=[0];
+let routeGeoTotal=0;
+let routeDistanceKm=0;
+let routeNamedPoints=[];
+let routeSource='loading';
+let roamMap=null,roamCursor=null,esriLayer=null,osmLayer=null,openTopoLayer=null;
+let routeVisualLayers=[],routePointLayers=[],routeHitLayer=null;
 
 function geoDistKm(a,b){
  const R=6371,toRad=x=>x*Math.PI/180;
@@ -543,12 +553,15 @@ function geoDistKm(a,b){
  const h=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;
  return 2*R*Math.asin(Math.sqrt(h));
 }
-const routeCum=[0];
-for(let i=1;i<routeGeo.length;i++)routeCum.push(routeCum[i-1]+geoDistKm(routeGeo[i-1],routeGeo[i]));
-const routeGeoTotal=routeCum[routeCum.length-1];
-
-function pAtRouteIndex(i){return routeGeoTotal?routeCum[i]/routeGeoTotal:0}
+function rebuildRouteMeasures(){
+ routeCum=[0];
+ for(let i=1;i<routeGeo.length;i++)routeCum.push(routeCum[i-1]+geoDistKm(routeGeo[i-1],routeGeo[i]));
+ routeGeoTotal=routeCum[routeCum.length-1]||0;
+ routeDistanceKm=routeGeoTotal;
+}
+function pAtRouteIndex(i){return routeGeoTotal?routeCum[Math.max(0,Math.min(routeCum.length-1,i))]/routeGeoTotal:0}
 function interpGeo(p){
+ if(routeGeo.length<2)return FALLBACK_ROUTE[0];
  p=Math.max(0,Math.min(1,p));
  const target=p*routeGeoTotal;
  let i=1;
@@ -557,6 +570,13 @@ function interpGeo(p){
  const prev=routeCum[i-1],next=routeCum[i],t=next>prev?(target-prev)/(next-prev):0;
  const a=routeGeo[i-1],b=routeGeo[i];
  return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+}
+function routeIndexForP(p){
+ if(routeGeo.length<2)return 0;
+ const target=Math.max(0,Math.min(1,p))*routeGeoTotal;
+ let i=0;
+ while(i<routeCum.length-1&&routeCum[i]<target)i++;
+ return Math.max(0,Math.min(routeGeo.length-1,i));
 }
 function terrainAtP(p){
  if(p<.20)return {name:'Gravel',color:'#a2573c'};
@@ -567,99 +587,266 @@ function terrainAtP(p){
  if(p<.88)return {name:'Trail',color:'#718260'};
  return {name:'Gravel',color:'#a2573c'};
 }
-const points=[
- {p:0,name:'Innsbruck',alt:575,temp:'18°',wind:'8 km/h W',grade:'2%'},
- {p:.16,name:'Kühtai',alt:2020,temp:'12°',wind:'16 km/h W',grade:'6%'},
- {p:.25,name:'Ötztal',alt:890,temp:'17°',wind:'9 km/h SW',grade:'1%'},
- {p:.43,name:'Jaufenpass',alt:2094,temp:'10°',wind:'22 km/h W',grade:'8%'},
- {p:.55,name:'Brixen',alt:560,temp:'20°',wind:'6 km/h S',grade:'-2%'},
- {p:.72,name:'Bozen',alt:262,temp:'22°',wind:'7 km/h S',grade:'-1%'},
- {p:.86,name:'Trento',alt:194,temp:'21°',wind:'18 km/h S',grade:'3%'},
- {p:1,name:'Gardasee',alt:65,temp:'22°',wind:'10 km/h S',grade:'-3%'}
-].map(x=>({...x,terrain:terrainAtP(x.p).name}));
+function setGeometryStatus(text,cls=''){
+ const el=document.getElementById('routeGeometryStatus');
+ if(!el)return;
+ el.textContent=text;el.className='route-geometry-status '+cls;
+}
+function routeMetaLabel(){
+ const km=routeDistanceKm?`${Math.round(routeDistanceKm)} km`:'Distanz –';
+ const src=routeSource==='stored'?'gespeicherte Adventure-Bike-OS-Route':routeSource==='api'?'echte Routing-Geometrie':routeSource==='fallback'?'Demo-Fallback':'Route';
+ return `${km} · ${src} · Straße/Weg-genau`;
+}
+function normalizeAdventureCoords(coords){
+ return (coords||[]).map(c=>{
+   const lon=Number(c?.[0]),lat=Number(c?.[1]),z=Number(c?.[2]);
+   if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
+   return {lat,lon,z:Number.isFinite(z)?z:null};
+ }).filter(Boolean);
+}
+function storedRouteCandidate(){
+ try{
+   const saved=JSON.parse(localStorage.getItem('abo-mobile-route')||'null');
+   const rows=normalizeAdventureCoords(saved?.coords);
+   if(rows.length<20)return null;
+   const named=(saved?.routePlan?.orderedPoints||[]).map(x=>({
+     name:String(x.name||x.label||'').trim(),
+     lat:Number(x.lat),lon:Number(x.lon),route_index:Number(x.route_index)
+   })).filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));
+   return {rows,named,start:saved.start||'',dest:saved.dest||'',metrics:saved.metrics||null};
+ }catch(e){return null}
+}
+async function enrichRouteElevation(rows){
+ if(rows.length<2)return rows;
+ const good=rows.filter(x=>Number.isFinite(x.z)).length;
+ if(good>=Math.min(rows.length,Math.max(2,Math.floor(rows.length*.7))))return rows;
+ try{
+   const r=await fetch(API+'/api/elevation',{
+     method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({coordinates:rows.map(x=>[x.lon,x.lat])})
+   });
+   const data=await r.json();
+   const enriched=normalizeAdventureCoords(data?.coordinates);
+   if(r.ok&&data?.ok&&enriched.length===rows.length)return enriched;
+ }catch(e){}
+ return rows;
+}
+async function apiRouteCandidate(){
+ const r=await fetch(API+'/api/route-plan',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({
+     start:'Innsbruck',
+     destination:'Riva del Garda',
+     loop:false,
+     waypoints:[],
+     profile:'trekking'
+   })
+ });
+ const data=await r.json();
+ if(!r.ok)throw new Error(data?.error||'Routing nicht verfügbar');
+ let rows=normalizeAdventureCoords(data?.geometry?.coordinates);
+ if(rows.length<20)throw new Error('Zu wenige Routingpunkte');
+ rows=await enrichRouteElevation(rows);
+ const named=(data?.ordered_points||[]).map(x=>({
+   name:String(x.name||x.label||'').trim(),
+   lat:Number(x.lat),lon:Number(x.lon),route_index:Number(x.route_index)
+ })).filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));
+ return {rows,named,start:'Innsbruck',dest:'Riva del Garda'};
+}
+function applyRouteRows(rows,named=[],source='api',start='',dest=''){
+ routeGeo=rows.map(x=>[x.lat,x.lon]);
+ routeElev=rows.map(x=>Number.isFinite(x.z)?x.z:null);
+ routeNamedPoints=Array.isArray(named)?named:[];
+ routeSource=source;
+ rebuildRouteMeasures();
 
-let roamMap=null,roamCursor=null,esriLayer=null,osmLayer=null,openTopoLayer=null;
+ if(!routeNamedPoints.length&&routeGeo.length){
+   routeNamedPoints=[
+     {name:start||'Start',lat:routeGeo[0][0],lon:routeGeo[0][1],route_index:0},
+     {name:dest||'Ziel',lat:routeGeo.at(-1)[0],lon:routeGeo.at(-1)[1],route_index:routeGeo.length-1}
+   ];
+ }
+ const title=document.getElementById('routePageTitle');
+ if(title&&start&&dest)title.textContent=`${start} → ${dest}`;
+ const meta=document.getElementById('routeMetaText');
+ if(meta)meta.textContent=routeMetaLabel();
+ setGeometryStatus(source==='stored'?'Gespeicherte Originalroute übernommen':'Echte Routengeometrie geladen','ok');
 
+ renderExactElevation();
+ if(roamMap){
+   drawRouteOnMap();
+   fitRoute();
+   updateLinked(.5,'load');
+ }
+}
+async function loadExactRouteGeometry(){
+ setGeometryStatus('Routengeometrie wird geladen …');
+ const stored=storedRouteCandidate();
+ if(stored){
+   const rows=await enrichRouteElevation(stored.rows);
+   applyRouteRows(rows,stored.named,'stored',stored.start,stored.dest);
+   return;
+ }
+ try{
+   const api=await apiRouteCandidate();
+   applyRouteRows(api.rows,api.named,'api',api.start,api.dest);
+ }catch(e){
+   const rows=FALLBACK_ROUTE.map(([lat,lon])=>({lat,lon,z:null}));
+   applyRouteRows(rows,[],'fallback','Innsbruck','Gardasee');
+   setGeometryStatus('Routingdienst nicht erreichbar · Demo-Fallback','warn');
+ }
+}
+function routePointProgress(x){
+ if(Number.isFinite(x.route_index)&&routeGeo.length>1)return pAtRouteIndex(Math.round(x.route_index));
+ if(!roamMap)return 0;
+ const target=roamMap.latLngToContainerPoint([x.lat,x.lon]);
+ let best={d:Infinity,p:0};
+ const samples=Math.min(800,Math.max(120,routeGeo.length));
+ for(let i=0;i<=samples;i++){
+   const p=i/samples,pt=roamMap.latLngToContainerPoint(interpGeo(p));
+   const dx=pt.x-target.x,dy=pt.y-target.y,d=dx*dx+dy*dy;
+   if(d<best.d)best={d,p};
+ }
+ return best.p;
+}
+function nearestNamedPoint(p){
+ if(!routeNamedPoints.length)return {name:'Streckenpunkt',p};
+ return routeNamedPoints.map(x=>({...x,p:routePointProgress(x)}))
+   .reduce((a,b)=>Math.abs(b.p-p)<Math.abs(a.p-p)?b:a);
+}
+function elevationStats(){
+ const vals=routeElev.filter(Number.isFinite);
+ if(!vals.length)return null;
+ return {min:Math.min(...vals),max:Math.max(...vals)};
+}
+function elevAtP(p){
+ if(!routeElev.some(Number.isFinite))return null;
+ const idx=routeIndexForP(p);
+ if(Number.isFinite(routeElev[idx]))return routeElev[idx];
+ for(let d=1;d<routeElev.length;d++){
+   if(idx-d>=0&&Number.isFinite(routeElev[idx-d]))return routeElev[idx-d];
+   if(idx+d<routeElev.length&&Number.isFinite(routeElev[idx+d]))return routeElev[idx+d];
+ }
+ return null;
+}
+function elevYForValue(z){
+ const s=elevationStats();
+ if(!s||!Number.isFinite(z))return 120;
+ const span=Math.max(100,s.max-s.min);
+ return 175-((z-s.min)/span)*125;
+}
+function renderExactElevation(){
+ const area=document.getElementById('profileArea'),stroke=document.getElementById('profileStroke');
+ if(!area||!stroke||routeGeo.length<2)return;
+ const sampleCount=Math.min(240,routeGeo.length);
+ const pts=[];
+ for(let j=0;j<sampleCount;j++){
+   const p=j/(sampleCount-1),x=55+p*(970-55),z=elevAtP(p);
+   const y=Number.isFinite(z)?elevYForValue(z):145;
+   pts.push([x,y]);
+ }
+ const line=pts.map(([x,y],i)=>`${i?'L':'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+ stroke.setAttribute('d',line);
+ area.setAttribute('d',line+` L970,180 L55,180 Z`);
+
+ const bars=document.getElementById('profileTerrainBars');
+ if(bars){
+   const cuts=[0,.20,.34,.49,.62,.77,.88,1];
+   bars.innerHTML=cuts.slice(0,-1).map((a,i)=>{
+     const b=cuts[i+1],t=terrainAtP((a+b)/2),x=55+a*915,w=(b-a)*915;
+     return `<rect x="${x.toFixed(1)}" y="181" width="${w.toFixed(1)}" height="10" fill="${t.color}"/>`;
+   }).join('');
+ }
+ const s=elevationStats();
+ if(s){
+   const span=s.max-s.min;
+   document.getElementById('elevTickTop').textContent=Math.round(s.max)+'m';
+   document.getElementById('elevTickMid').textContent=Math.round(s.min+span*.66)+'m';
+   document.getElementById('elevTickLow').textContent=Math.round(s.min+span*.33)+'m';
+ }else{
+   document.getElementById('elevTickTop').textContent='–';
+   document.getElementById('elevTickMid').textContent='–';
+   document.getElementById('elevTickLow').textContent='–';
+ }
+ const d=routeDistanceKm||0;
+ document.getElementById('distTick1').textContent=Math.round(d*.25);
+ document.getElementById('distTick2').textContent=Math.round(d*.5);
+ document.getElementById('distTick3').textContent=Math.round(d*.75);
+ document.getElementById('distTick4').textContent=Math.round(d)+' km';
+}
+function clearRouteVisuals(){
+ routeVisualLayers.forEach(l=>l.remove());routeVisualLayers=[];
+ routePointLayers.forEach(l=>l.remove());routePointLayers=[];
+ if(routeHitLayer){routeHitLayer.remove();routeHitLayer=null}
+}
+function drawRouteOnMap(){
+ if(!roamMap||routeGeo.length<2)return;
+ clearRouteVisuals();
+
+ const base=L.polyline(routeGeo,{color:'#f8f4ec',weight:8,opacity:.98,lineCap:'round',lineJoin:'round'}).addTo(roamMap);
+ routeVisualLayers.push(base);
+
+ // Exact routed geometry; colour is changed segment by segment without simplifying the line.
+ const chunk=Math.max(2,Math.floor(routeGeo.length/180));
+ for(let i=0;i<routeGeo.length-1;i+=chunk){
+   const end=Math.min(routeGeo.length-1,i+chunk);
+   const ll=routeGeo.slice(i,end+1);
+   const p=(pAtRouteIndex(i)+pAtRouteIndex(end))/2,t=terrainAtP(p);
+   const layer=L.polyline(ll,{color:t.color,weight:4.5,opacity:1,lineCap:'round',lineJoin:'round',smoothFactor:0}).addTo(roamMap);
+   routeVisualLayers.push(layer);
+ }
+
+ routeNamedPoints.forEach((x,i)=>{
+   const first=i===0,last=i===routeNamedPoints.length-1;
+   const marker=L.circleMarker([x.lat,x.lon],{
+     radius:first||last?8:4.5,color:'#f8f5ed',weight:first||last?4:2.5,
+     fillColor:last?'#a2573c':'#556244',fillOpacity:1
+   }).addTo(roamMap);
+   marker.bindTooltip(x.name,{direction:'top',offset:[0,-4],opacity:.92,permanent:first||last,className:first||last?'roam-place-label':''});
+   routePointLayers.push(marker);
+ });
+
+ routeHitLayer=L.polyline(routeGeo,{color:'#000',weight:24,opacity:0,interactive:true,smoothFactor:0})
+  .on('click',e=>{L.DomEvent.stopPropagation(e);updateLinked(nearestRouteProgress(e.latlng),'map')})
+  .addTo(roamMap);
+}
+function fitRoute(){
+ if(!roamMap||routeGeo.length<2)return;
+ roamMap.fitBounds(L.latLngBounds(routeGeo),{padding:[32,32],animate:true,maxZoom:12});
+}
 function initRouteMap(){
  if(roamMap||!document.getElementById('routeMapLeaflet')||typeof L==='undefined')return;
  const isTouch=window.matchMedia('(hover:none), (pointer:coarse)').matches;
  roamMap=L.map('routeMapLeaflet',{
-   zoomControl:true,
-   scrollWheelZoom:!isTouch,
-   touchZoom:true,
-   doubleClickZoom:true,
-   dragging:true,
-   boxZoom:!isTouch,
-   keyboard:!isTouch,
-   zoomSnap:.25,
-   zoomDelta:.5,
-   attributionControl:true
+   zoomControl:true,scrollWheelZoom:!isTouch,touchZoom:true,doubleClickZoom:true,dragging:true,
+   boxZoom:!isTouch,keyboard:!isTouch,zoomSnap:.25,zoomDelta:.5,attributionControl:true
  });
-
  esriLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{
-   maxZoom:19,
-   attribution:'Tiles © Esri · Map data contributors'
+   maxZoom:19,attribution:'Tiles © Esri · Map data contributors'
  });
  osmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-   maxZoom:19,
-   attribution:'© OpenStreetMap contributors'
+   maxZoom:19,attribution:'© OpenStreetMap contributors'
  });
  openTopoLayer=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
-   maxZoom:17,
-   attribution:'Map data © OpenStreetMap contributors · Map style © OpenTopoMap'
+   maxZoom:17,attribution:'Map data © OpenStreetMap contributors · Map style © OpenTopoMap'
  });
  esriLayer.addTo(roamMap);
 
- L.polyline(routeGeo,{color:'#f8f4ec',weight:8,opacity:.97,lineCap:'round',lineJoin:'round'}).addTo(roamMap);
- for(let i=0;i<routeGeo.length-1;i++){
-   const p=(pAtRouteIndex(i)+pAtRouteIndex(i+1))/2;
-   const terrain=terrainAtP(p);
-   L.polyline([routeGeo[i],routeGeo[i+1]],{
-     color:terrain.color,weight:4.5,opacity:1,lineCap:'round',lineJoin:'round'
-   }).addTo(roamMap);
- }
-
- L.circleMarker(routeGeo[0],{radius:9,color:'#f8f5ed',weight:4,fillColor:'#556244',fillOpacity:1})
-  .bindTooltip('Innsbruck',{direction:'right',offset:[9,0],permanent:true,className:'roam-place-label'}).addTo(roamMap);
- L.circleMarker(routeGeo[routeGeo.length-1],{radius:9,color:'#f8f5ed',weight:4,fillColor:'#a2573c',fillOpacity:1})
-  .bindTooltip('Gardasee',{direction:'left',offset:[-9,0],permanent:true,className:'roam-place-label'}).addTo(roamMap);
-
- [[47.2148,11.0238,'Kühtai'],[46.8390,11.3220,'Jaufenpass'],[46.7160,11.6560,'Brixen'],[46.4980,11.3540,'Bozen'],[46.0748,11.1217,'Trento']]
- .forEach(([lat,lng,label])=>{
-   L.circleMarker([lat,lng],{radius:4.5,color:'#f8f5ed',weight:2.5,fillColor:'#556244',fillOpacity:1})
-    .bindTooltip(label,{direction:'top',offset:[0,-4],opacity:.92}).addTo(roamMap);
- });
-
- roamCursor=L.circleMarker(interpGeo(.55),{radius:7,color:'#a2573c',weight:4,fillColor:'#f8f5ed',fillOpacity:1}).addTo(roamMap);
+ roamCursor=L.circleMarker([47.2692,11.4041],{radius:7,color:'#a2573c',weight:4,fillColor:'#f8f5ed',fillOpacity:1}).addTo(roamMap);
  roamCursor.bindTooltip('',{permanent:true,direction:'top',offset:[0,-10],className:'roam-map-tip',opacity:1}).openTooltip();
 
- const routeBounds=L.latLngBounds(routeGeo);
- function fitRoute(){
-   roamMap.fitBounds(routeBounds,{padding:[32,32],animate:true,maxZoom:11});
- }
- fitRoute();
-
  const canHover=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
- if(canHover){
-   roamMap.on('mousemove',e=>updateLinked(nearestRouteProgress(e.latlng),'map'));
- }
- roamMap.on('click',e=>updateLinked(nearestRouteProgress(e.latlng),'map'));
-
- // Wider invisible interaction line: easier to tap/click without changing the visual route.
- L.polyline(routeGeo,{color:'#000',weight:22,opacity:0,interactive:true})
-  .on('click',e=>{L.DomEvent.stopPropagation(e);updateLinked(nearestRouteProgress(e.latlng),'map')})
-  .addTo(roamMap);
+ if(canHover)roamMap.on('mousemove',e=>{if(routeGeo.length>1)updateLinked(nearestRouteProgress(e.latlng),'map')});
+ roamMap.on('click',e=>{if(routeGeo.length>1)updateLinked(nearestRouteProgress(e.latlng),'map')});
 
  const fitBtn=document.getElementById('fitRouteBtn');
  if(fitBtn)fitBtn.addEventListener('click',e=>{e.stopPropagation();fitRoute()});
 
- const fullBtn=document.getElementById('fullMapBtn');
- const wrap=document.getElementById('mapWrap');
+ const fullBtn=document.getElementById('fullMapBtn'),wrap=document.getElementById('mapWrap');
  function setFullMap(on){
-   wrap.classList.toggle('map-fullscreen',on);
-   document.body.classList.toggle('map-open',on);
-   fullBtn.textContent=on?'×':'⛶';
-   fullBtn.setAttribute('aria-label',on?'Vollbild schließen':'Karte Vollbild');
+   wrap.classList.toggle('map-fullscreen',on);document.body.classList.toggle('map-open',on);
+   fullBtn.textContent=on?'×':'⛶';fullBtn.setAttribute('aria-label',on?'Vollbild schließen':'Karte Vollbild');
    setTimeout(()=>{roamMap.invalidateSize();if(on)fitRoute()},80);
  }
  if(fullBtn)fullBtn.addEventListener('click',e=>{e.stopPropagation();setFullMap(!wrap.classList.contains('map-fullscreen'))});
@@ -672,51 +859,43 @@ function initRouteMap(){
    else if(select.value==='opentopo')openTopoLayer.addTo(roamMap);
    else esriLayer.addTo(roamMap);
  });
- updateLinked(.55,'init');
+
+ if(routeGeo.length>1){drawRouteOnMap();fitRoute();updateLinked(.5,'init')}
 }
 function nearestRouteProgress(latlng){
- if(!roamMap)return .55;
+ if(!roamMap||routeGeo.length<2)return .5;
  const target=roamMap.latLngToContainerPoint(latlng);
- let best={d:Infinity,p:.55};
- const samples=320;
+ let best={d:Infinity,p:.5};
+ const samples=Math.min(1200,Math.max(320,routeGeo.length));
  for(let i=0;i<=samples;i++){
-   const p=i/samples,pos=interpGeo(p),pt=roamMap.latLngToContainerPoint(pos);
+   const p=i/samples,pt=roamMap.latLngToContainerPoint(interpGeo(p));
    const dx=pt.x-target.x,dy=pt.y-target.y,d=dx*dx+dy*dy;
    if(d<best.d)best={d,p};
  }
  return best.p;
 }
-function interpElevY(p){
- const peaks=[[0,175],[.08,150],[.16,90],[.22,135],[.30,112],[.40,72],[.48,148],[.55,118],[.63,158],[.72,112],[.79,80],[.86,132],[.91,55],[.96,115],[1,166]];
- for(let i=0;i<peaks.length-1;i++){
-   if(p>=peaks[i][0]&&p<=peaks[i+1][0]){
-     const t=(p-peaks[i][0])/(peaks[i+1][0]-peaks[i][0]);
-     return peaks[i][1]+(peaks[i+1][1]-peaks[i][1])*t;
-   }
- }
- return 166;
-}
-function nearestPoint(p){return points.reduce((a,b)=>Math.abs(b.p-p)<Math.abs(a.p-p)?b:a)}
 function updateLinked(p,source){
+ if(routeGeo.length<2)return;
  p=Math.max(0,Math.min(1,p));
- const d=nearestPoint(p),km=Math.round(p*312),terrain=terrainAtP(p);
+ const named=nearestNamedPoint(p),terrain=terrainAtP(p),km=Math.round(p*routeDistanceKm);
+ const z=elevAtP(p);
  if(roamCursor){
    roamCursor.setLatLng(interpGeo(p));
-   roamCursor.setTooltipContent(`<div class="roam-tip-inner"><b>km ${km} · ${d.name}</b><small>${d.alt.toLocaleString('de-DE')} m</small><div class="roam-tip-meta"><i class="dot ${terrain.name.toLowerCase()}"></i><span>${terrain.name}</span><span>·</span><span>${d.temp}</span></div></div>`);
+   roamCursor.setTooltipContent(`<div class="roam-tip-inner"><b>km ${km} · ${named.name||'Streckenpunkt'}</b><small>${Number.isFinite(z)?Math.round(z).toLocaleString('de-DE')+' m':'Höhe –'}</small><div class="roam-tip-meta"><i class="dot ${terrain.name.toLowerCase()}"></i><span>${terrain.name}</span></div></div>`);
  }
- const xprof=55+p*(970-55),yprof=interpElevY(p);
+ const xprof=55+p*915,yprof=Number.isFinite(z)?elevYForValue(z):120;
  document.getElementById('profileLine').setAttribute('x1',xprof);
  document.getElementById('profileLine').setAttribute('x2',xprof);
- const pm=document.getElementById('profileMarker');
- pm.setAttribute('cx',xprof);pm.setAttribute('cy',yprof);
- document.getElementById('pointName').textContent=d.name;
+ const pm=document.getElementById('profileMarker');pm.setAttribute('cx',xprof);pm.setAttribute('cy',yprof);
+
+ document.getElementById('pointName').textContent=named.name||'Streckenpunkt';
  document.getElementById('pointKm').textContent=`km ${km}`;
- document.getElementById('pointAlt').textContent=d.alt.toLocaleString('de-DE')+' m';
+ document.getElementById('pointAlt').textContent=Number.isFinite(z)?Math.round(z).toLocaleString('de-DE')+' m':'–';
  document.getElementById('pointTerrain').textContent=terrain.name;
- document.getElementById('pointGrade').textContent=d.grade;
- document.getElementById('pointWind').textContent=d.wind;
- document.getElementById('weatherTemp').textContent=d.temp;
- document.getElementById('weatherText').textContent=`leicht bewölkt · ${d.wind}`;
+ document.getElementById('pointGrade').textContent='–';
+ document.getElementById('pointWind').textContent='–';
+ document.getElementById('weatherTemp').textContent='–';
+ document.getElementById('weatherText').textContent='Wetter wird im Live-System routengenau geladen';
 }
 function pointerToP(el,e){
  const r=el.getBoundingClientRect();
@@ -725,6 +904,7 @@ function pointerToP(el,e){
 document.getElementById('elevationSvg').addEventListener('pointermove',e=>updateLinked(pointerToP(e.currentTarget,e),'profile'));
 document.getElementById('elevationSvg').addEventListener('click',e=>updateLinked(pointerToP(e.currentTarget,e),'profile'));
 
+loadExactRouteGeometry();
 initRouteMap();
 
 const stageData=[
