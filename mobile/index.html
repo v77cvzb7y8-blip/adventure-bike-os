@@ -240,6 +240,9 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .gear-badge.loaded{background:#d8eee1;color:#1f6343}
 .pack-check-btn{border:1px solid #d8e1dc;border-radius:999px;background:#fff;color:#526159;font-weight:900;padding:6px 8px;font-size:9px;white-space:nowrap}
 .pack-check-btn.done{background:#e3f2e9;color:#236345;border-color:#c5dfcf}
+.bag-check-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding-top:7px;border-top:1px solid #e5ebe7}
+.bag-check-row span{font-size:8px;font-weight:900;color:#65736b}
+.bag-check-row span.done{color:#236345}
 .volume-line{font-size:10px;color:#657069;margin-top:2px}
 .bagbar.volume{margin-top:5px}
 .bagbar.volume .used{opacity:.55}
@@ -567,6 +570,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
         <div class="pack-mode-row">
           <button class="primary" type="button" onclick="applyRecommendedSetup()">Intelligenten Vorschlag übernehmen</button>
           <button class="secondary" type="button" onclick="startEmptySetup()">Leer starten</button>
+          <button class="secondary" type="button" onclick="resetPackedChecklist(event)">Pack-Check zurücksetzen</button>
         </div>
         <div class="pack-mode-note" id="packModeNote">Beim ersten Öffnen wird ein sinnvoller Vorschlag angezeigt, aber erst nach „übernehmen“ gespeichert.</div>
         <div id="packHealth" class="pack-health"></div>
@@ -3528,13 +3532,32 @@ function packedChecklistStats(){
  const ids=Object.keys(state.assignments||{}).filter(id=>gear.some(g=>g.id===id));
  return {total:ids.length,done:ids.filter(id=>state.packedChecklist?.[id]===true).length};
 }
+function bagPackedChecklistStats(id){
+ const ids=Object.entries(state.assignments||{}).filter(([,bid])=>bid===id).map(([gid])=>gid).filter(gid=>gear.some(g=>g.id===gid));
+ return {total:ids.length,done:ids.filter(gid=>state.packedChecklist?.[gid]===true).length,ids};
+}
+function markBagPackedChecklist(id,ev){
+ if(ev){ev.preventDefault();ev.stopPropagation()}
+ const check=bagPackedChecklistStats(id);
+ if(!check.total){toast('Diese Tasche ist leer');return}
+ check.ids.forEach(gid=>state.packedChecklist[gid]=true);
+ persistPackedChecklist();
+ renderBagContents();
+ toast(`${bagName(id)} vollständig als eingepackt markiert`);
+}
+function resetPackedChecklist(ev){
+ if(ev){ev.preventDefault();ev.stopPropagation()}
+ state.packedChecklist={};
+ persistPackedChecklist();
+ renderBagContents();
+ toast('Pack-Check zurückgesetzt');
+}
 function togglePackedChecklist(id,ev){
  if(ev){ev.preventDefault();ev.stopPropagation()}
  if(!state.assignments?.[id]){toast('Gegenstand zuerst einer Tasche zuordnen');return}
  state.packedChecklist[id]=state.packedChecklist[id]!==true;
  persistPackedChecklist();
- renderGearList();
- renderPackHealth();
+ renderBagContents();
  toast(state.packedChecklist[id]?'Als eingepackt markiert':'Pack-Haken entfernt');
 }
 function renderGearList(){
@@ -3717,6 +3740,7 @@ function renderBagContents(){
    const move=!!state.movingGear;
    const inactive=!bagAvailable(id);
    const inactiveReason=inactive?(bagMountAvailable(id)?'Tasche deaktiviert':'Aufnahme fehlt'):'';
+   const bagCheck=bagPackedChecklistStats(id);
    return `<div class="bagcard ${rec?'recommended':''} ${move&&!inactive?'move-target':''} ${inactive?'bag-unavailable':''}" onclick="${inactive?'void(0)':`assignToBag('${id}')`}">
      <h4>${b.name}${inactive?` · ${inactiveReason}`:''}</h4>
      <div class="sub">${kg.toFixed(1)} / ${b.cap.toFixed(1)} kg</div>
@@ -3726,6 +3750,7 @@ function renderBagContents(){
      <div class="bagbar dual volume"><i class="used ${vcl}" style="width:${vused}%"></i><i class="freepart" style="width:${vfree}%"></i></div>
      <div class="filllabels"><span class="filled">${vpct}% Volumen</span><span class="free">${Math.max(0,100-vpct)}% frei</span></div>
      <div class="bagitems">${items.length?items.map(g=>`<button class="bagitembtn ${state.movingGear===g.id?'active':''}" onclick="event.stopPropagation();startMove('${g.id}')">${g.name} ↔</button>`).join(''):'leer'}</div>
+     ${items.length?`<div class="bag-check-row"><span class="${bagCheck.done===bagCheck.total?'done':''}">${bagCheck.done}/${bagCheck.total} eingepackt</span><button class="pack-check-btn ${bagCheck.done===bagCheck.total?'done':''}" type="button" onclick="markBagPackedChecklist('${id}',event)">${bagCheck.done===bagCheck.total?'✓ Tasche fertig':'Alle einpacken'}</button></div>`:''}
      ${inactive&&items.length?`<div class="movehint" style="color:#8b3c34">${bagMountAvailable(id)?'Tasche ist aktuell deaktiviert':'Passende Aufnahme ist aktuell nicht bestätigt'} – Inhalt bitte umpacken.</div>`:items.length?'<div class="movehint">Gegenstand antippen → direkt verschieben</div>':''}
    </div>`;
  }).join('');
