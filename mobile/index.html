@@ -106,6 +106,18 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .bag-visual-row{display:flex;justify-content:flex-end;margin-top:7px}
 .bag-visual-btn{border:1px solid #d8e1dc;border-radius:999px;background:#fff;color:#315f4d;font-weight:900;padding:6px 8px;font-size:9px}
 .bag-visual-btn.mounted{background:#e3f2e9;color:#236345;border-color:#c5dfcf}
+.weight-balance{border:1px solid #d9e4dd;background:#f8faf8;border-radius:14px;padding:11px;margin:10px 0}
+.weight-balance-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.weight-balance-head b{font-size:13px}
+.weight-balance-badge{font-size:9px;font-weight:900;padding:4px 7px;border-radius:999px;background:#e3f2e9;color:#236345;white-space:nowrap}
+.weight-balance-badge.warn{background:#f5edd7;color:#765d18}
+.weight-balance-badge.high{background:#f2dfdc;color:#8b3c34}
+.weight-zones{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.weight-zone{background:white;border:1px solid #e0e7e2;border-radius:10px;padding:7px;text-align:center}
+.weight-zone b{display:block;font-size:12px}.weight-zone span{font-size:8px;color:#6f7a73}
+.weight-advice{font-size:10px;line-height:1.45;margin-top:8px;color:#53665d}
+.weight-moves{display:grid;gap:6px;margin-top:8px}
+.weight-move{background:white;border:1px solid #e3e8e5;border-radius:10px;padding:7px;font-size:10px;line-height:1.4}
 .bagbar{height:7px;border-radius:999px;background:#e8eee9;overflow:hidden;margin:7px 0 5px}
 .bagbar > i{display:block;height:100%;background:#1e805e;border-radius:inherit}
 .bagbar > i.warn{background:#c3902d}
@@ -601,6 +613,12 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
         </div>
         <div class="pack-mode-note" id="packModeNote">Beim ersten Öffnen wird ein sinnvoller Vorschlag angezeigt, aber erst nach „übernehmen“ gespeichert.</div>
         <div id="packHealth" class="pack-health"></div>
+        <div id="weightBalance" class="weight-balance">
+          <div class="weight-balance-head"><div><b>⚖️ Gewichtsverteilung</b><div class="sub">Analyse des aktuellen Packplans – nichts wird automatisch verschoben.</div></div><span id="weightBalanceBadge" class="weight-balance-badge">prüft</span></div>
+          <div id="weightBalanceZones" class="weight-zones"></div>
+          <div id="weightBalanceAdvice" class="weight-advice"></div>
+          <div id="weightBalanceMoves" class="weight-moves"></div>
+        </div>
         <div class="bike">
           <svg viewBox="0 0 420 250">
             <circle cx="110" cy="175" r="65" fill="none" stroke="#17231e" stroke-width="10"/>
@@ -4102,6 +4120,120 @@ function assignToBag(bag){
  $('recommendBox').textContent='Gegenstand wählen → Tasche direkt darunter auswählen.';
  renderBagContents();
 }
+function weightDistributionSnapshot(){
+ const zoneKg={front:0,center:0,rear:0};
+ Object.entries(state.assignments||{}).forEach(([gid,bid])=>{
+   const g=gear.find(x=>x.id===gid),b=bags[bid];
+   if(!g||!b)return;
+   const z=['front','center','rear'].includes(b.zone)?b.zone:'center';
+   zoneKg[z]+=Number(g.kg)||0;
+ });
+ const total=zoneKg.front+zoneKg.center+zoneKg.rear;
+ const pct=z=>total>0?zoneKg[z]/total*100:0;
+ const frontPct=pct('front'),centerPct=pct('center'),rearPct=pct('rear');
+ const forkL=bagWeight('forkL'),forkR=bagWeight('forkR');
+ const lateralDiff=Math.abs(forkL-forkR);
+ const warnings=[];
+ if(total<=0)return {total,zoneKg,frontPct,centerPct,rearPct,forkL,forkR,lateralDiff,severity:'ok',warnings:[],moves:[]};
+
+ if(rearPct>58)warnings.push('hecklastig');
+ if(frontPct>42)warnings.push('frontlastig');
+ if(centerPct<22&&total>=2.5)warnings.push('zu wenig zentral');
+ if(lateralDiff>.65&&forkL+forkR>.8)warnings.push('Gabel links/rechts ungleich');
+
+ const used=plannedBagUsage(state.assignments||{});
+ const candidateTargets=(g,from)=>{
+   const preferred=['frame','tool','top','forkL','forkR','saddle','handlebar']
+     .filter(id=>id!==from&&bags[id]&&bagAvailable(id));
+   return preferred.map(id=>{
+     const b=bags[id],u=used[id]||{kg:0,l:0};
+     const nextKg=u.kg+(Number(g.kg)||0),nextL=u.l+(Number(g.l)||0);
+     const kgFill=nextKg/Math.max(.1,b.cap),lFill=nextL/Math.max(.1,b.liters);
+     if(kgFill>.90||lFill>.90)return null;
+     const meta=gearPackingMeta(g);
+     let score=0;
+     if(meta.load==='schwer')score+=b.zone==='center'?-1:b.zone==='rear'?.6:.2;
+     if(meta.access==='schnell')score+=id==='top'?-0.7:id==='handlebar'?-0.4:id==='saddle'?.7:0;
+     if(b.zone==='center')score-=.35;
+     if(id===g.bag)score-=.15;
+     score+=Math.max(kgFill,lFill)*.25;
+     return {id,score};
+   }).filter(Boolean).sort((a,b)=>a.score-b.score);
+ };
+
+ const moves=[];
+ const addMove=(gid,from,to,reason)=>{
+   if(!gid||!to||from===to||moves.some(x=>x.gid===gid))return;
+   const g=gear.find(x=>x.id===gid);if(!g)return;
+   moves.push({gid,gear:g,from,to,reason});
+ };
+
+ if(rearPct>58||centerPct<22){
+   const rearItems=Object.entries(state.assignments||{})
+     .filter(([,bid])=>bags[bid]?.zone==='rear')
+     .map(([gid,bid])=>({g:gear.find(x=>x.id===gid),bid}))
+     .filter(x=>x.g)
+     .sort((a,b)=>(Number(b.g.kg)||0)-(Number(a.g.kg)||0));
+   for(const x of rearItems){
+     const target=candidateTargets(x.g,x.bid).find(t=>bags[t.id]?.zone==='center');
+     if(target){addMove(x.g.id,x.bid,target.id,'Schweres Gewicht näher zur Radmitte verlagern.');break}
+   }
+ }
+ if(frontPct>42){
+   const frontItems=Object.entries(state.assignments||{})
+     .filter(([,bid])=>bags[bid]?.zone==='front')
+     .map(([gid,bid])=>({g:gear.find(x=>x.id===gid),bid}))
+     .filter(x=>x.g)
+     .sort((a,b)=>(Number(b.g.kg)||0)-(Number(a.g.kg)||0));
+   for(const x of frontItems){
+     const target=candidateTargets(x.g,x.bid).find(t=>bags[t.id]?.zone==='center'||bags[t.id]?.zone==='rear');
+     if(target){addMove(x.g.id,x.bid,target.id,'Lenker-/Frontgewicht reduzieren.');break}
+   }
+ }
+ if(lateralDiff>.65&&forkL+forkR>.8){
+   const heavySide=forkL>forkR?'forkL':'forkR',lightSide=heavySide==='forkL'?'forkR':'forkL';
+   const sideItems=Object.entries(state.assignments||{})
+     .filter(([,bid])=>bid===heavySide)
+     .map(([gid])=>gear.find(x=>x.id===gid)).filter(Boolean)
+     .sort((a,b)=>(Number(b.kg)||0)-(Number(a.kg)||0));
+   const g=sideItems[0];
+   if(g){
+     const b=bags[lightSide],nextKg=bagWeight(lightSide)+(Number(g.kg)||0),nextL=bagVolume(lightSide)+(Number(g.l)||0);
+     if(nextKg<=b.cap*.90&&nextL<=b.liters*.90)addMove(g.id,heavySide,lightSide,'Gabel links/rechts gleichmäßiger belasten.');
+   }
+ }
+ const severity=warnings.some(x=>x==='hecklastig'||x==='frontlastig')?'high':warnings.length?'warn':'ok';
+ return {total,zoneKg,frontPct,centerPct,rearPct,forkL,forkR,lateralDiff,severity,warnings,moves:moves.slice(0,3)};
+}
+function renderWeightBalance(){
+ const root=$('weightBalance'),badge=$('weightBalanceBadge'),zones=$('weightBalanceZones'),advice=$('weightBalanceAdvice'),moves=$('weightBalanceMoves');
+ if(!root||!badge||!zones||!advice||!moves)return;
+ const d=weightDistributionSnapshot();
+ zones.innerHTML=[
+   ['Vorne',d.zoneKg.front,d.frontPct],
+   ['Zentral',d.zoneKg.center,d.centerPct],
+   ['Hinten',d.zoneKg.rear,d.rearPct]
+ ].map(([label,kg,pct])=>`<div class="weight-zone"><b>${Number(kg).toFixed(1)} kg</b><span>${label} · ${Math.round(pct)}%</span></div>`).join('');
+ if(!d.total){
+   badge.textContent='kein Gepäck';badge.className='weight-balance-badge';
+   advice.textContent='Sobald Gegenstände Taschen zugeordnet sind, wird die Verteilung bewertet.';
+   moves.innerHTML='';
+   return;
+ }
+ if(d.severity==='ok'){
+   badge.textContent='ausgewogen';badge.className='weight-balance-badge';
+   advice.textContent='Die aktuelle Verteilung ist unauffällig. Schwere Gegenstände liegen ausreichend zentral und Vorder-/Hinterlast sind im Planungsbereich.';
+ }else if(d.severity==='high'){
+   badge.textContent='prüfen';badge.className='weight-balance-badge high';
+   advice.textContent=`Auffällig: ${d.warnings.join(' · ')}. Das ist eine Planungsbewertung, keine Hersteller- oder Fahrdynamikgrenze.`;
+ }else{
+   badge.textContent='Hinweis';badge.className='weight-balance-badge warn';
+   advice.textContent=`Hinweis: ${d.warnings.join(' · ')}. Kleine Umpackung kann die Verteilung verbessern.`;
+ }
+ moves.innerHTML=d.moves.length
+   ?d.moves.map(x=>`<div class="weight-move"><b>${escapeHTML(x.gear.name)}</b><br>${escapeHTML(bagName(x.from))} → ${escapeHTML(bagName(x.to))} · ${escapeHTML(x.reason)}</div>`).join('')
+   :'<div class="weight-move">Keine konkrete Umpack-Empfehlung nötig. Der Plan wird nicht automatisch verändert.</div>';
+}
 function renderBikeBagState(){
  const forkOn=bikeProfile().forkMounts==='yes';
  const forkVisual=$('forkCargoVisual');if(forkVisual)forkVisual.style.display=forkOn?'':'none';
@@ -4174,6 +4306,7 @@ function renderBagContents(){
  }).join('');
  renderBikeBagState();
  renderPackHealth();
+ renderWeightBalance();
  renderGearList();
  renderBikeSetup();
 }
