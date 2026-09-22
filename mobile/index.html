@@ -33,6 +33,15 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .bag{fill:#164f3b;stroke:#fff;stroke-width:3}.bag.rec{stroke:#31b67a;stroke-width:7;filter:drop-shadow(0 0 5px rgba(49,182,122,.8))}
 .gearlist{display:flex;gap:7px;flex-wrap:wrap}.chip{border:1px solid #cfd9d2;border-radius:999px;padding:8px 10px;background:white;font-size:12px}.chip.selected{background:#173d2b;color:white}.recommend{background:#eaf6ed;border:1px solid #c8dfd1;border-radius:13px;padding:10px;margin:9px 0}.recommend b{display:block}
 .check{display:grid;grid-template-columns:1fr 1fr;gap:10px}.check .card{margin:0}.ok{color:#18734f;font-weight:800}.pending{color:#8c6a13;font-weight:800}
+.readiness-card{border:1px solid #d9e4dd;background:#f8faf8}
+.readiness-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.readiness-head b{font-size:17px}
+.readiness-badge{font-size:10px;font-weight:900;padding:5px 8px;border-radius:999px;background:#f5edd7;color:#765d18;white-space:nowrap}
+.readiness-badge.ready{background:#e3f2e9;color:#236345}
+.readiness-items{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.readiness-items span{font-size:9px;font-weight:900;padding:5px 7px;border-radius:999px;background:#f1f3f2;color:#67736d}
+.readiness-items span.ready{background:#e7f1e9;color:#356846}
+.readiness-items span.open{background:#f5edd7;color:#765d18}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(255,253,247,.97);border-top:1px solid #d7ddd8;padding:7px 5px calc(7px + env(safe-area-inset-bottom));z-index:40}
 .bottom button{border:0;background:transparent;font-size:9px;color:#53645b;padding:6px 2px}.bottom button b{display:block;font-size:20px;margin-bottom:2px}.bottom button.active{color:var(--g2);font-weight:800}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#132b21;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;display:none;z-index:100}
@@ -622,9 +631,14 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
         </div>
         <div class="pdf-note">Auf iPad/iPhone öffnet sich der Druckdialog. Dort kannst du über die Druckvorschau „Als PDF sichern“ bzw. teilen.</div>
       </div>
+      <div id="overallCheckCard" class="card readiness-card">
+        <div class="readiness-head"><div><div class="sub">REISESTATUS</div><b id="overallCheckTitle">Reise-Check wird geprüft</b></div><span id="overallCheckBadge" class="readiness-badge">offen</span></div>
+        <p id="overallCheckText" class="sub" style="margin-top:7px">Navigation, Wetter, Reservierungen und Packen werden gemeinsam geprüft.</p>
+        <div id="overallCheckItems" class="readiness-items"></div>
+      </div>
       <div class="check">
-        <div class="card"><h3>🧭 Navigation</h3><div class="ok">bereit</div>
-          <p class="sub">Finale Route inklusive ausgewählter Unterkünfte als GPX exportieren.</p>
+        <div class="card"><h3>🧭 Navigation</h3><div id="navigationCheckStatus" class="pending">Route fehlt</div>
+          <p id="navigationCheckText" class="sub">Finale Route berechnen und anschließend als GPX exportieren.</p>
           <div class="nav-export-actions">
             <button class="primary" type="button" onclick="exportGPX()">GPX teilen / exportieren</button>
           </div>
@@ -1114,6 +1128,65 @@ function weatherHTML(i){
    <div class="weather-note">${Number.isFinite(Number(w.precipitation_mm))?`Niederschlag bis ${Number(w.precipitation_mm).toFixed(1)} mm · `:''}${Number.isFinite(Number(w.gust_kmh))?`Böen bis ${Math.round(w.gust_kmh)} km/h · `:''}${w.sample_success&&w.sample_requested?`${w.sample_success}/${w.sample_requested} Routenpunkte · `:`${w.sample_count||0} Routenpunkte · `}${escapeHTML(weatherBandText(w.forecast_band,Number(w.horizon_days)||0))}${w.source?` · ${escapeHTML(w.source)}`:''}${w.partial_errors?.length?' · Teilweise Datenlücke':''}.</div>
  </div>`;
 }
+function renderNavigationCheck(){
+ const statusEl=$('navigationCheckStatus'),textEl=$('navigationCheckText');
+ if(!statusEl||!textEl)return;
+ const ready=Array.isArray(state.coords)&&state.coords.length>1&&Array.isArray(state.stages)&&state.stages.length>0;
+ if(ready){
+   statusEl.textContent='bereit';statusEl.className='ok';
+   textEl.textContent='Finale Route ist vorhanden. GPX kann für die Navigation exportiert werden.';
+ }else{
+   statusEl.textContent='Route fehlt';statusEl.className='pending';
+   textEl.textContent='Zuerst eine Route berechnen oder einen GPX-Track importieren.';
+ }
+}
+function travelReadinessSnapshot(){
+ const stages=Array.isArray(state.stages)?state.stages:[];
+ const navigation=Array.isArray(state.coords)&&state.coords.length>1&&stages.length>0;
+
+ const weatherRows=state.weather?.stages||[];
+ const weatherAvailable=weatherRows.filter(x=>x?.available);
+ const weatherSignals=weatherAvailable.filter(x=>x.overall==='high'||x.overall==='watch');
+ const weather=!!tripStartDate()&&stages.length>0&&state.weather?.status!=='loading'&&state.weather?.status!=='error'
+   && weatherRows.length>0&&weatherAvailable.length===stages.length&&weatherSignals.length===0;
+
+ const nights=Math.max(0,stages.length-1);
+ let booked=0;
+ for(let i=0;i<nights;i++){
+   const x=state.lodging?.selected?.[i];
+   if(x?.status==='booked')booked++;
+ }
+ const lodging=nights===0||booked===nights;
+
+ const pack=packedChecklistStats();
+ const packing=pack.total>0&&pack.done===pack.total;
+
+ return {
+   items:[
+     {key:'navigation',label:'Navigation',ready:navigation},
+     {key:'weather',label:'Wetter',ready:weather},
+     {key:'lodging',label:'Reservierungen',ready:lodging},
+     {key:'packing',label:'Packen',ready:packing}
+   ],
+   pack,nights,booked
+ };
+}
+function renderOverallCheck(){
+ const titleEl=$('overallCheckTitle'),badgeEl=$('overallCheckBadge'),textEl=$('overallCheckText'),itemsEl=$('overallCheckItems');
+ if(!titleEl||!badgeEl||!textEl||!itemsEl)return;
+ const snap=travelReadinessSnapshot();
+ const open=snap.items.filter(x=>!x.ready);
+ if(!open.length){
+   titleEl.textContent='Abfahrbereit';
+   badgeEl.textContent='4/4 bereit';badgeEl.className='readiness-badge ready';
+   textEl.textContent='Navigation, Wetter, Reservierungen und Pack-Check sind vollständig.';
+ }else{
+   titleEl.textContent=`Noch ${open.length} Punkt${open.length===1?'':'e'} offen`;
+   badgeEl.textContent=`${4-open.length}/4 bereit`;badgeEl.className='readiness-badge';
+   textEl.textContent=`Offen: ${open.map(x=>x.label).join(' · ')}. Die Detailkarten darunter zeigen, was noch zu tun ist.`;
+ }
+ itemsEl.innerHTML=snap.items.map(x=>`<span class="${x.ready?'ready':'open'}">${x.ready?'✓':'○'} ${escapeHTML(x.label)}</span>`).join('');
+}
 function renderWeatherCheck(){
  const statusEl=$('weatherCheckStatus'),textEl=$('weatherCheckText');
  if(!statusEl||!textEl)return;
@@ -1492,9 +1565,11 @@ function go(name){
  document.querySelectorAll('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.nav===name));
  if(name==='bike')setTimeout(()=>renderBikeSetup(),30);
  if(name==='check'){
+   renderNavigationCheck();
    renderWeatherCheck();
    renderLodgingCheck();
    renderPackCheck();
+   renderOverallCheck();
  }
  if(name==='stages'&&state.coords){
    setMapInteraction(false);
