@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ROAM · Web Prototype</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 :root{
   --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -84,25 +85,50 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
 .weather-day{padding:10px;border:1px solid var(--line);border-radius:10px;text-align:center;background:#faf7f0}
 .weather-day .icon{font-size:21px}.weather-day b{font-family:Georgia,serif;font-weight:500;font-size:19px}
 .weather-day small{display:block;color:#7a7e76}
-.route-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}
-.route-main{display:grid;gap:16px}
+.route-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}
+.route-main{display:grid;gap:0}
 .route-title-row{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
 .route-meta{font-size:12px;letter-spacing:.12em;color:#6a6e66;text-transform:uppercase}
-.tabs{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-top:18px}
+.tabs{display:flex;gap:26px;border-bottom:1px solid var(--line);margin-top:18px}
 .tabs button{border:0;background:transparent;padding:9px 0 11px;color:#686d66}
 .tabs button.active{color:var(--forest);font-weight:800;border-bottom:2px solid var(--rust)}
-.map-card{overflow:hidden}
-.map-wrap{position:relative;height:440px;background:#dfe1d2}
-#routeMap{width:100%;height:100%;display:block;touch-action:none}
-.map-ctrl{position:absolute;right:14px;top:14px;display:grid;gap:8px}
-.map-ctrl button{width:39px;height:39px;border-radius:50%;border:1px solid rgba(46,58,47,.14);background:rgba(248,245,237,.9)}
-.map-tip{
-  position:absolute;min-width:150px;padding:10px 12px;background:rgba(249,246,238,.96);
-  border:1px solid #d1c9bb;border-radius:10px;box-shadow:0 10px 24px rgba(49,45,39,.12);pointer-events:none;
-  font-size:12px;transform:translate(-50%,-112%);transition:left .05s linear,top .05s linear;
+.route-visual-card{overflow:hidden}
+.map-wrap{position:relative;height:500px;background:#dfe1d2;border-bottom:1px solid var(--line)}
+#routeMapLeaflet{width:100%;height:100%;display:block;background:#dfe1d2}
+#routeMapLeaflet .leaflet-container{font:inherit}
+#routeMapLeaflet .leaflet-control-zoom{border:1px solid rgba(56,62,54,.18);box-shadow:0 4px 14px rgba(50,45,38,.08);border-radius:9px;overflow:hidden}
+#routeMapLeaflet .leaflet-control-zoom a{color:var(--forest);background:rgba(250,247,239,.95);border-bottom-color:var(--line)}
+#routeMapLeaflet .leaflet-control-attribution{font-size:8px;background:rgba(248,245,237,.78);color:#777b74}
+.map-style-select{
+ position:absolute;right:14px;top:14px;z-index:700;border:1px solid rgba(56,62,54,.16);border-radius:10px;
+ background:rgba(250,247,239,.95);padding:9px 34px 9px 12px;color:var(--forest);font-weight:700;font-size:12px;
+ box-shadow:0 5px 16px rgba(50,45,38,.08)
 }
-.map-tip b{display:block;font-family:Georgia,serif;font-size:16px;font-weight:500}
-.map-tip .terrain{display:flex;gap:6px;align-items:center;margin-top:4px}
+.map-scale-note{
+ position:absolute;left:15px;bottom:14px;z-index:650;background:rgba(250,247,239,.87);border:1px solid rgba(56,62,54,.12);
+ border-radius:8px;padding:6px 8px;font-size:9px;color:#646a63;pointer-events:none
+}
+.route-map-legend{
+ position:absolute;right:14px;bottom:14px;z-index:650;display:flex;gap:10px;flex-wrap:wrap;max-width:62%;
+ background:rgba(250,247,239,.9);border:1px solid rgba(56,62,54,.12);border-radius:9px;padding:7px 9px;font-size:9px;color:#5e645d
+}
+.route-map-legend span{display:flex;gap:5px;align-items:center}
+.route-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.roam-map-tip{
+ background:rgba(250,247,239,.97)!important;border:1px solid #cfc7b9!important;border-radius:10px!important;
+ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;padding:0!important
+}
+.roam-map-tip:before{border-top-color:#cfc7b9!important}
+.roam-place-label{background:rgba(250,247,239,.88)!important;border:0!important;box-shadow:none!important;color:#313831!important;font-weight:800!important;font-size:10px!important;padding:3px 5px!important}
+.roam-place-label:before{display:none!important}
+.roam-tip-inner{padding:10px 12px;min-width:155px}
+.roam-tip-inner b{display:block;font-size:15px;margin-bottom:2px}
+.roam-tip-inner small{display:block;color:#6f746d;font-size:10px;margin-bottom:6px}
+.roam-tip-meta{display:flex;gap:8px;align-items:center;font-size:10px}
+.profile-card{padding:16px 18px 14px;background:rgba(250,247,239,.9)}
+.profile-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.profile-head h3{margin-bottom:3px}
+#elevationSvg{width:100%;height:220px;display:block;touch-action:none}
 .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
 .dot.gravel{background:var(--rust)}.dot.asphalt{background:var(--asphalt)}.dot.trail{background:var(--trail)}.dot.mixed{background:var(--mixed)}
 .profile-card{padding:18px 18px 14px}
@@ -285,58 +311,43 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
     <div><div class="eyebrow">Route</div><h1>Gravel Traverse Tirol</h1><div class="route-meta">312 km · +4.850 m · 4 Etappen · 53% Gravel</div></div>
     <div class="btn-row"><button class="btn">GPX exportieren</button><button class="btn primary">Route speichern</button></div>
   </div>
-  <div class="tabs"><button class="active">Übersicht</button><button>Karte</button><button>Höhe</button><button>Terrain</button><button>Waypoints</button></div>
-  <div class="route-layout" style="margin-top:16px">
-    <div class="route-main">
-      <div class="card map-card">
-        <div class="map-wrap" id="mapWrap">
-          <svg id="routeMap" viewBox="0 0 1000 440" preserveAspectRatio="none">
-            <defs>
-              <pattern id="topo" width="110" height="70" patternUnits="userSpaceOnUse">
-                <path d="M-5 55 Q24 16 52 44 T116 30" fill="none" stroke="#a9ad9d" stroke-width="1" opacity=".34"/>
-                <path d="M-10 68 Q28 31 54 57 T118 45" fill="none" stroke="#a9ad9d" stroke-width="1" opacity=".25"/>
-              </pattern>
-              <filter id="paper"><feTurbulence baseFrequency=".7" numOctaves="2" seed="2" type="fractalNoise" result="n"/><feBlend in="SourceGraphic" in2="n" mode="multiply"/></filter>
-            </defs>
-            <rect width="1000" height="440" fill="#dcded0"/>
-            <path d="M0 320 C90 245 130 340 215 250 S375 128 456 230 S625 336 704 220 S851 80 1000 145 L1000 440 L0 440Z" fill="#c3c8b6" opacity=".65"/>
-            <path d="M0 250 C100 180 200 245 280 170 S430 110 520 185 S705 270 790 155 S920 85 1000 110" fill="none" stroke="#aeb4a4" stroke-width="24" opacity=".38"/>
-            <rect width="1000" height="440" fill="url(#topo)"/>
-            <path d="M70,338 C140,315 150,240 218,248 C280,255 310,182 375,200 C445,219 451,278 523,245 C590,214 641,290 700,248 C759,208 784,129 850,147 C915,165 920,98 965,112" fill="none" stroke="#f4efe6" stroke-width="10" stroke-linecap="round"/>
-            <path id="seg1" d="M70,338 C140,315 150,240 218,248" fill="none" stroke="#a2573c" stroke-width="6" stroke-linecap="round"/>
-            <path id="seg2" d="M218,248 C280,255 310,182 375,200" fill="none" stroke="#525756" stroke-width="6" stroke-linecap="round"/>
-            <path id="seg3" d="M375,200 C445,219 451,278 523,245" fill="none" stroke="#718260" stroke-width="6" stroke-linecap="round"/>
-            <path id="seg4" d="M523,245 C590,214 641,290 700,248" fill="none" stroke="#bd955d" stroke-width="6" stroke-linecap="round"/>
-            <path id="seg5" d="M700,248 C759,208 784,129 850,147 C915,165 920,98 965,112" fill="none" stroke="#a2573c" stroke-width="6" stroke-linecap="round"/>
-            <circle cx="70" cy="338" r="11" fill="#556244" stroke="#f5f0e7" stroke-width="4"/>
-            <rect x="954" y="101" width="23" height="23" rx="5" fill="#a2573c" stroke="#f5f0e7" stroke-width="4"/>
-            <g fill="#556244" stroke="#f5f0e7" stroke-width="3">
-              <rect x="287" y="205" width="25" height="25" rx="7"/><rect x="560" y="225" width="25" height="25" rx="7"/>
-            </g>
-            <g fill="#a2573c" stroke="#f5f0e7" stroke-width="3"><rect x="435" y="236" width="25" height="25" rx="7"/><rect x="785" y="143" width="25" height="25" rx="7"/></g>
-            <g font-family="Inter, sans-serif" font-size="15" fill="#4b514a">
-              <text x="45" y="370">Innsbruck</text><text x="222" y="220">Kühtai</text><text x="500" y="280">Brixen</text><text x="900" y="92">Gardasee</text>
-            </g>
-            <circle id="mapMarker" cx="523" cy="245" r="10" fill="#f4efe6" stroke="#a2573c" stroke-width="5"/>
-          </svg>
-          <div class="map-tip" id="mapTip"><b>km 156 · Jaufenpass</b><span>1.842 m</span><div class="terrain"><i class="dot trail"></i><span>Trail · 16°</span></div></div>
-          <div class="map-ctrl"><button>▱</button><button>⌖</button></div>
-        </div>
-      </div>
+  <div class="tabs"><button class="active">Übersicht</button><button>Karte</button><button>Höhe</button><button>Terrain</button><button>Waypoints</button><button>Etappen</button></div>
 
-      <div class="card profile-card">
-        <div class="profile-head"><div><div class="eyebrow">Höhe & Terrain</div><h3>Karte und Profil sind gekoppelt</h3></div><div class="muted" style="font-size:12px">Mit Maus/Finger über Karte oder Profil fahren</div></div>
-        <svg id="elevationSvg" viewBox="0 0 1000 220" preserveAspectRatio="none">
-          <rect width="1000" height="220" fill="#f8f5ed"/>
-          <g stroke="#dad3c7" stroke-width="1"><line x1="55" x2="970" y1="40" y2="40"/><line x1="55" x2="970" y1="85" y2="85"/><line x1="55" x2="970" y1="130" y2="130"/><line x1="55" x2="970" y1="175" y2="175"/></g>
-          <path d="M55,175 L95,160 L135,120 L175,150 L220,92 L265,138 L305,108 L345,150 L390,124 L430,78 L475,145 L520,119 L565,160 L610,116 L650,82 L695,135 L740,102 L780,55 L820,128 L860,88 L905,140 L970,167 L970,180 L55,180 Z" fill="#8c9380" opacity=".78"/>
-          <path d="M55,175 L95,160 L135,120 L175,150 L220,92 L265,138 L305,108 L345,150 L390,124 L430,78 L475,145 L520,119 L565,160 L610,116 L650,82 L695,135 L740,102 L780,55 L820,128 L860,88 L905,140 L970,167" fill="none" stroke="#556244" stroke-width="2"/>
-          <g><rect x="55" y="181" width="184" height="10" fill="#a2573c"/><rect x="239" y="181" width="160" height="10" fill="#525756"/><rect x="399" y="181" width="167" height="10" fill="#718260"/><rect x="566" y="181" width="125" height="10" fill="#bd955d"/><rect x="691" y="181" width="279" height="10" fill="#a2573c"/></g>
-          <line id="profileLine" x1="516" x2="516" y1="22" y2="191" stroke="#a2573c" stroke-width="2" stroke-dasharray="6 5"/>
-          <circle id="profileMarker" cx="516" cy="119" r="7" fill="#f8f5ed" stroke="#a2573c" stroke-width="4"/>
-          <g font-size="12" font-family="Inter, sans-serif" fill="#71766f"><text x="10" y="45">2.5k</text><text x="20" y="90">1.5k</text><text x="28" y="135">1k</text><text x="24" y="180">500m</text><text x="55" y="210">0</text><text x="275" y="210">80</text><text x="505" y="210">160</text><text x="735" y="210">240</text><text x="940" y="210">312 km</text></g>
-        </svg>
-        <div class="terrain-legend"><span class="legend-item"><i class="dot gravel"></i>Gravel 53%</span><span class="legend-item"><i class="dot asphalt"></i>Asphalt 28%</span><span class="legend-item"><i class="dot trail"></i>Trail 13%</span><span class="legend-item"><i class="dot mixed"></i>Mixed 6%</span></div>
+  <div class="route-layout" style="margin-top:14px">
+    <div class="route-main">
+      <div class="card route-visual-card">
+        <div class="map-wrap" id="mapWrap">
+          <div id="routeMapLeaflet" aria-label="Topografische Routenkarte"></div>
+          <select id="mapStyleSelect" class="map-style-select" aria-label="Kartenstil">
+            <option value="topo">Topo</option>
+            <option value="osm">OSM</option>
+          </select>
+          <div class="map-scale-note">Karte ↔ Höhenprofil synchron</div>
+          <div class="route-map-legend">
+            <span><i class="route-dot" style="background:#a2573c"></i>Gravel</span>
+            <span><i class="route-dot" style="background:#525756"></i>Asphalt</span>
+            <span><i class="route-dot" style="background:#718260"></i>Trail</span>
+            <span><i class="route-dot" style="background:#bd955d"></i>Mixed</span>
+          </div>
+        </div>
+
+        <div class="profile-card">
+          <div class="profile-head">
+            <div><div class="eyebrow">Höhenprofil</div><h3>Gesamtroute</h3></div>
+            <div class="muted" style="font-size:12px">Mit Maus/Finger auf Karte oder Profil zeigen</div>
+          </div>
+          <svg id="elevationSvg" viewBox="0 0 1000 220" preserveAspectRatio="none">
+            <rect width="1000" height="220" fill="#f8f5ed"/>
+            <g stroke="#ded7cb" stroke-width="1"><line x1="55" x2="970" y1="40" y2="40"/><line x1="55" x2="970" y1="85" y2="85"/><line x1="55" x2="970" y1="130" y2="130"/><line x1="55" x2="970" y1="175" y2="175"/></g>
+            <path d="M55,175 L95,158 L135,126 L175,148 L220,91 L265,136 L305,112 L345,151 L390,122 L430,77 L475,145 L520,118 L565,160 L610,115 L650,82 L695,133 L740,101 L780,54 L820,127 L860,87 L905,139 L970,166 L970,180 L55,180 Z" fill="#9da392" opacity=".74"/>
+            <path d="M55,175 L95,158 L135,126 L175,148 L220,91 L265,136 L305,112 L345,151 L390,122 L430,77 L475,145 L520,118 L565,160 L610,115 L650,82 L695,133 L740,101 L780,54 L820,127 L860,87 L905,139 L970,166" fill="none" stroke="#556244" stroke-width="2"/>
+            <g><rect x="55" y="181" width="184" height="10" fill="#a2573c"/><rect x="239" y="181" width="160" height="10" fill="#525756"/><rect x="399" y="181" width="167" height="10" fill="#718260"/><rect x="566" y="181" width="125" height="10" fill="#bd955d"/><rect x="691" y="181" width="279" height="10" fill="#a2573c"/></g>
+            <line id="profileLine" x1="516" x2="516" y1="22" y2="191" stroke="#a2573c" stroke-width="2" stroke-dasharray="6 5"/>
+            <circle id="profileMarker" cx="516" cy="118" r="7" fill="#f8f5ed" stroke="#a2573c" stroke-width="4"/>
+            <g font-size="12" font-family="Inter, sans-serif" fill="#71766f"><text x="10" y="45">2.5k</text><text x="20" y="90">1.5k</text><text x="28" y="135">1k</text><text x="24" y="180">500m</text><text x="55" y="210">0</text><text x="275" y="210">80</text><text x="505" y="210">160</text><text x="735" y="210">240</text><text x="940" y="210">312 km</text></g>
+          </svg>
+          <div class="terrain-legend"><span class="legend-item"><i class="dot gravel"></i>Gravel 53%</span><span class="legend-item"><i class="dot asphalt"></i>Asphalt 28%</span><span class="legend-item"><i class="dot trail"></i>Trail 13%</span><span class="legend-item"><i class="dot mixed"></i>Mixed 6%</span></div>
+        </div>
       </div>
     </div>
 
@@ -351,15 +362,18 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
         </div>
         <div class="stackbar" style="margin-top:14px"><span style="width:53%;background:#a2573c"></span><span style="width:28%;background:#525756"></span><span style="width:13%;background:#718260"></span><span style="width:6%;background:#bd955d"></span></div>
       </div>
-      <div class="card">
-        <div class="eyebrow">Wetter · ausgewählter Punkt</div>
-        <div class="weather-big"><div class="wx">⛅</div><div><b id="weatherTemp">16°</b><div class="muted" id="weatherText">leicht bewölkt · 14 km/h W</div></div></div>
-      </div>
+
       <div class="card">
         <h3>Ausgewählter Punkt</h3>
-        <div style="margin-bottom:12px"><b class="serif" id="pointName" style="font-size:20px;font-weight:500">Jaufenpass</b><div class="muted" id="pointKm">km 156</div></div>
+        <div style="margin-bottom:12px"><b id="pointName" style="font-size:18px;font-weight:750">Jaufenpass</b><div class="muted" id="pointKm">km 156</div></div>
         <div class="point-details"><div>Höhe</div><b id="pointAlt">1.842 m</b><div>Terrain</div><b id="pointTerrain">Trail</b><div>Steigung nächste 2 km</div><b id="pointGrade">7%</b><div>Wind</div><b id="pointWind">14 km/h W</b></div>
       </div>
+
+      <div class="card">
+        <div class="eyebrow">Wetter · Punkt</div>
+        <div class="weather-big"><div class="wx">⛅</div><div><b id="weatherTemp">16°</b><div class="muted" id="weatherText">leicht bewölkt · 14 km/h W</div></div></div>
+      </div>
+
       <div class="card">
         <h3>Hinweise</h3>
         <div class="hints">
@@ -461,12 +475,14 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
 <div class="prototype-pill">Interaktiver Design-Prototyp · keine Live-Daten</div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const screens=[...document.querySelectorAll('.screen')];
 function showScreen(name){
   screens.forEach(s=>s.classList.toggle('active',s.id==='screen-'+name));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));
   window.scrollTo({top:0,behavior:'smooth'});
+  if(name==='route')setTimeout(()=>{initRouteMap();roamMap?.invalidateSize();},80);
 }
 document.querySelectorAll('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.go)));
@@ -477,31 +493,95 @@ const points=[
  {p:.34,name:'Ötztal',alt:890,terrain:'Asphalt',temp:'17°',wind:'9 km/h SW',grade:'1%'},
  {p:.50,name:'Jaufenpass',alt:1842,terrain:'Trail',temp:'16°',wind:'14 km/h W',grade:'7%'},
  {p:.68,name:'Brixen',alt:560,terrain:'Mixed',temp:'20°',wind:'6 km/h S',grade:'-2%'},
- {p:.82,name:'Passo',alt:2190,terrain:'Gravel',temp:'10°',wind:'22 km/h W',grade:'8%'},
+ {p:.82,name:'Trento',alt:194,terrain:'Gravel',temp:'21°',wind:'18 km/h S',grade:'3%'},
  {p:1,name:'Gardasee',alt:65,terrain:'Gravel',temp:'22°',wind:'10 km/h S',grade:'-3%'}
 ];
-const mapPathPts=[
- [70,338],[218,248],[375,200],[523,245],[700,248],[850,147],[965,112]
+const routeGeo=[
+ [47.2692,11.4041],
+ [47.2148,11.0238],
+ [47.2030,10.8970],
+ [46.8330,11.3200],
+ [46.7160,11.6560],
+ [46.4980,11.3540],
+ [46.0748,11.1217],
+ [45.8850,10.8410]
 ];
-function interpMap(p){
- const scaled=p*(mapPathPts.length-1),i=Math.min(mapPathPts.length-2,Math.floor(scaled)),t=scaled-i;
- return [mapPathPts[i][0]+(mapPathPts[i+1][0]-mapPathPts[i][0])*t,mapPathPts[i][1]+(mapPathPts[i+1][1]-mapPathPts[i][1])*t];
+let roamMap=null,roamCursor=null,topoLayer=null,osmLayer=null;
+const routeSegmentColors=['#a2573c','#a2573c','#525756','#718260','#bd955d','#a2573c','#a2573c'];
+
+function interpGeo(p){
+ const scaled=p*(routeGeo.length-1),i=Math.min(routeGeo.length-2,Math.floor(scaled)),t=scaled-i;
+ const a=routeGeo[i],b=routeGeo[i+1];
+ return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+}
+function initRouteMap(){
+ if(roamMap||!document.getElementById('routeMapLeaflet')||typeof L==='undefined')return;
+ roamMap=L.map('routeMapLeaflet',{zoomControl:true,scrollWheelZoom:true,attributionControl:true});
+ topoLayer=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
+   maxZoom:17,
+   attribution:'Map data © OpenStreetMap contributors · Map style © OpenTopoMap'
+ });
+ osmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+   maxZoom:19,
+   attribution:'© OpenStreetMap contributors'
+ });
+ topoLayer.addTo(roamMap);
+
+ L.polyline(routeGeo,{color:'#f6f2e9',weight:10,opacity:.96,lineCap:'round'}).addTo(roamMap);
+ for(let i=0;i<routeGeo.length-1;i++){
+   L.polyline([routeGeo[i],routeGeo[i+1]],{color:routeSegmentColors[i],weight:6,opacity:1,lineCap:'round'}).addTo(roamMap);
+ }
+ L.circleMarker(routeGeo[0],{radius:10,color:'#f8f5ed',weight:4,fillColor:'#556244',fillOpacity:1}).bindTooltip('Innsbruck',{direction:'right',offset:[10,0],permanent:true,className:'roam-place-label'}).addTo(roamMap);
+ L.circleMarker(routeGeo[routeGeo.length-1],{radius:9,color:'#f8f5ed',weight:4,fillColor:'#a2573c',fillOpacity:1}).bindTooltip('Gardasee',{direction:'left',offset:[-10,0],permanent:true,className:'roam-place-label'}).addTo(roamMap);
+ [[47.2148,11.0238,'Kühtai'],[46.7160,11.6560,'Brixen'],[46.0748,11.1217,'Trento']].forEach(([lat,lng,label])=>{
+   L.circleMarker([lat,lng],{radius:5,color:'#f8f5ed',weight:3,fillColor:'#556244',fillOpacity:1}).bindTooltip(label,{direction:'top',offset:[0,-4],opacity:.9}).addTo(roamMap);
+ });
+ roamCursor=L.circleMarker(interpGeo(.5),{radius:8,color:'#a2573c',weight:4,fillColor:'#f8f5ed',fillOpacity:1,zIndexOffset:1000}).addTo(roamMap);
+ roamCursor.bindTooltip('',{permanent:true,direction:'top',offset:[0,-12],className:'roam-map-tip',opacity:1}).openTooltip();
+ roamMap.fitBounds(L.latLngBounds(routeGeo).pad(.12));
+
+ roamMap.on('mousemove',e=>{
+   const p=nearestRouteProgress(e.latlng);
+   updateLinked(p,'map');
+ });
+ roamMap.on('click',e=>{
+   const p=nearestRouteProgress(e.latlng);
+   updateLinked(p,'map');
+ });
+
+ const select=document.getElementById('mapStyleSelect');
+ if(select)select.addEventListener('change',()=>{
+   if(select.value==='osm'){if(roamMap.hasLayer(topoLayer))roamMap.removeLayer(topoLayer);osmLayer.addTo(roamMap)}
+   else{if(roamMap.hasLayer(osmLayer))roamMap.removeLayer(osmLayer);topoLayer.addTo(roamMap)}
+ });
+ updateLinked(.5,'init');
+}
+function nearestRouteProgress(latlng){
+ if(!roamMap)return .5;
+ const target=roamMap.latLngToContainerPoint(latlng);
+ let best={d:Infinity,p:.5};
+ const samples=180;
+ for(let i=0;i<=samples;i++){
+   const p=i/samples,pos=interpGeo(p),pt=roamMap.latLngToContainerPoint(pos);
+   const dx=pt.x-target.x,dy=pt.y-target.y,d=dx*dx+dy*dy;
+   if(d<best.d)best={d,p};
+ }
+ return best.p;
 }
 function interpElevY(p){
- const peaks=[[0,175],[.1,125],[.18,92],[.28,138],[.38,124],[.45,78],[.52,145],[.62,116],[.68,82],[.76,135],[.82,55],[.9,88],[1,167]];
+ const peaks=[[0,175],[.1,125],[.18,91],[.28,136],[.38,122],[.45,77],[.52,145],[.62,115],[.68,82],[.76,133],[.82,54],[.9,87],[1,166]];
  for(let i=0;i<peaks.length-1;i++){if(p>=peaks[i][0]&&p<=peaks[i+1][0]){const t=(p-peaks[i][0])/(peaks[i+1][0]-peaks[i][0]);return peaks[i][1]+(peaks[i+1][1]-peaks[i][1])*t}}
- return 167;
+ return 166;
 }
 function nearestPoint(p){return points.reduce((a,b)=>Math.abs(b.p-p)<Math.abs(a.p-p)?b:a)}
-function updateLinked(p){
+function updateLinked(p,source){
  p=Math.max(0,Math.min(1,p));
- const [x,y]=interpMap(p), marker=document.getElementById('mapMarker');
- marker.setAttribute('cx',x);marker.setAttribute('cy',y);
- const tip=document.getElementById('mapTip'), wrap=document.getElementById('mapWrap');
- tip.style.left=(x/1000*100)+'%';tip.style.top=(y/440*100)+'%';
- const d=nearestPoint(p), km=Math.round(p*312);
- tip.innerHTML=`<b>km ${km} · ${d.name}</b><span>${d.alt.toLocaleString('de-DE')} m</span><div class="terrain"><i class="dot ${d.terrain.toLowerCase()}"></i><span>${d.terrain} · ${d.temp}</span></div>`;
- const xprof=55+p*(970-55), yprof=interpElevY(p);
+ const d=nearestPoint(p),km=Math.round(p*312);
+ if(roamCursor){
+   roamCursor.setLatLng(interpGeo(p));
+   roamCursor.setTooltipContent(`<div class="roam-tip-inner"><b>km ${km} · ${d.name}</b><small>${d.alt.toLocaleString('de-DE')} m</small><div class="roam-tip-meta"><i class="dot ${d.terrain.toLowerCase()}"></i><span>${d.terrain}</span><span>·</span><span>${d.temp}</span></div></div>`);
+ }
+ const xprof=55+p*(970-55),yprof=interpElevY(p);
  document.getElementById('profileLine').setAttribute('x1',xprof);document.getElementById('profileLine').setAttribute('x2',xprof);
  const pm=document.getElementById('profileMarker');pm.setAttribute('cx',xprof);pm.setAttribute('cy',yprof);
  document.getElementById('pointName').textContent=d.name;document.getElementById('pointKm').textContent=`km ${km}`;
@@ -510,13 +590,13 @@ function updateLinked(p){
  document.getElementById('weatherTemp').textContent=d.temp;document.getElementById('weatherText').textContent=`leicht bewölkt · ${d.wind}`;
 }
 function pointerToP(el,e){
- const r=el.getBoundingClientRect();return (e.clientX-r.left)/r.width;
+ const r=el.getBoundingClientRect();
+ return Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
 }
-document.getElementById('routeMap').addEventListener('pointermove',e=>updateLinked(pointerToP(e.currentTarget,e)));
-document.getElementById('elevationSvg').addEventListener('pointermove',e=>updateLinked(pointerToP(e.currentTarget,e)));
-document.getElementById('routeMap').addEventListener('click',e=>updateLinked(pointerToP(e.currentTarget,e)));
-document.getElementById('elevationSvg').addEventListener('click',e=>updateLinked(pointerToP(e.currentTarget,e)));
-updateLinked(.5);
+document.getElementById('elevationSvg').addEventListener('pointermove',e=>updateLinked(pointerToP(e.currentTarget,e),'profile'));
+document.getElementById('elevationSvg').addEventListener('click',e=>updateLinked(pointerToP(e.currentTarget,e),'profile'));
+
+initRouteMap();
 
 const stageData=[
  ['Tag 1','Innsbruck → Kühtai','73 km','1.250 m','18°','52%'],
