@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0b4c39"/>
-<title>Adventure Bike OS · Mobile 0.7.3</title>
+<title>Adventure Bike OS · Mobile 0.7.4</title>
 <link rel="manifest" href="manifest.webmanifest"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
@@ -46,6 +46,17 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .readiness-items span.open{background:#f2dfdc;color:#8b3c34}
 .check-action{width:100%;margin-top:9px}
 .check-action[hidden]{display:none}
+.departure-card{border:1px solid #cdded4;background:linear-gradient(180deg,#f7fbf8,#eef6f1)}
+.departure-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.departure-top b{font-size:18px}
+.departure-beta{font-size:9px;font-weight:900;letter-spacing:.05em;padding:5px 7px;border-radius:999px;background:#dfeee5;color:#286248;white-space:nowrap}
+.departure-list{display:grid;gap:6px;margin-top:10px}
+.departure-item{display:flex;gap:8px;align-items:flex-start;padding:8px 9px;border-radius:11px;background:rgba(255,255,255,.72);font-size:11px;line-height:1.35}
+.departure-item b{font-size:11px}
+.departure-item.ready{color:#356846}
+.departure-item.hint{color:#765d18}
+.departure-item.open{color:#7b433b}
+.departure-action{width:100%;margin-top:10px}
 .bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);display:grid;grid-template-columns:repeat(5,1fr);background:rgba(255,253,247,.97);border-top:1px solid #d7ddd8;padding:7px 5px calc(7px + env(safe-area-inset-bottom));z-index:40}
 .bottom button{border:0;background:transparent;font-size:9px;color:#53645b;padding:6px 2px}.bottom button b{display:block;font-size:20px;margin-bottom:2px}.bottom button.active{color:var(--g2);font-weight:800}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#132b21;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;display:none;z-index:100}
@@ -442,7 +453,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 <body>
 <div class="app">
   <header class="hero">
-    <div class="kicker">Adventure Bike OS · Mobile 0.7.3</div>
+    <div class="kicker">Adventure Bike OS · Mobile 0.7.4</div>
     <h1>Dein Bike.<br/>Dein Abenteuer.</h1>
     <p>Von der Idee zum fahrbaren Reiseplan.</p>
     <div class="topnav">
@@ -634,6 +645,15 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
           <button class="primary" type="button" onclick="printTripReport()">Reiseplan als PDF / drucken</button>
         </div>
         <div class="pdf-note">Auf iPad/iPhone öffnet sich der Druckdialog. Dort kannst du über die Druckvorschau „Als PDF sichern“ bzw. teilen.</div>
+      </div>
+      <div id="departureAssistantCard" class="card departure-card">
+        <div class="departure-top">
+          <div><div class="sub">DEPARTURE ASSISTANT</div><b id="departureTitle">Abfahrt wird vorbereitet</b></div>
+          <span class="departure-beta">0.7.4 BETA</span>
+        </div>
+        <p id="departureText" class="sub" style="margin-top:7px">Die wichtigsten Schritte vor der Abfahrt werden priorisiert.</p>
+        <div id="departureList" class="departure-list"></div>
+        <button id="departureAction" class="primary departure-action" type="button" hidden>Nächster Schritt</button>
       </div>
       <div id="overallCheckCard" class="card readiness-card">
         <div class="readiness-head"><div><div class="sub">REISESTATUS</div><b id="overallCheckTitle">Reise-Check wird geprüft</b></div><span id="overallCheckBadge" class="readiness-badge">offen</span></div>
@@ -1196,6 +1216,55 @@ function travelReadinessSnapshot(){
    pack,nights,booked
  };
 }
+function departureAssistantSnapshot(){
+ const snap=travelReadinessSnapshot();
+ const byKey=Object.fromEntries(snap.items.map(x=>[x.key,x]));
+ const tasks=[];
+ const push=(key,label,detail,action)=>tasks.push({key,label,detail,action,state:byKey[key]?.state||'open'});
+
+ if(byKey.navigation?.state==='open')push('navigation','Route vorbereiten','Route berechnen oder GPX importieren.','navigation');
+ if(byKey.weather?.state==='open'){
+   const label=!tripStartDate()?'Reisedatum setzen':'Wetter aktualisieren';
+   const detail=!tripStartDate()?'Ohne Reisedatum kann keine Etappenprognose erstellt werden.':'Prognose für alle Etappen vollständig laden.';
+   push('weather',label,detail,'weather');
+ }
+ if(byKey.lodging?.state==='open')push('lodging','Übernachtungen klären',`${snap.booked}/${snap.nights} Zwischenübernachtungen reserviert.`,'lodging');
+ if(byKey.packing?.state==='open')push('packing','Packen abschließen',snap.pack.total?`${snap.pack.done}/${snap.pack.total} Gegenstände tatsächlich eingepackt.`:'Packplan erstellen und anschließend abhaken.','packing');
+ if(byKey.weather?.state==='hint')push('weather','Wetterhinweise prüfen',byKey.weather.detail||'Wetterdetails der Etappen vor der Abfahrt prüfen.','weather');
+
+ return {snap,tasks,primary:tasks[0]||null};
+}
+function renderDepartureAssistant(){
+ const titleEl=$('departureTitle'),textEl=$('departureText'),listEl=$('departureList'),actionEl=$('departureAction');
+ if(!titleEl||!textEl||!listEl||!actionEl)return;
+ const d=departureAssistantSnapshot();
+ const open=d.snap.items.filter(x=>x.state==='open');
+ const hints=d.snap.items.filter(x=>x.state==='hint');
+
+ if(open.length){
+   titleEl.textContent=`Noch ${open.length} Schritt${open.length===1?'':'e'} bis bereit`;
+   textEl.textContent=d.primary?`Priorität: ${d.primary.label}. Danach die weiteren offenen Punkte abschließen.`:'Offene Punkte vor der Abfahrt abschließen.';
+ }else if(hints.length){
+   titleEl.textContent='Bereit · Hinweise vor Abfahrt prüfen';
+   textEl.textContent='Die Planung ist vollständig. Wetterhinweise vor dem Losfahren noch einmal ansehen.';
+ }else{
+   titleEl.textContent='Bereit für die Abfahrt';
+   textEl.textContent='Route, Wetter, Reservierungen und Pack-Check sind vollständig.';
+ }
+
+ listEl.innerHTML=d.tasks.length
+   ?d.tasks.slice(0,4).map(x=>`<div class="departure-item ${x.state}"><span>${x.state==='hint'?'!':'○'}</span><div><b>${escapeHTML(x.label)}</b><br>${escapeHTML(x.detail)}</div></div>`).join('')
+   :'<div class="departure-item ready"><span>✓</span><div><b>Keine offenen Aufgaben</b><br>Der Reise-Check ist vollständig.</div></div>';
+
+ if(d.primary){
+   actionEl.hidden=false;
+   actionEl.textContent=d.primary.label;
+   actionEl.onclick=()=>runCheckAction(d.primary.action);
+ }else{
+   actionEl.hidden=true;
+   actionEl.onclick=null;
+ }
+}
 function renderOverallCheck(){
  const titleEl=$('overallCheckTitle'),badgeEl=$('overallCheckBadge'),textEl=$('overallCheckText'),itemsEl=$('overallCheckItems');
  if(!titleEl||!badgeEl||!textEl||!itemsEl)return;
@@ -1218,6 +1287,7 @@ function renderOverallCheck(){
    textEl.textContent=`Offen: ${open.map(x=>x.label).join(' · ')}.${hintText} Die Detailkarten darunter zeigen, was noch zu tun ist.`;
  }
  itemsEl.innerHTML=snap.items.map(x=>`<span class="${x.state}">${x.state==='ready'?'✓':x.state==='hint'?'!':'○'} ${escapeHTML(x.label)}</span>`).join('');
+ renderDepartureAssistant();
 }
 function renderWeatherCheck(){
  const statusEl=$('weatherCheckStatus'),textEl=$('weatherCheckText');
