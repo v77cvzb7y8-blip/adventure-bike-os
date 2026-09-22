@@ -3454,7 +3454,7 @@ function bagCandidateOrder(g){
  if(meta.access==='schnell')return [g.bag,'top','handlebar','frame','forkL','forkR','saddle'];
  return [g.bag,'saddle','handlebar','frame','forkL','forkR','top','tool'];
 }
-function smartRecommendedAssignments(){
+function baseSmartRecommendedAssignments(){
  const chosen={};
  const items=recommendedGear().slice().sort((a,b)=>{
    const sa=gearDecision(a).status==='required'?0:1,sb=gearDecision(b).status==='required'?0:1;
@@ -3473,13 +3473,102 @@ function smartRecommendedAssignments(){
      const overL=Math.max(0,nextL-b.liters)/Math.max(.1,b.liters);
      const fill=(nextKg/b.cap+nextL/b.liters)*.15;
      const preferred=id===g.bag?-.12:0;
-     const score=overKg*4+overL*4+fill+preferred;
+     const opening=(used[id].kg<=0&&used[id].l<=0)?.20:0;
+     const score=overKg*4+overL*4+fill+opening+preferred;
      if(score<bestScore){bestScore=score;best=id}
    });
    chosen[g.id]=best;
    used[best].kg+=g.kg;used[best].l+=g.l;
  });
  return chosen;
+}
+function plannedBagUsage(assignments){
+ const used={};
+ Object.keys(bags).forEach(id=>used[id]={kg:0,l:0,items:[]});
+ Object.entries(assignments||{}).forEach(([gid,bid])=>{
+   const g=gear.find(x=>x.id===gid);
+   if(!g||!used[bid])return;
+   used[bid].kg+=Number(g.kg)||0;
+   used[bid].l+=Number(g.l)||0;
+   used[bid].items.push(gid);
+ });
+ return used;
+}
+function consolidateRecommendedAssignments(input){
+ const chosen={...(input||{})};
+ let used=plannedBagUsage(chosen);
+ const occupancy=([id,v])=>{
+   const b=bags[id];
+   return b?Math.max(v.kg/Math.max(.1,b.cap),v.l/Math.max(.1,b.liters)):1;
+ };
+ const sources=Object.entries(used)
+   .filter(([id,v])=>bagAvailable(id)&&v.items.length>0)
+   .sort((a,b)=>(a[1].items.length-b[1].items.length)||(occupancy(a)-occupancy(b)));
+
+ sources.forEach(([sourceId])=>{
+   used=plannedBagUsage(chosen);
+   const source=used[sourceId];
+   if(!source?.items.length)return;
+   const sourceFill=occupancy([sourceId,source]);
+   if(source.items.length>2&&sourceFill>.35)return;
+
+   const trial={...chosen};
+   const trialUsed=plannedBagUsage(trial);
+   let possible=true;
+   const moveItems=source.items
+     .map(gid=>gear.find(g=>g.id===gid))
+     .filter(Boolean)
+     .sort((a,b)=>(Number(b.l)||0)-(Number(a.l)||0));
+
+   for(const g of moveItems){
+     const order=[...new Set(bagCandidateOrder(g).filter(id=>id!==sourceId&&bags[id]&&bagAvailable(id)))];
+     const targets=order
+       .filter(id=>trialUsed[id]?.items.length>0)
+       .map(id=>{
+         const b=bags[id],u=trialUsed[id];
+         const nextKg=u.kg+Number(g.kg||0),nextL=u.l+Number(g.l||0);
+         const kgFill=nextKg/Math.max(.1,b.cap),lFill=nextL/Math.max(.1,b.liters);
+         if(kgFill>.90||lFill>.90)return null;
+         const rank=Math.max(0,order.indexOf(id));
+         const meta=gearPackingMeta(g);
+         const accessPenalty=meta.access==='schnell'&&id==='saddle'?.28:0;
+         const centralBonus=(meta.load==='schwer'&&['frame','tool'].includes(id))?-.12:0;
+         return {id,score:rank*.12+Math.max(kgFill,lFill)*.30+accessPenalty+centralBonus};
+       })
+       .filter(Boolean)
+       .sort((a,b)=>a.score-b.score);
+
+     if(!targets.length){possible=false;break}
+     const target=targets[0].id;
+     trial[g.id]=target;
+     trialUsed[sourceId].kg-=Number(g.kg)||0;
+     trialUsed[sourceId].l-=Number(g.l)||0;
+     trialUsed[sourceId].items=trialUsed[sourceId].items.filter(x=>x!==g.id);
+     trialUsed[target].kg+=Number(g.kg)||0;
+     trialUsed[target].l+=Number(g.l)||0;
+     trialUsed[target].items.push(g.id);
+   }
+   if(possible&&trialUsed[sourceId].items.length===0){
+     Object.assign(chosen,trial);
+   }
+ });
+ return chosen;
+}
+function smartRecommendedAssignments(){
+ return consolidateRecommendedAssignments(baseSmartRecommendedAssignments());
+}
+function packConsolidationPreview(){
+ const before=baseSmartRecommendedAssignments();
+ const after=consolidateRecommendedAssignments(before);
+ const beforeUsed=plannedBagUsage(before);
+ const afterUsed=plannedBagUsage(after);
+ const beforeIds=Object.keys(beforeUsed).filter(id=>beforeUsed[id].items.length);
+ const afterIds=Object.keys(afterUsed).filter(id=>afterUsed[id].items.length);
+ const removed=beforeIds.filter(id=>!afterIds.includes(id));
+ const moves=Object.keys(after).filter(gid=>before[gid]&&before[gid]!==after[gid]).map(gid=>({
+   gear:gear.find(g=>g.id===gid),from:before[gid],to:after[gid]
+ })).filter(x=>x.gear);
+ return {before,after,beforeCount:beforeIds.length,afterCount:afterIds.length,removed,moves};
 }
 function recommendedAssignments(){
  return smartRecommendedAssignments();
@@ -3537,7 +3626,7 @@ function activateBagFromPackIntel(id){
 function renderPackIntelligence(){
  const context=$('packIntelContext'),summary=$('packIntelSummary'),actions=$('packIntelActions');
  if(!context||!summary||!actions)return;
- const ctx=packContext(),tot=packRecommendationTotals(),preview=packCapacityPreview(),expansion=inactiveBagCapacityOptions();
+ const ctx=packContext(),tot=packRecommendationTotals(),preview=packCapacityPreview(),expansion=inactiveBagCapacityOptions(),consolidation=packConsolidationPreview();
  const activatedItems=activatedBagRecommendation(lastPackIntelActivatedBag);
  const chips=[];
  chips.push(`<span class="ok">${ctx.days} Tag${ctx.days===1?'':'e'}</span>`);
@@ -3562,6 +3651,12 @@ function renderPackIntelligence(){
  const contextOffPacked=gear.filter(g=>gearDecision(g).status==='context-off'&&packed.has(g.id));
  const rows=[];
  rows.push(`<div class="pack-intel-item"><b>Vorschlag: ${tot.count} Teile · ${tot.kg.toFixed(1)} kg · ca. ${tot.liters.toFixed(1)} L</b>${tot.required} Pflicht · ${tot.recommended} situationsabhängig empfohlen. Gewichte/Volumen sind Planwerte der hinterlegten Ausrüstung.</div>`);
+ if(consolidation.beforeCount>consolidation.afterCount){
+   const saved=consolidation.beforeCount-consolidation.afterCount;
+   const removed=consolidation.removed.map(id=>escapeHTML(bagName(id))).join(' · ');
+   const moveText=consolidation.moves.slice(0,5).map(x=>`${escapeHTML(x.gear.name)} → ${escapeHTML(bagName(x.to))}`).join(' · ');
+   rows.push(`<div class="pack-intel-item recommended"><b>Taschen reduzieren: ${consolidation.beforeCount} → ${consolidation.afterCount}</b>${saved} Tasche${saved===1?'':'n'} kann${saved===1?'':' können'} entfallen${removed?`: ${removed}`:''}.${moveText?` Neu verteilt: ${moveText}.`:''} Bestehende Taschen bleiben dabei unter 90 % der hinterlegten Gewichts- und Volumengrenzen.</div>`);
+ }
  if(missingReq.length)rows.push(`<div class="pack-intel-item required"><b>${missingReq.length} Pflichtteil${missingReq.length>1?'e':''} fehlt</b>${missingReq.map(g=>escapeHTML(g.name)).join(' · ')}</div>`);
  else rows.push('<div class="pack-intel-item"><b>Pflichtteile im aktuellen Packplan vorhanden</b>Basis für die aktuelle Reise ist abgedeckt.</div>');
  if(missingRec.length)rows.push(`<div class="pack-intel-item recommended"><b>${missingRec.length} Empfehlung${missingRec.length>1?'en':''} noch nicht gepackt</b>${missingRec.slice(0,6).map(g=>escapeHTML(g.name)).join(' · ')}${missingRec.length>6?' …':''}</div>`);
@@ -3591,7 +3686,9 @@ function renderPackIntelligence(){
  const expansionButtons=preview.over.length&&expansion.length
    ? expansion.slice(0,3).map(x=>`<button class="secondary" type="button" onclick="activateBagFromPackIntel('${x.id}')">${escapeHTML(x.name)} aktivieren</button>`).join('')
    :'';
- const applyLabel=lastPackIntelActivatedBag?'Neu verteilten Vorschlag übernehmen':'Vorschlag übernehmen';
+ const applyLabel=lastPackIntelActivatedBag
+   ?'Neu verteilten Vorschlag übernehmen'
+   :(consolidation.beforeCount>consolidation.afterCount?'Kompakten Vorschlag übernehmen':'Vorschlag übernehmen');
  actions.innerHTML=`
    <button class="primary" type="button" onclick="applyRecommendedSetup()">${applyLabel}</button>
    <button class="secondary" type="button" onclick="packOnlyMissingRecommendations()">nur Fehlendes ergänzen</button>
