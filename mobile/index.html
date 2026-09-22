@@ -388,7 +388,7 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .bag-profile-box{margin-top:12px;border:1px solid #dfe6e1;border-radius:14px;padding:10px;background:#fbfcfb}
 .bag-profile-box summary{font-size:11px;font-weight:900;cursor:pointer}
 .bag-profile-grid{display:grid;gap:7px;margin-top:9px}
-.bag-profile-row{display:grid;grid-template-columns:1fr 75px 75px;gap:6px;align-items:end;border-top:1px solid #e8ece9;padding-top:7px}
+.bag-profile-row{display:grid;grid-template-columns:1fr 68px 75px 75px;gap:6px;align-items:end;border-top:1px solid #e8ece9;padding-top:7px}
 .bag-profile-row:first-child{border-top:0;padding-top:0}
 .bag-profile-row b{font-size:9px}
 .bag-profile-row small{display:block;font-size:8px;color:#728078;margin-top:2px}
@@ -3070,18 +3070,22 @@ let gear=[
  {id:'sealant',name:'Tubeless-Dichtmilch Reserve',category:'Reparatur',bag:'frame',kg:.12,l:0.15,required:'conditional',why:'bei Tubeless auf längerer Reise'}
 ];
 const bags={
- saddle:{name:'Satteltasche',cap:4.5,liters:12,zone:'rear',role:'leicht / komprimierbar',mount:'base'},
- frame:{name:'Rahmentasche',cap:2.5,liters:5,zone:'center',role:'schwer / kompakt',mount:'base'},
- handlebar:{name:'Lenkertasche',cap:2.5,liters:8,zone:'front',role:'leicht / voluminös',mount:'base'},
- top:{name:'Oberrohrtasche',cap:1.0,liters:1.5,zone:'center',role:'schneller Zugriff',mount:'base'},
- tool:{name:'Werkzeugtasche',cap:1.0,liters:1.2,zone:'center',role:'Werkzeug / Ersatzteile',mount:'base'},
- forkL:{name:'Gabeltasche links',cap:1.5,liters:3.0,zone:'front',role:'kompakt / Wasser / Reserve',mount:'fork'},
- forkR:{name:'Gabeltasche rechts',cap:1.5,liters:3.0,zone:'front',role:'kompakt / Wasser / Reserve',mount:'fork'}
+ saddle:{name:'Satteltasche',cap:4.5,liters:12,zone:'rear',role:'leicht / komprimierbar',mount:'base',enabled:true},
+ frame:{name:'Rahmentasche',cap:2.5,liters:5,zone:'center',role:'schwer / kompakt',mount:'base',enabled:true},
+ handlebar:{name:'Lenkertasche',cap:2.5,liters:8,zone:'front',role:'leicht / voluminös',mount:'base',enabled:true},
+ top:{name:'Oberrohrtasche',cap:1.0,liters:1.5,zone:'center',role:'schneller Zugriff',mount:'base',enabled:true},
+ tool:{name:'Werkzeugtasche',cap:1.0,liters:1.2,zone:'center',role:'Werkzeug / Ersatzteile',mount:'base',enabled:true},
+ forkL:{name:'Gabeltasche links',cap:1.5,liters:3.0,zone:'front',role:'kompakt / Wasser / Reserve',mount:'fork',enabled:true},
+ forkR:{name:'Gabeltasche rechts',cap:1.5,liters:3.0,zone:'front',role:'kompakt / Wasser / Reserve',mount:'fork',enabled:true}
 };
-function bagAvailable(id){
+function bagMountAvailable(id){
  const b=bags[id];if(!b)return false;
  if(b.mount==='fork')return bikeProfile().forkMounts==='yes';
  return true;
+}
+function bagAvailable(id){
+ const b=bags[id];if(!b)return false;
+ return bagMountAvailable(id)&&b.enabled!==false;
 }
 function availableBagEntries(){
  return Object.entries(bags).filter(([id])=>bagAvailable(id));
@@ -3106,26 +3110,37 @@ function restoreBagProfile(){
      const liters=Number(v.liters),cap=Number(v.cap);
      if(Number.isFinite(liters)&&liters>0)bags[id].liters=Math.min(40,liters);
      if(Number.isFinite(cap)&&cap>0)bags[id].cap=Math.min(20,cap);
+     if(typeof v.enabled==='boolean')bags[id].enabled=v.enabled;
    });
  }catch(e){}
+}
+function persistBagProfile(){
+ const out={};Object.entries(bags).forEach(([bid,b])=>out[bid]={liters:b.liters,cap:b.cap,enabled:b.enabled!==false});
+ localStorage.setItem('abo-mobile-bag-profile-v1',JSON.stringify(out));
 }
 function saveBagProfileValue(id,key,value){
  if(!bags[id]||!['liters','cap'].includes(key))return;
  const n=Number(value);if(!Number.isFinite(n)||n<=0)return;
  bags[id][key]=key==='liters'?Math.min(40,n):Math.min(20,n);
- const out={};Object.entries(bags).forEach(([bid,b])=>out[bid]={liters:b.liters,cap:b.cap});
- localStorage.setItem('abo-mobile-bag-profile-v1',JSON.stringify(out));
+ persistBagProfile();
  renderBagContents();renderBikeSetup();
+}
+function saveBagEnabled(id,value){
+ if(!bags[id])return;
+ bags[id].enabled=value==='yes';
+ persistBagProfile();
+ refreshBagAvailability();
 }
 function renderBagProfile(){
  const el=$('bagProfileGrid');if(!el)return;
- const rows=availableBagEntries();
+ const rows=Object.entries(bags).filter(([id])=>bagMountAvailable(id));
  el.innerHTML=rows.map(([id,b])=>`<div class="bag-profile-row">
    <div><b>${escapeHTML(b.name)}</b><small>${escapeHTML(b.role||'')}</small></div>
+   <div><label>aktiv</label><select onchange="saveBagEnabled('${id}',this.value)"><option value="yes" ${b.enabled!==false?'selected':''}>ja</option><option value="no" ${b.enabled===false?'selected':''}>nein</option></select></div>
    <div><label>Liter</label><input type="number" min="0.2" max="40" step="0.1" value="${Number(b.liters).toFixed(1)}" onchange="saveBagProfileValue('${id}','liters',this.value)"></div>
    <div><label>max. kg</label><input type="number" min="0.2" max="20" step="0.1" value="${Number(b.cap).toFixed(1)}" onchange="saveBagProfileValue('${id}','cap',this.value)"></div>
  </div>`).join('') + (bikeProfile().forkMounts==='yes'
-   ?'<div class="sub" style="margin-top:6px">Gabel-Aufnahmen aktiv: zwei zusätzliche Cargo-Taschen sind verfügbar und direkt packbar.</div>'
+   ?'<div class="sub" style="margin-top:6px">Gabel-Aufnahmen aktiv: linke und rechte Cargo-Tasche können einzeln aktiviert und als echte Packziele genutzt werden.</div>'
    :'<div class="sub" style="margin-top:6px">Gabeltaschen werden eingeblendet, sobald „Gabel-Aufnahmen: vorhanden“ gewählt ist.</div>');
 }
 
@@ -3405,7 +3420,7 @@ function renderPackHealth(){
  const missingRec=recommended.filter(g=>!packed.has(g.id));
  const overW=Object.entries(bags).filter(([id,b])=>bagWeight(id)>b.cap);
  const overV=Object.entries(bags).filter(([id,b])=>bagVolume(id)>b.liters);
-  const unavailablePacked=Object.entries(bags).filter(([id])=>!bagAvailable(id)&&(bagWeight(id)>0||bagVolume(id)>0));
+
  let title='Packplan bereit',msg='Pflichtausrüstung vollständig und alle Taschen innerhalb der hinterlegten Grenzen.';
  if(missing.length){
    title=`${missing.length} Pflichtteil${missing.length>1?'e':''} fehlt`;
