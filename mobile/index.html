@@ -415,6 +415,18 @@ input,select{width:100%;padding:12px;border:1px solid #ccd6cf;border-radius:12px
 .weather-status.high{background:#f5dfdd;color:#8b3c34}
 .weather-status.open{background:#edf0ee;color:#657069}
 .weather-note{font-size:9px;color:#6d7972;line-height:1.4;margin-top:7px}
+.stage-weather-strip{margin-top:9px;border:1px solid #dce5df;border-radius:13px;background:#f8fbf9;padding:9px}
+.stage-weather-strip-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px}
+.stage-weather-strip-head b{font-size:11px}.stage-weather-strip-head span{font-size:8px;color:#6d7c74}
+.stage-weather-points{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;position:relative}
+.stage-weather-point{background:white;border:1px solid #e2e9e4;border-radius:10px;padding:7px;text-align:center;min-width:0}
+.stage-weather-point .role{font-size:8px;color:#6f7a73;text-transform:uppercase;letter-spacing:.04em}
+.stage-weather-point b{display:block;font-size:13px;margin:2px 0}
+.stage-weather-point small{display:block;font-size:8px;color:#596b62;line-height:1.35}
+.stage-weather-point.watch{background:#fbf7ea;border-color:#eadcb3}
+.stage-weather-point.high{background:#fbefed;border-color:#e4c4bf}
+.stage-weather-route{height:3px;border-radius:999px;background:linear-gradient(90deg,#5f9f7f,#d8b458,#5f9f7f);margin:6px 14% 0}
+
 
 .route-core{border:1px solid #dfe6e1;border-radius:14px;padding:10px;margin-bottom:10px;background:#fbfcfb}
 .route-mode-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.route-mode-tabs button{border:1px solid #d7dfda;background:#fff;border-radius:10px;padding:9px 6px;font-size:9px;font-weight:900}.route-mode-tabs button.active{background:#0f5d46;color:#fff;border-color:#0f5d46}
@@ -1139,6 +1151,41 @@ function weatherBandText(band,horizon){
  if(band==='long')return `weiteres Prognosefenster · ${horizon} Tage voraus`;
  return '';
 }
+function weatherPointRoleLabel(role){
+ return role==='start'?'Start':role==='high'?'Hochpunkt':role==='end'?'Ziel':'Punkt';
+}
+function weatherPointSeverity(p){
+ const rain=Number(p?.rain_probability),wind=Number(p?.wind_kmh),gust=Number(p?.gust_kmh),tmax=Number(p?.tmax),tmin=Number(p?.tmin);
+ if((Number.isFinite(rain)&&rain>=60)||(Number.isFinite(wind)&&wind>=45)||(Number.isFinite(gust)&&gust>=65)||(Number.isFinite(tmax)&&tmax>=30)||(Number.isFinite(tmin)&&tmin<=3))return 'high';
+ if((Number.isFinite(rain)&&rain>=35)||(Number.isFinite(wind)&&wind>=30)||(Number.isFinite(gust)&&gust>=45)||(Number.isFinite(tmax)&&tmax>=26)||(Number.isFinite(tmin)&&tmin<=8))return 'watch';
+ return '';
+}
+function stageWeatherStripHTML(i){
+ if(!tripStartDate())return '';
+ const w=state.weather?.stages?.[i];
+ const date=addDaysISO(tripStartDate(),i);
+ if(!w?.available)return '';
+ const roles=['start','high','end'];
+ const samples=Array.isArray(w.samples)?w.samples:[];
+ const byRole=Object.fromEntries(samples.filter(x=>x?.role).map(x=>[x.role,x]));
+ const points=roles.map(role=>{
+   const p=byRole[role]||w;
+   const tmin=Number(p?.tmin),tmax=Number(p?.tmax),rain=Number(p?.rain_probability),wind=Number(p?.wind_kmh);
+   const temp=Number.isFinite(tmin)&&Number.isFinite(tmax)
+     ?`${Math.round(tmin)}–${Math.round(tmax)}°`
+     :Number.isFinite(tmax)?`${Math.round(tmax)}°`:'–';
+   return `<div class="stage-weather-point ${weatherPointSeverity(p)}">
+     <div class="role">${weatherPointRoleLabel(role)}</div>
+     <b>${temp}</b>
+     <small>${Number.isFinite(rain)?`💧 ${Math.round(rain)}%`:'💧 –'} · ${Number.isFinite(wind)?`💨 ${Math.round(wind)} km/h`:'💨 –'}</small>
+   </div>`;
+ }).join('');
+ return `<div class="stage-weather-strip">
+   <div class="stage-weather-strip-head"><b>🌦 Wetter entlang der Etappe</b><span>${escapeHTML(w.date||date)}</span></div>
+   <div class="stage-weather-points">${points}</div>
+   <div class="stage-weather-route"></div>
+ </div>`;
+}
 function weatherHTML(i){
  if(!tripStartDate())return '';
  const w=state.weather?.stages?.[i];
@@ -1446,6 +1493,15 @@ function summarizeWeatherStageClient(date,samples){
    sample_count:available.length,
    sample_requested:(samples||[]).length,
    sample_success:available.length,
+   samples:available.map(x=>({
+     role:x.role||'',
+     tmin:Number.isFinite(Number(x.tmin))?Number(x.tmin):null,
+     tmax:Number.isFinite(Number(x.tmax))?Number(x.tmax):null,
+     rain_probability:Number.isFinite(Number(x.rain_probability))?Number(x.rain_probability):null,
+     precipitation_mm:Number.isFinite(Number(x.precipitation_mm))?Number(x.precipitation_mm):null,
+     wind_kmh:Number.isFinite(Number(x.wind_kmh))?Number(x.wind_kmh):null,
+     gust_kmh:Number.isFinite(Number(x.gust_kmh))?Number(x.gust_kmh):null
+   })),
    source:'Open-Meteo direct'
  };
 }
@@ -2969,6 +3025,7 @@ function renderStages(){
          <span><i style="background:#9aa39d"></i>offen</span>
        </div>
        <div class="stage-profile-note">${terrainForStage(i)?.segments?.length?'Terrainfarben folgen den gematchten Abschnitten dieser Etappe.':'Terrainabschnitte noch nicht verfügbar – das Etappenprofil wird trotzdem vergrößert angezeigt.'}</div>
+       ${stageWeatherStripHTML(i)}
      </div>
      ${weatherHTML(i)}
      ${lodgingStageHTML(i)}
