@@ -47,7 +47,7 @@ button{cursor:pointer}
 .screen{display:none}.screen.active{display:block}
 .eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#77776f;font-weight:800}
 h1,h2,h3,p{margin-top:0}
-h1{font-family:Georgia,serif;font-weight:500;font-size:48px;line-height:1.04;margin-bottom:8px}
+h1{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:720;font-size:46px;line-height:1.04;letter-spacing:-.035em;margin-bottom:8px}
 h2{font-family:Georgia,serif;font-weight:500;font-size:29px}
 h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
 .muted{color:var(--muted)}
@@ -157,6 +157,24 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
 .org-row:first-of-type{border-top:0}
 .chips{display:flex;flex-wrap:wrap;gap:5px}
 .chip{font-size:10px;padding:5px 7px;border-radius:999px;background:#ebe5da;color:#585d56}
+.pack-item-wrap{display:inline-flex;align-items:center;border-radius:999px;background:#ebe5da;border:1px solid transparent}
+.pack-item-wrap.selected{border-color:var(--rust);background:#f3e5dc;box-shadow:0 0 0 2px rgba(162,87,60,.12)}
+.pack-item{border:0;background:transparent;color:#50564f;padding:5px 4px 5px 8px;font-size:10px;cursor:grab}
+.pack-item:active{cursor:grabbing}
+.item-check{border:0;background:transparent;width:24px;height:24px;border-radius:50%;color:#8d8e86;font-size:11px}
+.item-check.packed{background:var(--olive);color:#fff}
+.pack-interaction{padding:10px 12px;border:1px dashed #c9bfb0;border-radius:11px;background:#f8f3e9;color:#60645d;font-size:12px;margin-bottom:10px}
+.pack-interaction b{color:var(--forest)}
+.bag-pill.drop-target{border-color:var(--olive);box-shadow:0 0 0 3px rgba(85,98,68,.13)}
+.bag-pill.empty{opacity:.68;border-style:dashed}
+.bag-node.empty{display:none}
+.bag-node.drop-target path,.bag-node.drop-target rect{stroke:var(--olive)!important;stroke-width:5!important}
+.pack-mini-note{font-size:10px;color:#787a73;margin-top:4px}
+.pack-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--forest);color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;z-index:80;opacity:0;pointer-events:none;transition:.2s}
+.pack-toast.show{opacity:1;bottom:34px}
+.checkline{padding:5px 0;border-radius:8px;cursor:pointer}
+.checkline:hover{background:#f0ece3}
+
 .status-ok{font-size:10px;padding:5px 7px;border-radius:999px;background:#e1e6d7;color:#52613f;font-weight:800}
 .checklist{display:grid;gap:9px}
 .checkline{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
@@ -380,55 +398,40 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
 </section>
 
 <section class="screen" id="screen-pack">
-  <div class="route-title-row"><div><div class="eyebrow">Bike & Packen</div><h1>Packorganisation</h1><div class="route-meta">14,2 kg · 5 aktive Taschen · Balance 48 / 52</div></div><div class="btn-row"><button class="btn" id="autoPack">Auto-Packen</button><button class="btn rust">Zum Packen</button></div></div>
+  <div class="route-title-row"><div><div class="eyebrow">Bike & Packen</div><h1>Packorganisation</h1><div class="route-meta" id="packMeta">14,2 kg · 5 aktive Taschen · Balance wird berechnet</div></div><div class="btn-row"><button class="btn" id="resetPack">Zurücksetzen</button><button class="btn" id="autoPack">Auto-Packen</button><button class="btn rust" id="packModeBtn">Zum Packen</button></div></div>
   <div class="pack-layout">
     <div class="card bike-card">
-      <div class="bike-header"><div><h3>Dein Bike</h3><div class="muted">Leere Taschen werden automatisch ausgeblendet.</div></div><span class="badge">Gravel · 40 mm</span></div>
+      <div class="bike-header"><div><h3>Dein Bike</h3><div class="muted">Gegenstand antippen und danach eine Zieltasche am Bike oder unten auswählen.</div></div><span class="badge">Gravel · 40 mm</span></div>
       <svg class="bike-svg" viewBox="0 0 760 330">
         <circle cx="185" cy="225" r="82" fill="none" stroke="#303630" stroke-width="11"/><circle cx="568" cy="225" r="82" fill="none" stroke="#303630" stroke-width="11"/>
         <circle cx="185" cy="225" r="72" fill="none" stroke="#bd955d" stroke-width="4"/><circle cx="568" cy="225" r="72" fill="none" stroke="#bd955d" stroke-width="4"/>
         <path d="M185 225 L305 92 L392 225 L185 225 M305 92 L470 105 L392 225 M470 105 L568 225" fill="none" stroke="#556244" stroke-width="12" stroke-linecap="round"/>
         <path d="M300 90 L275 65 M275 65 L235 64" stroke="#303630" stroke-width="8" stroke-linecap="round"/><path d="M468 104 L500 76 L530 78" stroke="#303630" stroke-width="8" stroke-linecap="round"/>
-        <g class="bag-node selected" data-bag="saddle"><path d="M228 71 Q180 58 152 79 L170 116 Q205 107 246 104 Z" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
-        <g class="bag-node" data-bag="frame"><path d="M300 112 L380 212 L244 212 Z" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
-        <g class="bag-node" data-bag="top"><rect x="335" y="83" width="72" height="30" rx="12" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
-        <g class="bag-node" data-bag="bar"><path d="M484 67 Q525 57 552 83 L542 122 Q503 117 469 105 Z" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
-        <g class="bag-node" data-bag="fork"><rect x="523" y="128" width="28" height="72" rx="10" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
+        <g class="bag-node" id="bikeBag-saddle" data-bag="saddle"><path d="M228 71 Q180 58 152 79 L170 116 Q205 107 246 104 Z" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
+        <g class="bag-node" id="bikeBag-frame" data-bag="frame"><path d="M300 112 L380 212 L244 212 Z" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
+        <g class="bag-node" id="bikeBag-top" data-bag="top"><rect x="335" y="83" width="72" height="30" rx="12" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
+        <g class="bag-node" id="bikeBag-bar" data-bag="bar"><path d="M484 67 Q525 57 552 83 L542 122 Q503 117 469 105 Z" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
+        <g class="bag-node" id="bikeBag-fork" data-bag="fork"><rect x="523" y="128" width="28" height="72" rx="10" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
       </svg>
-      <div class="bag-overview">
-        <div class="bag-pill active" data-bag="saddle"><div class="ring" style="--p:75%"></div><strong>Satteltasche</strong><span>75% · 16 L</span></div>
-        <div class="bag-pill" data-bag="frame"><div class="ring" style="--p:60%"></div><strong>Rahmentasche</strong><span>60% · 8 L</span></div>
-        <div class="bag-pill" data-bag="top"><div class="ring" style="--p:40%"></div><strong>Oberrohr</strong><span>40% · 2 L</span></div>
-        <div class="bag-pill" data-bag="bar"><div class="ring" style="--p:70%"></div><strong>Lenker</strong><span>70% · 7 L</span></div>
-        <div class="bag-pill" data-bag="fork"><div class="ring" style="--p:55%"></div><strong>Gabel</strong><span>55% · 8 L</span></div>
-      </div>
+      <div class="bag-overview" id="bagOverview"></div>
     </div>
 
     <div class="pack-panels">
       <div class="card pack-org">
-        <div class="trip-head"><div><div class="eyebrow">Pack-Organisation</div><h3>Tascheninhalt</h3></div><span class="badge">konsolidiert</span></div>
-        <div class="org-row"><b>Satteltasche</b><div class="chips"><span class="chip">Schlafsack</span><span class="chip">Isomatte</span><span class="chip">Daunenjacke</span></div><span class="status-ok">+1 umverteilt</span></div>
-        <div class="org-row"><b>Rahmentasche</b><div class="chips"><span class="chip">Werkzeug</span><span class="chip">Ersatzteile</span><span class="chip">Regenjacke</span></div><span></span></div>
-        <div class="org-row"><b>Lenkertasche</b><div class="chips"><span class="chip">Zelt</span><span class="chip">Kocher</span><span class="chip">Essgeschirr</span></div><span></span></div>
-        <div class="org-row"><b>Oberrohr</b><div class="chips"><span class="chip">Snacks</span><span class="chip">Elektronik</span><span class="chip">Kleinteile</span></div><span></span></div>
-        <div class="org-row"><b>Gabel</b><div class="chips"><span class="chip">Wasser</span><span class="chip">Food</span></div><span></span></div>
+        <div class="trip-head"><div><div class="eyebrow">Pack-Organisation</div><h3>Tascheninhalt</h3></div><span class="badge" id="consolidationBadge">interaktiv</span></div>
+        <div class="pack-interaction" id="packInteraction"><b>Tipp:</b> Wähle unten einen Gegenstand. Danach eine andere Tasche anklicken. Auf Desktop kannst du Gegenstände auch ziehen.</div>
+        <div id="packOrgRows"></div>
+      </div>
+      <div class="card card-pad" id="packChecklistCard">
+        <div class="trip-head"><div><div class="eyebrow">Packliste</div><h3 id="packListTitle">16 / 19</h3></div><span class="badge warn" id="packOpenBadge">3 offen</span></div>
+        <div class="checklist" id="checklist"></div>
+        <div class="pack-mini-note">Die Häkchen lassen sich einzeln ändern. Die Tasche selbst bleibt davon unabhängig.</div>
       </div>
       <div class="card card-pad">
-        <div class="trip-head"><div><div class="eyebrow">Packliste</div><h3>28 / 31</h3></div><span class="badge warn">3 offen</span></div>
-        <div class="checklist">
-          <div class="checkline"><span>Schlafen</span><span>4/4</span><i class="checkdot">✓</i></div>
-          <div class="checkline"><span>Kleidung</span><span>6/6</span><i class="checkdot">✓</i></div>
-          <div class="checkline"><span>Küche</span><span>5/5</span><i class="checkdot">✓</i></div>
-          <div class="checkline"><span>Werkzeug</span><span>5/5</span><i class="checkdot">✓</i></div>
-          <div class="checkline"><span>Food</span><span>4/6</span><i class="checkdot" style="background:#d8cfbf;color:#676b64">2</i></div>
-          <div class="checkline"><span>Dokumente</span><span>4/5</span><i class="checkdot" style="background:#d8cfbf;color:#676b64">1</i></div>
-        </div>
-      </div>
-      <div class="card card-pad">
-        <div class="eyebrow">Gewicht & Balance</div><h3>14,2 kg</h3>
-        <div class="balancebar"><i></i><i></i></div>
-        <div style="display:flex;justify-content:space-between;font-size:12px"><span>48% vorne</span><span>52% hinten</span></div>
-        <div class="status-ok" style="display:inline-block;margin-top:10px">gut ausbalanciert</div>
+        <div class="eyebrow">Gewicht & Balance</div><h3 id="packWeight">14,2 kg</h3>
+        <div class="balancebar" id="balanceBar"><i></i><i></i></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px"><span id="frontBalance">–</span><span id="rearBalance">–</span></div>
+        <div class="status-ok" id="balanceStatus" style="display:inline-block;margin-top:10px">wird berechnet</div>
       </div>
     </div>
   </div>
@@ -526,16 +529,173 @@ document.querySelectorAll('.stage-item').forEach(el=>el.addEventListener('click'
  const d=stageData[+el.dataset.stage];
  ['stageDay','stageName','stageKm','stageHm','stageWx','stageSurface'].forEach((id,i)=>document.getElementById(id).textContent=d[i]);
 }));
-function selectBag(id){
- document.querySelectorAll('.bag-node,.bag-pill').forEach(x=>x.classList.toggle('selected' in x.dataset ? false : 'active',false));
- document.querySelectorAll('.bag-node').forEach(x=>x.classList.toggle('selected',x.dataset.bag===id));
- document.querySelectorAll('.bag-pill').forEach(x=>x.classList.toggle('active',x.dataset.bag===id));
+const packBags={
+ saddle:{name:'Satteltasche',cap:16,zone:'rear'},
+ frame:{name:'Rahmentasche',cap:8,zone:'center'},
+ top:{name:'Oberrohr',cap:2,zone:'center'},
+ bar:{name:'Lenkertasche',cap:7,zone:'front'},
+ fork:{name:'Gabeltaschen',cap:8,zone:'front'}
+};
+const packInitialItems=[
+ {id:'sleep',name:'Schlafsack',bag:'saddle',l:5,kg:.9,cat:'Schlafen',packed:true},
+ {id:'down',name:'Daunenjacke',bag:'saddle',l:2.5,kg:.4,cat:'Kleidung',packed:true},
+ {id:'under',name:'Unterwäsche',bag:'saddle',l:.5,kg:.3,cat:'Kleidung',packed:true},
+ {id:'clothes',name:'Kleidung',bag:'saddle',l:4,kg:1.2,cat:'Kleidung',packed:true},
+ {id:'water',name:'Wasser',bag:'frame',l:2,kg:2,cat:'Food',packed:true},
+ {id:'tools',name:'Werkzeug',bag:'frame',l:1.4,kg:1.2,cat:'Werkzeug',packed:true},
+ {id:'power',name:'Powerbank',bag:'frame',l:.4,kg:.45,cat:'Werkzeug',packed:true},
+ {id:'food',name:'Food',bag:'frame',l:1,kg:1.8,cat:'Food',packed:false},
+ {id:'snacks',name:'Snacks',bag:'top',l:.4,kg:.5,cat:'Food',packed:true},
+ {id:'electronics',name:'Elektronik',bag:'top',l:.3,kg:.35,cat:'Werkzeug',packed:true},
+ {id:'docs',name:'Dokumente',bag:'top',l:.1,kg:.1,cat:'Dokumente',packed:false},
+ {id:'tent',name:'Zelt',bag:'bar',l:2.5,kg:1.6,cat:'Schlafen',packed:true},
+ {id:'mat',name:'Isomatte',bag:'bar',l:.5,kg:.5,cat:'Schlafen',packed:true},
+ {id:'stove',name:'Kocher',bag:'bar',l:1.1,kg:.45,cat:'Küche',packed:true},
+ {id:'dishes',name:'Essgeschirr',bag:'bar',l:.8,kg:.35,cat:'Küche',packed:true},
+ {id:'spares',name:'Ersatzteile',bag:'fork',l:1,kg:.6,cat:'Werkzeug',packed:true},
+ {id:'rain',name:'Regenjacke',bag:'fork',l:.9,kg:.35,cat:'Kleidung',packed:true},
+ {id:'fuel',name:'Fuel',bag:'fork',l:.7,kg:.4,cat:'Küche',packed:true},
+ {id:'sandals',name:'Sandalen',bag:'fork',l:1.8,kg:.75,cat:'Kleidung',packed:false}
+];
+let packItems=packInitialItems.map(x=>({...x}));
+let selectedPackItem=null;
+let selectedBag='saddle';
+
+function bagStats(id){
+ const items=packItems.filter(x=>x.bag===id),l=items.reduce((s,x)=>s+x.l,0),kg=items.reduce((s,x)=>s+x.kg,0);
+ return {items,l,kg,pct:Math.round(l/packBags[id].cap*100)};
 }
-document.querySelectorAll('.bag-node,.bag-pill').forEach(x=>x.addEventListener('click',()=>selectBag(x.dataset.bag)));
-document.getElementById('autoPack').addEventListener('click',()=>{
- const b=document.querySelector('#screen-pack .badge');b.textContent='neu bewertet';
- setTimeout(()=>b.textContent='Gravel · 40 mm',1800);
+function packTotalKg(){return packItems.reduce((s,x)=>s+x.kg,0)}
+function packToast(msg){
+ let el=document.getElementById('packToast');
+ if(!el){el=document.createElement('div');el.id='packToast';el.className='pack-toast';document.body.appendChild(el)}
+ el.textContent=msg;el.classList.add('show');clearTimeout(packToast.t);packToast.t=setTimeout(()=>el.classList.remove('show'),1500);
+}
+function movePackItem(itemId,targetBag){
+ const item=packItems.find(x=>x.id===itemId);if(!item||!packBags[targetBag])return;
+ const target=bagStats(targetBag);
+ if(target.l+item.l>packBags[targetBag].cap){packToast(`${packBags[targetBag].name}: zu wenig Platz`);return}
+ const from=item.bag;if(from===targetBag){selectedPackItem=null;renderPackPrototype();return}
+ item.bag=targetBag;selectedPackItem=null;selectedBag=targetBag;
+ packToast(`${item.name}: ${packBags[from].name} → ${packBags[targetBag].name}`);
+ renderPackPrototype();
+}
+function selectBag(id){
+ if(selectedPackItem){movePackItem(selectedPackItem,id);return}
+ selectedBag=id;renderPackPrototype();
+}
+function selectPackItem(id){
+ selectedPackItem=selectedPackItem===id?null:id;
+ renderPackPrototype();
+}
+function togglePacked(id){
+ const item=packItems.find(x=>x.id===id);if(!item)return;
+ item.packed=!item.packed;renderPackPrototype();
+}
+function renderBagOverview(){
+ const box=document.getElementById('bagOverview');if(!box)return;
+ box.innerHTML=Object.entries(packBags).map(([id,b])=>{
+   const s=bagStats(id),active=selectedBag===id,empty=!s.items.length;
+   return `<div class="bag-pill ${active?'active':''} ${empty?'empty':''} ${selectedPackItem?'drop-target':''}" data-bag="${id}" draggable="false">
+     <div class="ring" style="--p:${Math.min(100,s.pct)}%"></div><strong>${b.name}</strong><span>${s.pct}% · ${s.l.toFixed(1).replace('.0','')} / ${b.cap} L</span>
+   </div>`;
+ }).join('');
+ box.querySelectorAll('.bag-pill').forEach(el=>{
+   el.addEventListener('click',()=>selectBag(el.dataset.bag));
+   el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drop-target')});
+   el.addEventListener('dragleave',()=>el.classList.remove('drop-target'));
+   el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drop-target');const id=e.dataTransfer.getData('text/plain');if(id)movePackItem(id,el.dataset.bag)});
+ });
+}
+function renderBikeBags(){
+ Object.keys(packBags).forEach(id=>{
+   const node=document.getElementById('bikeBag-'+id);if(!node)return;
+   const empty=!bagStats(id).items.length;
+   node.classList.toggle('empty',empty);
+   node.classList.toggle('selected',selectedBag===id&&!empty);
+   node.classList.toggle('drop-target',!!selectedPackItem&&!empty);
+   node.onclick=()=>selectBag(id);
+ });
+}
+function renderPackOrg(){
+ const box=document.getElementById('packOrgRows');if(!box)return;
+ box.innerHTML=Object.entries(packBags).map(([id,b])=>{
+   const s=bagStats(id);
+   const chips=s.items.length?s.items.map(item=>`<span class="pack-item-wrap ${selectedPackItem===item.id?'selected':''}">
+      <button class="pack-item" draggable="true" data-item="${item.id}">${item.name}</button>
+      <button class="item-check ${item.packed?'packed':''}" data-check="${item.id}" title="eingepackt">${item.packed?'✓':'○'}</button>
+    </span>`).join(''):'<span class="muted" style="font-size:11px">leer – am Bike ausgeblendet</span>';
+   return `<div class="org-row" data-orgbag="${id}"><b>${b.name}<div class="pack-mini-note">${s.pct}% · ${s.l.toFixed(1).replace('.0','')} L</div></b><div class="chips">${chips}</div>${s.pct>90?'<span class="status-ok" style="background:#f0ddd5;color:#7b4738">sehr voll</span>':''}</div>`;
+ }).join('');
+ box.querySelectorAll('.pack-item').forEach(el=>{
+   el.addEventListener('click',()=>selectPackItem(el.dataset.item));
+   el.addEventListener('dragstart',e=>{selectedPackItem=el.dataset.item;e.dataTransfer.setData('text/plain',el.dataset.item);e.dataTransfer.effectAllowed='move';renderPackPrototype()});
+ });
+ box.querySelectorAll('.item-check').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();togglePacked(el.dataset.check)}));
+}
+function renderChecklist(){
+ const box=document.getElementById('checklist');if(!box)return;
+ const cats=[...new Set(packItems.map(x=>x.cat))];
+ let done=0;
+ box.innerHTML=cats.map(cat=>{
+   const items=packItems.filter(x=>x.cat===cat),d=items.filter(x=>x.packed).length;done+=d;
+   const complete=d===items.length;
+   return `<div class="checkline" data-cat="${cat}"><span>${cat}</span><span>${d}/${items.length}</span><i class="checkdot" style="${complete?'':'background:#d8cfbf;color:#676b64'}">${complete?'✓':items.length-d}</i></div>`;
+ }).join('');
+ const total=packItems.length,open=total-done;
+ document.getElementById('packListTitle').textContent=`${done} / ${total}`;
+ const badge=document.getElementById('packOpenBadge');badge.textContent=open?`${open} offen`:'komplett';badge.classList.toggle('warn',open>0);
+ box.querySelectorAll('.checkline').forEach(el=>el.addEventListener('click',()=>{
+   const items=packItems.filter(x=>x.cat===el.dataset.cat),all=items.every(x=>x.packed);
+   items.forEach(x=>x.packed=!all);renderPackPrototype();
+ }));
+}
+function renderBalance(){
+ const total=packTotalKg();
+ let front=0,rear=0,center=0;
+ packItems.forEach(x=>{const z=packBags[x.bag].zone;if(z==='front')front+=x.kg;else if(z==='rear')rear+=x.kg;else center+=x.kg});
+ const frontEq=front+center/2,rearEq=rear+center/2,frontPct=Math.round(frontEq/(frontEq+rearEq)*100),rearPct=100-frontPct;
+ document.getElementById('packWeight').textContent=total.toFixed(1).replace('.',',')+' kg';
+ document.getElementById('frontBalance').textContent=`${frontPct}% vorne`;document.getElementById('rearBalance').textContent=`${rearPct}% hinten`;
+ document.getElementById('balanceBar').style.gridTemplateColumns=`${frontPct}fr ${rearPct}fr`;
+ const diff=Math.abs(frontPct-50),status=document.getElementById('balanceStatus');
+ status.textContent=diff<=7?'gut ausbalanciert':frontPct>50?'etwas frontlastig':'etwas hecklastig';
+ status.style.background=diff<=7?'#e1e6d7':'#efe2d9';status.style.color=diff<=7?'#52613f':'#774936';
+ const active=Object.keys(packBags).filter(id=>bagStats(id).items.length).length;
+ document.getElementById('packMeta').textContent=`${total.toFixed(1).replace('.',',')} kg · ${active} aktive Taschen · Balance ${frontPct} / ${rearPct}`;
+}
+function renderPackHint(){
+ const hint=document.getElementById('packInteraction');if(!hint)return;
+ if(selectedPackItem){
+   const item=packItems.find(x=>x.id===selectedPackItem);
+   hint.innerHTML=`<b>${item.name} ausgewählt.</b> Jetzt Zieltasche am Bike oder in der Taschenleiste wählen.`;
+ }else if(selectedBag){
+   const s=bagStats(selectedBag);
+   hint.innerHTML=`<b>${packBags[selectedBag].name}</b> · ${s.pct}% gefüllt · ${s.items.length} Gegenstände. Gegenstand antippen, um ihn umzupacken.`;
+ }
+}
+function renderPackPrototype(){
+ renderBagOverview();renderBikeBags();renderPackOrg();renderChecklist();renderBalance();renderPackHint();
+}
+function autoPackPrototype(){
+ // Demonstrate consolidation: move the small top-tube items into frame/saddle, then hide the empty bag on the bike.
+ const moves={snacks:'saddle',electronics:'frame',docs:'frame',sandals:'saddle'};
+ Object.entries(moves).forEach(([itemId,target])=>{const item=packItems.find(x=>x.id===itemId);if(item)item.bag=target});
+ selectedPackItem=null;selectedBag='frame';
+ document.getElementById('consolidationBadge').textContent='4 Taschen · konsolidiert';
+ packToast('Vorschlag angewendet: Oberrohrtasche kann entfallen');
+ renderPackPrototype();
+}
+function resetPackPrototype(){
+ packItems=packInitialItems.map(x=>({...x}));selectedPackItem=null;selectedBag='saddle';
+ document.getElementById('consolidationBadge').textContent='interaktiv';packToast('Packplan zurückgesetzt');renderPackPrototype();
+}
+document.getElementById('autoPack').addEventListener('click',autoPackPrototype);
+document.getElementById('resetPack').addEventListener('click',resetPackPrototype);
+document.getElementById('packModeBtn').addEventListener('click',()=>{
+ document.getElementById('packChecklistCard').scrollIntoView({behavior:'smooth',block:'center'});packToast('Packliste: Häkchen direkt antippen');
 });
+renderPackPrototype();
 </script>
 </body>
 </html>
