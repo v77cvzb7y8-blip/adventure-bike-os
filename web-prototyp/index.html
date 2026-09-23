@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Web Prototype V12</title>
+<title>ROAM · Web Prototype V13</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"/>
 <style>
@@ -451,6 +451,14 @@ body.map-open{overflow:hidden!important}
 @media(max-width:1180px){.v12-home-grid{grid-template-columns:1fr 1fr}.v12-summary-col{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px}.v12-home-preview{grid-template-columns:1fr 1fr}.v12-home-preview .v12-preview-card:last-child{grid-column:1/-1}.pack-v12-grid{grid-template-columns:1fr 1fr}.pack-v12-assign{grid-column:1/-1}.pack-v12-side{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}}
 @media(max-width:760px){.v12-home-grid,.v12-home-preview,.v12-summary-col,.pack-v12-grid{grid-template-columns:1fr}.v12-summary-col,.pack-v12-assign,.pack-v12-side,.v12-home-preview .v12-preview-card:last-child{grid-column:auto}.pack-v12-side{grid-template-columns:1fr}.v12-form-row,.v12-form-row.double,.v12-profile-row{grid-template-columns:26px 1fr}.v12-form-label{grid-column:2}.v12-form-row .v12-control,.v12-form-row .v12-inline,.v12-form-row .v12-chip-row,.v12-form-row .v12-upload,.v12-profile-row>div:last-child{grid-column:2}.v12-segment,.v12-segment.four{grid-template-columns:1fr 1fr}.pack-v12-sizes{grid-template-columns:1fr 1fr}}
 
+
+/* V13 dashboard + interaction refinements */
+.dash-hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:16px}.dash-hero h1{margin-bottom:7px}.dash-meta{font-size:13px;color:var(--muted);letter-spacing:.04em}.dash-hero-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.dash-grid{display:grid;grid-template-columns:1.35fr .8fr;gap:16px}.dash-route-card,.dash-readiness,.dash-section{padding:18px}.dash-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.dash-card-head h2,.dash-card-head h3{margin:3px 0 0}.dash-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.dash-kpis>div{border:1px solid var(--line);border-radius:11px;background:#fffdf8;padding:11px}.dash-kpis b{display:block;font-size:20px}.dash-kpis span{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.dash-route-preview{height:180px;border:1px solid var(--line);border-radius:12px;background:#e7e8dc;overflow:hidden}.dash-route-preview svg{width:100%;height:100%;display:block}.dash-stage-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.dash-stage-chip{padding:9px;border:1px solid var(--line);border-radius:10px;background:#fffdf8}.dash-stage-chip b{font-size:11px;display:block}.dash-stage-chip span{font-size:9px;color:var(--muted)}.dash-progress{height:12px;margin:10px 0 14px}.dash-ready-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dash-ready-item{border:1px solid var(--line);border-radius:11px;background:#fffdf8;padding:10px;display:flex;gap:9px;align-items:center}.dash-ready-icon{width:29px;height:29px;border-radius:9px;background:#e9ece2;display:grid;place-items:center;color:var(--forest);font-weight:900}.dash-ready-item b{display:block;font-size:11px}.dash-ready-item small{display:block;color:var(--muted);font-size:9px;margin-top:2px}.dash-next{margin-top:12px;padding:13px;border:1px solid #dce4d3;background:#eef2e7;border-radius:12px;display:flex;justify-content:space-between;gap:12px;align-items:center}.dash-next h3{margin:3px 0 3px}.dash-next p{margin:0;color:var(--muted);font-size:10px}.dash-lower{display:grid;grid-template-columns:1.25fr .95fr .8fr;gap:16px;margin-top:16px}.dash-stage-list{display:grid;gap:7px;margin-top:10px}.dash-stage-row{display:grid;grid-template-columns:30px 1fr auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:10px;background:#fffdf8;padding:9px}.dash-stage-row i{width:27px;height:27px;border-radius:50%;display:grid;place-items:center;background:var(--olive);color:white;font-style:normal;font-weight:800;font-size:10px}.dash-stage-row b{font-size:11px}.dash-stage-row small{display:block;color:var(--muted);font-size:9px}.dash-stage-row span{font-size:9px;color:var(--muted);text-align:right}.dash-prep-cards{display:grid;gap:8px;margin-top:10px}.dash-prep{border:1px solid var(--line);border-radius:10px;background:#fffdf8;padding:10px;display:flex;justify-content:space-between;gap:10px;align-items:center}.dash-prep b{font-size:11px}.dash-prep span{font-size:9px;color:var(--muted)}.dash-rider{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.dash-rider>div{border:1px solid var(--line);border-radius:10px;background:#fffdf8;padding:10px;font-size:10px;font-weight:700}.dash-empty{padding:22px;display:grid;grid-template-columns:54px 1fr auto;gap:16px;align-items:center}.dash-empty-icon{width:52px;height:52px;border-radius:16px;background:#e7eadf;display:grid;place-items:center;font-size:28px;color:var(--forest)}.dash-empty h2{margin:0 0 4px}.dash-empty p{margin:0;color:var(--muted)}.dash-empty-actions{display:flex;gap:8px}.v13-target-row{grid-template-columns:26px 110px 1fr!important}.v13-target-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.v13-target-inputs label{display:flex;align-items:center;gap:6px}.v13-target-inputs label span{font-size:10px;color:var(--muted);white-space:nowrap}.v13-target-inputs .v12-control{min-width:0}.route-tabs{gap:8px}.route-tabs button{border:1px solid var(--line);background:#f8f5ed;border-radius:10px;padding:9px 13px;cursor:pointer}.route-tabs button:hover{background:#ece8dd;border-color:#b9b2a5}.route-tabs button.active{background:#e7e3d8;border-color:#d0c8bb;box-shadow:inset 0 -2px 0 var(--rust)}
+.stage-inner-card{padding:16px;margin-top:14px;background:#f7f4ec}.stage-detail-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.stage-nav{display:flex;gap:7px}.night-row{cursor:pointer}.night-row:hover{background:#f4f0e7}.night-action{font-size:9px;color:var(--forest);font-weight:800}.v13-stay-card{padding:16px;background:#f7f4ec}.stay-plan-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.stay-plan-head h3{margin:4px 0 0}.stay-plan-main{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;margin-top:10px}.stay-plan-copy{display:flex;gap:10px;align-items:flex-start}.stay-plan-actions{display:grid;gap:7px;min-width:190px}.stay-flow{display:flex;gap:14px;align-items:center;margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}.stay-step{display:flex;align-items:center;gap:7px}.stay-step i{width:27px;height:27px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-style:normal;font-weight:800}.stay-step b{display:block;font-size:10px}.stay-step small{font-size:8px;color:var(--muted)}.lodging-results{display:grid;gap:7px;margin-top:12px}.lodging-result{display:grid;grid-template-columns:1fr auto;gap:9px;border:1px solid var(--line);border-radius:10px;background:#fffdf8;padding:10px}.lodging-result h4{font-size:11px;margin:0 0 3px}.lodging-result small{font-size:9px;color:var(--muted)}.lodging-result-actions{display:flex;gap:6px;align-items:center}.lodging-selected{border:1px solid #cfd9c7;background:#eef2e7;border-radius:11px;padding:12px;margin-top:10px}.lodging-selected h4{margin:0 0 4px;font-size:13px}.lodging-status-line{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.lodging-search-status{padding:10px;border-radius:10px;background:#f4f0e7;color:var(--muted);font-size:10px;margin-top:10px}
+.pack-v13-label{display:block;font-size:10px;font-weight:800;color:#4f594f;margin-top:7px}.pack-v13-label .v12-control{margin-top:5px}.pack-v13-lodging-note{padding:9px 10px;border-radius:10px;background:#eef2e7;color:#596359;font-size:9px;line-height:1.45;margin-top:8px}.pack-v13-group{border:1px solid var(--line);border-radius:11px;background:#faf7ef;padding:8px;margin-top:8px}.pack-v13-grouphead{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:4px}.pack-v13-grouphead b{font-size:11px}.pack-v13-grouphead span{font-size:9px;color:var(--muted);font-weight:800}.pack-v13-bike{background:#d2c19a}.pack-v13-fill-title{font-size:13px;font-weight:800;margin:10px 0 6px}.pack-v13-fillgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}.pack-v13-fillcard{border:1px solid var(--line);border-radius:10px;background:#fffdf8;padding:8px;min-width:0}.pack-v13-fillcard .bag-svg{height:30px;display:flex;align-items:center}.pack-v13-fillcard .bag-svg svg{max-width:48px;height:28px}.pack-v13-fillcard b{display:block;font-size:9px;margin-top:3px}.pack-v13-fillcard strong{display:block;font-size:12px;margin-top:4px}.pack-v13-fillcard .bar{height:6px;border-radius:999px;background:#e3dccf;overflow:hidden;margin-top:6px}.pack-v13-fillcard .bar i{display:block;height:100%;background:var(--olive)}.pack-v13-fillcard small{font-size:8px;color:var(--muted)}.pack-v13-unassigned{margin-top:8px;border:1px dashed #d2c9ba;border-radius:10px;padding:9px}.pack-v13-unassigned>b{font-size:10px}.pack-v13-unassigned-list{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.pack-v13-unassigned-list span{font-size:8px;background:#f1ece2;border-radius:999px;padding:4px 6px}.pack-v13-apply-ready{box-shadow:0 0 0 3px rgba(162,87,60,.12)}.pack-v12-item .thumb svg{width:20px;height:20px;stroke:#465648;fill:none;stroke-width:1.8}.pack-v13-group .pack-v12-item{margin-top:5px}.pack-v13-group .pack-v12-item:first-of-type{margin-top:0}
+@media(max-width:1100px){.dash-grid,.dash-lower{grid-template-columns:1fr}.dash-stage-strip{grid-template-columns:1fr 1fr}.pack-v13-fillgrid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.dash-empty{grid-template-columns:1fr}.dash-empty-actions{flex-direction:column}.dash-kpis{grid-template-columns:1fr 1fr}.dash-stage-strip{grid-template-columns:1fr}.dash-ready-grid{grid-template-columns:1fr}.dash-rider{grid-template-columns:1fr}.v13-target-row{grid-template-columns:26px 1fr!important}.v13-target-inputs{grid-column:2;grid-template-columns:1fr}.pack-v13-fillgrid{grid-template-columns:1fr 1fr}.stay-plan-main{grid-template-columns:1fr}.stay-plan-actions{min-width:0}.stay-flow{flex-wrap:wrap}}
+
 </style>
 </head>
 <body>
@@ -459,7 +467,7 @@ body.map-open{overflow:hidden!important}
   <div class="brand"><div class="mark"></div><div class="wordmark">ROAM</div></div>
   <nav class="nav">
     <button class="active" data-screen="home">Übersicht</button>
-    <button data-screen="route">Route</button>
+    <button data-screen="plan">Route</button>
     <button data-screen="stages">Etappen</button>
     <button data-screen="pack">Packen</button>
     <button data-screen="check">Reise-Check</button>
@@ -469,6 +477,50 @@ body.map-open{overflow:hidden!important}
 
 <main class="shell">
 <section class="screen active" id="screen-home">
+  <div class="dash-hero" id="dashHero">
+    <div>
+      <div class="eyebrow">Aktuelle Reise</div>
+      <h1 id="dashTitle">Deine nächste Tour</h1>
+      <div class="dash-meta" id="dashMeta">Noch keine Reise aktiv.</div>
+    </div>
+    <div class="dash-hero-actions">
+      <span class="badge" id="dashDeparture">Planung starten</span>
+      <button class="btn rust" type="button" id="dashPrimaryAction" data-go="plan">Neue Reise planen</button>
+    </div>
+  </div>
+
+  <div id="dashNoTrip" class="card dash-empty" hidden>
+    <div class="dash-empty-icon">⌁</div>
+    <div><h2>Wohin möchtest du?</h2><p>Starte eine neue Bikepacking-Reise oder importiere eine vorhandene GPX-Datei. Das Fahrerprofil bleibt für zukünftige Touren gespeichert.</p></div>
+    <div class="dash-empty-actions"><button class="btn rust" data-go="plan">Neue Reise planen</button><button class="btn" id="dashImportGpx">GPX importieren</button></div>
+  </div>
+
+  <div id="dashTrip" class="dash-grid">
+    <section class="card dash-route-card">
+      <div class="dash-card-head"><div><div class="eyebrow">Tour</div><h2 id="dashRouteTitle">–</h2></div><button class="btn" data-go="route">Route öffnen</button></div>
+      <div class="dash-kpis">
+        <div><b id="dashKm">–</b><span>Strecke</span></div><div><b id="dashHm">–</b><span>Aufstieg</span></div><div><b id="dashDays">–</b><span>Etappen</span></div><div><b id="dashTerrain">Mixed</b><span>Untergrund</span></div>
+      </div>
+      <div class="dash-route-preview"><svg viewBox="0 0 780 190" preserveAspectRatio="none"><g stroke="#d9d7c9" stroke-width="1" opacity=".65"><path d="M0 145 Q90 105 170 132 T340 92 T520 112 T790 55" fill="none"/><path d="M0 105 Q80 70 165 96 T330 65 T520 82 T790 30" fill="none"/></g><polyline id="dashRouteLine" points="30,150 140,136 245,108 350,120 460,82 570,95 740,42" fill="none" stroke="#40523f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle id="dashRouteStart" cx="30" cy="150" r="7" fill="#40523f" stroke="#fff" stroke-width="4"/><circle id="dashRouteEnd" cx="740" cy="42" r="7" fill="#a2573c" stroke="#fff" stroke-width="4"/></svg></div>
+      <div class="dash-stage-strip" id="dashStageStrip"></div>
+    </section>
+
+    <section class="card dash-readiness">
+      <div class="dash-card-head"><div><div class="eyebrow">Vorbereitung</div><h2><span id="dashReadyPct">0%</span> bereit</h2></div><span class="badge warn" id="dashOpenCount">offen</span></div>
+      <div class="progress dash-progress"><i id="dashReadyBar" style="width:0%"></i></div>
+      <div class="dash-ready-grid" id="dashReadyGrid"></div>
+      <div class="dash-next" id="dashNext"><div><div class="eyebrow">Nächster sinnvoller Schritt</div><h3 id="dashNextTitle">Reise planen</h3><p id="dashNextText">Start und Ziel festlegen.</p></div><button class="btn primary" id="dashNextBtn">Öffnen</button></div>
+    </section>
+  </div>
+
+  <div id="dashLower" class="dash-lower">
+    <section class="card dash-section"><div class="dash-card-head"><div><div class="eyebrow">Etappen</div><h3>Deine Tage</h3></div><button class="btn" data-go="stages">Alle Etappen</button></div><div id="dashStages" class="dash-stage-list"></div></section>
+    <section class="card dash-section"><div class="eyebrow">Reisevorbereitung</div><h3>Was noch offen ist</h3><div id="dashPrepCards" class="dash-prep-cards"></div></section>
+    <section class="card dash-section"><div class="dash-card-head"><div><div class="eyebrow">Fahrerprofil</div><h3>Dein normales Niveau</h3></div><button class="btn" data-go="plan">Bearbeiten</button></div><div id="dashRider" class="dash-rider"></div></section>
+  </div>
+</section>
+
+<section class="screen" id="screen-plan">
   <div class="v12-title">
     <div class="eyebrow">Start & Route</div>
     <h1>Route planen</h1>
@@ -479,14 +531,14 @@ body.map-open{overflow:hidden!important}
     <section class="card v12-panel">
       <div class="v12-step-head"><div class="v12-step-num">1</div><div><h2>Wohin geht’s?</h2><p>Lege Start und Ziel fest und definiere die wichtigsten Rahmenbedingungen für die Reise.</p></div></div>
       <div class="v12-form-list">
-        <div class="v12-form-row"><div class="v12-form-icon">●</div><div class="v12-form-label">Start</div><input class="v12-control" id="planStart" value="Innsbruck" placeholder="z. B. Innsbruck"></div>
-        <div class="v12-form-row"><div class="v12-form-icon" style="color:var(--rust)">●</div><div class="v12-form-label">Ziel</div><input class="v12-control" id="planDest" value="Wien" placeholder="z. B. Wien"></div>
-        <div class="v12-form-row"><div class="v12-form-icon">⚑</div><div class="v12-form-label">Zwischenziele</div><input class="v12-control" id="planWaypoints" placeholder="z. B. Salzburg, Linz"></div>
+        <div class="v12-form-row"><div class="v12-form-icon">●</div><div class="v12-form-label">Start</div><input class="v12-control" id="planStart" placeholder="Ort, Region oder Adresse eingeben" autocomplete="off"></div>
+        <div class="v12-form-row"><div class="v12-form-icon" style="color:var(--rust)">●</div><div class="v12-form-label">Ziel</div><input class="v12-control" id="planDest" placeholder="Ort, Region oder Adresse eingeben" autocomplete="off"></div>
+        <div class="v12-form-row"><div class="v12-form-icon">⚑</div><div class="v12-form-label">Zwischenziele</div><input class="v12-control" id="planWaypoints" placeholder="z. B. Salzburg, Linz (optional)" autocomplete="off"></div>
         <div class="v12-form-row double"><div class="v12-form-icon">▦</div><div class="v12-form-label">Reisezeitraum</div><input class="v12-control" id="planStartDate" type="date"><div class="v12-form-label">bis</div><input class="v12-control" id="planEndDate" type="date"></div>
-        <div class="v12-form-row double"><div class="v12-form-icon">↔</div><div class="v12-form-label">Etappenziel</div><div class="v12-inline"><input class="v12-control" id="planKmDay" type="number" min="20" step="5" value="120"><span class="muted">km/Tag</span></div><div class="v12-form-label">max.</div><div class="v12-inline"><input class="v12-control" id="planHmDay" type="number" min="100" step="100" value="1800"><span class="muted">HM</span></div></div>
+        <div class="v12-form-row v13-target-row"><div class="v12-form-icon">↔</div><div class="v12-form-label">Tagesziel</div><div class="v13-target-inputs"><label><input class="v12-control" id="planKmDay" type="number" inputmode="numeric" min="20" step="5" placeholder="z. B. 80"><span>km/Tag</span></label><label><input class="v12-control" id="planHmDay" type="number" inputmode="numeric" min="100" step="100" placeholder="z. B. 1500"><span>max. HM</span></label></div></div>
         <div class="v12-form-row"><div class="v12-form-icon">⌁</div><div class="v12-form-label">Routing</div><select class="v12-control" id="planProfile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schneller Asphalt</option></select></div>
         <div class="v12-form-row"><div class="v12-form-icon">▰</div><div class="v12-form-label">Übernachtung</div><select class="v12-control" id="planLodging"><option value="hotel">Hotel / Pension</option><option value="camping">Camping / Zelt</option><option value="mixed">Gemischt</option></select></div>
-        <div class="v12-form-row double"><div class="v12-form-icon">◎</div><div class="v12-form-label">Preisniveau</div><select class="v12-control" id="planPrice"><option value="low">günstig</option><option value="mid" selected>mittel</option><option value="high">komfortabel</option></select><div class="v12-form-label">Max. €/Nacht</div><input class="v12-control" id="planNightBudget" type="number" min="0" step="10" value="90"></div>
+        <div class="v12-form-row double"><div class="v12-form-icon">◎</div><div class="v12-form-label">Preisniveau</div><select class="v12-control" id="planPrice"><option value="" selected>Bitte wählen …</option><option value="low">günstig</option><option value="mid">mittel</option><option value="high">komfortabel</option></select><div class="v12-form-label">Max. €/Nacht</div><input class="v12-control" id="planNightBudget" type="number" min="0" step="10" placeholder="optional"></div>
         <div class="v12-form-row"><div class="v12-form-icon">▲</div><div class="v12-form-label">Reiseart / Terrain</div><div class="v12-chip-row" id="planTerrainChips"><button type="button" class="v12-chip active" data-terrain="mixed">Gemischt</button><button type="button" class="v12-chip" data-terrain="road">Eher Straße</button><button type="button" class="v12-chip" data-terrain="gravel">Eher Schotter</button><button type="button" class="v12-chip" data-terrain="offroad">Eher Offroad</button></div></div>
         <div class="v12-form-row"><div class="v12-form-icon">⇧</div><div class="v12-form-label">GPX Import</div><label class="v12-upload"><input id="planGpxInput" type="file" accept=".gpx,application/gpx+xml" hidden><span><b>GPX-Datei hier auswählen</b>Bestehende Route importieren und als Originaltrack übernehmen.</span></label></div>
       </div>
@@ -526,11 +578,11 @@ body.map-open{overflow:hidden!important}
   <div class="v12-home-preview">
     <section class="card v12-preview-card"><div class="v12-preview-head"><div><h3>Routenvorschau</h3><small id="homePreviewText">Start und Ziel werden hier als Vorschau gezeigt.</small></div><button class="btn" data-go="route">Karte öffnen</button></div><div class="v12-map-preview"><svg viewBox="0 0 640 220" preserveAspectRatio="none"><defs><pattern id="homeTopo" width="90" height="50" patternUnits="userSpaceOnUse"><path d="M-10 35 Q20 10 55 29 T105 24" fill="none" stroke="#cbd0bf" stroke-width="1" opacity=".55"/></pattern></defs><rect width="640" height="220" fill="#e7e8dc"/><rect width="640" height="220" fill="url(#homeTopo)"/><polyline id="homePreviewRoute" points="60,175 155,150 250,120 350,105 455,75 580,45" fill="none" stroke="#40523f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle id="homePreviewStart" cx="60" cy="175" r="8" fill="#40523f" stroke="#fff" stroke-width="4"/><circle id="homePreviewEnd" cx="580" cy="45" r="8" fill="#b76547" stroke="#fff" stroke-width="4"/><text id="homePreviewStartLabel" x="72" y="186" font-size="13" font-weight="800" fill="#25352c">Start</text><text id="homePreviewEndLabel" x="520" y="35" font-size="13" font-weight="800" fill="#25352c">Ziel</text></svg></div></section>
     <section class="card v12-preview-card"><div class="v12-preview-head"><div><h3>Höhenprofil</h3><small id="homeElevMeta">wird nach Berechnung aktualisiert</small></div></div><div class="v12-elev-preview"><svg viewBox="0 0 520 180" preserveAspectRatio="none"><g stroke="#ddd7ca" stroke-width="1"><line x1="30" x2="500" y1="35" y2="35"/><line x1="30" x2="500" y1="80" y2="80"/><line x1="30" x2="500" y1="125" y2="125"/></g><path id="homeElevArea" d="M30,145 L80,120 L130,85 L175,110 L220,60 L265,115 L315,92 L360,132 L405,100 L455,65 L500,120 L500,150 L30,150 Z" fill="#9ca38d" opacity=".72"/><path id="homeElevLine" d="M30,145 L80,120 L130,85 L175,110 L220,60 L265,115 L315,92 L360,132 L405,100 L455,65 L500,120" fill="none" stroke="#556244" stroke-width="2"/></svg></div></section>
-    <section class="card v12-preview-card"><div class="v12-preview-head"><div><h3>Etappen grob</h3><small id="homeStageHint">Vorschlag nach Tagesziel und Fahrerprofil</small></div></div><div class="v12-stage-rough" id="homeStageRough"><div class="v12-stage-rough-row"><i>1</i><span>Route berechnen</span><span>–</span></div></div></section>
+    <section class="card v12-preview-card"><div class="v12-preview-head"><div><h3>Etappenvorschlag</h3><small id="homeStageHint">Vorschlag nach Tagesziel und Fahrerprofil</small></div></div><div class="v12-stage-rough" id="homeStageRough"><div class="v12-stage-rough-row"><i>1</i><span>Route berechnen</span><span>–</span></div></div></section>
   </div>
 
   <div class="v12-home-actions"><button class="btn" id="useSavedRouteBtn" type="button">Gespeicherte Route laden</button><button class="btn" type="button" id="saveDraftBtn">Entwurf speichern</button><button class="btn rust" id="planRouteBtn" type="button">Fahrradroute berechnen →</button></div>
-  <div id="planStatus" class="plan-status" style="text-align:right;margin-top:7px">Eine vorhandene Route wird automatisch übernommen.</div>
+  <div id="planStatus" class="plan-status" style="text-align:right;margin-top:7px">Start und Ziel eingeben oder eine gespeicherte Route laden.</div>
 </section>
 
 <section class="screen" id="screen-route">
@@ -538,11 +590,11 @@ body.map-open{overflow:hidden!important}
     <div><div class="eyebrow">Route</div><h1 id="routePageTitle">Gravel Traverse Tirol</h1><div class="route-meta" id="routeMetaText">Routengeometrie wird geladen …</div></div>
     <div class="btn-row"><button class="btn">GPX exportieren</button><button class="btn primary">Route speichern</button></div>
   </div>
-  <div class="tabs"><button class="active">Übersicht</button><button>Karte</button><button>Höhe</button><button>Terrain</button><button>Waypoints</button><button>Etappen</button></div>
+  <div class="tabs route-tabs" id="routeTabs"><button class="active" data-route-tab="overview">Übersicht</button><button data-route-tab="map">Karte</button><button data-route-tab="height">Höhe</button><button data-route-tab="terrain">Terrain</button><button data-route-tab="waypoints">Waypoints</button><button data-route-tab="stages">Etappen</button></div>
 
   <div class="route-layout" style="margin-top:14px">
     <div class="route-main">
-      <div class="card route-visual-card">
+      <div class="card route-visual-card" id="routeOverviewPanel">
         <div class="map-wrap" id="mapWrap">
           <div id="routeMapLeaflet" aria-label="Topografische Routenkarte"></div>
           <div id="routeMap3d" aria-label="3D Flyover der Route"></div>
@@ -581,7 +633,7 @@ body.map-open{overflow:hidden!important}
           </div>
         </div>
 
-        <div class="profile-card">
+        <div class="profile-card" id="routeHeightPanel">
           <div class="profile-head">
             <div><div class="eyebrow">Höhenprofil</div><h3>Gesamtroute</h3></div>
             <div class="muted" style="font-size:12px">Mit Maus/Finger auf Karte oder Profil zeigen</div>
@@ -602,7 +654,7 @@ body.map-open{overflow:hidden!important}
     </div>
 
     <aside class="side">
-      <div class="card">
+      <div class="card" id="routeTerrainPanel">
         <h3>Terrain</h3>
         <div class="surface-list" id="surfaceList"><div class="muted" style="font-size:12px">Terrain wird auf das OSM-Wegenetz gematcht …</div></div>
         <div class="stackbar" id="terrainStackBar" style="margin-top:14px"><span style="width:100%;background:#9aa39d"></span></div>
@@ -610,7 +662,7 @@ body.map-open{overflow:hidden!important}
         <div class="route-visibility-note">Dunkle Linie = Route · Farbkern = Terrain</div>
       </div>
 
-      <div class="card">
+      <div class="card" id="routeWaypointsPanel">
         <h3>Ausgewählter Punkt</h3>
         <div style="margin-bottom:12px"><b id="pointName" style="font-size:18px;font-weight:750">Jaufenpass</b><div class="muted" id="pointKm">km 156</div></div>
         <div class="point-details"><div>Höhe</div><b id="pointAlt">1.842 m</b><div>Terrain</div><b id="pointTerrain">Trail</b><div>Ø nächste 2 km</div><b id="pointGrade">–</b><div>Wind aktuell</div><b id="pointWind" class="point-wind">–</b></div>
@@ -635,7 +687,7 @@ body.map-open{overflow:hidden!important}
 
 <section class="screen" id="screen-stages">
   <div class="route-title-row"><div><div class="eyebrow">Etappen</div><h1 id="stagePageTitle">Etappen</h1><div class="route-meta">Wetter · Terrain · Belastung · Übernachtungen</div></div></div>
-  <div class="stage-page">
+  <div class="stage-page v13-stage-page">
     <div class="card stage-list">
       <div id="stageListItems"></div>
       <div class="overnight-summary">
@@ -644,20 +696,19 @@ body.map-open{overflow:hidden!important}
       </div>
     </div>
     <div class="card stage-detail">
-      <div class="eyebrow" id="stageDay">Tag 1</div><h2 id="stageName">Etappe</h2>
+      <div class="stage-detail-top"><div><div class="eyebrow" id="stageDay">Tag 1</div><h2 id="stageName">Etappe</h2></div><div class="stage-nav"><button class="btn" id="stagePrev">‹ Vorherige</button><button class="btn" id="stageNext">Nächste ›</button></div></div>
       <div class="stage-stat-grid">
-        <div class="stage-stat"><b id="stageKm">–</b><span>Distanz</span></div><div class="stage-stat"><b id="stageHm">–</b><span>Anstieg</span></div><div class="stage-stat"><b id="stageWx">–</b><span>Max.</span></div><div class="stage-stat"><b id="stageSurface">–</b><span>Gravel</span></div>
+        <div class="stage-stat"><b id="stageKm">–</b><span>Distanz</span></div><div class="stage-stat"><b id="stageHm">–</b><span>Anstieg</span></div><div class="stage-stat"><b id="stageWx">–</b><span>Max. Steigung</span></div><div class="stage-stat"><b id="stageSurface">–</b><span>Gravel</span></div>
       </div>
       <div id="stageRiderFit">Fahrerprofil wird mit dieser Etappe abgeglichen …</div>
-      <div class="card" style="padding:16px;margin-top:16px;background:#f7f4ec">
+      <div class="card stage-inner-card">
         <div class="eyebrow">Wetter entlang der Etappe</div>
-        <div class="weather-row" style="margin-top:10px"><div class="weather-day"><small>Start</small><div class="icon">☁</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Hochpunkt</small><div class="icon">☀</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Ziel</small><div class="icon">⛅</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Abend</small><div class="icon">◐</div><b>–</b><small>routengenau</small></div></div>
+        <div class="weather-row" id="stageWeatherStrip" style="margin-top:10px"><div class="weather-day"><small>Start</small><div class="icon">⛅</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Hochpunkt</small><div class="icon">☀</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Ziel</small><div class="icon">☁</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Abend</small><div class="icon">◐</div><b>–</b><small>routengenau</small></div></div>
       </div>
-      <div class="card" style="padding:16px;margin-top:14px;background:#f7f4ec">
+      <div class="card stage-inner-card">
         <div class="eyebrow">Terrain</div><div class="terrain-legend" id="stageTerrainLegend" style="margin-top:12px"><span class="legend-item">wird geladen …</span></div>
       </div>
-      <div class="card stay-card">
-        <div class="eyebrow">Übernachtung</div>
+      <div class="card stay-card v13-stay-card">
         <div id="stageOvernightCard"></div>
       </div>
     </div>
@@ -665,35 +716,37 @@ body.map-open{overflow:hidden!important}
 </section>
 
 <section class="screen" id="screen-pack">
-  <div class="route-title-row"><div><div class="eyebrow">Bike & Packen</div><h1>Packorganisation</h1><div class="route-meta" id="packMeta">Ausrüstung · Volumen · Gewichtsverteilung</div></div><div class="btn-row"><button class="btn" id="resetPack">Bike leeren</button><button class="btn" id="autoPack">Auto-Packen</button><button class="btn rust" id="packModeBtn">Beste Variante anwenden</button></div></div>
-  <div class="pack-v12-grid" style="margin-top:14px">
+  <div class="route-title-row"><div><div class="eyebrow">Bike & Packen</div><h1>Packorganisation</h1><div class="route-meta" id="packMeta">Ausrüstung · Volumen · Gewichtsverteilung</div></div><div class="btn-row"><button class="btn" id="resetPack">Bike leeren</button><button class="btn" id="autoPack">✦ Auto-Pack Vorschlag</button><button class="btn rust" id="packModeBtn" disabled>Vorschlag anwenden →</button></div></div>
+  <div class="pack-v12-grid pack-v13-grid" style="margin-top:14px">
     <section class="card pack-v12-card">
-      <div class="pack-v12-head"><div class="pack-v12-num">1</div><div><h2>Was brauche ich?</h2><p>ROAM schlägt die Ausrüstung passend zur Reise vor. Du entscheidest, was wirklich benötigt wird.</p></div></div>
-      <select class="v12-control" id="packTourType"><option>Bikepacking (mehrtägig)</option><option>Overnighter</option><option>Tagestour</option></select>
+      <div class="pack-v12-head"><div class="pack-v12-num">1</div><div><h2>Was brauche ich?</h2><p>ROAM schlägt nur die Ausrüstung vor, die zu Reiseart und Unterkunft passt.</p></div></div>
+      <label class="pack-v13-label">Reisetyp<select class="v12-control" id="packTourType"><option>Bikepacking (mehrtägig)</option><option>Overnighter</option><option>Tagestour</option></select></label>
+      <label class="pack-v13-label">Unterkunft<select class="v12-control" id="packLodgingMode"><option value="hotel">Hotel / Pension</option><option value="camping">Camping / Zelt</option><option value="mixed">Gemischt</option></select></label>
+      <div class="pack-v13-lodging-note" id="packLodgingNote"></div>
       <div id="packNeedList"></div>
     </section>
 
     <section class="card pack-v12-card">
-      <div class="pack-v12-head"><div class="pack-v12-num">2</div><div><h2>Was habe ich?</h2><p>Markiere vorhandene Teile. Fehlende, aber benötigte Gegenstände bleiben sofort sichtbar.</p></div></div>
+      <div class="pack-v12-head"><div class="pack-v12-num">2</div><div><h2>Was habe ich?</h2><p>Markiere vorhandene Teile und weise ihnen direkt eine Tasche zu.</p></div></div>
       <div class="pack-v12-search"><input id="packSearch" placeholder="Ausrüstung suchen …"><select id="packCategoryFilter"><option value="all">Alle Kategorien</option></select></div>
       <div id="packHaveList"></div>
     </section>
 
     <section class="card pack-v12-card pack-v12-assign">
-      <div class="pack-v12-head"><div class="pack-v12-num">3</div><div><h2>Was kommt wo hin?</h2><p>Wähle Taschengrößen und ordne Gegenstände direkt um. Auto-Pack berechnet die beste vorgeschlagene Variante.</p></div></div>
-      <div class="pack-v12-best"><div><h3>Beste vorgeschlagene Variante</h3><p>Kapazität, Balance, zentrale Gewichtsposition und schneller Zugriff werden gemeinsam bewertet.</p><div class="pack-v12-score" id="packBestScore"><span>noch nicht bewertet</span></div></div><button class="btn" id="packBestBtn" type="button">Auto-Packen</button></div>
-      <div class="pack-v12-bike">
-        <svg viewBox="0 0 760 360" aria-label="Bikepacking Bike mit Taschen">
+      <div class="pack-v12-head"><div class="pack-v12-num">3</div><div><h2>Was kommt wo hin?</h2><p>Verteile deine Ausrüstung auf die Taschen. Ziehe bzw. wähle Gegenstände direkt um oder nutze den Auto-Pack Vorschlag.</p></div><span class="badge" style="margin-left:auto">Gravel · 40 mm</span></div>
+      <div class="pack-v12-best"><div><h3>Auto-Pack Vorschlag</h3><p>Erstellt zunächst eine bewertete Variante. Erst „Vorschlag anwenden“ übernimmt die neue Verteilung.</p><div class="pack-v12-score" id="packBestScore"><span>noch kein Vorschlag</span></div></div><button class="btn" id="packBestBtn" type="button">Vorschlag erstellen</button></div>
+      <div class="pack-v12-bike pack-v13-bike">
+        <svg viewBox="0 0 760 360" aria-label="Einfaches Gravelbike mit Bikepacking-Taschen">
           <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="188" cy="250" r="92" stroke="#f8f4eb" stroke-width="10"/><circle cx="585" cy="250" r="92" stroke="#f8f4eb" stroke-width="10"/>
-            <circle cx="188" cy="250" r="75" stroke="#eee6d6" stroke-width="1.4"/><circle cx="585" cy="250" r="75" stroke="#eee6d6" stroke-width="1.4"/>
-            <path d="M188 250 L322 108 L414 250 L188 250 M322 108 L500 120 L414 250 M500 120 L585 250" stroke="#fbf8ef" stroke-width="10"/>
-            <path d="M322 108 L278 78 M278 78 L236 78" stroke="#fbf8ef" stroke-width="7"/><path d="M497 120 L531 86 L570 91 M531 86 L548 68" stroke="#fbf8ef" stroke-width="7"/>
-            <path d="M322 108 L414 250" stroke="#fbf8ef" stroke-width="9"/><path d="M414 250 L585 250" stroke="#fbf8ef" stroke-width="7"/><circle cx="414" cy="250" r="18" stroke="#fbf8ef" stroke-width="5"/>
+            <circle cx="190" cy="250" r="92" stroke="#f7f4ec" stroke-width="10"/><circle cx="586" cy="250" r="92" stroke="#f7f4ec" stroke-width="10"/>
+            <circle cx="190" cy="250" r="74" stroke="#eee8da" stroke-width="1.5"/><circle cx="586" cy="250" r="74" stroke="#eee8da" stroke-width="1.5"/>
+            <g stroke="#ede6d7" stroke-width="1" opacity=".65"><path d="M190 176V324M116 250H264M138 198L242 302M138 302L242 198"/><path d="M586 176V324M512 250H660M534 198L638 302M534 302L638 198"/></g>
+            <path d="M190 250 L320 108 L414 250 L190 250 M320 108 L500 120 L414 250 M500 120 L586 250" stroke="#fbf8ef" stroke-width="10"/>
+            <path d="M320 108 L278 78 M278 78 L235 78" stroke="#fbf8ef" stroke-width="7"/><path d="M497 120 L531 86 L570 91 M531 86 L548 68" stroke="#fbf8ef" stroke-width="7"/><path d="M320 108 L414 250" stroke="#fbf8ef" stroke-width="9"/><path d="M414 250 L586 250" stroke="#fbf8ef" stroke-width="7"/><circle cx="414" cy="250" r="18" stroke="#fbf8ef" stroke-width="5"/>
           </g>
-          <g id="packBike-saddle"><path d="M277 86 Q235 73 180 96 L197 146 Q245 136 292 118 Z" fill="#53664c" stroke="#f6efe2" stroke-width="3"/><path d="M195 143 L272 88M218 138 L246 84" stroke="#efe4d4" stroke-width="2"/></g>
-          <g id="packBike-top"><rect x="351" y="101" width="91" height="28" rx="10" fill="#b86b49" stroke="#f6efe2" stroke-width="3"/></g>
-          <g id="packBike-frame"><path d="M323 135 L484 135 L414 239 L275 239 Z" fill="#c07b4a" stroke="#f6efe2" stroke-width="3"/></g>
+          <g id="packBike-saddle"><path d="M278 86 Q235 73 180 96 L197 146 Q245 136 293 118 Z" fill="#53664c" stroke="#f6efe2" stroke-width="3"/><path d="M195 143 L272 88M218 138 L246 84" stroke="#efe4d4" stroke-width="2"/></g>
+          <g id="packBike-top"><rect x="350" y="101" width="92" height="28" rx="10" fill="#b86b49" stroke="#f6efe2" stroke-width="3"/></g>
+          <g id="packBike-frame"><path d="M323 135 L484 135 L414 239 L275 239 Z" fill="#bf7b4a" stroke="#f6efe2" stroke-width="3"/></g>
           <g id="packBike-bar"><path d="M532 91 Q575 75 624 95 L611 148 Q566 145 520 120 Z" fill="#c57440" stroke="#f6efe2" stroke-width="3"/><path d="M548 84 Q559 125 571 145" stroke="#334c3d" stroke-width="12" fill="none"/></g>
           <g id="packBike-fork"><rect x="543" y="166" width="37" height="90" rx="15" fill="#607057" stroke="#f6efe2" stroke-width="3"/></g>
           <g pointer-events="none">
@@ -705,13 +758,14 @@ body.map-open{overflow:hidden!important}
           </g>
         </svg>
       </div>
-      <div class="pack-v12-size-title">Taschengrößen</div><div class="pack-v12-sizes" id="packSizeGrid"></div>
+      <div class="pack-v13-fill-title">Taschenfüllstand</div><div class="pack-v13-fillgrid" id="packFillGrid"></div>
+      <div class="pack-v13-unassigned"><b>Nicht zugewiesene Gegenstände</b><div id="packUnassigned"></div></div>
     </section>
 
     <aside class="pack-v12-side">
       <section class="card pack-v12-summary"><h3>Pack-Zusammenfassung</h3><div class="pack-v12-weight" id="packWeight">0,0 / 0,0 kg</div><div class="pack-v12-balance" id="balanceBar"><i></i><i></i></div><div class="pack-v12-balance-label"><span id="frontBalance">–</span><span id="rearBalance">–</span></div><div class="pack-v12-statgrid"><div class="pack-v12-stat"><b id="packStatBags">0</b><span>Taschen</span></div><div class="pack-v12-stat"><b id="packStatItems">0</b><span>Gegenstände</span></div><div class="pack-v12-stat"><b id="packStatCoverage">0%</b><span>verteilt</span></div></div></section>
       <section class="card pack-v12-summary"><h3>Tascheninhalt</h3><div id="packBagSummary"></div></section>
-      <section class="card pack-v12-summary"><div style="display:flex;justify-content:space-between"><div><div class="eyebrow">Packliste Fortschritt</div><h3 id="packListTitle" style="margin:4px 0">0 / 0</h3></div><span class="badge warn" id="packOpenBadge">offen</span></div><div id="packProgress"></div><div class="pack-v12-tip"><b>Tipp</b>Schwere Gegenstände möglichst mittig und tief verstauen. Häufig benötigte Dinge griffbereit einpacken.</div></section>
+      <section class="card pack-v12-summary"><div style="display:flex;justify-content:space-between"><div><div class="eyebrow">Packliste Fortschritt</div><h3 id="packListTitle" style="margin:4px 0">0 / 0</h3></div><span class="badge warn" id="packOpenBadge">offen</span></div><div id="packProgress"></div><div class="pack-v12-tip" id="packTip"><b>Tipp</b>Schwere Gegenstände möglichst mittig und tief verstauen. Häufig benötigte Dinge griffbereit einpacken.</div></section>
     </aside>
   </div>
 </section>
@@ -737,7 +791,7 @@ body.map-open{overflow:hidden!important}
   </div>
 </section>
 </main>
-<div class="prototype-pill">ROAM V12 · interaktiver Web-Prototyp</div>
+<div class="prototype-pill">ROAM V13 · interaktiver Web-Prototyp</div>
 </div>
 
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
@@ -746,8 +800,15 @@ body.map-open{overflow:hidden!important}
 const screens=[...document.querySelectorAll('.screen')];
 function showScreen(name){
   screens.forEach(s=>s.classList.toggle('active',s.id==='screen-'+name));
-  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));
+  document.querySelectorAll('.nav button').forEach(b=>{
+    const routeActive=(name==='plan'||name==='route')&&b.dataset.screen==='plan';
+    b.classList.toggle('active',routeActive||b.dataset.screen===name);
+  });
   window.scrollTo({top:0,behavior:'smooth'});
+  if(name==='home')renderOverviewDashboard();
+  if(name==='plan')renderHomePlanner();
+  if(name==='stages')renderStagePrototype();
+  if(name==='pack')renderPackPrototype();
   if(name==='route')setTimeout(()=>{
     initRouteMap();
     if(currentMapMode==='3d')roam3DMap?.resize(); else roamMap?.invalidateSize();
@@ -755,6 +816,14 @@ function showScreen(name){
 }
 document.querySelectorAll('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.go)));
+document.getElementById('dashImportGpx')?.addEventListener('click',()=>{showScreen('plan');setTimeout(()=>document.getElementById('planGpxInput')?.click(),120)});
+document.querySelectorAll('[data-route-tab]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-route-tab]').forEach(x=>x.classList.toggle('active',x===b));
+  const tab=b.dataset.routeTab;
+  if(tab==='stages'){showScreen('stages');return}
+  const target=tab==='height'?document.getElementById('routeHeightPanel'):tab==='terrain'?document.getElementById('routeTerrainPanel'):tab==='waypoints'?document.getElementById('routeWaypointsPanel'):document.getElementById(tab==='map'?'mapWrap':'routeOverviewPanel');
+  target?.scrollIntoView({behavior:'smooth',block:'start'});
+}));
 
 const API='https://adventure-bike-os-api.onrender.com';
 
@@ -1224,11 +1293,12 @@ function updateFlyCamera(force=false){
  const slider=document.getElementById('flySlider'),kmEl=document.getElementById('flyKm');
  if(slider)slider.value=String(Math.round(flyProgress*1000));
  if(kmEl)kmEl.textContent=`${Math.round(flyProgress*routeDistanceKm)} km`;
+ updateLinked(flyProgress,'flyover');
  if(!flyFollow&&!force)return;
  const behind=routeLngLat(cameraLookBehindP(flyProgress));
  const ahead=routeLngLat(cameraLookAheadP(flyProgress));
  const targetBearing=bearingBetween(behind,ahead);
- const targetCenter=routeLngLat(Math.min(1,flyProgress+(cameraLookAheadP(flyProgress)-flyProgress)*.55));
+ const targetCenter=routeLngLat(flyProgress);
  const targetZoom=routeDistanceKm>300?13.25:13.55,targetPitch=64;
  if(!flyCameraState||force){
    flyCameraState={center:[targetCenter[0],targetCenter[1]],bearing:targetBearing,zoom:targetZoom,pitch:targetPitch};
@@ -1635,7 +1705,7 @@ function updateLinked(p,source){
  document.getElementById('pointGrade').textContent=g
    ?`${g.grade>=0?'+':''}${g.grade.toFixed(1).replace('.',',')}% · ${g.delta>=0?'+':''}${Math.round(g.delta)} m`
    :'–';
- schedulePointWeather(p);
+ if(source!=='flyover'||Math.abs(km-(updateLinked.lastWeatherKm??-999))>=5){updateLinked.lastWeatherKm=km;schedulePointWeather(p)}
 }
 function pointerToP(el,e){
  const r=el.getBoundingClientRect();
@@ -1645,6 +1715,26 @@ document.getElementById('elevationSvg').addEventListener('pointermove',e=>update
 document.getElementById('elevationSvg').addEventListener('click',e=>updateLinked(pointerToP(e.currentTarget,e),'profile'));
 
 
+
+function readSavedRoute(){try{return JSON.parse(localStorage.getItem('abo-mobile-route')||'null')}catch(e){return null}}
+function daysUntil(dateStr){if(!dateStr)return null;const d=parseDateOnly(dateStr);if(!d)return null;const now=new Date();const today=new Date(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()));return Math.ceil((d-today)/86400000)}
+function drawDashboardRoute(saved){const el=document.getElementById('dashRouteLine'),sd=document.getElementById('dashRouteStart'),ed=document.getElementById('dashRouteEnd');if(!el||!saved?.coords?.length)return;const rows=normalizeAdventureCoords(saved.coords);if(rows.length<2)return;const lats=rows.map(x=>x.lat),lons=rows.map(x=>x.lon),minLat=Math.min(...lats),maxLat=Math.max(...lats),minLon=Math.min(...lons),maxLon=Math.max(...lons),dx=Math.max(.0001,maxLon-minLon),dy=Math.max(.0001,maxLat-minLat),pts=[];for(let j=0;j<Math.min(100,rows.length);j++){const r=rows[Math.round(j*(rows.length-1)/(Math.min(100,rows.length)-1))];pts.push([30+(r.lon-minLon)/dx*710,160-(r.lat-minLat)/dy*125])}el.setAttribute('points',pts.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' '));sd.setAttribute('cx',pts[0][0]);sd.setAttribute('cy',pts[0][1]);ed.setAttribute('cx',pts.at(-1)[0]);ed.setAttribute('cy',pts.at(-1)[1])}
+function dashboardPackState(){let arr=null;try{arr=JSON.parse(localStorage.getItem(PACK_STATE_KEY)||'null')}catch(e){};const source=Array.isArray(arr)?arr:packInitialItems;const lodging=readPackLodgingMode();const hidden=new Set(lodging==='hotel'?['sleep','tent','mat']:[]);const needed=source.filter(x=>x.needed!==false&&!hidden.has(x.id)),have=needed.filter(x=>x.have!==false);return {needed:needed.length,have:have.length,pct:needed.length?Math.round(have.length/needed.length*100):100}}
+function renderOverviewDashboard(){
+ const saved=readSavedRoute(),no=document.getElementById('dashNoTrip'),trip=document.getElementById('dashTrip'),lower=document.getElementById('dashLower');if(!no||!trip)return;
+ if(!saved?.coords?.length){no.hidden=false;trip.hidden=true;lower.hidden=true;document.getElementById('dashTitle').textContent='Deine nächste Tour';document.getElementById('dashMeta').textContent='Noch keine Reise aktiv.';document.getElementById('dashDeparture').textContent='Planung starten';document.getElementById('dashPrimaryAction').textContent='Neue Reise planen';document.getElementById('dashPrimaryAction').dataset.go='plan';return}
+ no.hidden=true;trip.hidden=false;lower.hidden=false;
+ const m=saved.metrics||{},stages=Array.isArray(saved.stages)?saved.stages:[],start=saved.start||'Start',dest=saved.dest||'Ziel',dates=saved.tripDates||{},du=daysUntil(dates.startDate);
+ document.getElementById('dashTitle').textContent=`${start} → ${dest}`;document.getElementById('dashRouteTitle').textContent=`${start} → ${dest}`;document.getElementById('dashMeta').textContent=[dates.startDate&&dates.endDate?`${dates.startDate} – ${dates.endDate}`:'Termin offen',`${Math.round(Number(m.totalDist)||0)} km`,`${Math.round(Number(m.totalGain)||0).toLocaleString('de-DE')} HM`,`${stages.length} ${stages.length===1?'Tag':'Tage'}`].join(' · ');document.getElementById('dashDeparture').textContent=du==null?'Termin offen':du>0?`Abfahrt in ${du} Tagen`:du===0?'Abfahrt heute':'Reise gestartet';document.getElementById('dashPrimaryAction').textContent='Reise bearbeiten';document.getElementById('dashPrimaryAction').dataset.go='plan';
+ document.getElementById('dashKm').textContent=`${Math.round(Number(m.totalDist)||0)} km`;document.getElementById('dashHm').textContent=`${Math.round(Number(m.totalGain)||0).toLocaleString('de-DE')} HM`;document.getElementById('dashDays').textContent=stages.length||'–';document.getElementById('dashTerrain').textContent=routeTerrain.status==='ready'?'Mixed':'Mixed';drawDashboardRoute(saved);
+ let names=null;try{names=JSON.parse(localStorage.getItem('abo-mobile-stage-names')||'null')}catch(e){};document.getElementById('dashStageStrip').innerHTML=stages.slice(0,4).map((x,i)=>`<div class="dash-stage-chip"><b>Tag ${i+1} · ${Array.isArray(names)?(names[i+1]||'Ziel'):'Ziel'}</b><span>${Math.round(x.km||0)} km · ${Math.round(x.hm||0).toLocaleString('de-DE')} HM</span></div>`).join('');
+ document.getElementById('dashStages').innerHTML=stages.slice(0,6).map((x,i)=>`<div class="dash-stage-row"><i>${i+1}</i><div><b>${Array.isArray(names)?(names[i]||start):start} → ${Array.isArray(names)?(names[i+1]||dest):dest}</b><small>${Math.round(x.km||0)} km · ${Math.round(x.hm||0).toLocaleString('de-DE')} HM</small></div><span>Tag ${i+1}</span></div>`).join('');
+ let lod={};try{lod=JSON.parse(localStorage.getItem('abo-mobile-lodging-selected')||'{}')||{}}catch(e){};const nights=Math.max(0,stages.length-1),lodCount=Array.from({length:nights},(_,i)=>lod[i]).filter(Boolean).length,pack=dashboardPackState(),routePct=100,stagesPct=stages.length?100:0,lodgePct=nights?Math.round(lodCount/nights*100):100,checkPct=du!=null&&du<=3?60:40;const ready=Math.round((routePct+stagesPct+lodgePct+pack.pct+checkPct)/5),open=[lodgePct<100,pack.pct<100,checkPct<100].filter(Boolean).length;
+ document.getElementById('dashReadyPct').textContent=`${ready}%`;document.getElementById('dashReadyBar').style.width=`${ready}%`;document.getElementById('dashOpenCount').textContent=open?`${open} Bereiche offen`:'alles bereit';document.getElementById('dashReadyGrid').innerHTML=`<div class="dash-ready-item"><span class="dash-ready-icon">⌁</span><div><b>Route</b><small>fertig</small></div></div><div class="dash-ready-item"><span class="dash-ready-icon">⚑</span><div><b>Etappen</b><small>${stages.length} geplant</small></div></div><div class="dash-ready-item"><span class="dash-ready-icon">⌂</span><div><b>Übernachtungen</b><small>${lodCount}/${nights||0} gewählt</small></div></div><div class="dash-ready-item"><span class="dash-ready-icon">▣</span><div><b>Packen</b><small>${pack.have}/${pack.needed} vorhanden</small></div></div>`;
+ let next={title:'Reise-Check öffnen',text:'Letzte Punkte vor der Abfahrt prüfen.',screen:'check'};if(lodgePct<100)next={title:'Übernachtungen planen',text:`${nights-lodCount} Nacht/Nächte sind noch offen.`,screen:'stages'};else if(pack.pct<100)next={title:'Packliste vervollständigen',text:`${pack.needed-pack.have} benötigte Gegenstände fehlen noch.`,screen:'pack'};document.getElementById('dashNextTitle').textContent=next.title;document.getElementById('dashNextText').textContent=next.text;document.getElementById('dashNextBtn').onclick=()=>showScreen(next.screen);
+ document.getElementById('dashPrepCards').innerHTML=`<div class="dash-prep"><div><b>Übernachtungen</b><span>${lodCount}/${nights||0} geplant</span></div><button class="btn" data-dash-go="stages">Öffnen</button></div><div class="dash-prep"><div><b>Packen</b><span>${pack.pct}% vollständig</span></div><button class="btn" data-dash-go="pack">Öffnen</button></div><div class="dash-prep"><div><b>Reise-Check</b><span>${checkPct}% bereit</span></div><button class="btn" data-dash-go="check">Öffnen</button></div>`;document.querySelectorAll('[data-dash-go]').forEach(b=>b.onclick=()=>showScreen(b.dataset.dashGo));
+ const r=readRiderProfileForm();document.getElementById('dashRider').innerHTML=`<div>◴ ${r.km} km/Tag</div><div>▲ ${r.hm} HM/Tag</div><div>▥ ${riderLabel('multi',r.multi)}</div><div>♥ ${riderLabel('intensity',r.intensity)}</div><div>✹ ${riderLabel('tech',r.tech)}</div><div>▱ ${riderLabel('surface',r.surface)}</div>`;
+}
 function parseDateOnly(v){
  const p=String(v||'').split('-').map(Number);
  if(p.length!==3||p.some(x=>!Number.isFinite(x)))return null;
@@ -1757,6 +1847,11 @@ function drawHomePreview(saved){
    const d=epts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');line.setAttribute('d',d);area.setAttribute('d',d+' L500,150 L30,150 Z');
  }
 }
+
+function cleanPlaceName(raw){return String(raw||'').split(',')[0].replace(/\s+municipality$/i,'').replace(/\s+\([^)]*\)$/,'').trim()}
+async function reversePlaceAtWeb(row){try{const r=await fetch(API+'/api/reverse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:Number(row.lat),lon:Number(row.lon),zoom:12})});const d=await r.json();if(r.ok){const n=cleanPlaceName(d.name||d.display_name||'');if(n)return n}}catch(e){}return ''}
+function stageNamesNeedRepairWeb(names,stages){return !Array.isArray(names)||names.length!==stages.length+1||names.slice(1,-1).some(x=>{const v=String(x||'').toLowerCase();return !v||v.startsWith('etappenziel')||v.includes('wird ermittelt')})}
+async function resolveWebStageNames(){const saved=readSavedRoute();if(!saved?.stages?.length||!saved?.coords?.length)return;let names=null;try{names=JSON.parse(localStorage.getItem('abo-mobile-stage-names')||'null')}catch(e){};if(!stageNamesNeedRepairWeb(names,saved.stages))return;const rows=normalizeAdventureCoords(saved.coords),out=[saved.start||'Start'],dest=saved.dest||'Ziel';for(let i=0;i<saved.stages.length-1;i++){const st=saved.stages[i],span=Math.max(1,(st.e||0)-(st.s||0)),offs=[0,-.03,.03,-.07,.07,-.12,.12];let found='';for(const off of offs){const idx=Math.max(st.s||0,Math.min(rows.length-1,(st.e||0)+Math.round(span*off))),candidate=await reversePlaceAtWeb(rows[idx]);if(candidate&&candidate!==out[out.length-1]&&candidate!==dest){found=candidate;break}}out.push(found||`Tag ${i+1} Ziel`)}out.push(dest);localStorage.setItem('abo-mobile-stage-names',JSON.stringify(out));renderHomePlanner();renderOverviewDashboard();renderStagePrototype()}
 function renderHomeStages(saved){
  const wrap=document.getElementById('homeStageRough');if(!wrap)return;
  const stages=Array.isArray(saved?.stages)?saved.stages:[];let names=null;try{names=JSON.parse(localStorage.getItem('abo-mobile-stage-names')||'null')}catch(e){}
@@ -1777,9 +1872,6 @@ function renderHomePlanner(){
    document.getElementById('homeStages').textContent=stages.length||'–';
    const sd=saved.tripDates?.startDate||'',ed=saved.tripDates?.endDate||'';document.getElementById('homeDates').textContent=sd?(ed?`${sd.slice(5)} – ${ed.slice(5)}`:sd.slice(5)):'offen';
    document.getElementById('homeRouteBadge').textContent='Route gespeichert';
-   if(document.activeElement!==document.getElementById('planStart'))document.getElementById('planStart').value=saved.start||'';
-   if(document.activeElement!==document.getElementById('planDest'))document.getElementById('planDest').value=saved.dest||'';
-   if(sd)document.getElementById('planStartDate').value=sd;if(ed)document.getElementById('planEndDate').value=ed;
    const fit=profileFeasibility(stages,rider),box=document.getElementById('homeFeasibility');box.className='v12-feasibility '+fit.cls;box.innerHTML=`<span style="font-size:22px">${fit.cls?'!':'✓'}</span><div><strong>${fit.title}</strong>${fit.text}</div>`;
    document.getElementById('homePreviewText').textContent=`${saved.start||'Start'} → ${saved.dest||'Ziel'} · echte Routengeometrie`;
    document.getElementById('homeElevMeta').textContent=`${Math.round(Number(metrics.totalDist)||0)} km · ${Math.round(Number(metrics.totalGain)||0).toLocaleString('de-DE')} HM`;
@@ -1802,13 +1894,13 @@ async function calculateWebRoute(){
    const r=await fetch(API+'/api/route-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start,destination:dest,loop:false,waypoints,profile})});
    const d=await r.json();if(!r.ok)throw new Error(d?.error||'Routing nicht verfügbar');let rows=normalizeAdventureCoords(d?.geometry?.coordinates);if(rows.length<20)throw new Error('Die Routingantwort enthält zu wenige Punkte.');rows=await enrichRouteElevation(rows);
    const m=webRouteMetrics(rows),days=plannedTripDays(),stages=buildWebStages(rows,m,days,kmDay,hmDay),ordered=Array.isArray(d?.ordered_points)?d.ordered_points:[];
-   const fixedNames=[start,...stages.slice(0,-1).map((_,i)=>ordered.find(x=>Number(x.route_index)===stages[i].e)?.name||`Etappenziel ${i+1}`),dest];
+   const fixedNames=[start,...stages.slice(0,-1).map((_,i)=>ordered.find(x=>Number(x.route_index)===stages[i].e)?.name||`Tag ${i+1} Ziel`),dest];
    const routePlan={type:'point',source:'generated',waypoints,orderedPoints:ordered,importName:''};
    localStorage.setItem('abo-mobile-stage-names',JSON.stringify(fixedNames));localStorage.setItem('abo-mobile-trip-prefs-v2',JSON.stringify({startDate,endDate}));
    localStorage.setItem('abo-mobile-lodging-prefs',JSON.stringify({type:lodging,priceLevel:document.getElementById('planPrice')?.value||'mid',nightBudget:Number(document.getElementById('planNightBudget')?.value)||90,totalBudget:0}));
    localStorage.setItem('abo-mobile-route',JSON.stringify({start,dest,coords:rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]),metrics:m,stages,routePlan,tripDates:{startDate,endDate},riderProfile:rider,terrainPreference:planTerrainPref}));
    routeTerrain={status:'idle',stages:[],source:null,reliableCoverage:0,warning:null};applyRouteRows(rows,routePlan.orderedPoints,'stored',start,dest,stages);
-   setPlanStatus(`${Math.round(m.totalDist)} km · ${Math.round(m.totalGain).toLocaleString('de-DE')} HM · ${stages.length} Etappen gespeichert.`,'ok');renderHomePlanner();renderStagePrototype();setTimeout(()=>showScreen('route'),250);
+   setPlanStatus(`${Math.round(m.totalDist)} km · ${Math.round(m.totalGain).toLocaleString('de-DE')} HM · ${stages.length} Etappen gespeichert.`,'ok');renderHomePlanner();renderStagePrototype();renderOverviewDashboard();resolveWebStageNames();setTimeout(()=>showScreen('route'),250);
  }catch(e){setPlanStatus(e?.message||'Route konnte nicht berechnet werden.','warn')}finally{btn.disabled=false}
 }
 async function handleWebGpxImport(file){
@@ -1818,18 +1910,18 @@ async function handleWebGpxImport(file){
    let rows=pts.map(p=>({lat:Number(p.getAttribute('lat')),lon:Number(p.getAttribute('lon')),z:Number(p.querySelector('ele')?.textContent)})).filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lon));rows=await enrichRouteElevation(rows);
    const m=webRouteMetrics(rows),kmDay=Math.max(20,Number(document.getElementById('planKmDay').value)||120),hmDay=Math.max(200,Number(document.getElementById('planHmDay').value)||1800),stages=buildWebStages(rows,m,plannedTripDays(),kmDay,hmDay);
    const start=document.getElementById('planStart').value.trim()||'GPX Start',dest=document.getElementById('planDest').value.trim()||'GPX Ziel';
-   localStorage.setItem('abo-mobile-stage-names',JSON.stringify([start,...stages.slice(0,-1).map((_,i)=>`Etappenziel ${i+1}`),dest]));localStorage.setItem('abo-mobile-route',JSON.stringify({start,dest,coords:rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]),metrics:m,stages,routePlan:{type:'gpx',source:'imported',waypoints:[],orderedPoints:[],importName:file.name},tripDates:{startDate:document.getElementById('planStartDate').value,endDate:document.getElementById('planEndDate').value}}));
-   applyRouteRows(rows,[],'stored',start,dest,stages);setPlanStatus(`GPX übernommen · ${Math.round(m.totalDist)} km · Originaltrack bleibt erhalten.`,'ok');renderHomePlanner();renderStagePrototype();
+   localStorage.setItem('abo-mobile-stage-names',JSON.stringify([start,...stages.slice(0,-1).map((_,i)=>`Tag ${i+1} Ziel`),dest]));localStorage.setItem('abo-mobile-route',JSON.stringify({start,dest,coords:rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]),metrics:m,stages,routePlan:{type:'gpx',source:'imported',waypoints:[],orderedPoints:[],importName:file.name},tripDates:{startDate:document.getElementById('planStartDate').value,endDate:document.getElementById('planEndDate').value}}));
+   applyRouteRows(rows,[],'stored',start,dest,stages);setPlanStatus(`GPX übernommen · ${Math.round(m.totalDist)} km · Originaltrack bleibt erhalten.`,'ok');renderHomePlanner();renderStagePrototype();renderOverviewDashboard();resolveWebStageNames();
  }catch(e){setPlanStatus(e?.message||'GPX konnte nicht importiert werden.','warn')}
 }
-function loadSavedRouteFromPlanner(){loadExactRouteGeometry().then(()=>{renderHomePlanner();setPlanStatus('Gespeicherte Route geladen.','ok');showScreen('route')})}
+function loadSavedRouteFromPlanner(){const saved=readSavedRoute();if(saved){document.getElementById('planStart').value=saved.start||'';document.getElementById('planDest').value=saved.dest||'';document.getElementById('planStartDate').value=saved.tripDates?.startDate||'';document.getElementById('planEndDate').value=saved.tripDates?.endDate||''}loadExactRouteGeometry().then(()=>{renderHomePlanner();setPlanStatus('Gespeicherte Route geladen.','ok');showScreen('route')})}
 restoreRiderProfile();
 ['riderMulti','riderIntensity','riderTech','riderSurface'].forEach(id=>document.querySelectorAll(`#${id} button`).forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll(`#${id} button`).forEach(x=>x.classList.remove('active'));b.classList.add('active');saveRiderProfile();renderHomePlanner()})));
 document.getElementById('riderKmDay')?.addEventListener('change',()=>{saveRiderProfile();renderHomePlanner()});document.getElementById('riderHmDay')?.addEventListener('change',()=>{saveRiderProfile();renderHomePlanner()});
 document.querySelectorAll('#planTerrainChips [data-terrain]').forEach(b=>b.addEventListener('click',()=>{planTerrainPref=b.dataset.terrain;document.querySelectorAll('#planTerrainChips [data-terrain]').forEach(x=>x.classList.toggle('active',x===b))}));
 document.getElementById('profileFocusBtn')?.addEventListener('click',()=>document.getElementById('riderKmDay')?.focus());document.getElementById('planRouteBtn')?.addEventListener('click',calculateWebRoute);document.getElementById('useSavedRouteBtn')?.addEventListener('click',loadSavedRouteFromPlanner);document.getElementById('planGpxInput')?.addEventListener('change',e=>handleWebGpxImport(e.target.files?.[0]));document.getElementById('saveDraftBtn')?.addEventListener('click',()=>{saveRiderProfile();setPlanStatus('Entwurf lokal gespeichert.','ok')});
 renderHomePlanner();
-renderTerrainUI();loadExactRouteGeometry();initRouteMap();
+renderTerrainUI();loadExactRouteGeometry().then(()=>{renderOverviewDashboard();resolveWebStageNames()});initRouteMap();
 
 const fallbackStageData=[
  {day:'Tag 1',from:'Innsbruck',to:'Kühtai',km:73,hm:1250,wx:'18°',gravel:52,lodging:null},
@@ -1852,7 +1944,7 @@ function readStagePrototypeData(){
    const start=saved.start||'Start',dest=saved.dest||'Ziel';
    return saved.stages.map((st,i)=>{
      const from=Array.isArray(names)?(names[i]||start):(i===0?start:`Etappe ${i}`);
-     const to=Array.isArray(names)?(names[i+1]||dest):(i===saved.stages.length-1?dest:`Etappenziel ${i+1}`);
+     const to=Array.isArray(names)?(names[i+1]||dest):(i===saved.stages.length-1?dest:`Tag ${i+1} Ziel`);
      const terrain=routeTerrain.status==='ready'?routeTerrain.stages?.[i]:null;
      return {
        day:`Tag ${i+1}`,from,to,
@@ -1864,118 +1956,82 @@ function readStagePrototypeData(){
    });
  }catch(e){return fallbackStageData}
 }
+function maxStageGradient(stageIndex){const st=routeStages?.[stageIndex];if(!st||routeGeo.length<3)return null;let best=0;const a=Math.max(0,st.s||0),b=Math.min(routeGeo.length-1,st.e||routeGeo.length-1);for(let i=a+1;i<=b;i++){const z0=routeElev[i-1],z1=routeElev[i];if(!Number.isFinite(z0)||!Number.isFinite(z1))continue;const km=geoDistKm(routeGeo[i-1],routeGeo[i]);if(km<.02)continue;best=Math.max(best,Math.abs((z1-z0)/(km*1000)*100))}return Number.isFinite(best)?best:null}
+let webLodging={results:{},status:{},selected:{}};
+function restoreWebLodging(){try{webLodging.selected=JSON.parse(localStorage.getItem('abo-mobile-lodging-selected')||'{}')||{}}catch(e){webLodging.selected={}}}
+restoreWebLodging();
+function saveWebLodging(){localStorage.setItem('abo-mobile-lodging-selected',JSON.stringify(webLodging.selected||{}));renderOverviewDashboard()}
+function webLodgingMode(){try{const p=JSON.parse(localStorage.getItem('abo-mobile-lodging-prefs')||'null');return p?.type==='camping'?'camping':p?.type==='mixed'?'mixed':'hotel'}catch(e){return 'hotel'}}
+function stageWeatherValues(i){let w=null;try{const x=JSON.parse(localStorage.getItem('abo-mobile-weather-v7')||'null');w=x?.stages?.[i]||null}catch(e){};if(!w)return null;const s=w.samples||w.points||{};return {start:s.start||w.start,high:s.high||s.highpoint||w.high,target:s.end||s.destination||w.end,evening:s.evening||w.evening}}
+function weatherCell(label,x,icon){const t=Number(x?.temp??x?.temperature??x?.temperature_2m);return `<div class="weather-day"><small>${label}</small><div class="icon">${icon}</div><b>${Number.isFinite(t)?Math.round(t)+'°':'–'}</b><small>routengenau</small></div>`}
+function lodgingDistance(a,b){const R=6371,r=Math.PI/180,dlat=(b.lat-a.lat)*r,dlon=(b.lon-a.lon)*r,q=Math.sin(dlat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dlon/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
+function normalizeWebLodging(x,center){if(!x)return null;const lat=Number(x.lat),lon=Number(x.lon),type=String(x.type||'');if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;return {id:String(x.id||`${x.osm_type||'x'}-${x.osm_id||''}-${lat.toFixed(4)}-${lon.toFixed(4)}`),name:x.name||lodgingTypeName(type),type,lat,lon,website:x.website||'',distance:lodgingDistance(center,{lat,lon}),stars:x.stars||'',status:'saved',quotedPrice:0}}
+async function loadWebLodgingForStage(i){const saved=readSavedRoute(),st=saved?.stages?.[i],rows=normalizeAdventureCoords(saved?.coords||[]);if(!st||!rows.length)return;const start=st.s||0,end=st.e||rows.length-1,span=Math.max(1,end-start),mode=webLodgingMode(),offs=mode==='hotel'?[0,-.1,-.2]:[0,-.08,-.16,-.26],points=offs.map(off=>rows[Math.max(start,Math.min(end,end+Math.round(span*off)))]).filter(Boolean).map(r=>({lat:r.lat,lon:r.lon})),center=points[0];if(!center)return;webLodging.status[i]='loading';showStagePrototype(i,false);try{const r=await fetch(API+'/api/lodging-nearby',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({points,lodging:mode})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.warning||'Unterkünfte nicht verfügbar');webLodging.results[i]=(d.results||[]).map(x=>normalizeWebLodging(x,center)).filter(Boolean).sort((a,b)=>a.distance-b.distance).slice(0,6);webLodging.status[i]='ready'}catch(e){webLodging.results[i]=[];webLodging.status[i]='error'}showStagePrototype(i,false)}
+function selectWebLodging(i,id){const x=(webLodging.results[i]||[]).find(x=>x.id===id);if(!x)return;webLodging.selected[i]={...x,status:'saved'};saveWebLodging();renderStagePrototype();showStagePrototype(i,false)}
+function toggleWebLodgingBooked(i){const x=webLodging.selected[i];if(!x)return;x.status=x.status==='booked'?'saved':'booked';saveWebLodging();renderStagePrototype();showStagePrototype(i,false)}
+function clearWebLodging(i){delete webLodging.selected[i];saveWebLodging();renderStagePrototype();showStagePrototype(i,false)}
 function renderStagePrototype(){
- stageData=readStagePrototypeData();
- const list=document.getElementById('stageListItems'),summary=document.getElementById('overnightSummary');
- if(!list||!summary)return;
+ restoreWebLodging();stageData=readStagePrototypeData().map((d,i)=>({...d,lodging:webLodging.selected[i]||d.lodging}));
+ const list=document.getElementById('stageListItems'),summary=document.getElementById('overnightSummary');if(!list||!summary)return;
  document.getElementById('stagePageTitle').textContent=`${stageData.length} ${stageData.length===1?'Tag':'Tage'}`;
- list.innerHTML=stageData.map((d,i)=>`<div class="stage-item ${i===selectedStagePrototype?'active':''}" data-stage="${i}">
-   <b>${d.day} · ${d.from} → ${d.to}</b>
-   <small>${d.km.toFixed(0)} km · ${Math.round(d.hm).toLocaleString('de-DE')} HM${d.gravel!=null?` · ${d.gravel}% Gravel`:''}</small>
- </div>`).join('');
- const nights=stageData.slice(0,-1);
- summary.innerHTML=nights.length?nights.map((d,i)=>{
-   const l=d.lodging,icon=l?(isCampingLodging(l)?'⛺':'⌂'):'○';
-   const status=l?(l.status==='booked'?'reserviert':'vorgemerkt'):'noch offen';
-   return `<div class="night-row"><span class="night-icon">${icon}</span><div><b>Nacht ${i+1} · ${d.to}</b><small>${l?l.name:'Noch keine Unterkunft ausgewählt'}</small></div><span class="night-status">${status}</span></div>`;
- }).join(''):'<div class="muted" style="font-size:11px">Keine Zwischenübernachtung erforderlich.</div>';
- list.querySelectorAll('.stage-item').forEach(el=>el.addEventListener('click',()=>showStagePrototype(+el.dataset.stage)));
- selectedStagePrototype=Math.min(selectedStagePrototype,stageData.length-1);
- showStagePrototype(selectedStagePrototype,false);
+ list.innerHTML=stageData.map((d,i)=>`<div class="stage-item ${i===selectedStagePrototype?'active':''}" data-stage="${i}"><b>${d.day} · ${d.from} → ${d.to}</b><small>${d.km.toFixed(0)} km · ${Math.round(d.hm).toLocaleString('de-DE')} HM${d.gravel!=null?` · ${d.gravel}% Gravel`:''}</small></div>`).join('');
+ const nights=stageData.slice(0,-1);summary.innerHTML=nights.length?nights.map((d,i)=>{const l=d.lodging,status=l?(l.status==='booked'?'reserviert':'vorgemerkt'):'noch offen';return `<div class="night-row" data-night="${i}"><span class="night-icon">${l?(isCampingLodging(l)?'⛺':'⌂'):'○'}</span><div><b>Nacht ${i+1} · ${d.to}</b><small>${l?l.name:'Noch keine Unterkunft ausgewählt'}</small></div><span class="night-status">${status}<small class="night-action">${l?'ansehen':'wählen'} ›</small></span></div>`}).join(''):'<div class="muted" style="font-size:11px">Keine Zwischenübernachtung erforderlich.</div>';
+ list.querySelectorAll('.stage-item').forEach(el=>el.onclick=()=>showStagePrototype(+el.dataset.stage));summary.querySelectorAll('[data-night]').forEach(el=>el.onclick=()=>{selectedStagePrototype=+el.dataset.night;showStagePrototype(selectedStagePrototype);setTimeout(()=>document.querySelector('.v13-stay-card')?.scrollIntoView({behavior:'smooth',block:'center'}),80)});selectedStagePrototype=Math.min(selectedStagePrototype,stageData.length-1);showStagePrototype(selectedStagePrototype,false)
 }
-function showStagePrototype(i,rerender=True){
- selectedStagePrototype=Math.max(0,Math.min(stageData.length-1,i));
- if(rerender)document.querySelectorAll('#stageListItems .stage-item').forEach((x,j)=>x.classList.toggle('active',j===selectedStagePrototype));
- const d=stageData[selectedStagePrototype],l=d.lodging;
- document.getElementById('stageDay').textContent=d.day;
- document.getElementById('stageName').textContent=`${d.from} → ${d.to}`;
- document.getElementById('stageKm').textContent=`${d.km.toFixed(0)} km`;
- document.getElementById('stageHm').textContent=`${Math.round(d.hm).toLocaleString('de-DE')} m`;
- document.getElementById('stageWx').textContent=d.wx||'–';
- document.getElementById('stageSurface').textContent=d.gravel==null?'–':`${d.gravel}%`;
- const rider=readRiderProfileForm(),ratio=Math.max(d.km/Math.max(1,rider.km),d.hm/Math.max(1,rider.hm)),fitEl=document.getElementById('stageRiderFit');
- if(fitEl){
-   if(ratio<=1.15){fitEl.className='';fitEl.innerHTML=`<b>Im gewohnten Bereich.</b> ${d.km.toFixed(0)} km / ${Math.round(d.hm)} HM gegenüber ${rider.km} km / ${rider.hm} HM gewohnt.`}
-   else if(ratio<=1.45){fitEl.className='fit-warn';fitEl.innerHTML=`<b>Anspruchsvoller als gewohnt.</b> Diese Etappe liegt rund ${Math.round((ratio-1)*100)}% über deinem normalen Tagesniveau.`}
-   else{fitEl.className='fit-hard';fitEl.innerHTML=`<b>Deutlich über deinem gewohnten Niveau.</b> Etappenteilung prüfen – km oder HM liegen erheblich über deinem Fahrerprofil.`}
- }
- const t=routeTerrain.status==='ready'?routeTerrain.stages?.[selectedStagePrototype]:null;
- document.getElementById('stageTerrainLegend').innerHTML=t
-   ?['paved','fine','gravel','rough','unknown'].map(c=>`<span class="legend-item"><i class="route-dot" style="background:${terrainStyle(c).color}"></i>${terrainStyle(c).short} ${Math.round(Number(t[c])||0)}%</span>`).join('')
-   :'<span class="legend-item">Terrain wird geladen …</span>';
- const box=document.getElementById('stageOvernightCard');
- if(d.last&&!l){
-   box.innerHTML='<div class="stay-card-main"><span class="stay-card-icon">◎</span><div><b>Reiseziel erreicht</b><div class="stay-meta">Keine weitere Zwischenübernachtung nötig.</div></div></div>';
- }else if(l){
-   const icon=isCampingLodging(l)?'⛺':'⌂',status=l.status==='booked'?'reserviert':'vorgemerkt',price=Number(l.quotedPrice)||0;
-   box.innerHTML=`<div class="stay-card-main"><span class="stay-card-icon">${icon}</span><div><b>${l.name||lodgingTypeName(l.type)}</b><div class="stay-meta">${lodgingTypeName(l.type)} · ${status}${price?` · ${price.toFixed(0)} €`:''}</div></div><span class="badge">${status}</span></div>`;
- }else{
-   box.innerHTML=`<div class="stay-card-main"><span class="stay-card-icon">○</span><div><b>Übernachtung in ${d.to}</b><div class="stay-meta">Noch keine Unterkunft vorgemerkt. Auswahl aus der Mobile-App wird hier automatisch übernommen.</div></div><span class="badge warn">offen</span></div>`;
- }
+function showStagePrototype(i,rerender=true){selectedStagePrototype=Math.max(0,Math.min(stageData.length-1,i));if(rerender)document.querySelectorAll('#stageListItems .stage-item').forEach((x,j)=>x.classList.toggle('active',j===selectedStagePrototype));const d=stageData[selectedStagePrototype],l=webLodging.selected[selectedStagePrototype]||d.lodging;document.getElementById('stageDay').textContent=d.day;document.getElementById('stageName').textContent=`${d.from} → ${d.to}`;document.getElementById('stageKm').textContent=`${d.km.toFixed(0)} km`;document.getElementById('stageHm').textContent=`${Math.round(d.hm).toLocaleString('de-DE')} m`;const mg=maxStageGradient(selectedStagePrototype);document.getElementById('stageWx').textContent=mg==null?'–':`Max. ${Math.round(mg)}%`;document.getElementById('stageSurface').textContent=d.gravel==null?'–':`${d.gravel}%`;document.getElementById('stagePrev').disabled=selectedStagePrototype===0;document.getElementById('stageNext').disabled=selectedStagePrototype===stageData.length-1;
+ const rider=readRiderProfileForm(),ratio=Math.max(d.km/Math.max(1,rider.km),d.hm/Math.max(1,rider.hm)),fitEl=document.getElementById('stageRiderFit');if(ratio<=1.15){fitEl.className='';fitEl.innerHTML=`<b>Im gewohnten Bereich.</b> ${d.km.toFixed(0)} km / ${Math.round(d.hm)} HM gegenüber ${rider.km} km / ${rider.hm} HM gewohnt.`}else if(ratio<=1.45){fitEl.className='fit-warn';fitEl.innerHTML=`<b>Anspruchsvoller als gewohnt.</b> Diese Etappe liegt rund ${Math.round((ratio-1)*100)}% über deinem normalen Tagesniveau.`}else{fitEl.className='fit-hard';fitEl.innerHTML='<b>Deutlich über deinem gewohnten Niveau.</b> Etappenteilung prüfen – Distanz oder Höhenmeter liegen erheblich über deinem Fahrerprofil.'}
+ const w=stageWeatherValues(selectedStagePrototype);document.getElementById('stageWeatherStrip').innerHTML=weatherCell('Start',w?.start,'⛅')+weatherCell('Hochpunkt',w?.high,'☀')+weatherCell('Ziel',w?.target,'☁')+weatherCell('Abend',w?.evening,'◐');const t=routeTerrain.status==='ready'?routeTerrain.stages?.[selectedStagePrototype]:null;document.getElementById('stageTerrainLegend').innerHTML=t?['paved','fine','gravel','rough','unknown'].map(c=>`<span class="legend-item"><i class="route-dot" style="background:${terrainStyle(c).color}"></i>${terrainStyle(c).short} ${Math.round(Number(t[c])||0)}%</span>`).join(''):'<span class="legend-item">Terrain wird geladen …</span>';
+ const box=document.getElementById('stageOvernightCard');if(d.last&&!l){box.innerHTML='<div class="stay-plan-head"><div><div class="eyebrow">Reiseziel</div><h3>Wien / Ziel erreicht</h3></div></div><div class="lodging-search-status">Keine Zwischenübernachtung mehr nötig. Eine Unterkunft am Ziel kann optional vorgemerkt werden.</div>';return}
+ if(l){box.innerHTML=`<div class="stay-plan-head"><div><div class="eyebrow">Übernachtung in ${d.to}</div><h3>${l.name}</h3></div><span class="badge">${l.status==='booked'?'reserviert':'vorgemerkt'}</span></div><div class="lodging-selected"><h4>${lodgingTypeName(l.type)}${l.distance!=null?` · ${l.distance.toFixed(1)} km vom Etappenziel`:''}</h4><div class="lodging-status-line"><button class="btn primary" type="button" onclick="toggleWebLodgingBooked(${selectedStagePrototype})">${l.status==='booked'?'Reservierung zurücksetzen':'Als reserviert markieren'}</button><button class="btn" type="button" onclick="clearWebLodging(${selectedStagePrototype})">ändern</button></div></div>`;return}
+ const status=webLodging.status[selectedStagePrototype],rows=webLodging.results[selectedStagePrototype]||[];box.innerHTML=`<div class="stay-plan-head"><div><div class="eyebrow">Übernachtung in ${d.to}</div><h3>Unterkunft planen</h3></div><span class="badge warn">noch offen</span></div><div class="stay-plan-main"><div class="stay-plan-copy"><span class="stay-card-icon">⌂</span><div><b>Hotel, Pension, Camping oder gemischte Unterkunft wählen</b><div class="stay-meta">Die Auswahl wird gespeichert und im Reise-Check übernommen.</div></div></div><div class="stay-plan-actions"><button class="btn primary" type="button" onclick="loadWebLodgingForStage(${selectedStagePrototype})">Unterkunft wählen</button><button class="btn" type="button" onclick="loadWebLodgingForStage(${selectedStagePrototype})">Optionen ansehen</button></div></div><div class="stay-flow"><div class="stay-step"><i>1</i><div><b>Suchen</b><small>Unterkünfte finden</small></div></div><span>›</span><div class="stay-step"><i>2</i><div><b>Vormerken</b><small>Favorit speichern</small></div></div><span>›</span><div class="stay-step"><i>3</i><div><b>Bestätigen</b><small>Reservierung markieren</small></div></div></div>${status==='loading'?'<div class="lodging-search-status">Unterkünfte werden gesucht …</div>':status==='error'?'<div class="lodging-search-status">Unterkünfte konnten gerade nicht geladen werden. Bitte erneut versuchen.</div>':''}${rows.length?`<div class="lodging-results">${rows.map(x=>`<div class="lodging-result"><div><h4>${x.name}</h4><small>${lodgingTypeName(x.type)} · ${x.distance.toFixed(1)} km vom Etappenziel${x.stars?` · ${x.stars}★`:''}</small></div><div class="lodging-result-actions"><button class="btn" type="button" onclick="selectWebLodging(${selectedStagePrototype},'${x.id}')">vormerken</button></div></div>`).join('')}</div>`:''}`
 }
+document.getElementById('stagePrev')?.addEventListener('click',()=>showStagePrototype(selectedStagePrototype-1));document.getElementById('stageNext')?.addEventListener('click',()=>showStagePrototype(selectedStagePrototype+1));
 
 const packBags={
- saddle:{name:'Satteltasche',sizes:[8,10,14],size:14,zone:'rear',qty:1,color:'#53664c'},
- frame:{name:'Rahmentasche',sizes:[4,6,8],size:8,zone:'center',qty:1,color:'#bf7b4a'},
- top:{name:'Oberrohr',sizes:[0.8,1.2,2],size:2,zone:'center',qty:1,color:'#b86b49'},
- bar:{name:'Lenkertasche',sizes:[8,10,14],size:14,zone:'front',qty:1,color:'#c57440'},
- fork:{name:'Gabeltaschen',sizes:[3,5,7],size:7,zone:'front',qty:1,color:'#607057'}
+ saddle:{name:'Satteltasche',sizes:[8,10,14],size:14,zone:'rear',qty:1,color:'#53664c'},frame:{name:'Rahmentasche',sizes:[4,6,8],size:8,zone:'center',qty:1,color:'#bf7b4a'},top:{name:'Oberrohr',sizes:[0.8,1.2,2],size:2,zone:'center',qty:1,color:'#b86b49'},bar:{name:'Lenkertasche',sizes:[8,10,14],size:14,zone:'front',qty:1,color:'#c57440'},fork:{name:'Gabeltaschen',sizes:[3,5,7],size:7,zone:'front',qty:1,color:'#607057'}
 };
 const PACK_STATE_KEY='abo-web-pack-v12',BAG_SIZE_STORAGE='abo-web-bag-sizes-v12';
 const packCategoryDefs=[
- {id:'sleep',name:'Schlafen',items:['sleep','tent','mat']},{id:'clothes',name:'Kleidung',items:['down','under','clothes','rain','sandals']},{id:'food',name:'Food & Wasser',items:['water','food','snacks','stove','dishes','fuel']},{id:'tools',name:'Werkzeug & Ersatzteile',items:['tools','spares']},{id:'electronics',name:'Elektronik',items:['power','electronics']},{id:'docs',name:'Dokumente & Sonstiges',items:['docs']}
+ {id:'sleep',name:'Schlafen',icon:'sleep',items:['sleep','tent','mat']},{id:'clothes',name:'Kleidung',icon:'shirt',items:['shirt','shorts','under','socks','rain','down','sandals']},{id:'food',name:'Food & Wasser',icon:'food',items:['water','food','snacks','stove','dishes','fuel']},{id:'tools',name:'Werkzeug & Ersatzteile',icon:'tools',items:['tools','spares']},{id:'electronics',name:'Elektronik',icon:'battery',items:['power','electronics']},{id:'docs',name:'Dokumente & Sonstiges',icon:'docs',items:['docs','money','hygiene']}
 ];
 const packInitialItems=[
- {id:'sleep',name:'Schlafsack',bag:'saddle',l:5,kg:.9,cat:'sleep',needed:true,have:true,access:'low'},
- {id:'down',name:'Daunenjacke',bag:'saddle',l:2.5,kg:.4,cat:'clothes',needed:true,have:true,access:'mid'},
- {id:'under',name:'Unterwäsche',bag:'frame',l:.5,kg:.3,cat:'clothes',needed:true,have:true,access:'low'},
- {id:'clothes',name:'Kleidung',bag:'frame',l:4,kg:1.2,cat:'clothes',needed:true,have:true,access:'low'},
- {id:'water',name:'Wasser',bag:'fork',l:2,kg:2,cat:'food',needed:true,have:true,access:'high'},
- {id:'tools',name:'Werkzeug-Set',bag:'frame',l:1.4,kg:1.2,cat:'tools',needed:true,have:true,access:'mid'},
- {id:'power',name:'Powerbank',bag:'frame',l:.4,kg:.45,cat:'electronics',needed:true,have:true,access:'mid'},
- {id:'food',name:'Nahrung',bag:'frame',l:1,kg:1.8,cat:'food',needed:true,have:true,access:'mid'},
- {id:'snacks',name:'Snacks',bag:'top',l:.4,kg:.5,cat:'food',needed:true,have:true,access:'high'},
- {id:'electronics',name:'Elektronik',bag:'frame',l:.3,kg:.35,cat:'electronics',needed:true,have:true,access:'mid'},
- {id:'docs',name:'Dokumente',bag:'top',l:.1,kg:.1,cat:'docs',needed:true,have:false,access:'high'},
- {id:'tent',name:'Zelt',bag:'bar',l:2.5,kg:1.6,cat:'sleep',needed:true,have:true,access:'low'},
- {id:'mat',name:'Isomatte',bag:'bar',l:.5,kg:.5,cat:'sleep',needed:true,have:true,access:'low'},
- {id:'stove',name:'Kocher',bag:'bar',l:1.1,kg:.45,cat:'food',needed:true,have:false,access:'mid'},
- {id:'dishes',name:'Essgeschirr',bag:'bar',l:.8,kg:.35,cat:'food',needed:true,have:false,access:'mid'},
- {id:'spares',name:'Ersatzteile',bag:'fork',l:1,kg:.6,cat:'tools',needed:true,have:false,access:'low'},
- {id:'rain',name:'Regenjacke',bag:'fork',l:.9,kg:.35,cat:'clothes',needed:true,have:true,access:'high'},
- {id:'fuel',name:'Fuel',bag:'fork',l:.7,kg:.4,cat:'food',needed:false,have:false,access:'low'},
- {id:'sandals',name:'Sandalen',bag:'saddle',l:1.8,kg:.75,cat:'clothes',needed:false,have:false,access:'low'}
+ {id:'sleep',name:'Schlafsack',bag:'saddle',l:5,kg:.9,cat:'sleep',needed:true,have:true,access:'low'},{id:'tent',name:'Zelt',bag:'bar',l:2.5,kg:1.6,cat:'sleep',needed:true,have:true,access:'low'},{id:'mat',name:'Isomatte',bag:'bar',l:.5,kg:.5,cat:'sleep',needed:true,have:true,access:'low'},
+ {id:'shirt',name:'Trikot / Shirt',bag:'frame',l:1,kg:.25,cat:'clothes',needed:true,have:true,access:'low'},{id:'shorts',name:'Shorts / Hose',bag:'frame',l:1.5,kg:.35,cat:'clothes',needed:true,have:true,access:'low'},{id:'under',name:'Unterwäsche',bag:'saddle',l:.8,kg:.3,cat:'clothes',needed:true,have:true,access:'low'},{id:'socks',name:'Socken',bag:'saddle',l:.5,kg:.15,cat:'clothes',needed:true,have:true,access:'low'},{id:'rain',name:'Regenjacke',bag:'bar',l:1,kg:.35,cat:'clothes',needed:true,have:true,access:'high'},{id:'down',name:'Daunenjacke',bag:'bar',l:1.5,kg:.4,cat:'clothes',needed:true,have:true,access:'mid'},{id:'sandals',name:'Sandalen',bag:'fork',l:1.5,kg:.4,cat:'clothes',needed:false,have:true,access:'low'},
+ {id:'water',name:'Wasser',bag:'fork',l:2,kg:2,cat:'food',needed:true,have:true,access:'high'},{id:'food',name:'Nahrung',bag:'frame',l:2.5,kg:1.2,cat:'food',needed:true,have:true,access:'mid'},{id:'snacks',name:'Snacks',bag:'top',l:1,kg:.5,cat:'food',needed:true,have:true,access:'high'},{id:'stove',name:'Kocher',bag:'bar',l:1.1,kg:.45,cat:'food',needed:false,have:true,access:'mid'},{id:'dishes',name:'Essgeschirr',bag:'bar',l:.8,kg:.35,cat:'food',needed:false,have:true,access:'mid'},{id:'fuel',name:'Fuel',bag:'fork',l:.7,kg:.4,cat:'food',needed:false,have:false,access:'low'},
+ {id:'tools',name:'Werkzeug-Set',bag:'frame',l:1.5,kg:.5,cat:'tools',needed:true,have:true,access:'mid'},{id:'spares',name:'Ersatzteile',bag:'frame',l:.8,kg:.3,cat:'tools',needed:true,have:true,access:'low'},
+ {id:'power',name:'Powerbank',bag:'frame',l:.4,kg:.3,cat:'electronics',needed:true,have:true,access:'mid'},{id:'electronics',name:'Elektronik',bag:'top',l:.3,kg:.25,cat:'electronics',needed:true,have:true,access:'mid'},
+ {id:'docs',name:'Dokumente',bag:'top',l:.2,kg:.1,cat:'docs',needed:true,have:true,access:'high'},{id:'money',name:'Geld / Karte',bag:'top',l:.1,kg:.05,cat:'docs',needed:true,have:true,access:'high'},{id:'hygiene',name:'Hygiene-Set',bag:'bar',l:1,kg:.35,cat:'docs',needed:true,have:true,access:'mid'}
 ];
-let packItems=packInitialItems.map(x=>({...x}));
-function bagCapacity(id){const b=packBags[id];return (Number(b.size)||0)*(Number(b.qty)||1)}
-function formatLiters(v){const n=Number(v)||0;return Number.isInteger(n)?String(n):n.toFixed(1).replace('.',',')}
+let packItems=packInitialItems.map(x=>({...x})),packProposal=null;
+function bagCapacity(id){const b=packBags[id];return (Number(b.size)||0)*(Number(b.qty)||1)}function formatLiters(v){const n=Number(v)||0;return Number.isInteger(n)?String(n):n.toFixed(1).replace('.',',')}
+function readPackLodgingMode(){const ui=document.getElementById('packLodgingMode')?.value;if(ui)return ui;try{const p=JSON.parse(localStorage.getItem('abo-mobile-lodging-prefs')||'null');return p?.type==='camping'?'camping':p?.type==='mixed'?'mixed':'hotel'}catch(e){return 'hotel'}}
+function syncPackLodgingUI(){const mode=readPackLodgingMode(),sel=document.getElementById('packLodgingMode');if(sel&&!sel.dataset.touched)sel.value=mode;const actual=sel?.value||mode,note=document.getElementById('packLodgingNote');if(note)note.innerHTML=actual==='hotel'?'ⓘ <b>Hotel / Pension:</b> Zelt, Schlafsack und Isomatte werden nicht vorgeschlagen.':actual==='camping'?'ⓘ <b>Camping:</b> Schlafsack, Zelt und Isomatte gehören zur Grundausstattung.':'ⓘ <b>Gemischt:</b> Camping-Ausrüstung bleibt optional und kann bei Bedarf aktiviert werden.'}
+function applyLodgingPackRules(){syncPackLodgingUI();const mode=document.getElementById('packLodgingMode')?.value||readPackLodgingMode();['sleep','tent','mat'].forEach(id=>{const x=packItems.find(i=>i.id===id);if(!x)return;if(mode==='hotel'){x.needed=false;x.bag=''}else if(mode==='camping'){x.needed=true}else if(mode==='mixed'&&x.needed==null)x.needed=false});['stove','dishes','fuel'].forEach(id=>{const x=packItems.find(i=>i.id===id);if(x&&mode==='hotel'&&x.needed&&id!=='stove')x.needed=false})}
 function packPersist(){try{localStorage.setItem(PACK_STATE_KEY,JSON.stringify(packItems));localStorage.setItem(BAG_SIZE_STORAGE,JSON.stringify(Object.fromEntries(Object.entries(packBags).map(([k,b])=>[k,b.size]))))}catch(e){}}
-function restorePack(){try{const a=JSON.parse(localStorage.getItem(PACK_STATE_KEY)||'null');if(Array.isArray(a)){packItems=packInitialItems.map(base=>({...base,...(a.find(x=>x.id===base.id)||{})}))}const s=JSON.parse(localStorage.getItem(BAG_SIZE_STORAGE)||'null');if(s)Object.entries(s).forEach(([k,v])=>{if(packBags[k]?.sizes.includes(Number(v)))packBags[k].size=Number(v)})}catch(e){}}
-restorePack();
-function bagStats(id){const arr=packItems.filter(x=>x.needed&&x.have&&x.bag===id),l=arr.reduce((s,x)=>s+x.l,0),kg=arr.reduce((s,x)=>s+x.kg,0),cap=bagCapacity(id);return {items:arr,l,kg,cap,pct:cap?Math.round(l/cap*100):0,over:l>cap+1e-6}}
-function relevantPackItems(){return packItems.filter(x=>x.needed&&x.have)}
-function packTotalKg(){return relevantPackItems().reduce((s,x)=>s+x.kg,0)}
-function assignedPackItems(){return relevantPackItems().filter(x=>x.bag)}
-function packBalance(){let front=0,rear=0,center=0;assignedPackItems().forEach(x=>{const z=packBags[x.bag]?.zone;if(z==='front')front+=x.kg;else if(z==='rear')rear+=x.kg;else center+=x.kg});const f=front+center/2,r=rear+center/2,t=f+r||1;return {front:Math.round(f/t*100),rear:Math.round(r/t*100)}}
+function restorePack(){try{const a=JSON.parse(localStorage.getItem(PACK_STATE_KEY)||'null');if(Array.isArray(a))packItems=packInitialItems.map(base=>({...base,...(a.find(x=>x.id===base.id)||{})}));const bs=JSON.parse(localStorage.getItem(BAG_SIZE_STORAGE)||'null');if(bs)Object.entries(bs).forEach(([k,v])=>{if(packBags[k]?.sizes.includes(Number(v)))packBags[k].size=Number(v)})}catch(e){}}restorePack();
+function bagStats(id,items=packItems){const arr=items.filter(x=>x.needed&&x.have&&x.bag===id),l=arr.reduce((s,x)=>s+x.l,0),kg=arr.reduce((s,x)=>s+x.kg,0),cap=bagCapacity(id);return {items:arr,l,kg,cap,pct:cap?Math.round(l/cap*100):0,over:l>cap+1e-6}}function relevantPackItems(items=packItems){return items.filter(x=>x.needed&&x.have)}function packTotalKg(){return relevantPackItems().reduce((s,x)=>s+x.kg,0)}function assignedPackItems(){return relevantPackItems().filter(x=>x.bag)}function packBalance(items=packItems){let front=0,rear=0,center=0;relevantPackItems(items).filter(x=>x.bag).forEach(x=>{const z=packBags[x.bag]?.zone;if(z==='front')front+=x.kg;else if(z==='rear')rear+=x.kg;else center+=x.kg});const f=front+center/2,r=rear+center/2,t=f+r||1;return {front:Math.round(f/t*100),rear:Math.round(r/t*100)}}
 function packToast(msg){let el=document.getElementById('packToast');if(!el){el=document.createElement('div');el.id='packToast';el.className='pack-toast';document.body.appendChild(el)}el.textContent=msg;el.classList.add('show');clearTimeout(packToast.t);packToast.t=setTimeout(()=>el.classList.remove('show'),1600)}
-function itemCategory(item){return packCategoryDefs.find(c=>c.items.includes(item.id))}
-function renderPackNeeds(){const box=document.getElementById('packNeedList');if(!box)return;box.innerHTML=packCategoryDefs.map(c=>{const arr=c.items.map(id=>packItems.find(x=>x.id===id)).filter(Boolean),needed=arr.filter(x=>x.needed).length;return `<div class="pack-v12-category"><div class="pack-v12-cathead"><b>${c.name}</b><span>${needed}/${arr.length}</span></div>${arr.map(i=>`<div class="pack-v12-needrow"><button class="pack-v12-check ${i.needed?'':'off'}" data-need="${i.id}" type="button">✓</button><span>${i.name}</span><span class="mini-badge">${i.needed?'':'optional'}</span></div>`).join('')}</div>`}).join('');box.querySelectorAll('[data-need]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.need);i.needed=!i.needed;if(!i.needed)i.bag='';packPersist();renderPackPrototype()})}
+function itemIcon(id,cat){const common='viewBox="0 0 24 24" aria-hidden="true"';if(['shirt','down','rain'].includes(id))return `<svg ${common}><path d="M8 4 4 6l2 5 2-1v10h8V10l2 1 2-5-4-2-2 2h-4L8 4Z"/></svg>`;if(id==='shorts')return `<svg ${common}><path d="M7 4h10l-1 7 2 9h-5l-1-6-1 6H6l2-9-1-7Z"/></svg>`;if(id==='water')return `<svg ${common}><path d="M9 3h6v3l2 3v12H7V9l2-3V3Z"/></svg>`;if(cat==='tools')return `<svg ${common}><path d="m5 4 4 4-2 2-4-4 2-2Zm6 7 8 8M14 5l5 5M5 19l6-6"/></svg>`;if(cat==='electronics')return `<svg ${common}><path d="M13 2 6 13h5l-1 9 8-12h-5V2Z"/></svg>`;if(cat==='docs')return `<svg ${common}><path d="M6 3h9l3 3v15H6V3Zm8 0v4h4"/></svg>`;if(cat==='food')return `<svg ${common}><path d="M5 3v7M3 3v4c0 2 4 2 4 0V3M5 10v11M14 3c4 3 4 9 0 11v7"/></svg>`;if(cat==='sleep')return `<svg ${common}><path d="M5 4h14v16H5zM8 7h8M8 10h8M8 13h8"/></svg>`;return `<svg ${common}><circle cx="12" cy="12" r="8"/></svg>`}
+function bagIconSvg(id){const c=packBags[id].color,com=`fill="${c}" stroke="#e8e0d3" stroke-width="1.5"`;if(id==='saddle')return `<svg viewBox="0 0 48 30"><path d="M4 9Q20 2 43 8l-5 18H8Q5 26 4 22Z" ${com}/></svg>`;if(id==='frame')return `<svg viewBox="0 0 48 30"><path d="M5 5h39L33 25H5Z" ${com}/></svg>`;if(id==='top')return `<svg viewBox="0 0 48 30"><rect x="5" y="9" width="38" height="13" rx="6" ${com}/></svg>`;if(id==='bar')return `<svg viewBox="0 0 48 30"><rect x="4" y="6" width="39" height="18" rx="9" ${com}/></svg>`;return `<svg viewBox="0 0 48 30"><rect x="9" y="3" width="12" height="24" rx="5" ${com}/><rect x="27" y="3" width="12" height="24" rx="5" ${com}/></svg>`}
+function visiblePackCategories(){const mode=document.getElementById('packLodgingMode')?.value||readPackLodgingMode();return packCategoryDefs.filter(c=>!(c.id==='sleep'&&mode==='hotel'))}
+function renderPackNeeds(){applyLodgingPackRules();const box=document.getElementById('packNeedList');if(!box)return;box.innerHTML=visiblePackCategories().map(c=>{const arr=c.items.map(id=>packItems.find(x=>x.id===id)).filter(Boolean).filter(x=>x.needed||x.cat!=='sleep'),needed=arr.filter(x=>x.needed).length;if(!arr.length)return '';return `<div class="pack-v12-category"><div class="pack-v12-cathead"><b>${c.name}</b><span>${needed}/${arr.length}</span></div>${arr.map(i=>`<div class="pack-v12-needrow"><button class="pack-v12-check ${i.needed?'':'off'}" data-need="${i.id}" type="button">✓</button><span>${i.name}</span><span class="mini-badge">${i.needed?'':'optional'}</span></div>`).join('')}</div>`}).join('');box.querySelectorAll('[data-need]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.need);i.needed=!i.needed;if(!i.needed)i.bag='';packProposal=null;packPersist();renderPackPrototype()})}
 function bagOptions(selected){return `<option value="">nicht zugewiesen</option>`+Object.entries(packBags).map(([id,b])=>`<option value="${id}" ${selected===id?'selected':''}>${b.name}</option>`).join('')}
-function renderPackHave(){const box=document.getElementById('packHaveList');if(!box)return;const q=(document.getElementById('packSearch')?.value||'').toLowerCase(),filter=document.getElementById('packCategoryFilter')?.value||'all';const list=packItems.filter(i=>i.needed&&(!q||i.name.toLowerCase().includes(q))&&(filter==='all'||i.cat===filter));box.innerHTML=list.map(i=>`<div class="pack-v12-item"><button class="pack-v12-check ${i.have?'':'off'}" data-have="${i.id}" type="button">✓</button><div class="thumb">${i.cat==='sleep'?'▰':i.cat==='clothes'?'♙':i.cat==='food'?'◉':i.cat==='tools'?'⚒':i.cat==='electronics'?'ϟ':'▣'}</div><div><b>${i.name}</b><small>${i.kg.toFixed(2).replace('.',',')} kg · ${formatLiters(i.l)} L${i.have?'':' · fehlt'}</small></div><select class="pack-v12-bagselect" data-bagitem="${i.id}" ${i.have?'':'disabled'}>${bagOptions(i.bag)}</select><span class="menu-dots">⋮</span></div>`).join('')||'<div class="muted" style="font-size:11px;padding:12px">Keine Gegenstände im Filter.</div>';box.querySelectorAll('[data-have]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.have);i.have=!i.have;if(!i.have)i.bag='';packPersist();renderPackPrototype()});box.querySelectorAll('[data-bagitem]').forEach(s=>s.onchange=()=>{const i=packItems.find(x=>x.id===s.dataset.bagitem);if(!i)return;if(s.value){const st=bagStats(s.value);if(st.l+i.l>st.cap+1e-6){packToast(`${packBags[s.value].name}: zu wenig Platz`);renderPackPrototype();return}}i.bag=s.value;packPersist();renderPackPrototype()})}
-function renderPackSizeGrid(){const box=document.getElementById('packSizeGrid');if(!box)return;box.innerHTML=Object.entries(packBags).map(([id,b])=>{const s=bagStats(id);return `<div class="pack-v12-size ${s.over?'pack-v12-over':''}"><b>${b.name}</b><div class="pack-v12-sizeopts">${b.sizes.map(v=>`<button type="button" class="${Number(v)===Number(b.size)?'active':''}" data-sizebag="${id}" data-size="${v}">${formatLiters(v)}L</button>`).join('')}</div><div class="pack-v12-sizebar"><i style="width:${Math.min(100,s.pct)}%"></i></div><div class="pack-v12-sizemeta">${formatLiters(s.l)} / ${formatLiters(s.cap)} L · ${s.pct}%${s.over?' · überfüllt':''}</div></div>`}).join('');box.querySelectorAll('[data-sizebag]').forEach(b=>b.onclick=()=>{packBags[b.dataset.sizebag].size=Number(b.dataset.size);packPersist();renderPackPrototype()})}
-function renderPackBike(){Object.keys(packBags).forEach(id=>{const s=bagStats(id),g=document.getElementById(`packBike-${id}`),lab=document.getElementById(`packBikeLabel-${id}`);if(g){g.classList.toggle('pack-v12-empty',!s.items.length);g.classList.toggle('pack-v12-over',s.over)}if(lab)lab.textContent=`${formatLiters(s.l)} / ${formatLiters(s.cap)} L · ${s.pct}%`})}
-function renderPackSummary(){const assigned=assignedPackItems(),total=packTotalKg(),assignedKg=assigned.reduce((s,x)=>s+x.kg,0),bal=packBalance(),active=Object.keys(packBags).filter(k=>bagStats(k).items.length).length,cov=relevantPackItems().length?Math.round(assigned.length/relevantPackItems().length*100):0;document.getElementById('packWeight').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg`;document.getElementById('frontBalance').textContent=`${bal.front}% vorne`;document.getElementById('rearBalance').textContent=`${bal.rear}% hinten`;document.getElementById('balanceBar').style.gridTemplateColumns=`${bal.front}fr ${bal.rear}fr`;document.getElementById('packStatBags').textContent=active;document.getElementById('packStatItems').textContent=assigned.length;document.getElementById('packStatCoverage').textContent=`${cov}%`;document.getElementById('packMeta').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg verteilt · ${active} aktive Taschen · Balance ${bal.front} / ${bal.rear}`;const bagBox=document.getElementById('packBagSummary');bagBox.innerHTML=Object.entries(packBags).map(([id,b])=>{const s=bagStats(id);return `<div class="pack-v12-bagrow"><i class="bag-dot" style="background:${b.color}"></i><b>${b.name}</b><span>${formatLiters(s.l)} / ${formatLiters(s.cap)} L</span><span class="mini-badge">${s.items.length}</span></div>`}).join('')}
-function renderPackProgress(){const box=document.getElementById('packProgress');let needed=0,have=0;box.innerHTML=packCategoryDefs.map(c=>{const arr=c.items.map(id=>packItems.find(x=>x.id===id)).filter(x=>x?.needed),h=arr.filter(x=>x.have).length;needed+=arr.length;have+=h;const pct=arr.length?Math.round(h/arr.length*100):100;return `<div class="pack-v12-progrow"><div class="pack-v12-proghead"><span>${c.name}</span><span>${h}/${arr.length} · ${pct}%</span></div><div class="pack-v12-progbar"><i style="width:${pct}%"></i></div></div>`}).join('');document.getElementById('packListTitle').textContent=`${have} / ${needed}`;const open=needed-have,b=document.getElementById('packOpenBadge');b.textContent=open?`${open} offen`:'komplett';b.classList.toggle('warn',open>0)}
-function bestPackMetrics(unassigned=[]){const bal=packBalance(),active=Object.keys(packBags).filter(k=>bagStats(k).items.length).length,totalCap=Object.keys(packBags).filter(k=>bagStats(k).items.length).reduce((s,k)=>s+bagCapacity(k),0),used=Object.keys(packBags).reduce((s,k)=>s+bagStats(k).l,0),reserve=Math.max(0,totalCap-used),heavy=relevantPackItems().filter(x=>x.kg>=1).length,central=relevantPackItems().filter(x=>x.kg>=1&&x.bag==='frame').length;return {balance:Math.abs(bal.front-50),active,reserve,unassigned:unassigned.length,central:heavy?Math.round(central/heavy*100):100}}
-function renderBestPack(unassigned=[]){const m=bestPackMetrics(unassigned),box=document.getElementById('packBestScore');box.innerHTML=`<span>Balance ${packBalance().front}/${packBalance().rear}${m.balance<=7?' ✓':''}</span><span>${m.active} Taschen</span><span>${formatLiters(m.reserve)} L Reserve</span><span>${m.central}% schwere Teile zentral</span>${m.unassigned?`<span>${m.unassigned} ohne Platz</span>`:'<span>alles verteilt ✓</span>'}`}
-function preferredBags(item){if(item.kg>=1.4)return ['frame','fork','bar','saddle'];if(item.access==='high')return ['top','bar','frame','fork','saddle'];if(item.cat==='sleep')return ['saddle','bar','frame','fork'];if(item.cat==='tools')return ['frame','fork','bar','top'];if(item.cat==='food')return ['frame','fork','bar','top','saddle'];return ['frame','saddle','bar','top','fork']}
-function candidateScore(item,bagId){const b=packBags[bagId],s=bagStats(bagId),cap=bagCapacity(bagId),after=s.l+item.l;if(after>cap+1e-6)return 1e9;let score=0;score+=preferredBags(item).indexOf(bagId)*12;if(!s.items.length)score+=5;if(item.kg>=1&&b.zone!=='center')score+=18;if(item.access==='high'&&!['top','bar'].includes(bagId))score+=12;score+=(after/cap)*3;return score}
-function autoPackPrototype(){relevantPackItems().forEach(i=>i.bag='');const ordered=[...relevantPackItems()].sort((a,b)=>b.kg-a.kg||b.l-a.l),unassigned=[];for(const item of ordered){let best=null,bestScore=1e9;for(const id of Object.keys(packBags)){const sc=candidateScore(item,id);if(sc<bestScore){bestScore=sc;best=id}}if(best&&bestScore<1e8)item.bag=best;else unassigned.push(item)}packPersist();renderPackPrototype(unassigned);packToast(unassigned.length?`${unassigned.length} Teil(e) ohne Platz – Taschengrößen prüfen`:'Beste vorgeschlagene Variante berechnet')}
-function resetPackPrototype(){packItems=packInitialItems.map(x=>({...x,bag:''}));packPersist();renderPackPrototype();packToast('Bike geleert · Bedarf und Bestand bleiben erhalten')}
-function renderPackPrototype(unassigned=[]){renderPackNeeds();renderPackHave();renderPackSizeGrid();renderPackBike();renderPackSummary();renderPackProgress();renderBestPack(unassigned)}
-document.getElementById('packSearch')?.addEventListener('input',renderPackHave);document.getElementById('packCategoryFilter')?.addEventListener('change',renderPackHave);document.getElementById('autoPack')?.addEventListener('click',autoPackPrototype);document.getElementById('packBestBtn')?.addEventListener('click',autoPackPrototype);document.getElementById('packModeBtn')?.addEventListener('click',()=>{autoPackPrototype();packToast('Beste Variante angewendet')});document.getElementById('resetPack')?.addEventListener('click',resetPackPrototype);
-(function initPackFilter(){const s=document.getElementById('packCategoryFilter');if(s){packCategoryDefs.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;s.appendChild(o)})}})();
-renderPackPrototype();
+function renderPackHave(){applyLodgingPackRules();const box=document.getElementById('packHaveList');if(!box)return;const q=(document.getElementById('packSearch')?.value||'').toLowerCase(),filter=document.getElementById('packCategoryFilter')?.value||'all';box.innerHTML=visiblePackCategories().filter(c=>filter==='all'||c.id===filter).map(c=>{const arr=c.items.map(id=>packItems.find(x=>x.id===id)).filter(Boolean).filter(i=>i.needed&&(!q||i.name.toLowerCase().includes(q)));if(!arr.length)return '';return `<div class="pack-v13-group"><div class="pack-v13-grouphead"><b>${c.name}</b><span>${arr.filter(x=>x.have).length}/${arr.length}</span></div>${arr.map(i=>`<div class="pack-v12-item"><button class="pack-v12-check ${i.have?'':'off'}" data-have="${i.id}" type="button">✓</button><div class="thumb">${itemIcon(i.id,i.cat)}</div><div><b>${i.name}</b><small>${i.kg.toFixed(2).replace('.',',')} kg · ${formatLiters(i.l)} L${i.have?'':' · fehlt'}</small></div><select class="pack-v12-bagselect" data-bagitem="${i.id}" ${i.have?'':'disabled'}>${bagOptions(i.bag)}</select><span class="menu-dots">⋮</span></div>`).join('')}</div>`}).join('')||'<div class="muted" style="font-size:11px;padding:12px">Keine Gegenstände im Filter.</div>';box.querySelectorAll('[data-have]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.have);i.have=!i.have;if(!i.have)i.bag='';packProposal=null;packPersist();renderPackPrototype()});box.querySelectorAll('[data-bagitem]').forEach(el=>el.onchange=()=>{const i=packItems.find(x=>x.id===el.dataset.bagitem);if(!i)return;if(el.value){const st=bagStats(el.value);if(st.l+i.l>st.cap+1e-6){packToast(`${packBags[el.value].name}: zu wenig Platz`);renderPackPrototype();return}}i.bag=el.value;packProposal=null;packPersist();renderPackPrototype()})}
+function renderPackFillGrid(){const box=document.getElementById('packFillGrid');if(!box)return;box.innerHTML=Object.entries(packBags).map(([id,b])=>{const st=bagStats(id);return `<div class="pack-v13-fillcard ${st.over?'pack-v12-over':''}"><div class="bag-svg">${bagIconSvg(id)}</div><b>${b.name}</b><strong>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</strong><div class="bar"><i style="width:${Math.min(100,st.pct)}%"></i></div><small>${st.pct}%${st.over?' · überfüllt':''}</small></div>`}).join('');const ua=relevantPackItems().filter(x=>!x.bag),u=document.getElementById('packUnassigned');u.innerHTML=ua.length?`<div class="pack-v13-unassigned-list">${ua.map(x=>`<span>${x.name}</span>`).join('')}</div>`:'<div class="muted" style="font-size:9px;margin-top:5px">Alle benötigten Gegenstände sind einer Tasche zugewiesen.</div>'}
+function renderPackBike(){Object.keys(packBags).forEach(id=>{const st=bagStats(id),g=document.getElementById(`packBike-${id}`),lab=document.getElementById(`packBikeLabel-${id}`);if(g){g.classList.toggle('pack-v12-empty',!st.items.length);g.classList.toggle('pack-v12-over',st.over)}if(lab)lab.textContent=`${formatLiters(st.l)} / ${formatLiters(st.cap)} L · ${st.pct}%`})}
+function renderPackSummary(){const assigned=assignedPackItems(),total=packTotalKg(),assignedKg=assigned.reduce((s,x)=>s+x.kg,0),bal=packBalance(),active=Object.keys(packBags).filter(k=>bagStats(k).items.length).length,cov=relevantPackItems().length?Math.round(assigned.length/relevantPackItems().length*100):0;document.getElementById('packWeight').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg`;document.getElementById('frontBalance').textContent=`${bal.front}% vorne`;document.getElementById('rearBalance').textContent=`${bal.rear}% hinten`;document.getElementById('balanceBar').style.gridTemplateColumns=`${bal.front}fr ${bal.rear}fr`;document.getElementById('packStatBags').textContent=active;document.getElementById('packStatItems').textContent=assigned.length;document.getElementById('packStatCoverage').textContent=`${cov}%`;document.getElementById('packMeta').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg verteilt · ${active} aktive Taschen · Balance ${bal.front} / ${bal.rear}`;document.getElementById('packBagSummary').innerHTML=Object.entries(packBags).map(([id,b])=>{const st=bagStats(id);return `<div class="pack-v12-bagrow"><i class="bag-dot" style="background:${b.color}"></i><b>${b.name}</b><span>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</span><span class="mini-badge">${st.items.length}</span></div>`}).join('')}
+function renderPackProgress(){const box=document.getElementById('packProgress');let needed=0,have=0;box.innerHTML=visiblePackCategories().map(c=>{const arr=c.items.map(id=>packItems.find(x=>x.id===id)).filter(x=>x?.needed),h=arr.filter(x=>x.have).length;if(!arr.length)return '';needed+=arr.length;have+=h;const pct=Math.round(h/arr.length*100);return `<div class="pack-v12-progrow"><div class="pack-v12-proghead"><span>${c.name}</span><span>${h}/${arr.length} · ${pct}%</span></div><div class="pack-v12-progbar"><i style="width:${pct}%"></i></div></div>`}).join('');document.getElementById('packListTitle').textContent=`${have} / ${needed}`;const open=needed-have,b=document.getElementById('packOpenBadge');b.textContent=open?`${open} offen`:'komplett';b.classList.toggle('warn',open>0);const tip=document.getElementById('packTip'),mode=document.getElementById('packLodgingMode')?.value||readPackLodgingMode();tip.innerHTML=mode==='hotel'?'<b>Tipp</b>Bei Hotel-Übernachtungen kannst du Zelt, Schlafsack und Isomatte zu Hause lassen. Das spart Gewicht und Volumen.':'<b>Tipp</b>Schwere Gegenstände möglichst mittig und tief verstauen. Häufig benötigte Dinge griffbereit einpacken.'}
+function proposalStats(items,unassigned){const bal=packBalance(items),active=Object.keys(packBags).filter(k=>bagStats(k,items).items.length).length,totalCap=Object.keys(packBags).filter(k=>bagStats(k,items).items.length).reduce((s,k)=>s+bagCapacity(k),0),used=Object.keys(packBags).reduce((s,k)=>s+bagStats(k,items).l,0),heavy=relevantPackItems(items).filter(x=>x.kg>=1),central=heavy.filter(x=>x.bag==='frame').length;return {bal,active,reserve:Math.max(0,totalCap-used),central:heavy.length?Math.round(central/heavy.length*100):100,unassigned:unassigned.length}}
+function renderBestPack(){const box=document.getElementById('packBestScore'),apply=document.getElementById('packModeBtn');if(!packProposal){box.innerHTML='<span>noch kein Vorschlag</span>';apply.disabled=true;apply.classList.remove('pack-v13-apply-ready');return}const m=proposalStats(packProposal.items,packProposal.unassigned);box.innerHTML=`<span>Balance ${m.bal.front}/${m.bal.rear}</span><span>${m.active} Taschen</span><span>${formatLiters(m.reserve)} L Reserve</span><span>${m.central}% schwere Teile zentral</span>${m.unassigned?`<span>${m.unassigned} ohne Platz</span>`:'<span>alles verteilt ✓</span>'}`;apply.disabled=false;apply.classList.add('pack-v13-apply-ready')}
+function preferredBags(item){if(item.kg>=1.4)return ['frame','fork','bar','saddle'];if(item.access==='high')return ['top','bar','frame','fork','saddle'];if(item.cat==='sleep')return ['saddle','bar','frame','fork'];if(item.cat==='tools')return ['frame','fork','saddle','bar','top'];if(item.cat==='food')return ['frame','fork','bar','top','saddle'];return ['frame','saddle','bar','top','fork']}
+function buildPackProposal(){const items=packItems.map(x=>({...x})),used=Object.fromEntries(Object.keys(packBags).map(k=>[k,0])),unassigned=[],ordered=relevantPackItems(items).sort((a,b)=>b.kg-a.kg||b.l-a.l);ordered.forEach(i=>i.bag='');for(const item of ordered){let best='',score=1e9;for(const id of Object.keys(packBags)){const after=used[id]+item.l,cap=bagCapacity(id);if(after>cap+1e-6)continue;let sc=Math.max(0,preferredBags(item).indexOf(id))*12;if(!used[id])sc+=5;if(item.kg>=1&&packBags[id].zone!=='center')sc+=18;if(item.access==='high'&&!['top','bar'].includes(id))sc+=12;sc+=(after/cap)*3;if(sc<score){score=sc;best=id}}if(best){item.bag=best;used[best]+=item.l}else unassigned.push(item)}return {items,unassigned}}
+function createAutoPackProposal(){packProposal=buildPackProposal();renderBestPack();packToast(packProposal.unassigned.length?`${packProposal.unassigned.length} Teil(e) passen noch nicht in die vorhandenen Taschen`:'Auto-Pack Vorschlag erstellt – prüfen und anwenden')}
+function applyAutoPackProposal(){if(!packProposal){packToast('Bitte zuerst einen Auto-Pack Vorschlag erstellen');return}const map=new Map(packProposal.items.map(x=>[x.id,x.bag]));packItems.forEach(x=>{if(map.has(x.id))x.bag=map.get(x.id)});packProposal=null;packPersist();renderPackPrototype();renderOverviewDashboard();packToast('Vorschlag angewendet')}
+function resetPackPrototype(){packItems.forEach(x=>x.bag='');packProposal=null;packPersist();renderPackPrototype();renderOverviewDashboard();packToast('Bike geleert · Bedarf und Bestand bleiben erhalten')}
+function renderPackPrototype(){applyLodgingPackRules();renderPackNeeds();renderPackHave();renderPackFillGrid();renderPackBike();renderPackSummary();renderPackProgress();renderBestPack()}
+document.getElementById('packSearch')?.addEventListener('input',renderPackHave);document.getElementById('packCategoryFilter')?.addEventListener('change',renderPackHave);document.getElementById('packLodgingMode')?.addEventListener('change',e=>{e.currentTarget.dataset.touched='1';try{const p=JSON.parse(localStorage.getItem('abo-mobile-lodging-prefs')||'{}');p.type=e.currentTarget.value;localStorage.setItem('abo-mobile-lodging-prefs',JSON.stringify(p))}catch(_){localStorage.setItem('abo-mobile-lodging-prefs',JSON.stringify({type:e.currentTarget.value}))}packProposal=null;renderPackPrototype();renderOverviewDashboard()});document.getElementById('autoPack')?.addEventListener('click',createAutoPackProposal);document.getElementById('packBestBtn')?.addEventListener('click',createAutoPackProposal);document.getElementById('packModeBtn')?.addEventListener('click',applyAutoPackProposal);document.getElementById('resetPack')?.addEventListener('click',resetPackPrototype);
+(function initPackFilter(){const el=document.getElementById('packCategoryFilter');if(el){packCategoryDefs.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;el.appendChild(o)})}syncPackLodgingUI()})();renderPackPrototype();renderOverviewDashboard();
+
 </script>
 </body>
 </html>
