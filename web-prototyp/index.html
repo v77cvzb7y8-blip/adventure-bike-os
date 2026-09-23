@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light">
 <title>ROAM · Web Prototype</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css"/>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"/>
 <style>
 :root{
   --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -161,7 +161,75 @@ h3{font-family:var(--font-ui);font-weight:650;font-size:20px;letter-spacing:-.01
 .bag-icon svg{width:42px;height:28px;overflow:visible}
 .bag-pill{min-width:0}
 .bag-pill.empty .ring{opacity:.35}
+.bike-svg{background:#cdbb90;border-radius:14px;margin-top:12px}
+.bike-svg .bike-frame{stroke:#f5f2ea}
+.bike-svg .bike-wheel{stroke:#f5f2ea}
+.bike-svg .bike-detail{stroke:#eee8dc}
+.bike-svg .bag-node{filter:drop-shadow(0 3px 3px rgba(65,52,38,.12))}
+.bike-svg .bag-node.empty{opacity:.13}
+.bike-svg .bag-node:not(.empty){opacity:1}
+.bike-svg .bag-node.selected{filter:drop-shadow(0 0 0 rgba(0,0,0,0)) drop-shadow(0 0 6px rgba(162,87,60,.55))}
+.bag-size-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.bag-size-btn{
+ min-width:39px;height:28px;padding:0 8px;border-radius:999px;border:1px solid var(--line);
+ background:#f7f3ea;color:#5e645d;font-size:10px;font-weight:800
+}
+.bag-size-btn.active{background:var(--olive);border-color:var(--olive);color:white}
+.bag-size-btn:hover{border-color:#9ca08f}
+.bag-size-meta{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.35}
+.bag-pill.over{border-color:#b5684c;background:#f6e6de}
+.bag-pill.over .ring{box-shadow:0 0 0 2px rgba(162,87,60,.15)}
+.bag-pill strong{display:block}
+.bag-visual-label{font-family:var(--font-ui);font-size:12px;font-weight:800;fill:#26362d}
+.bag-visual-sub{font-family:var(--font-ui);font-size:10px;fill:#5d655c}
 .unassigned-row{background:#f4f0e7;border-radius:11px;padding-left:9px!important;padding-right:9px!important}
+.planner-card{padding:22px}
+.plan-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.plan-field label{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#73776f;font-weight:800;margin-bottom:6px}
+.plan-field input,.plan-field select{
+ width:100%;min-height:44px;border:1px solid var(--line);border-radius:11px;background:#fbf8f1;color:var(--ink);padding:0 12px;font-size:14px
+}
+.plan-field.span2{grid-column:span 2}
+.plan-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+.plan-status{font-size:12px;color:var(--muted);min-height:18px}
+.plan-status.ok{color:#486149}.plan-status.warn{color:#8a563e}
+.current-trip-card{margin-top:16px;padding:20px}
+.current-trip-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.current-trip-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.current-trip-stat{padding:12px;border:1px solid var(--line);border-radius:11px;background:#faf7f0}
+.current-trip-stat b{display:block;font-size:20px}.current-trip-stat span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.gear-section{border-top:1px solid var(--line);margin-top:18px;padding-top:18px}
+.gear-section-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:10px}
+.gear-list{display:grid;gap:7px}
+.gear-row{
+ display:grid;grid-template-columns:minmax(150px,1fr) 95px 155px 42px;gap:8px;align-items:center;
+ border:1px solid var(--line);border-radius:11px;background:#faf7f0;padding:9px 10px
+}
+.gear-row.selected{border-color:var(--rust);background:#f4e9e1}
+.gear-name{font-size:12px;font-weight:800}.gear-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.gear-bag-select{width:100%;min-height:38px;border:1px solid var(--line);border-radius:9px;background:#fffaf2;padding:0 7px;font-size:11px;color:var(--ink)}
+.gear-select-btn,.gear-check-btn{min-height:38px;border:1px solid var(--line);border-radius:9px;background:#fffaf2;color:var(--forest);font-size:11px;font-weight:800}
+.gear-select-btn.active{background:var(--rust);border-color:var(--rust);color:white}
+.gear-check-btn.checked{background:var(--olive);border-color:var(--olive);color:white}
+.pack-focus-banner{margin-top:10px;padding:10px 12px;border-radius:11px;background:#e9e7dc;color:#50584f;font-size:11px}
+.pack-focus-banner.active{background:#f1e2d8;color:#704835}
+.pack-help{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.45}
+.map-diagnostic{
+ display:none;position:absolute;left:14px;bottom:124px;z-index:721;max-width:70%;
+ background:rgba(248,245,237,.96);border:1px solid rgba(56,62,54,.15);border-radius:9px;
+ padding:7px 9px;font-size:10px;color:#626861
+}
+.map-wrap.mode-3d .map-diagnostic{display:block}
+@media(max-width:1000px){
+ .plan-grid{grid-template-columns:1fr 1fr}
+ .current-trip-stats{grid-template-columns:1fr 1fr}
+}
+@media(max-width:720px){
+ .plan-grid{grid-template-columns:1fr}
+ .plan-field.span2{grid-column:span 1}
+ .gear-row{grid-template-columns:1fr 120px 42px}
+ .gear-row .gear-select-btn{grid-column:1/-1}
+}
 .map-tool{
  min-height:42px;border:1px solid rgba(56,62,54,.16);border-radius:10px;background:rgba(250,247,239,.96);
  color:var(--forest);font-weight:800;font-size:11px;padding:0 12px;box-shadow:0 5px 16px rgba(50,45,38,.08)
@@ -346,7 +414,7 @@ body.map-open{overflow:hidden!important}
 <header class="topbar">
   <div class="brand"><div class="mark"></div><div class="wordmark">ROAM</div></div>
   <nav class="nav">
-    <button class="active" data-screen="home">Übersicht</button>
+    <button class="active" data-screen="home">Start</button>
     <button data-screen="route">Route</button>
     <button data-screen="stages">Etappen</button>
     <button data-screen="pack">Packen</button>
@@ -358,55 +426,38 @@ body.map-open{overflow:hidden!important}
 <main class="shell">
 <section class="screen active" id="screen-home">
   <div class="trip-head">
-    <div><div class="eyebrow">Aktuelle Reise</div><h1>Innsbruck → Gardasee</h1><div class="route-meta">312 km · 4 Tage · 4.850 HM · Gravel / Mixed</div></div>
-    <span class="badge">Abfahrt in 3 Tagen</span>
+    <div><div class="eyebrow">ROAM Planner</div><h1>Reise planen</h1><div class="route-meta">Route · Zeitraum · Tagesdistanz · Höhenmeter · Übernachtung</div></div>
+    <span class="badge" id="homeRouteBadge">noch offen</span>
   </div>
-  <div class="grid dashboard-grid">
-    <div class="card card-pad">
-      <div class="trip-head"><div><div class="eyebrow">Vorbereitung</div><h2>82% bereit</h2></div><span class="badge warn">3 Punkte offen</span></div>
-      <div class="progress"><i style="width:82%"></i></div>
-      <div class="action-grid" style="margin-top:18px">
-        <button class="action" data-go="route">⌁ Route prüfen<br><small class="muted">Profil + Terrain</small></button>
-        <button class="action" data-go="stages">☼ Wetter ansehen<br><small class="muted">Tag 2 im Blick</small></button>
-        <button class="action" data-go="pack">▣ Packen abschließen<br><small class="muted">4 Teile offen</small></button>
-        <button class="action" data-go="check">✓ Reise-Check<br><small class="muted">Reservierung fehlt</small></button>
-      </div>
+
+  <div class="card planner-card">
+    <div class="plan-grid">
+      <div class="plan-field span2"><label>Start</label><input id="planStart" value="Innsbruck" placeholder="z. B. Innsbruck"></div>
+      <div class="plan-field span2"><label>Ziel</label><input id="planDest" value="Gardasee" placeholder="z. B. Wien"></div>
+      <div class="plan-field"><label>Reise von</label><input id="planStartDate" type="date"></div>
+      <div class="plan-field"><label>Reise bis</label><input id="planEndDate" type="date"></div>
+      <div class="plan-field"><label>km / Tag</label><input id="planKmDay" type="number" min="20" step="5" value="120"></div>
+      <div class="plan-field"><label>max. HM / Tag</label><input id="planHmDay" type="number" min="100" step="100" value="1800"></div>
+      <div class="plan-field span2"><label>Routing</label><select id="planProfile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schneller Asphalt</option></select></div>
+      <div class="plan-field span2"><label>Übernachtung</label><select id="planLodging"><option>Hotel / Pension</option><option>Camping / Zelt</option><option>Gemischt</option></select></div>
     </div>
-    <div class="card">
-      <div class="kpi"><b>312 km</b><span>Distanz</span></div>
-      <div class="kpi"><b>4.850 m</b><span>Anstieg</span></div>
-      <div class="kpi"><b>4</b><span>Etappen</span></div>
-      <div class="kpi"><b>14,2 kg</b><span>Gepäck</span></div>
+    <div class="plan-actions">
+      <button class="btn primary" id="planRouteBtn" type="button">Fahrradroute berechnen</button>
+      <button class="btn" id="useSavedRouteBtn" type="button">Gespeicherte Route laden</button>
+      <div id="planStatus" class="plan-status">Eine vorhandene Route wird automatisch übernommen.</div>
     </div>
   </div>
 
-  <div class="card card-pad" style="margin-top:16px">
-    <div class="trip-head"><div><div class="eyebrow">Etappen</div><h3>Die nächsten Tage</h3></div><button class="btn" data-go="stages">Alle Etappen</button></div>
-    <div class="stage-mini">
-      <div class="mini"><div class="day">Tag 1</div><b>Innsbruck → Kühtai</b><small>73 km · 1.250 HM · ☀ 18°</small></div>
-      <div class="mini"><div class="day">Tag 2</div><b>Kühtai → Brixen</b><small>96 km · 1.760 HM · ☁ 16°</small></div>
-      <div class="mini"><div class="day">Tag 3</div><b>Brixen → Riva</b><small>143 km · 1.840 HM · ☀ 20°</small></div>
+  <div class="card current-trip-card" id="homeCurrentTrip">
+    <div class="current-trip-head">
+      <div><div class="eyebrow">Aktuelle Reise</div><h2 id="homeTripTitle">Noch keine Route</h2><div class="route-meta" id="homeTripMeta">Start und Ziel eingeben und Route berechnen.</div></div>
+      <div class="btn-row"><button class="btn" data-go="route">Route</button><button class="btn" data-go="stages">Etappen</button><button class="btn" data-go="pack">Packen</button></div>
     </div>
-  </div>
-
-  <div class="dashboard-footer">
-    <div class="card card-pad">
-      <div class="eyebrow">Höhenprofil</div><h3>Gesamtroute</h3>
-      <svg class="elev-simple" viewBox="0 0 700 115">
-        <path d="M0,93 L40,88 L80,65 L120,76 L160,47 L210,72 L255,61 L300,83 L350,54 L405,66 L455,35 L505,56 L555,31 L610,66 L655,59 L700,89 L700,110 L0,110 Z" fill="#8a927f" opacity=".65"/>
-        <path d="M0,93 L40,88 L80,65 L120,76 L160,47 L210,72 L255,61 L300,83 L350,54 L405,66 L455,35 L505,56 L555,31 L610,66 L655,59 L700,89" fill="none" stroke="#556244" stroke-width="2"/>
-        <g opacity=".9"><rect x="0" y="106" width="160" height="5" fill="#a2573c"/><rect x="160" y="106" width="90" height="5" fill="#525756"/><rect x="250" y="106" width="150" height="5" fill="#718260"/><rect x="400" y="106" width="95" height="5" fill="#bd955d"/><rect x="495" y="106" width="205" height="5" fill="#a2573c"/></g>
-      </svg>
-      <div class="terrain-legend"><span class="legend-item"><i class="dot gravel"></i>Gravel 53%</span><span class="legend-item"><i class="dot asphalt"></i>Asphalt 28%</span><span class="legend-item"><i class="dot trail"></i>Trail 13%</span></div>
-    </div>
-    <div class="card card-pad">
-      <div class="eyebrow">Wetter</div><h3>Entlang der Reise</h3>
-      <div class="weather-row">
-        <div class="weather-day"><div class="icon">☀</div><b>18°</b><small>Tag 1</small></div>
-        <div class="weather-day"><div class="icon">☁</div><b>16°</b><small>Tag 2</small></div>
-        <div class="weather-day"><div class="icon">☂</div><b>14°</b><small>Tag 3</small></div>
-        <div class="weather-day"><div class="icon">☀</div><b>20°</b><small>Tag 4</small></div>
-      </div>
+    <div class="current-trip-stats">
+      <div class="current-trip-stat"><b id="homeDist">–</b><span>Distanz</span></div>
+      <div class="current-trip-stat"><b id="homeGain">–</b><span>Anstieg</span></div>
+      <div class="current-trip-stat"><b id="homeStages">–</b><span>Etappen</span></div>
+      <div class="current-trip-stat"><b id="homeDates">–</b><span>Zeitraum</span></div>
     </div>
   </div>
 </section>
@@ -434,6 +485,7 @@ body.map-open{overflow:hidden!important}
           </div>
           <div class="touch-hint">Mit 2 Fingern zoomen · Tippen = Streckenpunkt</div>
           <div id="routeGeometryStatus" class="route-geometry-status">Routengeometrie wird geladen …</div>
+          <div id="mapDiagnostic" class="map-diagnostic">3D wird vorbereitet …</div>
           <div id="flyoverControls" class="flyover-controls">
             <button id="flyPlayBtn" class="fly-btn primary" type="button" disabled>▶</button>
             <select id="flySpeed" class="fly-select" aria-label="Flyover Geschwindigkeit" disabled>
@@ -545,36 +597,67 @@ body.map-open{overflow:hidden!important}
   <div class="pack-layout">
     <div class="card bike-card">
       <div class="bike-header"><div><h3>Dein Bike</h3><div class="muted">Gegenstand antippen und danach eine Zieltasche am Bike oder unten auswählen.</div></div><span class="badge">Gravel · 40 mm</span></div>
-      <svg class="bike-svg" viewBox="0 0 800 360" aria-label="Gravelbike Seitenansicht">
+      <svg class="bike-svg" viewBox="0 0 800 360" aria-label="Gravelbike mit Bikepacking-Taschen">
         <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="185" cy="252" r="92" stroke="#2d342f" stroke-width="10"/>
-          <circle cx="615" cy="252" r="92" stroke="#2d342f" stroke-width="10"/>
-          <circle cx="185" cy="252" r="78" stroke="#c3b99e" stroke-width="2"/>
-          <circle cx="615" cy="252" r="78" stroke="#c3b99e" stroke-width="2"/>
-          <g stroke="#cfc7b8" stroke-width="1.4" opacity=".85">
-            <path d="M185 174V330M107 252H263M130 197L240 307M130 307L240 197"/>
-            <path d="M615 174V330M537 252H693M560 197L670 307M560 307L670 197"/>
+          <circle class="bike-wheel" cx="190" cy="250" r="92" stroke-width="11"/>
+          <circle class="bike-wheel" cx="612" cy="250" r="92" stroke-width="11"/>
+          <circle class="bike-detail" cx="190" cy="250" r="78" stroke-width="1.5" opacity=".55"/>
+          <circle class="bike-detail" cx="612" cy="250" r="78" stroke-width="1.5" opacity=".55"/>
+          <g class="bike-detail" stroke-width="1" opacity=".45">
+            <path d="M190 172V328M112 250H268M135 195L245 305M135 305L245 195"/>
+            <path d="M612 172V328M534 250H690M557 195L667 305M557 305L667 195"/>
           </g>
-          <path d="M185 252 L322 105 L414 252 L185 252 M322 105 L510 119 L414 252 M510 119 L615 252" stroke="#536347" stroke-width="12"/>
-          <path d="M322 105 L414 252" stroke="#536347" stroke-width="10"/>
-          <path d="M414 252 L615 252" stroke="#536347" stroke-width="9"/>
-          <path d="M507 118 L535 88 L570 91 M535 88 L553 70" stroke="#2d342f" stroke-width="8"/>
-          <path d="M321 105 L294 76 M294 76 L252 76" stroke="#2d342f" stroke-width="8"/>
-          <path d="M503 119 L615 252" stroke="#2d342f" stroke-width="6"/>
-          <circle cx="414" cy="252" r="19" stroke="#2d342f" stroke-width="5"/>
-          <circle cx="414" cy="252" r="5" fill="#2d342f" stroke="none"/>
-          <path d="M414 252 L443 267" stroke="#2d342f" stroke-width="5"/>
-          <path d="M443 267 h20" stroke="#2d342f" stroke-width="5"/>
-          <path d="M286 77 h58" stroke="#2d342f" stroke-width="7"/>
+          <path class="bike-frame" d="M190 250 L326 108 L421 250 L190 250 M326 108 L506 120 L421 250 M506 120 L612 250" stroke-width="10"/>
+          <path class="bike-frame" d="M326 108 L421 250" stroke-width="9"/>
+          <path class="bike-frame" d="M421 250 L612 250" stroke-width="8"/>
+          <path class="bike-frame" d="M503 120 L540 85 L575 89 M540 85 L558 67" stroke-width="8"/>
+          <path class="bike-frame" d="M326 108 L298 80 M298 80 L252 80" stroke-width="7"/>
+          <path class="bike-frame" d="M503 120 L612 250" stroke-width="5"/>
+          <circle cx="421" cy="250" r="19" stroke="#f5f2ea" stroke-width="5"/>
+          <circle cx="421" cy="250" r="5" fill="#f5f2ea" stroke="none"/>
         </g>
-        <g class="bag-node" id="bikeBag-saddle" data-bag="saddle"><path d="M267 80 Q218 68 184 88 L202 129 Q237 121 286 113 Z" fill="#465044" stroke="#f5f0e7" stroke-width="3"/></g>
-        <g class="bag-node" id="bikeBag-frame" data-bag="frame"><path d="M323 128 L400 235 L242 235 Z" fill="#465044" stroke="#f5f0e7" stroke-width="3"/></g>
-        <g class="bag-node" id="bikeBag-top" data-bag="top"><rect x="358" y="101" width="83" height="29" rx="11" fill="#465044" stroke="#f5f0e7" stroke-width="3"/></g>
-        <g class="bag-node" id="bikeBag-bar" data-bag="bar"><path d="M526 78 Q565 66 596 91 L584 133 Q546 127 511 115 Z" fill="#465044" stroke="#f5f0e7" stroke-width="3"/></g>
-        <g class="bag-node" id="bikeBag-fork" data-bag="fork"><rect x="566" y="139" width="31" height="84" rx="11" fill="#465044" stroke="#f5f0e7" stroke-width="3"/></g>
+
+        <g class="bag-node" id="bikeBag-saddle" data-bag="saddle">
+          <path d="M285 84 Q238 72 194 93 L210 137 Q249 128 301 115 Z" fill="#4f5e48" stroke="#f5f0e7" stroke-width="3"/>
+        </g>
+        <g class="bag-node" id="bikeBag-frame" data-bag="frame">
+          <path d="M330 132 L407 234 L254 234 Z" fill="#a46b39" stroke="#f5f0e7" stroke-width="3"/>
+        </g>
+        <g class="bag-node" id="bikeBag-top" data-bag="top">
+          <rect x="356" y="101" width="88" height="28" rx="10" fill="#a2573c" stroke="#f5f0e7" stroke-width="3"/>
+        </g>
+        <g class="bag-node" id="bikeBag-bar" data-bag="bar">
+          <path d="M525 82 Q567 68 607 92 L596 137 Q552 130 514 116 Z" fill="#b66e3d" stroke="#f5f0e7" stroke-width="3"/>
+        </g>
+        <g class="bag-node" id="bikeBag-fork" data-bag="fork">
+          <rect x="563" y="145" width="28" height="76" rx="10" fill="#64705c" stroke="#f5f0e7" stroke-width="3"/>
+          <rect x="596" y="151" width="22" height="66" rx="9" fill="#64705c" stroke="#f5f0e7" stroke-width="3" opacity=".88"/>
+        </g>
+
+        <g pointer-events="none">
+          <text x="118" y="55" class="bag-visual-label">Satteltasche</text>
+          <text x="118" y="70" class="bag-visual-sub" id="bikeLabel-saddle">–</text>
+          <text x="351" y="62" class="bag-visual-label">Oberrohr</text>
+          <text x="351" y="77" class="bag-visual-sub" id="bikeLabel-top">–</text>
+          <text x="468" y="286" class="bag-visual-label">Rahmentasche</text>
+          <text x="468" y="301" class="bag-visual-sub" id="bikeLabel-frame">–</text>
+          <text x="618" y="72" class="bag-visual-label">Lenkertasche</text>
+          <text x="618" y="87" class="bag-visual-sub" id="bikeLabel-bar">–</text>
+          <text x="636" y="185" class="bag-visual-label">Gabeltaschen</text>
+          <text x="636" y="200" class="bag-visual-sub" id="bikeLabel-fork">–</text>
+        </g>
       </svg>
-      <div class="bike-empty-state" id="bikeEmptyState">Leeres Bike · Auto-Packen startet die Verteilung</div>
+      <div class="bike-empty-state"<div class="bike-empty-state" id="bikeEmptyState">Leeres Bike · Auto-Packen startet die Verteilung</div>
       <div class="bag-overview" id="bagOverview"></div>
+      <div class="gear-section">
+        <div class="gear-section-head">
+          <div><div class="eyebrow">Ausrüstung</div><h3>Gegenstände</h3></div>
+          <span class="badge" id="gearCountBadge">19 Teile</span>
+        </div>
+        <div id="packFocusBanner" class="pack-focus-banner">Gegenstand auswählen → danach Tasche am Bike, unten oder direkt im Dropdown wählen.</div>
+        <div id="gearListWeb" class="gear-list"></div>
+        <div class="pack-help">Auf dem iPad ist das Dropdown der direkteste Weg. Alternativ Gegenstand antippen und anschließend eine Tasche am Bike oder in der Taschenleiste wählen.</div>
+      </div>
     </div>
 
     <div class="pack-panels">
@@ -622,7 +705,7 @@ body.map-open{overflow:hidden!important}
 <div class="prototype-pill">Interaktiver Design-Prototyp · keine Live-Daten</div>
 </div>
 
-<script src="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const screens=[...document.querySelectorAll('.screen')];
@@ -655,7 +738,7 @@ let routeSource='loading';
 let roamMap=null,roamCursor=null,esriLayer=null,osmLayer=null,openTopoLayer=null;
 let routeVisualLayers=[],routePointLayers=[],routeHitLayer=null;
 let currentMapMode='2d';
-let roam3DMap=null,roam3DReady=false;
+let roam3DMap=null,roam3DReady=false,roam3DTerrainReady=false,pending3D=false;
 let flyProgress=0,flyPlaying=false,flyFollow=true,flySpeed=1,flyRAF=null,flyLastTs=0;
 let routeStages=[];
 let routeTerrain={status:'idle',stages:[],source:null,reliableCoverage:0,warning:null};
@@ -854,7 +937,9 @@ function applyRouteRows(rows,named=[],source='api',start='',dest='',stages=[]){
    updateLinked(.5,'load');
  }
  if(roam3DReady){update3DSources();updateFlyCamera(true)}
+ else if(currentMapMode==='3d'||pending3D)setTimeout(()=>init3DMap(),80);
  renderStagePrototype();
+ renderHomePlanner();
  loadExactTerrain().catch(()=>{});
 }
 async function loadExactRouteGeometry(){
@@ -1157,7 +1242,7 @@ function ensureMapLibre(){
  if(mapLibreLoadPromise)return mapLibreLoadPromise;
  mapLibreLoadPromise=new Promise(resolve=>{
    const s=document.createElement('script');
-   s.src='https://cdn.jsdelivr.net/npm/maplibre-gl@6.10.0/dist/maplibre-gl.js';
+   s.src='https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js';
    s.async=true;
    s.onload=()=>resolve(typeof maplibregl!=='undefined');
    s.onerror=()=>resolve(false);
@@ -1165,89 +1250,132 @@ function ensureMapLibre(){
  });
  return mapLibreLoadPromise;
 }
+function webGLCapability(){
+ try{
+   const c=document.createElement('canvas');
+   if(c.getContext('webgl2'))return 'WebGL2';
+   if(c.getContext('webgl')||c.getContext('experimental-webgl'))return 'WebGL1';
+ }catch(e){}
+ return '';
+}
+function setMapDiagnostic(msg,kind=''){
+ const el=document.getElementById('mapDiagnostic');if(!el)return;
+ el.textContent=msg;
+ el.style.color=kind==='warn'?'#8a563e':'#596159';
+}
 function setFlyControlsEnabled(enabled){
  ['flyPlayBtn','flySpeed','flySlider','flyFollowBtn','flyResetBtn'].forEach(id=>{
    const el=document.getElementById(id);if(el)el.disabled=!enabled;
  });
 }
 async function init3DMap(){
- if(roam3DMap){setTimeout(()=>{roam3DMap.resize();update3DSources();updateFlyCamera(true)},60);return}
- const libReady=await ensureMapLibre();
- if(!libReady||routeGeo.length<2){
-   setFlyPlaying(false);setFlyControlsEnabled(false);
-   setGeometryStatus('3D-Modus konnte nicht geladen werden','warn');
-   const s=document.getElementById('flyStatus');if(s)s.textContent='MapLibre nicht verfügbar';
+ pending3D=true;
+ if(roam3DMap){
+   setTimeout(()=>{roam3DMap.resize();update3DSources();updateFlyCamera(true)},60);
    return;
  }
+ if(routeGeo.length<2){
+   setFlyControlsEnabled(false);
+   setGeometryStatus('Route wird für 3D vorbereitet …','');
+   setMapDiagnostic('Warte auf Routengeometrie …');
+   return;
+ }
+ const libReady=await ensureMapLibre();
+ const gl=webGLCapability();
+ if(!libReady||!gl){
+   pending3D=false;setFlyPlaying(false);setFlyControlsEnabled(false);
+   setGeometryStatus('3D nicht verfügbar','warn');
+   setMapDiagnostic(!libReady?'MapLibre konnte nicht geladen werden.':'WebGL ist auf diesem Gerät/Browser deaktiviert.','warn');
+   return;
+ }
+ setMapDiagnostic(`MapLibre 5.24 · ${gl} · Basiskarte wird geladen …`);
  const start=routeLngLat(0);
- roam3DMap=new maplibregl.Map({
-   container:'routeMap3d',
-   center:start,
-   zoom:13.7,
-   pitch:68,
-   bearing:0,
-   maxPitch:82,
-   renderWorldCopies:false,
-   canvasContextAttributes:{antialias:true},
-   style:{
-     version:8,
-     sources:{
-       osm:{
-         type:'raster',
-         tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-         tileSize:256,
-         maxzoom:19,
-         attribution:'© OpenStreetMap contributors'
-       },
-       terrainSource:{
-         type:'raster-dem',
-         url:'https://tiles.mapterhorn.com/tilejson.json'
-       },
-       hillshadeSource:{
-         type:'raster-dem',
-         url:'https://tiles.mapterhorn.com/tilejson.json'
-       }
-     },
-     layers:[
-       {id:'roam-bg',type:'background',paint:{'background-color':'#d9ded5'}},
-       {id:'osm',type:'raster',source:'osm'},
-       {
-         id:'hillshade',type:'hillshade',source:'hillshadeSource',
-         paint:{
-           'hillshade-exaggeration':.38,
-           'hillshade-shadow-color':'#475047',
-           'hillshade-highlight-color':'#f4efe3',
-           'hillshade-accent-color':'#7a806f'
+ try{
+   roam3DMap=new maplibregl.Map({
+     container:'routeMap3d',
+     center:start,
+     zoom:13.4,
+     pitch:66,
+     bearing:0,
+     maxPitch:80,
+     renderWorldCopies:false,
+     canvasContextAttributes:{antialias:true},
+     style:{
+       version:8,
+       sources:{
+         osm:{
+           type:'raster',
+           tiles:['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+           tileSize:256,maxzoom:19,
+           attribution:'© OpenStreetMap contributors'
          }
-       }
-     ]
-   }
- });
+       },
+       layers:[
+         {id:'roam-bg',type:'background',paint:{'background-color':'#d9ded5'}},
+         {id:'osm',type:'raster',source:'osm'}
+       ]
+     }
+   });
+ }catch(e){
+   roam3DMap=null;pending3D=false;setFlyControlsEnabled(false);
+   setGeometryStatus('3D konnte nicht gestartet werden','warn');
+   setMapDiagnostic(`3D-Startfehler · ${gl}: ${e?.message||'unbekannter Fehler'}`,'warn');
+   return;
+ }
+
  roam3DMap.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
+
  roam3DMap.on('load',()=>{
-   roam3DMap.setTerrain({source:'terrainSource',exaggeration:1.15});
-   roam3DMap.addSource('roam-route',{type:'geojson',data:routeGeoJSON(),lineMetrics:true});
-   roam3DMap.addLayer({id:'roam-route-halo',type:'line',source:'roam-route',paint:{
-     'line-color':'#f8f4ec','line-width':9,'line-opacity':.98
-   },layout:{'line-cap':'round','line-join':'round'}});
-   roam3DMap.addLayer({id:'roam-route-line',type:'line',source:'roam-route',paint:{
-     'line-color':'#26362d','line-width':5,'line-opacity':1
-   },layout:{'line-cap':'round','line-join':'round'}});
-   roam3DMap.addSource('roam-progress',{type:'geojson',data:flyProgressGeoJSON()});
-   roam3DMap.addLayer({id:'roam-progress-line',type:'line',source:'roam-progress',paint:{
-     'line-color':'#a2573c','line-width':5.5,'line-opacity':1
-   },layout:{'line-cap':'round','line-join':'round'}});
-   roam3DMap.addSource('roam-point',{type:'geojson',data:flyPointGeoJSON()});
-   roam3DMap.addLayer({id:'roam-point-dot',type:'circle',source:'roam-point',paint:{
-     'circle-radius':7,'circle-color':'#f8f4ec','circle-stroke-width':4,'circle-stroke-color':'#a2573c'
-   }});
-   roam3DReady=true;
+   try{
+     roam3DMap.addSource('roam-route',{type:'geojson',data:routeGeoJSON(),lineMetrics:true});
+     roam3DMap.addLayer({id:'roam-route-halo',type:'line',source:'roam-route',paint:{
+       'line-color':'#f8f4ec','line-width':9,'line-opacity':.98
+     },layout:{'line-cap':'round','line-join':'round'}});
+     roam3DMap.addLayer({id:'roam-route-line',type:'line',source:'roam-route',paint:{
+       'line-color':'#26362d','line-width':5,'line-opacity':1
+     },layout:{'line-cap':'round','line-join':'round'}});
+     roam3DMap.addSource('roam-progress',{type:'geojson',data:flyProgressGeoJSON()});
+     roam3DMap.addLayer({id:'roam-progress-line',type:'line',source:'roam-progress',paint:{
+       'line-color':'#a2573c','line-width':5.5,'line-opacity':1
+     },layout:{'line-cap':'round','line-join':'round'}});
+     roam3DMap.addSource('roam-point',{type:'geojson',data:flyPointGeoJSON()});
+     roam3DMap.addLayer({id:'roam-point-dot',type:'circle',source:'roam-point',paint:{
+       'circle-radius':7,'circle-color':'#f8f4ec','circle-stroke-width':4,'circle-stroke-color':'#a2573c'
+     }});
+   }catch(e){}
+
+   roam3DReady=true;pending3D=false;
    setFlyControlsEnabled(true);
    setFlyFollow(true);
    updateFlyCamera(true);
-   setGeometryStatus(`${routeSource==='stored'?'Gespeicherte Originalroute':'Echte Routengeometrie'} · 3D bereit`,'ok');
+   setGeometryStatus(`${routeSource==='stored'?'Gespeicherte Originalroute':'Echte Routengeometrie'} · Flyover bereit`,'ok');
+   setMapDiagnostic(`Flyover bereit · ${gl} · Höhenrelief wird geladen …`);
+
+   // Terrain is optional: the Flyover stays usable even if the DEM service fails.
+   try{
+     roam3DMap.addSource('terrainSource',{type:'raster-dem',url:'https://tiles.mapterhorn.com/tilejson.json'});
+     roam3DMap.addSource('hillshadeSource',{type:'raster-dem',url:'https://tiles.mapterhorn.com/tilejson.json'});
+     roam3DMap.addLayer({
+       id:'hillshade',type:'hillshade',source:'hillshadeSource',
+       paint:{'hillshade-exaggeration':.36,'hillshade-shadow-color':'#475047','hillshade-highlight-color':'#f4efe3','hillshade-accent-color':'#7a806f'}
+     },'roam-route-halo');
+     roam3DMap.setTerrain({source:'terrainSource',exaggeration:1.08});
+     roam3DTerrainReady=true;
+     setMapDiagnostic(`3D-Terrain aktiv · ${gl} · Route folgt dem Gelände`);
+   }catch(e){
+     roam3DTerrainReady=false;
+     setMapDiagnostic(`Flyover aktiv · ${gl} · Relief derzeit nicht verfügbar`,'warn');
+   }
  });
- roam3DMap.on('error',()=>{});
+
+ roam3DMap.on('error',e=>{
+   const msg=String(e?.error?.message||'');
+   if(/webgl|gpu|context/i.test(msg)){
+     setMapDiagnostic(`Grafikfehler: ${msg}`,'warn');
+   }else if(!roam3DReady){
+     setMapDiagnostic(`Kartendaten laden … ${msg.slice(0,90)}`,'warn');
+   }
+ });
  roam3DMap.getCanvas().addEventListener('pointerdown',()=>{if(currentMapMode==='3d')setFlyFollow(false)});
 }
 function setMapMode(mode){
@@ -1449,6 +1577,140 @@ function pointerToP(el,e){
 document.getElementById('elevationSvg').addEventListener('pointermove',e=>updateLinked(pointerToP(e.currentTarget,e),'profile'));
 document.getElementById('elevationSvg').addEventListener('click',e=>updateLinked(pointerToP(e.currentTarget,e),'profile'));
 
+
+function parseDateOnly(v){
+ const p=String(v||'').split('-').map(Number);
+ if(p.length!==3||p.some(x=>!Number.isFinite(x)))return null;
+ return new Date(Date.UTC(p[0],p[1]-1,p[2]));
+}
+function plannedTripDays(){
+ const a=parseDateOnly(document.getElementById('planStartDate')?.value);
+ const b=parseDateOnly(document.getElementById('planEndDate')?.value);
+ if(!a||!b)return null;
+ const n=Math.round((b-a)/86400000)+1;
+ return n>0?n:null;
+}
+function webRouteMetrics(rows){
+ const dist=[0],gain=[0];
+ let totalGain=0;
+ for(let i=1;i<rows.length;i++){
+   dist[i]=dist[i-1]+geoDistKm([rows[i-1].lat,rows[i-1].lon],[rows[i].lat,rows[i].lon]);
+   const z0=Number(rows[i-1].z),z1=Number(rows[i].z);
+   if(Number.isFinite(z0)&&Number.isFinite(z1)&&z1>z0)totalGain+=z1-z0;
+   gain[i]=totalGain;
+ }
+ return {dist,gain,totalDist:dist.at(-1)||0,totalGain};
+}
+function buildWebStages(rows,m,days,targetKm,maxHm){
+ const count=rows.length;if(count<2)return [];
+ if(!days){
+   const byKm=Math.ceil(m.totalDist/Math.max(20,targetKm||120));
+   const byHm=Math.ceil(m.totalGain/Math.max(200,maxHm||1800));
+   days=Math.max(1,byKm,byHm);
+ }
+ days=Math.max(1,Math.min(days,count-1));
+ const totalScore=Math.max(.001,m.totalDist/Math.max(20,targetKm||120)+m.totalGain/Math.max(200,maxHm||1800));
+ const cuts=[0];let last=0;
+ for(let part=1;part<days;part++){
+   const target=totalScore*(part/days);
+   let best=last+1,bestDelta=Infinity;
+   for(let i=last+1;i<count-(days-part);i++){
+     const score=m.dist[i]/Math.max(20,targetKm||120)+m.gain[i]/Math.max(200,maxHm||1800);
+     const d=Math.abs(score-target);
+     if(d<bestDelta){bestDelta=d;best=i}
+   }
+   cuts.push(best);last=best;
+ }
+ cuts.push(count-1);
+ return cuts.slice(1).map((e,i)=>{
+   const s=cuts[i];
+   return {s,e,km:m.dist[e]-m.dist[s],hm:m.gain[e]-m.gain[s]};
+ });
+}
+function setPlanStatus(msg,kind=''){
+ const el=document.getElementById('planStatus');if(!el)return;
+ el.textContent=msg;el.className='plan-status '+kind;
+}
+function renderHomePlanner(){
+ const saved=(()=>{try{return JSON.parse(localStorage.getItem('abo-mobile-route')||'null')}catch(e){return null}})();
+ const title=document.getElementById('homeTripTitle');
+ if(!title)return;
+ if(saved?.coords?.length>1){
+   const metrics=saved.metrics||{},stages=Array.isArray(saved.stages)?saved.stages:[];
+   title.textContent=`${saved.start||'Start'} → ${saved.dest||'Ziel'}`;
+   document.getElementById('homeTripMeta').textContent='Gespeicherte Adventure-Bike-OS-Route · bereit für Route, Etappen und Packen';
+   document.getElementById('homeDist').textContent=`${Math.round(Number(metrics.totalDist)||routeDistanceKm||0)} km`;
+   document.getElementById('homeGain').textContent=`${Math.round(Number(metrics.totalGain)||0).toLocaleString('de-DE')} m`;
+   document.getElementById('homeStages').textContent=stages.length||'–';
+   const sd=saved.tripDates?.startDate||'',ed=saved.tripDates?.endDate||'';
+   document.getElementById('homeDates').textContent=sd?(ed?`${sd} – ${ed}`:sd):'offen';
+   document.getElementById('homeRouteBadge').textContent='Route gespeichert';
+   if(document.activeElement!==document.getElementById('planStart'))document.getElementById('planStart').value=saved.start||'';
+   if(document.activeElement!==document.getElementById('planDest'))document.getElementById('planDest').value=saved.dest||'';
+   if(sd)document.getElementById('planStartDate').value=sd;
+   if(ed)document.getElementById('planEndDate').value=ed;
+ }else{
+   title.textContent='Noch keine Route';
+   document.getElementById('homeTripMeta').textContent='Start und Ziel eingeben und Route berechnen.';
+   document.getElementById('homeDist').textContent='–';document.getElementById('homeGain').textContent='–';
+   document.getElementById('homeStages').textContent='–';document.getElementById('homeDates').textContent='–';
+   document.getElementById('homeRouteBadge').textContent='noch offen';
+ }
+ try{
+   const lp=JSON.parse(localStorage.getItem('abo-mobile-lodging-prefs')||'null');
+   if(lp?.type)document.getElementById('planLodging').value=lp.type;
+ }catch(e){}
+}
+async function calculateWebRoute(){
+ const start=document.getElementById('planStart').value.trim(),dest=document.getElementById('planDest').value.trim();
+ const startDate=document.getElementById('planStartDate').value,endDate=document.getElementById('planEndDate').value;
+ const kmDay=Math.max(20,Number(document.getElementById('planKmDay').value)||120);
+ const hmDay=Math.max(200,Number(document.getElementById('planHmDay').value)||1800);
+ const profile=document.getElementById('planProfile').value||'trekking';
+ const lodging=document.getElementById('planLodging').value||'Hotel / Pension';
+ if(!start||!dest){setPlanStatus('Bitte Start und Ziel eingeben.','warn');return}
+ if(startDate&&endDate&&!plannedTripDays()){setPlanStatus('Das Bis-Datum muss nach dem Startdatum liegen.','warn');return}
+ const btn=document.getElementById('planRouteBtn');btn.disabled=true;
+ setPlanStatus('Route wird berechnet …');
+ try{
+   const r=await fetch(API+'/api/route-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+     start,destination:dest,loop:false,waypoints:[],profile
+   })});
+   const d=await r.json();
+   if(!r.ok)throw new Error(d?.error||'Routing nicht verfügbar');
+   let rows=normalizeAdventureCoords(d?.geometry?.coordinates);
+   if(rows.length<20)throw new Error('Die Routingantwort enthält zu wenige Punkte.');
+   rows=await enrichRouteElevation(rows);
+   const m=webRouteMetrics(rows),days=plannedTripDays(),stages=buildWebStages(rows,m,days,kmDay,hmDay);
+   const names=[start,...Array.from({length:Math.max(0,stages.length-1)},(_,i)=>`Etappenziel ${i+1}`),dest];
+   const routePlan={
+     type:'point',source:'generated',waypoints:[],
+     orderedPoints:Array.isArray(d?.ordered_points)?d.ordered_points:[],
+     importName:''
+   };
+   localStorage.setItem('abo-mobile-stage-names',JSON.stringify(names));
+   localStorage.setItem('abo-mobile-trip-prefs-v2',JSON.stringify({startDate,endDate}));
+   localStorage.setItem('abo-mobile-lodging-prefs',JSON.stringify({type:lodging,priceLevel:'mid',nightBudget:90,totalBudget:0}));
+   localStorage.setItem('abo-mobile-route',JSON.stringify({
+     start,dest,coords:rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]),
+     metrics:m,stages,routePlan,tripDates:{startDate,endDate}
+   }));
+   routeTerrain={status:'idle',stages:[],source:null,reliableCoverage:0,warning:null};
+   applyRouteRows(rows,routePlan.orderedPoints,'stored',start,dest,stages);
+   setPlanStatus(`${Math.round(m.totalDist)} km · ${Math.round(m.totalGain).toLocaleString('de-DE')} HM · ${stages.length} Etappen gespeichert.`,'ok');
+   renderHomePlanner();renderStagePrototype();
+   setTimeout(()=>showScreen('route'),250);
+ }catch(e){
+   setPlanStatus(e?.message||'Route konnte nicht berechnet werden.','warn');
+ }finally{btn.disabled=false}
+}
+function loadSavedRouteFromPlanner(){
+ loadExactRouteGeometry().then(()=>{renderHomePlanner();setPlanStatus('Gespeicherte Route geladen.','ok');showScreen('route')});
+}
+document.getElementById('planRouteBtn')?.addEventListener('click',calculateWebRoute);
+document.getElementById('useSavedRouteBtn')?.addEventListener('click',loadSavedRouteFromPlanner);
+renderHomePlanner();
+
 renderTerrainUI();
 loadExactRouteGeometry();
 initRouteMap();
@@ -1531,12 +1793,53 @@ function showStagePrototype(i,rerender=True){
 }
 
 const packBags={
- saddle:{name:'Satteltasche',cap:16,zone:'rear'},
- frame:{name:'Rahmentasche',cap:8,zone:'center'},
- top:{name:'Oberrohr',cap:2,zone:'center'},
- bar:{name:'Lenkertasche',cap:7,zone:'front'},
- fork:{name:'Gabeltaschen',cap:8,zone:'front'}
+ saddle:{name:'Satteltasche',sizes:[8,10,14],size:14,cap:14,zone:'rear',qty:1},
+ frame:{name:'Rahmentasche',sizes:[4,6,8],size:6,cap:6,zone:'center',qty:1},
+ top:{name:'Oberrohr',sizes:[0.8,1.2,1.8],size:1.2,cap:1.2,zone:'center',qty:1},
+ bar:{name:'Lenkertasche',sizes:[8,10,14],size:10,cap:10,zone:'front',qty:1},
+ fork:{name:'Gabeltaschen',sizes:[3,5,7],size:5,cap:10,zone:'front',qty:2}
 };
+const BAG_SIZE_STORAGE='abo-web-bag-sizes-v1';
+function bagCapacity(id){
+ const b=packBags[id];return (Number(b.size)||0)*(Number(b.qty)||1);
+}
+function formatLiters(v){
+ const n=Number(v)||0;
+ return Number.isInteger(n)?String(n):n.toFixed(1).replace('.',',');
+}
+function bagSizeLabel(id){
+ const b=packBags[id];
+ return b.qty>1?`${b.qty} × ${formatLiters(b.size)} L`:`${formatLiters(b.size)} L`;
+}
+function saveBagSizes(){
+ try{
+   localStorage.setItem(BAG_SIZE_STORAGE,JSON.stringify(
+     Object.fromEntries(Object.entries(packBags).map(([id,b])=>[id,b.size]))
+   ));
+ }catch(e){}
+}
+function restoreBagSizes(){
+ try{
+   const saved=JSON.parse(localStorage.getItem(BAG_SIZE_STORAGE)||'null');
+   if(!saved)return;
+   Object.entries(saved).forEach(([id,size])=>{
+     const b=packBags[id],n=Number(size);
+     if(b&&b.sizes.some(x=>Math.abs(Number(x)-n)<1e-6))b.size=n;
+   });
+   Object.keys(packBags).forEach(id=>packBags[id].cap=bagCapacity(id));
+ }catch(e){}
+}
+function setBagSize(id,size){
+ const b=packBags[id],n=Number(size);
+ if(!b||!b.sizes.some(x=>Math.abs(Number(x)-n)<1e-6))return;
+ b.size=n;b.cap=bagCapacity(id);saveBagSizes();
+ const s=bagStats(id);
+ if(s.l>b.cap){
+   packToast(`${b.name}: ${formatLiters(s.l)} L Inhalt bei ${bagSizeLabel(id)} – bitte umpacken`);
+ }
+ renderPackPrototype();
+}
+restoreBagSizes();
 const packInitialItems=[
  {id:'sleep',name:'Schlafsack',bag:null,l:5,kg:.9,cat:'Schlafen',packed:false},
  {id:'down',name:'Daunenjacke',bag:null,l:2.5,kg:.4,cat:'Kleidung',packed:false},
@@ -1564,7 +1867,8 @@ let selectedBag=null;
 
 function bagStats(id){
  const items=packItems.filter(x=>x.bag===id),l=items.reduce((s,x)=>s+x.l,0),kg=items.reduce((s,x)=>s+x.kg,0);
- return {items,l,kg,pct:Math.round(l/packBags[id].cap*100)};
+ const cap=bagCapacity(id);packBags[id].cap=cap;
+ return {items,l,kg,cap,pct:cap?Math.round(l/cap*100):0,over:l>cap+1e-6};
 }
 function packTotalKg(){return packItems.reduce((s,x)=>s+x.kg,0)}
 function packToast(msg){
@@ -1574,14 +1878,13 @@ function packToast(msg){
 }
 function movePackItem(itemId,targetBag){
  const item=packItems.find(x=>x.id===itemId);if(!item||!packBags[targetBag])return;
- const target=bagStats(targetBag);
- if(target.l+item.l>packBags[targetBag].cap){packToast(`${packBags[targetBag].name}: zu wenig Platz`);return}
+ const target=bagStats(targetBag),cap=bagCapacity(targetBag);
+ if(target.l+item.l>cap+1e-6){packToast(`${packBags[targetBag].name}: zu wenig Platz (${formatLiters(cap)} L)`);return}
  const from=item.bag;if(from===targetBag){selectedPackItem=null;renderPackPrototype();return}
  item.bag=targetBag;selectedPackItem=null;selectedBag=targetBag;
  const fromName=from&&packBags[from]?packBags[from].name:'nicht verteilt';
  packToast(`${item.name}: ${fromName} → ${packBags[targetBag].name}`);
  renderPackPrototype();
-renderStagePrototype();
 }
 function selectBag(id){
  if(selectedPackItem){movePackItem(selectedPackItem,id);return}
@@ -1610,28 +1913,76 @@ function renderBagOverview(){
  const box=document.getElementById('bagOverview');if(!box)return;
  box.innerHTML=Object.entries(packBags).map(([id,b])=>{
    const s=bagStats(id),active=selectedBag===id,empty=!s.items.length;
-   return `<div class="bag-pill ${active?'active':''} ${empty?'empty':''} ${selectedPackItem?'drop-target':''}" data-bag="${id}" draggable="false">
-     <div class="bag-icon">${bagIconSVG(id)}</div><div class="ring" style="--p:${Math.min(100,s.pct)}%"></div><strong>${b.name}</strong><span>${s.pct}% · ${s.l.toFixed(1).replace('.0','')} / ${b.cap} L</span>
+   const sizeButtons=b.sizes.map(size=>`<button type="button" class="bag-size-btn ${Math.abs(Number(size)-Number(b.size))<1e-6?'active':''}" data-bagsize="${id}" data-size="${size}">${formatLiters(size)} L</button>`).join('');
+   return `<div class="bag-pill ${active?'active':''} ${empty?'empty':''} ${s.over?'over':''} ${selectedPackItem?'drop-target':''}" data-bag="${id}" draggable="false">
+     <div class="bag-icon">${bagIconSVG(id)}</div>
+     <div class="ring" style="--p:${Math.min(100,s.pct)}%"></div>
+     <strong>${b.name}</strong>
+     <span>${s.pct}% · ${formatLiters(s.l)} / ${formatLiters(s.cap)} L${s.over?' · überfüllt':''}</span>
+     <div class="bag-size-row">${sizeButtons}</div>
+     <div class="bag-size-meta">${b.qty>1?`Kapazität gesamt: ${formatLiters(s.cap)} L (${b.qty} Taschen)`:`gewählt: ${bagSizeLabel(id)}`}</div>
    </div>`;
  }).join('');
  box.querySelectorAll('.bag-pill').forEach(el=>{
-   el.addEventListener('click',()=>selectBag(el.dataset.bag));
+   el.addEventListener('click',e=>{
+     if(e.target.closest('.bag-size-btn'))return;
+     selectBag(el.dataset.bag);
+   });
    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drop-target')});
    el.addEventListener('dragleave',()=>el.classList.remove('drop-target'));
    el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('drop-target');const id=e.dataTransfer.getData('text/plain');if(id)movePackItem(id,el.dataset.bag)});
  });
+ box.querySelectorAll('.bag-size-btn').forEach(btn=>btn.addEventListener('click',e=>{
+   e.stopPropagation();setBagSize(btn.dataset.bagsize,btn.dataset.size);
+ }));
 }
 function renderBikeBags(){
  const activeCount=Object.keys(packBags).filter(id=>bagStats(id).items.length).length;
  document.getElementById('bikeEmptyState')?.classList.toggle('hidden',activeCount>0);
  Object.keys(packBags).forEach(id=>{
    const node=document.getElementById('bikeBag-'+id);if(!node)return;
-   const empty=!bagStats(id).items.length;
+   const s=bagStats(id),empty=!s.items.length;
    node.classList.toggle('empty',empty);
    node.classList.toggle('selected',selectedBag===id&&!empty);
-   node.classList.toggle('drop-target',!!selectedPackItem&&!empty);
+   node.classList.toggle('drop-target',!!selectedPackItem);
    node.onclick=()=>selectBag(id);
+   const label=document.getElementById('bikeLabel-'+id);
+   if(label){
+     label.textContent=`${bagSizeLabel(id)} · ${s.pct}%${s.over?' · überfüllt':''}`;
+   }
  });
+}
+function renderGearListWeb(){
+ const box=document.getElementById('gearListWeb');if(!box)return;
+ const bagOptions=[['','Nicht verteilt'],...Object.entries(packBags).map(([id,b])=>[id,b.name])];
+ document.getElementById('gearCountBadge').textContent=`${packItems.length} Teile`;
+ box.innerHTML=packItems.map(item=>{
+   const selected=selectedPackItem===item.id;
+   const opts=bagOptions.map(([id,label])=>`<option value="${id}" ${item.bag===id||(!item.bag&&!id)?'selected':''}>${label}</option>`).join('');
+   return `<div class="gear-row ${selected?'selected':''}" data-gearrow="${item.id}">
+     <div><div class="gear-name">${item.name}</div><div class="gear-meta">${item.cat} · ${item.kg.toFixed(2).replace('.',',')} kg · ${item.l.toFixed(1).replace('.0','')} L</div></div>
+     <button class="gear-select-btn ${selected?'active':''}" type="button" data-gearselect="${item.id}">${selected?'ausgewählt':'wählen'}</button>
+     <select class="gear-bag-select" data-geartarget="${item.id}" aria-label="Tasche für ${item.name}">${opts}</select>
+     <button class="gear-check-btn ${item.packed?'checked':''}" type="button" data-gearcheck="${item.id}" title="Pack-Check">${item.packed?'✓':'○'}</button>
+   </div>`;
+ }).join('');
+ box.querySelectorAll('[data-gearselect]').forEach(el=>el.addEventListener('click',()=>selectPackItem(el.dataset.gearselect)));
+ box.querySelectorAll('[data-geartarget]').forEach(el=>el.addEventListener('change',()=>{
+   const item=packItems.find(x=>x.id===el.dataset.geartarget);if(!item)return;
+   const target=el.value;
+   if(!target){item.bag=null;selectedPackItem=null;packToast(`${item.name}: nicht verteilt`);renderPackPrototype();return}
+   movePackItem(item.id,target);
+ }));
+ box.querySelectorAll('[data-gearcheck]').forEach(el=>el.addEventListener('click',()=>togglePacked(el.dataset.gearcheck)));
+ const banner=document.getElementById('packFocusBanner');
+ if(selectedPackItem){
+   const item=packItems.find(x=>x.id===selectedPackItem);
+   banner.className='pack-focus-banner active';
+   banner.innerHTML=`<b>${item.name}</b> ausgewählt → jetzt Tasche am Bike, in der Taschenleiste oder im Dropdown wählen.`;
+ }else{
+   banner.className='pack-focus-banner';
+   banner.textContent='Gegenstand auswählen → danach Tasche am Bike, unten oder direkt im Dropdown wählen.';
+ }
 }
 function renderPackOrg(){
  const box=document.getElementById('packOrgRows');if(!box)return;
@@ -1707,29 +2058,59 @@ function renderPackHint(){
  }
 }
 function renderPackPrototype(){
- renderBagOverview();renderBikeBags();renderPackOrg();renderChecklist();renderBalance();renderPackHint();
+ renderBagOverview();renderBikeBags();renderGearListWeb();renderPackOrg();renderChecklist();renderBalance();renderPackHint();
 }
+document.querySelectorAll('.bag-node').forEach(el=>el.addEventListener('click',()=>selectBag(el.dataset.bag)));
 function autoPackPrototype(){
- const plan={
-   sleep:'saddle',down:'saddle',under:'saddle',clothes:'saddle',snacks:'saddle',sandals:'saddle',
-   water:'frame',tools:'frame',power:'frame',food:'frame',electronics:'frame',docs:'frame',
-   tent:'bar',mat:'bar',stove:'bar',dishes:'bar',
-   spares:'fork',rain:'fork',fuel:'fork'
+ packItems.forEach(item=>item.bag=null);
+ const prefs={
+   sleep:['saddle','bar','frame'],
+   down:['saddle','frame','bar'],
+   under:['saddle','frame','top'],
+   clothes:['saddle','bar','frame'],
+   snacks:['top','frame','saddle'],
+   sandals:['saddle','bar','fork'],
+   water:['frame','fork','bar'],
+   tools:['frame','fork','bar'],
+   power:['top','frame','bar'],
+   food:['frame','bar','saddle'],
+   electronics:['top','frame','bar'],
+   docs:['top','frame'],
+   tent:['bar','saddle','fork'],
+   mat:['bar','saddle','fork'],
+   stove:['frame','bar','fork'],
+   dishes:['bar','frame','fork'],
+   spares:['fork','frame','bar'],
+   rain:['fork','top','bar'],
+   fuel:['fork','bar','frame']
  };
- packItems.forEach(item=>item.bag=plan[item.id]||null);
+ const ordered=[...packItems].sort((a,b)=>b.l-a.l);
+ const unassigned=[];
+ ordered.forEach(item=>{
+   const candidates=prefs[item.id]||['frame','bar','saddle','fork','top'];
+   let placed=false;
+   for(const bagId of candidates){
+     const s=bagStats(bagId),cap=bagCapacity(bagId);
+     if(s.l+item.l<=cap+1e-6){item.bag=bagId;placed=true;break}
+   }
+   if(!placed)unassigned.push(item);
+ });
  selectedPackItem=null;selectedBag='frame';
- document.getElementById('consolidationBadge').textContent='4 Taschen · Auto-Pack';
- packToast('Auto-Packen angewendet: Oberrohrtasche bleibt frei');
+ const active=Object.keys(packBags).filter(id=>bagStats(id).items.length).length;
+ document.getElementById('consolidationBadge').textContent=`${active} Taschen · Auto-Pack`;
+ packToast(unassigned.length
+   ?`Auto-Packen: ${unassigned.length} Teil${unassigned.length===1?'':'e'} ohne Platz – größere Tasche wählen`
+   :'Auto-Packen an gewählte Taschengrößen angepasst');
  renderPackPrototype();
 }
 function resetPackPrototype(){
  packItems=packInitialItems.map(x=>({...x,bag:null,packed:false}));selectedPackItem=null;selectedBag=null;
- document.getElementById('consolidationBadge').textContent='leer';packToast('Bike geleert');renderPackPrototype();
+ document.getElementById('consolidationBadge').textContent='leer';packToast('Bike geleert · Taschengrößen bleiben gespeichert');renderPackPrototype();
 }
 document.getElementById('autoPack').addEventListener('click',autoPackPrototype);
 document.getElementById('resetPack').addEventListener('click',resetPackPrototype);
 document.getElementById('packModeBtn').addEventListener('click',()=>{
- document.getElementById('packChecklistCard').scrollIntoView({behavior:'smooth',block:'center'});packToast('Packliste: Häkchen direkt antippen');
+ document.getElementById('gearListWeb').scrollIntoView({behavior:'smooth',block:'center'});packToast('Gegenstand wählen → Tasche zuweisen');
 });
 renderPackPrototype();
 </script>
