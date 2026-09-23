@@ -134,6 +134,9 @@ body.map-open{overflow:hidden!important}
 }
 .route-geometry-status.ok{color:#3e5f45}
 .route-geometry-status.warn{color:#7b533b}
+.terrain-live-note{font-size:10px;color:#6d726b;margin-top:9px;line-height:1.35}
+.terrain-live-note.ok{color:#486149}
+.terrain-live-note.warn{color:#7c573f}
 @media (hover:none),(pointer:coarse){
  .touch-hint{display:block}
  .map-scale-note{display:none}
@@ -365,11 +368,8 @@ body.map-open{overflow:hidden!important}
             <option value="opentopo">OpenTopo</option>
           </select>
           <div class="map-scale-note">Karte ↔ Höhenprofil synchron</div>
-          <div class="route-map-legend">
-            <span><i class="route-dot" style="background:#a2573c"></i>Gravel</span>
-            <span><i class="route-dot" style="background:#525756"></i>Asphalt</span>
-            <span><i class="route-dot" style="background:#718260"></i>Trail</span>
-            <span><i class="route-dot" style="background:#bd955d"></i>Mixed</span>
+          <div class="route-map-legend" id="routeMapLegend">
+            <span><i class="route-dot" style="background:#9aa39d"></i>Terrain wird geladen …</span>
           </div>
         </div>
 
@@ -388,7 +388,7 @@ body.map-open{overflow:hidden!important}
             <circle id="profileMarker" cx="516" cy="118" r="7" fill="#f8f5ed" stroke="#a2573c" stroke-width="4"/>
             <g font-size="12" font-family="Inter, sans-serif" fill="#71766f"><text id="elevTickTop" x="10" y="45">–</text><text id="elevTickMid" x="20" y="90">–</text><text id="elevTickLow" x="28" y="135">–</text><text x="24" y="180">0m</text><text x="55" y="210">0</text><text id="distTick1" x="275" y="210">–</text><text id="distTick2" x="505" y="210">–</text><text id="distTick3" x="735" y="210">–</text><text id="distTick4" x="930" y="210">– km</text></g>
           </svg>
-          <div class="terrain-legend"><span class="legend-item"><i class="dot gravel"></i>Gravel 53%</span><span class="legend-item"><i class="dot asphalt"></i>Asphalt 28%</span><span class="legend-item"><i class="dot trail"></i>Trail 13%</span><span class="legend-item"><i class="dot mixed"></i>Mixed 6%</span></div>
+          <div class="terrain-legend" id="profileTerrainLegend"><span class="legend-item"><i class="route-dot" style="background:#9aa39d"></i>Terrain wird geladen …</span></div>
         </div>
       </div>
     </div>
@@ -396,13 +396,9 @@ body.map-open{overflow:hidden!important}
     <aside class="side">
       <div class="card">
         <h3>Terrain</h3>
-        <div class="surface-list">
-          <div class="surface-row"><b><i class="dot gravel"></i> Gravel</b><span>165 km</span><span>53%</span></div>
-          <div class="surface-row"><b><i class="dot asphalt"></i> Asphalt</b><span>87 km</span><span>28%</span></div>
-          <div class="surface-row"><b><i class="dot trail"></i> Trail</b><span>41 km</span><span>13%</span></div>
-          <div class="surface-row"><b><i class="dot mixed"></i> Mixed</b><span>19 km</span><span>6%</span></div>
-        </div>
-        <div class="stackbar" style="margin-top:14px"><span style="width:53%;background:#a2573c"></span><span style="width:28%;background:#525756"></span><span style="width:13%;background:#718260"></span><span style="width:6%;background:#bd955d"></span></div>
+        <div class="surface-list" id="surfaceList"><div class="muted" style="font-size:12px">Terrain wird auf das OSM-Wegenetz gematcht …</div></div>
+        <div class="stackbar" id="terrainStackBar" style="margin-top:14px"><span style="width:100%;background:#9aa39d"></span></div>
+        <div id="terrainCoverageNote" class="terrain-live-note">Analyse wird geladen …</div>
       </div>
 
       <div class="card">
@@ -545,6 +541,15 @@ let routeNamedPoints=[];
 let routeSource='loading';
 let roamMap=null,roamCursor=null,esriLayer=null,osmLayer=null,openTopoLayer=null;
 let routeVisualLayers=[],routePointLayers=[],routeHitLayer=null;
+let routeStages=[];
+let routeTerrain={status:'idle',stages:[],source:null,reliableCoverage:0,warning:null};
+const TERRAIN_STYLE={
+ paved:{name:'Befestigt',short:'Asphalt',color:'#3a7f5f'},
+ fine:{name:'Fein',short:'Fein',color:'#9a8b63'},
+ gravel:{name:'Gravel',short:'Gravel',color:'#c8863b'},
+ rough:{name:'Grob / Trail',short:'Grob',color:'#b64b3b'},
+ unknown:{name:'Offen',short:'Offen',color:'#9aa39d'}
+};
 
 function geoDistKm(a,b){
  const R=6371,toRad=x=>x*Math.PI/180;
@@ -578,14 +583,65 @@ function routeIndexForP(p){
  while(i<routeCum.length-1&&routeCum[i]<target)i++;
  return Math.max(0,Math.min(routeGeo.length-1,i));
 }
+function terrainStyle(cls){return TERRAIN_STYLE[cls]||TERRAIN_STYLE.unknown}
+function normalizedRouteStages(stages){
+ const max=Math.max(1,routeGeo.length-1);
+ const clean=(stages||[]).map((s,i)=>{
+   const a=Math.max(0,Math.min(max,Math.round(Number(s?.s)||0)));
+   const b=Math.max(a+1,Math.min(max,Math.round(Number(s?.e)||max)));
+   return {s:a,e:b,stage_index:i};
+ }).filter(x=>x.e>x.s);
+ return clean.length?clean:[{s:0,e:max,stage_index:0}];
+}
+function stageProgressBounds(i){
+ const st=routeStages?.[i]; if(!st)return {a:0,b:1};
+ return {a:pAtRouteIndex(st.s),b:pAtRouteIndex(st.e)};
+}
 function terrainAtP(p){
- if(p<.20)return {name:'Gravel',color:'#a2573c'};
- if(p<.34)return {name:'Asphalt',color:'#525756'};
- if(p<.49)return {name:'Trail',color:'#718260'};
- if(p<.62)return {name:'Mixed',color:'#bd955d'};
- if(p<.77)return {name:'Asphalt',color:'#525756'};
- if(p<.88)return {name:'Trail',color:'#718260'};
- return {name:'Gravel',color:'#a2573c'};
+ if(routeTerrain.status!=='ready')return {...terrainStyle('unknown'),cls:'unknown'};
+ let i=routeStages.findIndex((st,j)=>{const b=stageProgressBounds(j);return p>=b.a-1e-6&&p<=b.b+1e-6});
+ if(i<0)i=Math.max(0,routeStages.length-1);
+ const b=stageProgressBounds(i),span=Math.max(1e-6,b.b-b.a),local=Math.max(0,Math.min(1,(p-b.a)/span));
+ const seg=(routeTerrain.stages?.[i]?.segments||[]).find(s=>{
+   const a=Number(s.start_fraction)||0,e=Number(s.end_fraction);
+   return local>=a-1e-5&&local<=(Number.isFinite(e)?e:1)+1e-5;
+ });
+ const cls=seg?.class||'unknown';
+ return {...terrainStyle(cls),cls};
+}
+function terrainSummary(){
+ const total={paved:0,fine:0,gravel:0,rough:0,unknown:0};
+ if(routeTerrain.status!=='ready')return total;
+ let weightSum=0;
+ routeStages.forEach((st,i)=>{
+   const b=stageProgressBounds(i),w=Math.max(0,b.b-b.a),t=routeTerrain.stages?.[i]||{};
+   weightSum+=w;Object.keys(total).forEach(k=>total[k]+=w*(Number(t[k])||0));
+ });
+ if(weightSum>0)Object.keys(total).forEach(k=>total[k]/=weightSum);
+ return total;
+}
+function renderTerrainUI(){
+ const list=document.getElementById('surfaceList'),stack=document.getElementById('terrainStackBar'),
+       mapLegend=document.getElementById('routeMapLegend'),profileLegend=document.getElementById('profileTerrainLegend'),
+       note=document.getElementById('terrainCoverageNote'),classes=['paved','fine','gravel','rough','unknown'];
+ if(routeTerrain.status!=='ready'){
+   if(list)list.innerHTML='<div class="muted" style="font-size:12px">Terrain wird auf das OSM-Wegenetz gematcht …</div>';
+   if(note){note.textContent=routeTerrain.status==='error'?(routeTerrain.warning||'Terrain nicht verfügbar'):'Analyse wird geladen …';note.className='terrain-live-note '+(routeTerrain.status==='error'?'warn':'')}
+   return;
+ }
+ const s=terrainSummary();
+ if(list)list.innerHTML=classes.map(c=>{
+   const v=Math.max(0,Number(s[c])||0),m=terrainStyle(c);
+   return `<div class="surface-row"><b><i class="route-dot" style="background:${m.color}"></i> ${m.name}</b><span>${(routeDistanceKm*v/100).toFixed(0)} km</span><span>${v.toFixed(0)}%</span></div>`;
+ }).join('');
+ if(stack)stack.innerHTML=classes.map(c=>`<span style="width:${Math.max(0,s[c]||0)}%;background:${terrainStyle(c).color}"></span>`).join('');
+ if(mapLegend)mapLegend.innerHTML=classes.map(c=>`<span><i class="route-dot" style="background:${terrainStyle(c).color}"></i>${terrainStyle(c).short}</span>`).join('');
+ if(profileLegend)profileLegend.innerHTML=classes.map(c=>`<span class="legend-item"><i class="route-dot" style="background:${terrainStyle(c).color}"></i>${terrainStyle(c).short} ${(s[c]||0).toFixed(0)}%</span>`).join('');
+ if(note){
+   const cov=Math.round(Number(routeTerrain.reliableCoverage)||0),n=routeTerrain.stages.reduce((a,t)=>a+(t?.segments?.length||0),0);
+   note.textContent=`Valhalla/OSM · zuverlässige Abdeckung ${cov}% · ${n} gematchte Abschnitte`;
+   note.className='terrain-live-note '+(cov>=50?'ok':'warn');
+ }
 }
 function setGeometryStatus(text,cls=''){
  const el=document.getElementById('routeGeometryStatus');
@@ -595,7 +651,8 @@ function setGeometryStatus(text,cls=''){
 function routeMetaLabel(){
  const km=routeDistanceKm?`${Math.round(routeDistanceKm)} km`:'Distanz –';
  const src=routeSource==='stored'?'gespeicherte Adventure-Bike-OS-Route':routeSource==='api'?'echte Routing-Geometrie':routeSource==='fallback'?'Demo-Fallback':'Route';
- return `${km} · ${src} · Straße/Weg-genau`;
+ const terrain=routeTerrain.status==='ready'?` · Terrain ${Math.round(Number(routeTerrain.reliableCoverage)||0)}%`:'';
+ return `${km} · ${src} · Straße/Weg-genau${terrain}`;
 }
 function normalizeAdventureCoords(coords){
  return (coords||[]).map(c=>{
@@ -613,7 +670,7 @@ function storedRouteCandidate(){
      name:String(x.name||x.label||'').trim(),
      lat:Number(x.lat),lon:Number(x.lon),route_index:Number(x.route_index)
    })).filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));
-   return {rows,named,start:saved.start||'',dest:saved.dest||'',metrics:saved.metrics||null};
+   return {rows,named,start:saved.start||'',dest:saved.dest||'',metrics:saved.metrics||null,stages:Array.isArray(saved.stages)?saved.stages:[]};
  }catch(e){return null}
 }
 async function enrichRouteElevation(rows){
@@ -652,14 +709,15 @@ async function apiRouteCandidate(){
    name:String(x.name||x.label||'').trim(),
    lat:Number(x.lat),lon:Number(x.lon),route_index:Number(x.route_index)
  })).filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));
- return {rows,named,start:'Innsbruck',dest:'Riva del Garda'};
+ return {rows,named,start:'Innsbruck',dest:'Riva del Garda',stages:[{s:0,e:rows.length-1}]};
 }
-function applyRouteRows(rows,named=[],source='api',start='',dest=''){
+function applyRouteRows(rows,named=[],source='api',start='',dest='',stages=[]){
  routeGeo=rows.map(x=>[x.lat,x.lon]);
  routeElev=rows.map(x=>Number.isFinite(x.z)?x.z:null);
  routeNamedPoints=Array.isArray(named)?named:[];
  routeSource=source;
  rebuildRouteMeasures();
+ routeStages=normalizedRouteStages(stages);
 
  if(!routeNamedPoints.length&&routeGeo.length){
    routeNamedPoints=[
@@ -679,24 +737,68 @@ function applyRouteRows(rows,named=[],source='api',start='',dest=''){
    fitRoute();
    updateLinked(.5,'load');
  }
+ loadExactTerrain().catch(()=>{});
 }
 async function loadExactRouteGeometry(){
  setGeometryStatus('Routengeometrie wird geladen …');
  const stored=storedRouteCandidate();
  if(stored){
    const rows=await enrichRouteElevation(stored.rows);
-   applyRouteRows(rows,stored.named,'stored',stored.start,stored.dest);
+   applyRouteRows(rows,stored.named,'stored',stored.start,stored.dest,stored.stages);
    return;
  }
  try{
    const api=await apiRouteCandidate();
-   applyRouteRows(api.rows,api.named,'api',api.start,api.dest);
+   applyRouteRows(api.rows,api.named,'api',api.start,api.dest,api.stages);
  }catch(e){
    const rows=FALLBACK_ROUTE.map(([lat,lon])=>({lat,lon,z:null}));
-   applyRouteRows(rows,[],'fallback','Innsbruck','Gardasee');
+   applyRouteRows(rows,[],'fallback','Innsbruck','Gardasee',[{s:0,e:rows.length-1}]);
    setGeometryStatus('Routingdienst nicht erreichbar · Demo-Fallback','warn');
  }
 }
+
+function routeTerrainShapes(maxPoints=46){
+ return routeStages.map((st,i)=>{
+   const slice=routeGeo.slice(st.s,st.e+1),n=Math.min(maxPoints,slice.length),shape=[];
+   for(let j=0;j<n;j++){const k=Math.round(j*(slice.length-1)/Math.max(1,n-1)),c=slice[k];shape.push({lat:c[0],lon:c[1]})}
+   return {stage_index:i,shape};
+ });
+}
+function terrainCacheMatchesRoute(cache){
+ if(!cache||!Array.isArray(cache.stages)||cache.stages.length!==routeStages.length)return false;
+ try{
+   const r=JSON.parse(localStorage.getItem('abo-mobile-route')||'null'),key=String(cache.key||'');
+   return !!(r?.start&&r?.dest&&key.includes(`|${r.start}|${r.dest}|`));
+ }catch(e){return false}
+}
+function normalizeTerrainStage(x){
+ return {
+   paved:Number(x?.paved)||0,fine:Number(x?.fine)||0,gravel:Number(x?.gravel)||0,rough:Number(x?.rough)||0,unknown:Number(x?.unknown)||0,
+   coverage:Number(x?.coverage)||0,samples:Number(x?.samples ?? x?.edge_count)||0,segments:Array.isArray(x?.segments)?x.segments:[]
+ };
+}
+async function loadExactTerrain(){
+ if(routeGeo.length<2||!routeStages.length)return;
+ routeTerrain={status:'loading',stages:[],source:null,reliableCoverage:0,warning:null};renderTerrainUI();
+ try{
+   const cached=JSON.parse(localStorage.getItem('abo-mobile-terrain-v6')||'null');
+   if(terrainCacheMatchesRoute(cached)){
+     routeTerrain={status:'ready',stages:cached.stages.map(normalizeTerrainStage),source:cached.source||'Valhalla',reliableCoverage:Number(cached.reliableCoverage)||0,warning:null};
+   }else{
+     const r=await fetch(API+'/api/terrain-profile-v2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stages:routeTerrainShapes(46)})});
+     const d=await r.json();if(!r.ok||!d?.ok)throw new Error(d?.warning||'Terrain-Profil nicht verfügbar');
+     const by=new Map((d.stages||[]).map(x=>[Number(x.stage_index),x]));
+     routeTerrain={status:'ready',stages:routeStages.map((_,i)=>normalizeTerrainStage(by.get(i)||{unknown:100,segments:[]})),source:d.source||'Valhalla',reliableCoverage:Number(d.reliable_coverage)||0,warning:d.warning||null};
+   }
+   setGeometryStatus(`${routeSource==='stored'?'Gespeicherte Originalroute':'Echte Routengeometrie'} · Terrain ${Math.round(routeTerrain.reliableCoverage)}%`,routeTerrain.reliableCoverage>=50?'ok':'warn');
+ }catch(e){
+   routeTerrain={status:'error',stages:[],source:null,reliableCoverage:0,warning:e?.message||'Terrain-Profil nicht verfügbar'};
+   setGeometryStatus(`${routeSource==='stored'?'Gespeicherte Originalroute':'Echte Routengeometrie'} · Terrain offen`,'warn');
+ }
+ renderTerrainUI();renderExactElevation();
+ if(roamMap){drawRouteOnMap();updateLinked(.5,'terrain')}
+}
+
 function routePointProgress(x){
  if(Number.isFinite(x.route_index)&&routeGeo.length>1)return pAtRouteIndex(Math.round(x.route_index));
  if(!roamMap)return 0;
@@ -752,11 +854,17 @@ function renderExactElevation(){
 
  const bars=document.getElementById('profileTerrainBars');
  if(bars){
-   const cuts=[0,.20,.34,.49,.62,.77,.88,1];
-   bars.innerHTML=cuts.slice(0,-1).map((a,i)=>{
-     const b=cuts[i+1],t=terrainAtP((a+b)/2),x=55+a*915,w=(b-a)*915;
-     return `<rect x="${x.toFixed(1)}" y="181" width="${w.toFixed(1)}" height="10" fill="${t.color}"/>`;
-   }).join('');
+   if(routeTerrain.status==='ready'){
+     const rects=[];
+     routeStages.forEach((st,i)=>{
+       const b=stageProgressBounds(i),span=Math.max(0,b.b-b.a),segs=routeTerrain.stages?.[i]?.segments||[];
+       if(segs.length)segs.forEach(seg=>{
+         const a=b.a+span*(Number(seg.start_fraction)||0),e=b.a+span*(Number(seg.end_fraction)||0),m=terrainStyle(seg.class||'unknown');
+         rects.push(`<rect x="${(55+a*915).toFixed(1)}" y="181" width="${Math.max(.8,(e-a)*915).toFixed(1)}" height="10" fill="${m.color}"/>`);
+       }); else rects.push(`<rect x="${(55+b.a*915).toFixed(1)}" y="181" width="${Math.max(.8,span*915).toFixed(1)}" height="10" fill="${terrainStyle('unknown').color}"/>`);
+     });
+     bars.innerHTML=rects.join('');
+   }else bars.innerHTML=`<rect x="55" y="181" width="915" height="10" fill="${terrainStyle('unknown').color}"/>`;
  }
  const s=elevationStats();
  if(s){
@@ -787,15 +895,15 @@ function drawRouteOnMap(){
  const base=L.polyline(routeGeo,{color:'#f8f4ec',weight:8,opacity:.98,lineCap:'round',lineJoin:'round'}).addTo(roamMap);
  routeVisualLayers.push(base);
 
- // Exact routed geometry; colour is changed segment by segment without simplifying the line.
- const chunk=Math.max(2,Math.floor(routeGeo.length/180));
- for(let i=0;i<routeGeo.length-1;i+=chunk){
-   const end=Math.min(routeGeo.length-1,i+chunk);
-   const ll=routeGeo.slice(i,end+1);
-   const p=(pAtRouteIndex(i)+pAtRouteIndex(end))/2,t=terrainAtP(p);
-   const layer=L.polyline(ll,{color:t.color,weight:4.5,opacity:1,lineCap:'round',lineJoin:'round',smoothFactor:0}).addTo(roamMap);
-   routeVisualLayers.push(layer);
- }
+ // Real Valhalla/OSM terrain geometry overlays the exact routed geometry.
+ if(routeTerrain.status==='ready'){
+   routeTerrain.stages.forEach(t=>(t?.segments||[]).forEach(seg=>{
+     const ll=(seg.geometry||[]).map(c=>[Number(c?.[1]),Number(c?.[0])]).filter(x=>Number.isFinite(x[0])&&Number.isFinite(x[1]));
+     if(ll.length<2)return;
+     const m=terrainStyle(seg.class||'unknown');
+     routeVisualLayers.push(L.polyline(ll,{color:m.color,weight:5,opacity:.96,lineCap:'round',lineJoin:'round',smoothFactor:0}).addTo(roamMap));
+   }));
+ }else routeVisualLayers.push(L.polyline(routeGeo,{color:'#8b9189',weight:4.5,opacity:.78,lineCap:'round',lineJoin:'round',smoothFactor:0}).addTo(roamMap));
 
  routeNamedPoints.forEach((x,i)=>{
    const first=i===0,last=i===routeNamedPoints.length-1;
@@ -904,6 +1012,7 @@ function pointerToP(el,e){
 document.getElementById('elevationSvg').addEventListener('pointermove',e=>updateLinked(pointerToP(e.currentTarget,e),'profile'));
 document.getElementById('elevationSvg').addEventListener('click',e=>updateLinked(pointerToP(e.currentTarget,e),'profile'));
 
+renderTerrainUI();
 loadExactRouteGeometry();
 initRouteMap();
 
