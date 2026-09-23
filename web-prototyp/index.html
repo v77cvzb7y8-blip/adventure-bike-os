@@ -1,646 +1,1981 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ROAM · Packorganisation · Web-Prototyp</title>
-  <style>
-    :root{
-      --paper:#f5f1e8;
-      --card:#fbf8f1;
-      --line:#ddd4c7;
-      --forest:#25352c;
-      --olive:#5c6f4d;
-      --sage:#9ca38d;
-      --rust:#b76547;
-      --rust-dark:#985239;
-      --ink:#1f2822;
-      --muted:#737970;
-      --soft:#ece7db;
-      --white:#fffdf8;
-      --shadow:0 10px 26px rgba(53,46,37,.05);
-      --radius:18px;
-      --font:Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--font)}
-    button,input,select{font:inherit}
-    .app{min-height:100vh}
-    .topbar{
-      display:flex;align-items:center;gap:34px;padding:16px 34px;border-bottom:1px solid rgba(37,53,44,.08);
-      background:rgba(245,241,232,.92);backdrop-filter:blur(10px);position:sticky;top:0;z-index:20;
-    }
-    .brand{display:flex;align-items:center;gap:12px;min-width:180px}
-    .logo{
-      width:40px;height:40px;border-radius:11px;background:#647755;position:relative;
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);
-    }
-    .logo:before{content:"";position:absolute;inset:7px;border:2px solid rgba(255,248,241,.95);border-radius:999px}
-    .logo:after{content:"";position:absolute;width:8px;height:8px;border-radius:50%;background:#b96545;right:5px;top:14px;border:2px solid rgba(255,248,241,.95)}
-    .wordmark{letter-spacing:.22em;font-size:24px;font-weight:600;color:var(--forest)}
-    .nav{display:flex;gap:12px;flex:1}
-    .nav a{color:#556055;text-decoration:none;padding:10px 14px;border-radius:999px;font-weight:700;font-size:14px}
-    .nav a.active{background:#ebe4d7;color:var(--forest);box-shadow:inset 0 -2px 0 var(--rust)}
-    .actions{display:flex;align-items:center;gap:10px}
-    .circle-btn,.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center}
-    .circle-btn{background:var(--card);border:1px solid var(--line);color:var(--forest)}
-    .avatar{background:var(--forest);color:white;font-weight:700;font-size:14px}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>ROAM · Web Prototype V12</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"/>
+<style>
+:root{
+  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
+  --sage:#b7bcae; --paper:#f3efe6; --card:#f8f5ed; --ink:#202820;
+  --muted:#6f746d; --line:#d9d2c5; --asphalt:#525756; --trail:#718260;
+  --mixed:#bd955d; --soft:#ece7dc; --danger:#9e5b45;
+  --font-ui:"Avenir Next",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body,.app{background:var(--paper)!important;color-scheme:light}
+body{
+  margin:0;color:var(--ink);font-family:var(--font-ui);
+  min-height:100vh;
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.serif{font-family:var(--font-ui)}
+.app{min-height:100vh}
+.topbar{
+  height:76px;display:flex;align-items:center;gap:36px;padding:0 38px;border-bottom:1px solid rgba(46,58,47,.12);
+  background:rgba(246,242,233,.9);backdrop-filter:blur(14px);position:sticky;top:0;z-index:30;
+}
+.brand{display:flex;align-items:center;gap:12px;min-width:165px}
+.mark{width:36px;height:36px;border-radius:10px;background:var(--olive);position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.mark:before{content:"";position:absolute;width:22px;height:22px;border:2px solid #f5f0e7;border-radius:50%;left:6px;top:6px}
+.mark:after{content:"";position:absolute;width:6px;height:6px;border-radius:50%;background:var(--rust);right:5px;top:13px;border:2px solid #f5f0e7}
+.wordmark{font-size:27px;letter-spacing:.18em;color:var(--forest);font-weight:600}
+.nav{display:flex;gap:7px;flex:1}
+.nav button{
+  border:0;background:transparent;padding:11px 14px;border-radius:999px;color:#62675f;font-weight:700;font-size:13px;
+}
+.nav button.active{color:var(--forest);background:#e7e3d8;box-shadow:inset 0 -2px 0 var(--rust)}
+.top-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#f9f6ef;color:var(--forest)}
+.profile{width:37px;height:37px;border-radius:50%;display:grid;place-items:center;background:var(--forest);color:white;font-size:12px}
+.shell{max-width:1440px;margin:0 auto;padding:28px 34px 52px}
+.screen{display:none}.screen.active{display:block}
+.eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#77776f;font-weight:800}
+h1,h2,h3,p{margin-top:0}
+h1{font-family:var(--font-ui);font-weight:680;font-size:46px;line-height:1.04;letter-spacing:-.025em;margin-bottom:8px}
+h2{font-family:var(--font-ui);font-weight:650;font-size:29px;letter-spacing:-.018em}
+h3{font-family:var(--font-ui);font-weight:650;font-size:20px;letter-spacing:-.01em}
+.muted{color:var(--muted)}
+.card{
+  border:1px solid rgba(73,78,68,.15);background:rgba(250,247,239,.83);border-radius:16px;
+  box-shadow:0 10px 28px rgba(61,54,46,.035);
+}
+.card-pad{padding:20px}
+.grid{display:grid;gap:16px}
+.dashboard-grid{grid-template-columns:1.3fr .9fr}
+.kpi-grid{grid-template-columns:repeat(4,1fr)}
+.kpi{padding:16px;border-top:1px solid var(--line)}
+.kpi:first-child{border-top:0}
+.kpi b{font-family:var(--font-ui);font-size:27px;font-weight:600;display:block}
+.kpi span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.trip-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}
+.badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 9px;background:#e7e7dd;color:var(--forest);font-size:11px;font-weight:800}
+.badge.warn{background:#efe2d9;color:#774936}
+.progress{height:10px;background:#deddd3;border-radius:999px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--olive);border-radius:inherit}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.action{
+  padding:13px;border:1px solid var(--line);border-radius:12px;background:#f8f5ed;text-align:left;color:var(--forest);font-weight:700;
+}
+.action:hover{border-color:#a9aa9c;background:#fbf8f0}
+.stage-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stage-mini .mini{padding:14px;border:1px solid var(--line);border-radius:12px;background:#f9f6ef}
+.mini .day{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#7a7c74}
+.mini b{font-family:var(--font-ui);font-weight:600}
+.mini small{display:block;color:#737870;margin-top:5px}
+.dashboard-footer{margin-top:16px;display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+.elev-simple{height:115px;width:100%}
+.weather-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.weather-day{padding:10px;border:1px solid var(--line);border-radius:10px;text-align:center;background:#faf7f0}
+.weather-day .icon{font-size:21px}.weather-day b{font-family:var(--font-ui);font-weight:600;font-size:19px}
+.weather-day small{display:block;color:#7a7e76}
+.route-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}
+.route-main{display:grid;gap:0}
+.route-title-row{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+.route-meta{font-size:12px;letter-spacing:.12em;color:#6a6e66;text-transform:uppercase}
+.tabs{display:flex;gap:26px;border-bottom:1px solid var(--line);margin-top:18px}
+.tabs button{border:0;background:transparent;padding:9px 0 11px;color:#686d66}
+.tabs button.active{color:var(--forest);font-weight:800;border-bottom:2px solid var(--rust)}
+.route-visual-card{overflow:hidden}
+.map-wrap{position:relative;height:520px;background:#e7e5dc;border-bottom:1px solid var(--line)}
+#routeMapLeaflet,#routeMap3d{width:100%;height:100%;background:#dfe1d2}
+#routeMapLeaflet{display:block}
+#routeMap3d{display:none}
+.map-wrap.mode-3d #routeMapLeaflet{display:none}
+.map-wrap.mode-3d #routeMap3d{display:block}
+.map-wrap.mode-3d .map-style-select{display:none}
+.map-wrap.mode-3d .map-scale-note{display:none}
+.map-wrap.mode-3d .route-map-legend{display:none}
+.map-wrap.mode-3d .route-geometry-status{bottom:92px}
+#routeMap3d .maplibregl-ctrl-attrib{font-size:8px;background:rgba(248,245,237,.78)}
+#routeMap3d .maplibregl-ctrl-group{border-radius:10px;overflow:hidden}
+#routeMapLeaflet .leaflet-container{font:inherit}
+#routeMapLeaflet .leaflet-control-zoom{border:1px solid rgba(56,62,54,.18);box-shadow:0 4px 14px rgba(50,45,38,.08);border-radius:9px;overflow:hidden}
+#routeMapLeaflet .leaflet-control-zoom a{color:var(--forest);background:rgba(250,247,239,.95);border-bottom-color:var(--line)}
+#routeMapLeaflet .leaflet-control-attribution{font-size:8px;background:rgba(248,245,237,.78);color:#777b74}
+.map-style-select{
+ position:absolute;right:14px;top:14px;z-index:700;border:1px solid rgba(56,62,54,.16);border-radius:10px;
+ background:rgba(250,247,239,.95);padding:9px 34px 9px 12px;color:var(--forest);font-weight:700;font-size:12px;
+ box-shadow:0 5px 16px rgba(50,45,38,.08)
+}
+.map-tools{
+ position:absolute;left:14px;top:14px;z-index:710;display:flex;gap:8px;align-items:center
+}
+.map-mode-switch{
+ position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:715;
+ display:flex;padding:3px;border:1px solid rgba(56,62,54,.15);border-radius:12px;
+ background:rgba(250,247,239,.96);box-shadow:0 5px 16px rgba(50,45,38,.08)
+}
+.map-mode-switch button{
+ border:0;background:transparent;color:#60675f;border-radius:9px;padding:8px 12px;
+ font-size:11px;font-weight:800;white-space:nowrap
+}
+.map-mode-switch button.active{background:#2e3a2f;color:#fff}
+.flyover-controls{
+ display:none;position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+ z-index:720;width:min(760px,calc(100% - 36px));align-items:center;gap:9px;
+ padding:10px 12px;border-radius:14px;border:1px solid rgba(56,62,54,.17);
+ background:rgba(248,245,237,.95);box-shadow:0 12px 28px rgba(35,40,35,.16);
+ backdrop-filter:blur(12px)
+}
+.map-wrap.mode-3d .flyover-controls{display:flex}
+.fly-btn,.fly-select{
+ min-height:38px;border:1px solid #d4cdbf;border-radius:9px;background:#fffaf1;
+ color:#2e3a2f;font-size:11px;font-weight:800;padding:0 11px
+}
+.fly-btn.primary{background:#2e3a2f;color:#fff;border-color:#2e3a2f}
+.fly-btn.following{background:#556244;color:#fff;border-color:#556244}
+.fly-progress{flex:1;min-width:120px;accent-color:#a2573c}
+.fly-km{min-width:72px;text-align:right;font-size:11px;font-weight:800;color:#4f574f}
+.fly-status{font-size:10px;color:#6b716b;white-space:nowrap}
+.fly-btn:disabled,.fly-select:disabled,.fly-progress:disabled{opacity:.42;cursor:not-allowed}
+.point-wind{display:inline-flex;gap:6px;align-items:center}
+.overnight-summary{border-top:1px solid var(--line);margin-top:8px;padding:14px 8px 4px}
+.overnight-summary .eyebrow{margin-bottom:8px}
+.night-row{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center;padding:9px 0;border-top:1px solid rgba(80,84,75,.10)}
+.night-row:first-of-type{border-top:0}
+.night-icon{width:28px;height:28px;border-radius:8px;background:#e8e5da;display:grid;place-items:center;font-size:14px}
+.night-row b{font-size:12px}.night-row small{display:block;color:var(--muted);margin-top:2px}.night-status{font-size:10px;font-weight:800;color:#596159}
+.stay-card{padding:16px;margin-top:14px;background:#f7f4ec}
+.stay-card-main{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;margin-top:10px}
+.stay-card-icon{width:40px;height:40px;border-radius:11px;background:#e5e7dc;display:grid;place-items:center;font-size:20px}
+.stay-card b{font-size:14px}.stay-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.bike-card{position:relative}
+.bike-empty-state{position:absolute;left:50%;top:162px;transform:translateX(-50%);z-index:2;background:rgba(248,245,237,.94);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:11px;color:#666d65;pointer-events:none}
+.bike-empty-state.hidden{display:none}
+.bag-icon{width:42px;height:30px;display:grid;place-items:center;margin-bottom:6px}
+.bag-icon svg{width:42px;height:28px;overflow:visible}
+.bag-pill{min-width:0}
+.bag-pill.empty .ring{opacity:.35}
+.bike-svg{background:#cdbb90;border-radius:14px;margin-top:12px}
+.bike-svg .bike-frame{stroke:#f5f2ea}
+.bike-svg .bike-wheel{stroke:#f5f2ea}
+.bike-svg .bike-detail{stroke:#eee8dc}
+.bike-svg .bag-node{filter:drop-shadow(0 3px 3px rgba(65,52,38,.12))}
+.bike-svg .bag-node.empty{opacity:.13}
+.bike-svg .bag-node:not(.empty){opacity:1}
+.bike-svg .bag-node.selected{filter:drop-shadow(0 0 0 rgba(0,0,0,0)) drop-shadow(0 0 6px rgba(162,87,60,.55))}
+.bag-size-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.bag-size-btn{
+ min-width:39px;height:28px;padding:0 8px;border-radius:999px;border:1px solid var(--line);
+ background:#f7f3ea;color:#5e645d;font-size:10px;font-weight:800
+}
+.bag-size-btn.active{background:var(--olive);border-color:var(--olive);color:white}
+.bag-size-btn:hover{border-color:#9ca08f}
+.bag-size-meta{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.35}
+.bag-pill.over{border-color:#b5684c;background:#f6e6de}
+.bag-pill.over .ring{box-shadow:0 0 0 2px rgba(162,87,60,.15)}
+.bag-pill strong{display:block}
+.bag-visual-label{font-family:var(--font-ui);font-size:12px;font-weight:800;fill:#26362d}
+.bag-visual-sub{font-family:var(--font-ui);font-size:10px;fill:#5d655c}
+.unassigned-row{background:#f4f0e7;border-radius:11px;padding-left:9px!important;padding-right:9px!important}
+.planner-card{padding:22px}
+.plan-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.plan-field label{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#73776f;font-weight:800;margin-bottom:6px}
+.plan-field input,.plan-field select{
+ width:100%;min-height:44px;border:1px solid var(--line);border-radius:11px;background:#fbf8f1;color:var(--ink);padding:0 12px;font-size:14px
+}
+.plan-field.span2{grid-column:span 2}
+.plan-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+.plan-status{font-size:12px;color:var(--muted);min-height:18px}
+.plan-status.ok{color:#486149}.plan-status.warn{color:#8a563e}
+.current-trip-card{margin-top:16px;padding:20px}
+.current-trip-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.current-trip-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.current-trip-stat{padding:12px;border:1px solid var(--line);border-radius:11px;background:#faf7f0}
+.current-trip-stat b{display:block;font-size:20px}.current-trip-stat span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.gear-section{border-top:1px solid var(--line);margin-top:18px;padding-top:18px}
+.gear-section-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:10px}
+.gear-list{display:grid;gap:7px}
+.gear-row{
+ display:grid;grid-template-columns:minmax(150px,1fr) 95px 155px 42px;gap:8px;align-items:center;
+ border:1px solid var(--line);border-radius:11px;background:#faf7f0;padding:9px 10px
+}
+.gear-row.selected{border-color:var(--rust);background:#f4e9e1}
+.gear-name{font-size:12px;font-weight:800}.gear-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.gear-bag-select{width:100%;min-height:38px;border:1px solid var(--line);border-radius:9px;background:#fffaf2;padding:0 7px;font-size:11px;color:var(--ink)}
+.gear-select-btn,.gear-check-btn{min-height:38px;border:1px solid var(--line);border-radius:9px;background:#fffaf2;color:var(--forest);font-size:11px;font-weight:800}
+.gear-select-btn.active{background:var(--rust);border-color:var(--rust);color:white}
+.gear-check-btn.checked{background:var(--olive);border-color:var(--olive);color:white}
+.pack-focus-banner{margin-top:10px;padding:10px 12px;border-radius:11px;background:#e9e7dc;color:#50584f;font-size:11px}
+.pack-focus-banner.active{background:#f1e2d8;color:#704835}
+.pack-help{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.45}
+.map-diagnostic{
+ display:none;position:absolute;left:14px;bottom:124px;z-index:721;max-width:70%;
+ background:rgba(248,245,237,.96);border:1px solid rgba(56,62,54,.15);border-radius:9px;
+ padding:7px 9px;font-size:10px;color:#626861
+}
+.map-wrap.mode-3d .map-diagnostic{display:block}
+@media(max-width:1000px){
+ .plan-grid{grid-template-columns:1fr 1fr}
+ .current-trip-stats{grid-template-columns:1fr 1fr}
+}
+@media(max-width:720px){
+ .plan-grid{grid-template-columns:1fr}
+ .plan-field.span2{grid-column:span 1}
+ .gear-row{grid-template-columns:1fr 120px 42px}
+ .gear-row .gear-select-btn{grid-column:1/-1}
+}
+.map-tool{
+ min-height:42px;border:1px solid rgba(56,62,54,.16);border-radius:10px;background:rgba(250,247,239,.96);
+ color:var(--forest);font-weight:800;font-size:11px;padding:0 12px;box-shadow:0 5px 16px rgba(50,45,38,.08)
+}
+.map-tool.icon{width:42px;padding:0;font-size:18px}
+.map-wrap.map-fullscreen{
+ position:fixed!important;inset:0!important;height:100dvh!important;width:100vw!important;z-index:9999!important;
+ border:0!important;border-radius:0!important;background:#e7e5dc!important
+}
+.map-wrap.map-fullscreen #routeMapLeaflet,.map-wrap.map-fullscreen #routeMap3d{height:100%!important}
+.map-wrap.map-fullscreen .map-scale-note{bottom:18px}
+.map-wrap.map-fullscreen .route-map-legend{bottom:18px}
+.map-wrap.map-fullscreen .map-style-select{top:18px;right:18px}
+.map-wrap.map-fullscreen .map-tools{top:18px;left:18px}
+body.map-open{overflow:hidden!important}
+#routeMapLeaflet .leaflet-control-zoom a{
+ width:44px!important;height:44px!important;line-height:42px!important;font-size:23px!important
+}
+#routeMapLeaflet .leaflet-control-zoom{margin-top:72px!important;margin-left:14px!important}
+.touch-hint{
+ display:none;position:absolute;left:50%;top:62px;transform:translateX(-50%);z-index:705;
+ background:rgba(250,247,239,.94);border:1px solid rgba(56,62,54,.14);border-radius:999px;
+ padding:7px 10px;font-size:10px;color:#626861;pointer-events:none
+}
+.route-geometry-status{
+ position:absolute;left:14px;bottom:48px;z-index:706;background:rgba(250,247,239,.95);
+ border:1px solid rgba(56,62,54,.14);border-radius:999px;padding:7px 10px;font-size:10px;
+ font-weight:750;color:#596159;box-shadow:0 4px 14px rgba(50,45,38,.06);pointer-events:none
+}
+.route-geometry-status.ok{color:#3e5f45}
+.route-geometry-status.warn{color:#7b533b}
+.terrain-live-note{font-size:10px;color:#6d726b;margin-top:9px;line-height:1.35}
+.terrain-live-note.ok{color:#486149}
+.terrain-live-note.warn{color:#7c573f}
+@media (hover:none),(pointer:coarse){
+ .touch-hint{display:block}
+ .map-scale-note{display:none}
+ #routeMapLeaflet .leaflet-control-zoom{margin-top:76px!important}
+ .flyover-controls{gap:7px;padding:9px}
+ .fly-status{display:none}
+}
+.map-scale-note{
+ position:absolute;left:15px;bottom:14px;z-index:650;background:rgba(250,247,239,.87);border:1px solid rgba(56,62,54,.12);
+ border-radius:8px;padding:6px 8px;font-size:9px;color:#646a63;pointer-events:none
+}
+.route-map-legend{
+ position:absolute;right:14px;bottom:14px;z-index:650;display:flex;gap:10px;flex-wrap:wrap;max-width:62%;
+ background:rgba(250,247,239,.9);border:1px solid rgba(56,62,54,.12);border-radius:9px;padding:7px 9px;font-size:9px;color:#5e645d
+}
+.route-map-legend span{display:flex;gap:5px;align-items:center}
+.route-visibility-note{
+ display:flex;align-items:center;gap:7px;font-size:10px;color:#5c625c;margin-top:8px
+}
+.route-visibility-note:before{
+ content:"";width:26px;height:6px;border-radius:999px;background:#26362d;box-shadow:0 0 0 2px #f8f4ec
+}
+.route-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.roam-map-tip{
+ background:rgba(250,247,239,.97)!important;border:1px solid #cfc7b9!important;border-radius:10px!important;
+ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;padding:0!important
+}
+.roam-map-tip:before{border-top-color:#cfc7b9!important}
+.roam-place-label{background:rgba(250,247,239,.88)!important;border:0!important;box-shadow:none!important;color:#313831!important;font-weight:800!important;font-size:10px!important;padding:3px 5px!important}
+.roam-place-label:before{display:none!important}
+.roam-tip-inner{padding:10px 12px;min-width:155px}
+.roam-tip-inner b{display:block;font-size:15px;margin-bottom:2px}
+.roam-tip-inner small{display:block;color:#6f746d;font-size:10px;margin-bottom:6px}
+.roam-tip-meta{display:flex;gap:8px;align-items:center;font-size:10px}
+.profile-card{padding:16px 18px 14px;background:rgba(250,247,239,.9)}
+.profile-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.profile-head h3{margin-bottom:3px}
+#elevationSvg{width:100%;height:220px;display:block;touch-action:none}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.dot.gravel{background:var(--rust)}.dot.asphalt{background:var(--asphalt)}.dot.trail{background:var(--trail)}.dot.mixed{background:var(--mixed)}
+.profile-card{padding:18px 18px 14px}
+.profile-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.profile-head h3{margin-bottom:3px}
+#elevationSvg{width:100%;height:220px;display:block;touch-action:none}
+.terrain-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:7px;font-size:12px;color:#626861}
+.legend-item{display:flex;align-items:center;gap:6px}
+.side{display:grid;gap:14px;align-content:start}
+.side .card{padding:17px}
+.surface-list{display:grid;gap:10px}
+.surface-row{display:grid;grid-template-columns:1fr auto auto;gap:12px;font-size:13px}
+.surface-row b{font-weight:600}
+.stackbar{height:9px;border-radius:999px;overflow:hidden;display:flex;background:#ddd}
+.stackbar span{height:100%}
+.weather-big{display:flex;gap:14px;align-items:center}
+.weather-big .wx{font-size:42px}
+.weather-big b{font-family:var(--font-ui);font-size:38px;font-weight:600}
+.point-details{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:12px}
+.point-details div:nth-child(odd){color:#70766e}
+.hints{display:grid;gap:0}
+.hint-row{display:grid;grid-template-columns:34px 1fr auto;gap:10px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+.hint-row:first-child{border-top:0}
+.hint-ico{width:31px;height:31px;border-radius:9px;background:var(--olive);color:white;display:grid;place-items:center}
+.hint-ico.rust{background:var(--rust)}
+.stage-page{display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px}
+.stage-list{padding:10px}
+.stage-item{padding:14px;border-bottom:1px solid var(--line);border-radius:10px}
+.stage-item:hover,.stage-item.active{background:#ebe7dc}
+.stage-item b{font-family:var(--font-ui);font-weight:600}
+.stage-item small{display:block;color:#777b74;margin-top:4px}
+.stage-detail{padding:20px}
+.stage-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.stage-stat{padding:12px;border:1px solid var(--line);border-radius:12px;background:#faf7ef}
+.stage-stat b{font-family:var(--font-ui);font-size:22px;font-weight:600;display:block}
+.pack-layout{display:grid;grid-template-columns:minmax(0,1.15fr) .85fr;gap:18px}
+.bike-card{padding:20px}
+.bike-header{display:flex;justify-content:space-between;gap:12px}
+.bike-svg{width:100%;height:330px;display:block}
+.bag-node{transition:.2s;cursor:pointer}
+.bag-node:hover{filter:drop-shadow(0 3px 5px rgba(82,67,53,.2));transform-origin:center}
+.bag-node.selected rect,.bag-node.selected path{stroke:var(--rust);stroke-width:4}
+.bag-overview{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px}
+.bag-pill{border:1px solid var(--line);border-radius:12px;padding:10px;background:#faf7f0;cursor:pointer}
+.bag-pill.active{border-color:var(--rust);background:#f4eae2}
+.bag-pill strong{display:block;font-size:12px}.bag-pill span{font-size:11px;color:#777b74}
+.ring{width:31px;height:31px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--rust) var(--p),#ddd6c8 0);margin-bottom:7px}
+.ring:after{content:"";width:22px;height:22px;border-radius:50%;background:#faf7ef}
+.pack-panels{display:grid;gap:14px}
+.pack-org{padding:18px}
+.org-row{display:grid;grid-template-columns:120px 1fr auto;gap:9px;padding:11px 0;border-top:1px solid var(--line);align-items:center}
+.org-row:first-of-type{border-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:10px;padding:5px 7px;border-radius:999px;background:#ebe5da;color:#585d56}
+.pack-item-wrap{display:inline-flex;align-items:center;border-radius:999px;background:#ebe5da;border:1px solid transparent}
+.pack-item-wrap.selected{border-color:var(--rust);background:#f3e5dc;box-shadow:0 0 0 2px rgba(162,87,60,.12)}
+.pack-item{border:0;background:transparent;color:#50564f;padding:5px 4px 5px 8px;font-size:10px;cursor:grab}
+.pack-item:active{cursor:grabbing}
+.item-check{border:0;background:transparent;width:24px;height:24px;border-radius:50%;color:#8d8e86;font-size:11px}
+.item-check.packed{background:var(--olive);color:#fff}
+.pack-interaction{padding:10px 12px;border:1px dashed #c9bfb0;border-radius:11px;background:#f8f3e9;color:#60645d;font-size:12px;margin-bottom:10px}
+.pack-interaction b{color:var(--forest)}
+.bag-pill.drop-target{border-color:var(--olive);box-shadow:0 0 0 3px rgba(85,98,68,.13)}
+.bag-pill.empty{opacity:.68;border-style:dashed}
+.bag-node.empty{display:none}
+.bag-node.drop-target path,.bag-node.drop-target rect{stroke:var(--olive)!important;stroke-width:5!important}
+.pack-mini-note{font-size:10px;color:#787a73;margin-top:4px}
+.pack-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--forest);color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;z-index:80;opacity:0;pointer-events:none;transition:.2s}
+.pack-toast.show{opacity:1;bottom:34px}
+.checkline{padding:5px 0;border-radius:8px;cursor:pointer}
+.checkline:hover{background:#f0ece3}
 
-    .shell{max-width:1480px;margin:0 auto;padding:22px 32px 44px}
-    .head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:14px}
-    .eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.22em;color:#787b74;font-weight:800;margin-bottom:6px}
-    h1{margin:0 0 8px;font-size:56px;line-height:1.02;letter-spacing:-.04em;color:var(--forest);font-weight:800}
-    .submeta{font-size:26px}
-    .meta{color:#6c726c;font-size:13px;letter-spacing:.08em;text-transform:none;font-weight:600}
-    .btn-row{display:flex;gap:12px;flex-wrap:wrap}
-    .btn{
-      border:1px solid var(--line);background:var(--card);color:var(--forest);padding:14px 20px;border-radius:14px;
-      font-size:16px;font-weight:800;cursor:pointer;box-shadow:var(--shadow);
-    }
-    .btn:hover{filter:brightness(.99)}
-    .btn.primary{background:var(--rust);border-color:var(--rust);color:white}
-    .main-grid{display:grid;grid-template-columns:1.08fr 1.08fr 1.55fr .92fr;gap:16px;align-items:start}
-    .card{background:rgba(251,248,241,.95);border:1px solid rgba(76,82,68,.14);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .step-card{padding:16px 16px 14px}
-    .step-title{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
-    .step-num{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--olive);color:white;font-weight:900;font-size:21px;flex:0 0 auto}
-    .step-title h2{margin:2px 0 4px;font-size:24px;line-height:1.12;color:var(--ink);font-weight:800;letter-spacing:-.02em}
-    .step-title p{margin:0;color:var(--muted);font-size:14px;line-height:1.4}
-    .input-row{display:flex;gap:10px;margin:12px 0 10px}
-    .search,.filter{
-      min-height:42px;border:1px solid var(--line);background:var(--white);border-radius:12px;padding:0 14px;color:var(--ink)
-    }
-    .search{flex:1}
-    .filter{min-width:140px}
-    .category-select{width:100%;min-height:46px;border:1px solid var(--line);border-radius:13px;background:#fffdf8;padding:0 14px;color:var(--ink);font-weight:600}
+.status-ok{font-size:10px;padding:5px 7px;border-radius:999px;background:#e1e6d7;color:#52613f;font-weight:800}
+.checklist{display:grid;gap:9px}
+.checkline{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
+.checkdot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--olive);color:white;font-size:11px}
+.balancebar{display:grid;grid-template-columns:48fr 52fr;height:10px;overflow:hidden;border-radius:999px;margin:10px 0}
+.balancebar i:first-child{background:var(--olive)}.balancebar i:last-child{background:var(--rust)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#f8f5ed;color:var(--forest);border-radius:11px;padding:11px 13px;font-weight:800}
+.btn.primary{border-color:var(--forest);background:var(--forest);color:white}
+.btn.rust{border-color:var(--rust);background:var(--rust);color:white}
+.check-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+.departure{padding:22px}
+.readiness-list{display:grid;gap:8px;margin-top:16px}
+.readiness-row{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:11px;border:1px solid var(--line);border-radius:12px;background:#faf7f0}
+.state{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px}
+.state.ok{background:var(--olive);color:white}.state.warn{background:var(--rust);color:white}.state.open{background:#ddd5c7;color:#6e716b}
+.setting-card{padding:18px}
+.notice{padding:10px 12px;border:1px solid #dacabb;background:#f3e8df;border-radius:10px;color:#694b3e;font-size:12px}
+.prototype-pill{
+  position:fixed;right:18px;bottom:18px;background:#2e3a2f;color:white;border-radius:999px;padding:8px 11px;font-size:10px;z-index:40;opacity:.9
+}
+@media(max-width:1000px){
+  .route-layout,.pack-layout,.check-grid,.dashboard-grid,.dashboard-footer,.stage-page{grid-template-columns:1fr}
+  .side{grid-template-columns:repeat(2,1fr)}
+  .bag-overview{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:720px){
+  .topbar{padding:0 15px;height:auto;min-height:66px;gap:10px}.wordmark{font-size:20px}.mark{width:31px;height:31px}.nav{overflow:auto}
+  .nav button{padding:8px 9px;font-size:11px}.top-actions{display:none}.shell{padding:18px 12px 42px}
+  h1{font-size:35px}.kpi-grid,.stage-stat-grid,.stage-mini,.action-grid,.weather-row{grid-template-columns:1fr 1fr}
+  .side{grid-template-columns:1fr}.map-wrap{height:430px}.bag-overview{grid-template-columns:1fr 1fr}
+  .org-row{grid-template-columns:90px 1fr}.org-row .status-ok{grid-column:2}
+}
 
-    .category-block{border:1px solid var(--line);border-radius:14px;background:var(--white);padding:12px 12px 8px;margin-top:10px}
-    .category-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px}
-    .category-head-left{display:flex;align-items:center;gap:10px}
-    .cat-icon{width:26px;height:26px;border-radius:8px;background:#eef0e7;display:grid;place-items:center;color:#50604b;font-size:15px}
-    .category-head strong{font-size:18px}
-    .category-head .count{font-size:16px;color:#687067;font-weight:800}
-    .item-list{display:grid;gap:6px}
-    .item-row{display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:center;padding:3px 0}
-    .item-row.compact{grid-template-columns:18px 34px 1fr auto}
-    .check{width:18px;height:18px;border-radius:50%;border:2px solid #87917f;display:grid;place-items:center;font-size:11px;color:white;background:#697861}
-    .check.off{background:transparent;color:transparent}
-    .item-name{font-size:15px}
-    .item-sub{font-size:12px;color:var(--muted)}
-    .mini-badge{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 8px;border-radius:999px;background:#efeadf;color:#6e726b;font-size:12px;font-weight:800}
-    .bag-tag{display:inline-flex;align-items:center;gap:7px;border-radius:999px;background:#f2ede3;color:#5e665d;padding:7px 10px;font-size:13px;font-weight:700}
-    .bag-dot{width:10px;height:10px;border-radius:50%}
-    .gear-thumb{width:34px;height:34px;border-radius:10px;background:#eef0e7;display:grid;place-items:center;font-size:21px;color:#53634d}
-    .menu-dots{color:#7b7f79;font-weight:900;font-size:18px;padding:0 4px}
+/* ===== V12 confirmed ROAM system ===== */
+:root{
+ --v12-white:#fffdf8;--v12-soft:#f4f0e7;--v12-line:#ddd5c9;--v12-green:#40523f;--v12-pale:#eef1e7;
+}
+.v12-title{margin-bottom:16px}.v12-title p{margin:0;color:var(--muted);font-size:15px;max-width:880px}
+.v12-home-grid{display:grid;grid-template-columns:1.1fr .95fr .85fr;gap:16px;align-items:start}
+.v12-panel{padding:18px}.v12-step-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:15px}
+.v12-step-num{width:38px;height:38px;border-radius:50%;background:var(--olive);color:#fff;display:grid;place-items:center;font-size:21px;font-weight:900;flex:0 0 auto}
+.v12-step-head h2{font-size:24px;margin:1px 0 4px;color:var(--ink)}.v12-step-head p{font-size:12px;color:var(--muted);margin:0;line-height:1.45}
+.v12-form-list{display:grid;gap:9px}.v12-form-row{display:grid;grid-template-columns:28px 118px 1fr;gap:9px;align-items:center}
+.v12-form-row.double{grid-template-columns:28px 118px 1fr 84px 1fr}.v12-form-icon{font-size:18px;color:var(--forest);text-align:center}
+.v12-form-label{font-size:12px;font-weight:800;color:#2f3831}.v12-control{width:100%;height:42px;border:1px solid var(--v12-line);border-radius:10px;background:var(--v12-white);padding:0 11px;color:var(--ink);font-size:12px}
+.v12-control.small{max-width:120px}.v12-inline{display:flex;gap:8px;align-items:center}.v12-chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.v12-chip{border:1px solid transparent;background:#eee9df;color:#60665f;border-radius:999px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer}
+.v12-chip.active{background:var(--olive);color:#fff}.v12-upload{display:grid;place-items:center;min-height:92px;border:1px dashed #cfc5b7;border-radius:11px;background:#faf7f0;text-align:center;padding:12px;color:#666d66;font-size:11px;cursor:pointer}
+.v12-upload b{display:block;color:var(--forest);font-size:12px;margin-bottom:3px}.v12-profile-row{display:grid;grid-template-columns:28px 150px 1fr;gap:8px;align-items:center;margin-bottom:11px}
+.v12-segment{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.v12-segment.four{grid-template-columns:repeat(4,1fr)}
+.v12-segment button{border:0;background:#eee9df;color:#626860;border-radius:999px;padding:8px 7px;font-size:10px;font-weight:700}.v12-segment button.active{background:var(--olive);color:#fff}
+.v12-info{display:flex;gap:10px;padding:12px;border-radius:11px;background:#eef1e8;color:#606861;font-size:11px;line-height:1.45;margin-top:14px}.v12-info b{display:block;color:var(--forest);margin-bottom:2px}
+.v12-summary-card{padding:16px}.v12-summary-card h3{font-size:18px;margin-bottom:11px}.v12-summary-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.v12-summary-kpi{border:1px solid var(--line);background:#fffdf8;border-radius:11px;padding:11px;text-align:center}.v12-summary-kpi .ico{font-size:20px;color:var(--olive)}.v12-summary-kpi b{display:block;font-size:21px;margin:4px 0 2px}.v12-summary-kpi span{font-size:10px;color:var(--muted)}
+.v12-feasibility{padding:12px;border-radius:11px;background:#eef1e8;margin-top:10px;display:flex;gap:10px;font-size:11px;line-height:1.4}.v12-feasibility strong{display:block;font-size:12px;color:var(--forest);margin-bottom:2px}
+.v12-profile-chips{display:grid;grid-template-columns:1fr 1fr;gap:7px}.v12-profile-chip{border:1px solid var(--line);background:#fffdf8;border-radius:10px;padding:9px;font-size:10px;font-weight:700;color:#586159}
+.v12-home-preview{display:grid;grid-template-columns:1.2fr .9fr .8fr;gap:16px;margin-top:16px}.v12-preview-card{padding:13px;overflow:hidden}.v12-preview-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}.v12-preview-head h3{font-size:16px;margin:0}.v12-preview-head small{color:var(--muted)}
+.v12-map-preview{height:210px;border-radius:11px;background:#e5e6da;overflow:hidden;border:1px solid var(--line)}.v12-map-preview svg,.v12-elev-preview svg{width:100%;height:100%;display:block}.v12-elev-preview{height:170px;border:1px solid var(--line);border-radius:11px;background:#faf7ef;overflow:hidden}
+.v12-stage-rough{display:grid;gap:5px}.v12-stage-rough-row{display:grid;grid-template-columns:24px 1fr auto;gap:7px;align-items:center;border:1px solid var(--line);background:#fffdf8;border-radius:9px;padding:7px;font-size:10px}.v12-stage-rough-row i{width:21px;height:21px;border-radius:50%;background:var(--olive);color:white;font-style:normal;display:grid;place-items:center;font-weight:800}
+.v12-home-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:12px}.v12-home-actions .btn.rust{min-width:210px}
+.v12-fit-card{margin-top:12px;padding:11px;border:1px solid var(--line);border-radius:11px;background:#faf7ef;font-size:11px;color:#5e655e}.v12-fit-card strong{color:var(--forest)}
 
-    .pack-panel{padding:16px}
-    .suggestion{display:flex;justify-content:space-between;gap:12px;align-items:center;background:#f1f4ea;border:1px solid #dfe5d5;border-radius:14px;padding:14px 16px;margin-bottom:14px}
-    .suggestion h3{margin:0 0 6px;font-size:19px}
-    .suggestion p{margin:0;color:var(--muted);font-size:13px;line-height:1.35;max-width:460px}
-    .small-link{margin-top:6px;font-size:12px;color:#666d66;text-decoration:underline;cursor:pointer}
+/* Pack page: confirmed 4-column design */
+.pack-v12-grid{display:grid;grid-template-columns:.9fr .95fr 1.35fr .82fr;gap:14px;align-items:start}.pack-v12-card{padding:14px}.pack-v12-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}.pack-v12-num{width:34px;height:34px;border-radius:50%;background:var(--olive);color:white;display:grid;place-items:center;font-size:19px;font-weight:900;flex:0 0 auto}.pack-v12-head h2{font-size:22px;margin:1px 0 3px}.pack-v12-head p{font-size:11px;line-height:1.4;color:var(--muted);margin:0}
+.pack-v12-category{border:1px solid var(--line);border-radius:12px;background:#fffdf8;padding:10px;margin-top:8px}.pack-v12-cathead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.pack-v12-cathead b{font-size:13px}.pack-v12-cathead span{font-size:11px;color:#626a62;font-weight:800}.pack-v12-needrow{display:grid;grid-template-columns:20px 1fr auto;gap:7px;align-items:center;padding:4px 0;font-size:11px}.pack-v12-check{width:17px;height:17px;border-radius:5px;border:1px solid #98a08f;background:#66765c;color:white;display:grid;place-items:center;font-size:10px;cursor:pointer}.pack-v12-check.off{background:#fff;color:transparent}
+.pack-v12-search{display:grid;grid-template-columns:1fr 120px;gap:7px;margin:8px 0}.pack-v12-search input,.pack-v12-search select{width:100%;height:38px;border:1px solid var(--line);border-radius:9px;background:#fffdf8;padding:0 9px;font-size:10px}.pack-v12-item{display:grid;grid-template-columns:20px 30px 1fr minmax(105px,auto) 14px;gap:7px;align-items:center;border:1px solid var(--line);border-radius:10px;background:#fffdf8;padding:8px;margin-top:6px}.pack-v12-item .thumb{width:30px;height:30px;border-radius:8px;background:#eef0e7;display:grid;place-items:center;font-size:17px}.pack-v12-item b{font-size:11px}.pack-v12-item small{display:block;font-size:9px;color:var(--muted);margin-top:2px}.pack-v12-bagselect{max-width:130px;height:30px;border:0;border-radius:999px;background:#efe9df;padding:0 7px;font-size:9px;color:#5e655e;font-weight:700}
+.pack-v12-best{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #dce4d3;background:#eef2e7;border-radius:12px;padding:11px;margin-bottom:9px}.pack-v12-best h3{font-size:14px;margin:0 0 3px}.pack-v12-best p{font-size:9px;color:#636b63;margin:0;line-height:1.35}.pack-v12-score{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.pack-v12-score span{font-size:9px;background:#fffdf8;border:1px solid #d7ddcf;border-radius:999px;padding:4px 6px;color:#586358;font-weight:700}
+.pack-v12-bike{background:#d0bf95;border-radius:12px;padding:6px;border:1px solid rgba(96,83,62,.12)}.pack-v12-bike svg{width:100%;height:auto;display:block}.pack-v12-bikelabel{font-family:var(--font-ui);font-size:12px;font-weight:800;fill:#25352c}.pack-v12-bikesub{font-family:var(--font-ui);font-size:10px;fill:#596258}.pack-v12-size-title{font-size:13px;font-weight:800;margin:9px 0 6px}.pack-v12-sizes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.pack-v12-size{border:1px solid var(--line);border-radius:10px;background:#fffdf8;padding:8px}.pack-v12-size b{font-size:10px}.pack-v12-sizeopts{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}.pack-v12-sizeopts button{height:26px;min-width:31px;border:1px solid var(--line);border-radius:999px;background:#f5f0e7;color:#596159;font-size:9px;font-weight:800}.pack-v12-sizeopts button.active{background:var(--olive);color:white;border-color:var(--olive)}.pack-v12-sizebar{height:6px;border-radius:999px;background:#e3dccf;margin-top:6px;overflow:hidden}.pack-v12-sizebar i{height:100%;display:block;background:var(--olive);border-radius:inherit}.pack-v12-sizemeta{font-size:8px;color:#666d65;margin-top:4px}
+.pack-v12-side{display:grid;gap:10px}.pack-v12-summary{padding:13px}.pack-v12-summary h3{font-size:14px;margin:0 0 9px}.pack-v12-weight{font-size:27px;font-weight:850}.pack-v12-balance{height:8px;display:grid;border-radius:999px;overflow:hidden;margin:8px 0}.pack-v12-balance i:first-child{background:var(--olive)}.pack-v12-balance i:last-child{background:var(--rust)}.pack-v12-balance-label{display:flex;justify-content:space-between;font-size:10px}.pack-v12-statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}.pack-v12-stat{border:1px solid var(--line);background:#fffdf8;border-radius:9px;padding:7px;text-align:center}.pack-v12-stat b{display:block;font-size:18px}.pack-v12-stat span{font-size:8px;color:var(--muted)}.pack-v12-bagrow{display:grid;grid-template-columns:9px 1fr auto 22px;gap:7px;align-items:center;border:1px solid var(--line);background:#fffdf8;border-radius:9px;padding:8px;margin-top:6px;font-size:9px}.pack-v12-bagrow b{font-size:10px}.pack-v12-progrow{margin-top:8px}.pack-v12-proghead{display:flex;justify-content:space-between;font-size:9px;margin-bottom:3px}.pack-v12-progbar{height:5px;border-radius:999px;background:#e3dccf;overflow:hidden}.pack-v12-progbar i{height:100%;display:block;background:var(--olive)}.pack-v12-tip{padding:10px;border-radius:10px;background:#eef2e7;font-size:9px;line-height:1.4;color:#5a645a;margin-top:9px}.pack-v12-tip b{display:block;font-size:11px;color:var(--forest);margin-bottom:2px}
+.pack-v12-empty{opacity:.28}.pack-v12-over{outline:2px solid var(--rust)}
 
-    .bike-hero{padding:10px 8px 14px;background:linear-gradient(180deg,#f5f2e8 0%,#fbf8f1 100%);border-radius:16px;border:1px solid rgba(117,108,89,.11)}
-    .bike-figure{width:100%;max-width:580px;display:block;margin:0 auto}
-    .bike-label{font-size:13px;font-weight:800;fill:#2b372e;font-family:var(--font)}
-    .bike-label-sub{font-size:12px;fill:#626a61;font-family:var(--font)}
+#stageRiderFit{margin-top:10px;padding:10px 12px;border-radius:11px;background:#eef1e8;font-size:11px;color:#596259}.fit-warn{background:#f3e7df!important;color:#785141!important}.fit-hard{background:#eedbd3!important;color:#7a4237!important}
 
-    .size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px}
-    .size-card{border:1px solid var(--line);border-radius:14px;background:#fffdf9;padding:12px}
-    .size-card .headrow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-    .size-icon{width:42px;height:28px;display:grid;place-items:center;color:#4f5b46}
-    .size-icon svg{width:42px;height:28px}
-    .size-card strong{font-size:15px}
-    .size-options{display:flex;gap:6px;flex-wrap:wrap}
-    .size-options button{border:1px solid var(--line);background:#faf7ef;color:#556055;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;cursor:pointer}
-    .size-options button.active{background:var(--olive);color:white;border-color:var(--olive)}
-    .fillbar{height:8px;border-radius:999px;background:#e7e0d3;overflow:hidden;margin-top:10px}
-    .fillbar i{display:block;height:100%;background:linear-gradient(90deg,#6e7d5f,#b76547);border-radius:inherit}
-    .size-meta{font-size:12px;color:#656c63;margin-top:8px;font-weight:700}
+@media(max-width:1180px){.v12-home-grid{grid-template-columns:1fr 1fr}.v12-summary-col{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px}.v12-home-preview{grid-template-columns:1fr 1fr}.v12-home-preview .v12-preview-card:last-child{grid-column:1/-1}.pack-v12-grid{grid-template-columns:1fr 1fr}.pack-v12-assign{grid-column:1/-1}.pack-v12-side{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.v12-home-grid,.v12-home-preview,.v12-summary-col,.pack-v12-grid{grid-template-columns:1fr}.v12-summary-col,.pack-v12-assign,.pack-v12-side,.v12-home-preview .v12-preview-card:last-child{grid-column:auto}.pack-v12-side{grid-template-columns:1fr}.v12-form-row,.v12-form-row.double,.v12-profile-row{grid-template-columns:26px 1fr}.v12-form-label{grid-column:2}.v12-form-row .v12-control,.v12-form-row .v12-inline,.v12-form-row .v12-chip-row,.v12-form-row .v12-upload,.v12-profile-row>div:last-child{grid-column:2}.v12-segment,.v12-segment.four{grid-template-columns:1fr 1fr}.pack-v12-sizes{grid-template-columns:1fr 1fr}}
 
-    .side-stack{display:grid;gap:14px}
-    .summary{padding:16px}
-    .summary h3{margin:0 0 10px;font-size:18px}
-    .weight-main{font-size:44px;line-height:1;font-weight:900;margin-bottom:8px;color:var(--ink)}
-    .balance-head{display:flex;justify-content:space-between;color:#495248;font-weight:700;font-size:14px;margin:8px 0 0}
-    .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
-    .statbox{border:1px solid var(--line);border-radius:14px;background:#fffdf8;padding:12px;text-align:center}
-    .statbox b{display:block;font-size:30px;line-height:1.05}
-    .statbox span{display:block;font-size:13px;color:#6b716b;margin-top:4px}
-
-    .bag-summary-list{display:grid;gap:10px}
-    .bag-summary-row{display:grid;grid-template-columns:14px 1fr auto auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);background:#fffdf8;border-radius:12px}
-    .bag-summary-row strong{font-size:17px}
-    .bag-summary-row .vol{color:#596058;font-size:14px;font-weight:700}
-    .bag-summary-row .countbubble{background:#efeadf;color:#666c66;border-radius:999px;min-width:24px;height:24px;display:grid;place-items:center;font-size:12px;font-weight:800}
-
-    .progress-list{display:grid;gap:9px;margin-top:8px}
-    .prog-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}
-    .prog-label{font-size:15px}
-    .prog-numbers{font-size:13px;color:#606760;font-weight:700}
-    .progbar{grid-column:1/4;height:7px;border-radius:999px;background:#e7e0d3;overflow:hidden}
-    .progbar i{display:block;height:100%;background:#66745b;border-radius:inherit}
-    .tip{margin-top:14px;padding:14px;border-radius:14px;background:#eff3ea;border:1px solid #dde7d6;font-size:14px;line-height:1.45;color:#576156}
-    .tip strong{display:block;font-size:18px;color:#36453a;margin-bottom:4px}
-    .prototype-pill{position:fixed;right:22px;bottom:18px;background:#415042;color:white;border-radius:999px;padding:10px 14px;font-size:13px;box-shadow:var(--shadow)}
-
-    @media (max-width: 1360px){
-      .main-grid{grid-template-columns:1fr 1fr;}
-      .pack-panel{grid-column:span 2}
-      .side-stack{grid-column:span 2;grid-template-columns:1fr 1fr}
-    }
-    @media (max-width: 980px){
-      .topbar,.shell{padding-left:18px;padding-right:18px}
-      h1{font-size:42px}
-      .main-grid{grid-template-columns:1fr}
-      .pack-panel,.side-stack{grid-column:auto}
-      .side-stack{grid-template-columns:1fr}
-      .size-grid{grid-template-columns:repeat(2,1fr)}
-      .head{flex-direction:column;align-items:flex-start}
-    }
-    @media (max-width: 640px){
-      .nav{display:none}
-      .size-grid{grid-template-columns:1fr}
-      h1{font-size:34px}
-      .weight-main{font-size:34px}
-      .stats-grid{grid-template-columns:1fr}
-      .step-title h2{font-size:20px}
-      .btn-row{width:100%}
-      .btn{width:100%;justify-content:center}
-    }
-  </style>
+</style>
 </head>
 <body>
 <div class="app">
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo"></div>
-      <div class="wordmark">ROAM</div>
-    </div>
-    <nav class="nav">
-      <a href="#">Übersicht</a>
-      <a href="#">Route</a>
-      <a href="#">Etappen</a>
-      <a href="#" class="active">Packen</a>
-      <a href="#">Reise-Check</a>
-    </nav>
-    <div class="actions">
-      <div class="circle-btn">⌕</div>
-      <div class="circle-btn">···</div>
-      <div class="avatar">FM</div>
-    </div>
-  </header>
+<header class="topbar">
+  <div class="brand"><div class="mark"></div><div class="wordmark">ROAM</div></div>
+  <nav class="nav">
+    <button class="active" data-screen="home">Übersicht</button>
+    <button data-screen="route">Route</button>
+    <button data-screen="stages">Etappen</button>
+    <button data-screen="pack">Packen</button>
+    <button data-screen="check">Reise-Check</button>
+  </nav>
+  <div class="top-actions"><button class="icon-btn">⌕</button><button class="icon-btn">⋯</button><div class="profile">FM</div></div>
+</header>
 
-  <main class="shell">
-    <section class="head">
-      <div>
-        <div class="eyebrow">Bike & Packen</div>
-        <h1>Packorganisation</h1>
-        <div class="meta" id="pageMeta">14,2 / 14,2 kg verteilt · 5 aktive Taschen · Balance 51 / 49</div>
-      </div>
-      <div class="btn-row">
-        <button class="btn" id="btnReset">Bike leeren</button>
-        <button class="btn" id="btnAuto">Auto-Packen</button>
-        <button class="btn primary" id="btnApply">Beste Variante anwenden</button>
+<main class="shell">
+<section class="screen active" id="screen-home">
+  <div class="v12-title">
+    <div class="eyebrow">Start & Route</div>
+    <h1>Route planen</h1>
+    <p>Lege dein Ziel fest, passe die Route an deine Vorlieben und dein gewohntes Fahrniveau an und lass dir eine passende Bikepacking-Route erstellen.</p>
+  </div>
+
+  <div class="v12-home-grid">
+    <section class="card v12-panel">
+      <div class="v12-step-head"><div class="v12-step-num">1</div><div><h2>Wohin geht’s?</h2><p>Lege Start und Ziel fest und definiere die wichtigsten Rahmenbedingungen für die Reise.</p></div></div>
+      <div class="v12-form-list">
+        <div class="v12-form-row"><div class="v12-form-icon">●</div><div class="v12-form-label">Start</div><input class="v12-control" id="planStart" value="Innsbruck" placeholder="z. B. Innsbruck"></div>
+        <div class="v12-form-row"><div class="v12-form-icon" style="color:var(--rust)">●</div><div class="v12-form-label">Ziel</div><input class="v12-control" id="planDest" value="Wien" placeholder="z. B. Wien"></div>
+        <div class="v12-form-row"><div class="v12-form-icon">⚑</div><div class="v12-form-label">Zwischenziele</div><input class="v12-control" id="planWaypoints" placeholder="z. B. Salzburg, Linz"></div>
+        <div class="v12-form-row double"><div class="v12-form-icon">▦</div><div class="v12-form-label">Reisezeitraum</div><input class="v12-control" id="planStartDate" type="date"><div class="v12-form-label">bis</div><input class="v12-control" id="planEndDate" type="date"></div>
+        <div class="v12-form-row double"><div class="v12-form-icon">↔</div><div class="v12-form-label">Etappenziel</div><div class="v12-inline"><input class="v12-control" id="planKmDay" type="number" min="20" step="5" value="120"><span class="muted">km/Tag</span></div><div class="v12-form-label">max.</div><div class="v12-inline"><input class="v12-control" id="planHmDay" type="number" min="100" step="100" value="1800"><span class="muted">HM</span></div></div>
+        <div class="v12-form-row"><div class="v12-form-icon">⌁</div><div class="v12-form-label">Routing</div><select class="v12-control" id="planProfile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schneller Asphalt</option></select></div>
+        <div class="v12-form-row"><div class="v12-form-icon">▰</div><div class="v12-form-label">Übernachtung</div><select class="v12-control" id="planLodging"><option value="hotel">Hotel / Pension</option><option value="camping">Camping / Zelt</option><option value="mixed">Gemischt</option></select></div>
+        <div class="v12-form-row double"><div class="v12-form-icon">◎</div><div class="v12-form-label">Preisniveau</div><select class="v12-control" id="planPrice"><option value="low">günstig</option><option value="mid" selected>mittel</option><option value="high">komfortabel</option></select><div class="v12-form-label">Max. €/Nacht</div><input class="v12-control" id="planNightBudget" type="number" min="0" step="10" value="90"></div>
+        <div class="v12-form-row"><div class="v12-form-icon">▲</div><div class="v12-form-label">Reiseart / Terrain</div><div class="v12-chip-row" id="planTerrainChips"><button type="button" class="v12-chip active" data-terrain="mixed">Gemischt</button><button type="button" class="v12-chip" data-terrain="road">Eher Straße</button><button type="button" class="v12-chip" data-terrain="gravel">Eher Schotter</button><button type="button" class="v12-chip" data-terrain="offroad">Eher Offroad</button></div></div>
+        <div class="v12-form-row"><div class="v12-form-icon">⇧</div><div class="v12-form-label">GPX Import</div><label class="v12-upload"><input id="planGpxInput" type="file" accept=".gpx,application/gpx+xml" hidden><span><b>GPX-Datei hier auswählen</b>Bestehende Route importieren und als Originaltrack übernehmen.</span></label></div>
       </div>
     </section>
 
-    <section class="main-grid">
-      <article class="card step-card" id="needsCard">
-        <div class="step-title">
-          <div class="step-num">1</div>
-          <div>
-            <h2>Was brauche ich?</h2>
-            <p>Wähle die Ausrüstung für deine Tour. Die Liste hilft dir, nichts zu vergessen.</p>
+    <section class="card v12-panel">
+      <div class="v12-step-head"><div class="v12-step-num">2</div><div><h2>Was passt zu mir?</h2><p>Das Fahrerprofil beschreibt dein normales Niveau – nicht das Ziel der geplanten Reise.</p></div></div>
+      <div class="v12-profile-row"><div class="v12-form-icon">◴</div><div class="v12-form-label">Typische Tour km</div><div class="v12-inline"><input class="v12-control" id="riderKmDay" type="number" min="10" step="5" value="80"><span class="muted">km/Tag</span></div></div>
+      <div class="v12-profile-row"><div class="v12-form-icon">▲</div><div class="v12-form-label">Typische Tour HM</div><div class="v12-inline"><input class="v12-control" id="riderHmDay" type="number" min="100" step="100" value="800"><span class="muted">HM/Tag</span></div></div>
+      <div class="v12-profile-row"><div class="v12-form-icon">▥</div><div class="v12-form-label">Mehrtagestouren</div><div class="v12-segment" id="riderMulti"><button type="button" data-value="beginner">Anfänger</button><button type="button" class="active" data-value="regular">Fortgeschritten</button><button type="button" data-value="expert">Sehr erfahren</button></div></div>
+      <div class="v12-profile-row"><div class="v12-form-icon" style="color:var(--rust)">♥</div><div class="v12-form-label">Intensität</div><div class="v12-segment" id="riderIntensity"><button type="button" data-value="easy">Entspannt</button><button type="button" class="active" data-value="balanced">Ausgewogen</button><button type="button" data-value="sporty">Sportlich</button></div></div>
+      <div class="v12-profile-row"><div class="v12-form-icon">✹</div><div class="v12-form-label">Technisches Niveau</div><div class="v12-segment" id="riderTech"><button type="button" data-value="easy">Einfach</button><button type="button" class="active" data-value="moderate">Moderat</button><button type="button" data-value="advanced">Anspruchsvoll</button></div></div>
+      <div class="v12-profile-row"><div class="v12-form-icon">▱</div><div class="v12-form-label">Untergrund-Komfort</div><div class="v12-segment four" id="riderSurface"><button type="button" data-value="asphalt">Asphalt ok</button><button type="button" class="active" data-value="gravel">Schotter ok</button><button type="button" data-value="both">Beides</button><button type="button" data-value="nature">Naturwege</button></div></div>
+      <div class="v12-info"><span style="font-size:22px">♧</span><div><b>Gut zu wissen</b>Je genauer du dein normales Fahrniveau angibst, desto besser kann ROAM Etappen als gewohnt, anspruchsvoll oder deutlich darüber einordnen.</div></div>
+      <div id="homeRiderFit" class="v12-fit-card"><strong>Fahrerprofil:</strong> 80 km / 800 HM gewohnt · Etappenbewertung wird nach der Routenberechnung angezeigt.</div>
+    </section>
+
+    <aside class="v12-summary-col">
+      <section class="card v12-summary-card">
+        <h3>Reise-Zusammenfassung</h3>
+        <div class="v12-summary-kpis">
+          <div class="v12-summary-kpi"><div class="ico">⌁</div><b id="homeDist">–</b><span>Strecke</span></div>
+          <div class="v12-summary-kpi"><div class="ico">▲</div><b id="homeGain">–</b><span>Aufstieg</span></div>
+          <div class="v12-summary-kpi"><div class="ico">⚑</div><b id="homeStages">–</b><span>Etappen</span></div>
+          <div class="v12-summary-kpi"><div class="ico">◴</div><b id="homeDates">–</b><span>Zeitraum</span></div>
+        </div>
+        <div class="v12-feasibility" id="homeFeasibility"><span style="font-size:22px">✓</span><div><strong>Bereit zur Planung</strong>Route und Fahrerprofil werden gemeinsam bewertet.</div></div>
+      </section>
+      <section class="card v12-summary-card" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h3>Dein Fahrprofil</h3><button class="btn" type="button" id="profileFocusBtn">Profil anpassen</button></div>
+        <div class="v12-profile-chips" id="homeProfileChips"></div>
+        <div style="margin-top:10px"><div class="eyebrow">Aktuelle Reise</div><h3 id="homeTripTitle" style="margin:4px 0">Noch keine Route</h3><div class="muted" id="homeTripMeta" style="font-size:11px">Start und Ziel eingeben und Route berechnen.</div><span class="badge" id="homeRouteBadge" style="margin-top:8px">noch offen</span></div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="v12-home-preview">
+    <section class="card v12-preview-card"><div class="v12-preview-head"><div><h3>Routenvorschau</h3><small id="homePreviewText">Start und Ziel werden hier als Vorschau gezeigt.</small></div><button class="btn" data-go="route">Karte öffnen</button></div><div class="v12-map-preview"><svg viewBox="0 0 640 220" preserveAspectRatio="none"><defs><pattern id="homeTopo" width="90" height="50" patternUnits="userSpaceOnUse"><path d="M-10 35 Q20 10 55 29 T105 24" fill="none" stroke="#cbd0bf" stroke-width="1" opacity=".55"/></pattern></defs><rect width="640" height="220" fill="#e7e8dc"/><rect width="640" height="220" fill="url(#homeTopo)"/><polyline id="homePreviewRoute" points="60,175 155,150 250,120 350,105 455,75 580,45" fill="none" stroke="#40523f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle id="homePreviewStart" cx="60" cy="175" r="8" fill="#40523f" stroke="#fff" stroke-width="4"/><circle id="homePreviewEnd" cx="580" cy="45" r="8" fill="#b76547" stroke="#fff" stroke-width="4"/><text id="homePreviewStartLabel" x="72" y="186" font-size="13" font-weight="800" fill="#25352c">Start</text><text id="homePreviewEndLabel" x="520" y="35" font-size="13" font-weight="800" fill="#25352c">Ziel</text></svg></div></section>
+    <section class="card v12-preview-card"><div class="v12-preview-head"><div><h3>Höhenprofil</h3><small id="homeElevMeta">wird nach Berechnung aktualisiert</small></div></div><div class="v12-elev-preview"><svg viewBox="0 0 520 180" preserveAspectRatio="none"><g stroke="#ddd7ca" stroke-width="1"><line x1="30" x2="500" y1="35" y2="35"/><line x1="30" x2="500" y1="80" y2="80"/><line x1="30" x2="500" y1="125" y2="125"/></g><path id="homeElevArea" d="M30,145 L80,120 L130,85 L175,110 L220,60 L265,115 L315,92 L360,132 L405,100 L455,65 L500,120 L500,150 L30,150 Z" fill="#9ca38d" opacity=".72"/><path id="homeElevLine" d="M30,145 L80,120 L130,85 L175,110 L220,60 L265,115 L315,92 L360,132 L405,100 L455,65 L500,120" fill="none" stroke="#556244" stroke-width="2"/></svg></div></section>
+    <section class="card v12-preview-card"><div class="v12-preview-head"><div><h3>Etappen grob</h3><small id="homeStageHint">Vorschlag nach Tagesziel und Fahrerprofil</small></div></div><div class="v12-stage-rough" id="homeStageRough"><div class="v12-stage-rough-row"><i>1</i><span>Route berechnen</span><span>–</span></div></div></section>
+  </div>
+
+  <div class="v12-home-actions"><button class="btn" id="useSavedRouteBtn" type="button">Gespeicherte Route laden</button><button class="btn" type="button" id="saveDraftBtn">Entwurf speichern</button><button class="btn rust" id="planRouteBtn" type="button">Fahrradroute berechnen →</button></div>
+  <div id="planStatus" class="plan-status" style="text-align:right;margin-top:7px">Eine vorhandene Route wird automatisch übernommen.</div>
+</section>
+
+<section class="screen" id="screen-route">
+  <div class="route-title-row">
+    <div><div class="eyebrow">Route</div><h1 id="routePageTitle">Gravel Traverse Tirol</h1><div class="route-meta" id="routeMetaText">Routengeometrie wird geladen …</div></div>
+    <div class="btn-row"><button class="btn">GPX exportieren</button><button class="btn primary">Route speichern</button></div>
+  </div>
+  <div class="tabs"><button class="active">Übersicht</button><button>Karte</button><button>Höhe</button><button>Terrain</button><button>Waypoints</button><button>Etappen</button></div>
+
+  <div class="route-layout" style="margin-top:14px">
+    <div class="route-main">
+      <div class="card route-visual-card">
+        <div class="map-wrap" id="mapWrap">
+          <div id="routeMapLeaflet" aria-label="Topografische Routenkarte"></div>
+          <div id="routeMap3d" aria-label="3D Flyover der Route"></div>
+          <div class="map-tools">
+            <button id="fitRouteBtn" class="map-tool" type="button">Route anzeigen</button>
+            <button id="fullMapBtn" class="map-tool icon" type="button" aria-label="Karte Vollbild">⛶</button>
+          </div>
+          <div class="map-mode-switch" aria-label="Kartenmodus">
+            <button id="mapMode2dBtn" class="active" type="button">2D</button>
+            <button id="mapMode3dBtn" type="button">3D Flyover</button>
+          </div>
+          <div class="touch-hint">Mit 2 Fingern zoomen · Tippen = Streckenpunkt</div>
+          <div id="routeGeometryStatus" class="route-geometry-status">Routengeometrie wird geladen …</div>
+          <div id="mapDiagnostic" class="map-diagnostic">3D wird vorbereitet …</div>
+          <div id="flyoverControls" class="flyover-controls">
+            <button id="flyPlayBtn" class="fly-btn primary" type="button" disabled>▶</button>
+            <select id="flySpeed" class="fly-select" aria-label="Flyover Geschwindigkeit" disabled>
+              <option value="1">1×</option>
+              <option value="2">2×</option>
+              <option value="4">4×</option>
+            </select>
+            <input id="flySlider" class="fly-progress" type="range" min="0" max="1000" value="0" disabled aria-label="Position auf der Route">
+            <span id="flyKm" class="fly-km">0 km</span>
+            <button id="flyFollowBtn" class="fly-btn following" type="button" disabled>Folgen</button>
+            <button id="flyResetBtn" class="fly-btn" type="button" disabled>↺</button>
+            <span id="flyStatus" class="fly-status">Drohnenansicht</span>
+          </div>
+          <select id="mapStyleSelect" class="map-style-select" aria-label="Kartenstil">
+            <option value="esri">Esri Topo</option>
+            <option value="osm">OSM</option>
+            <option value="opentopo">OpenTopo</option>
+          </select>
+          <div class="map-scale-note">Karte ↔ Höhenprofil synchron</div>
+          <div class="route-map-legend" id="routeMapLegend">
+            <span><i class="route-dot" style="background:#9aa39d"></i>Terrain wird geladen …</span>
           </div>
         </div>
-        <select class="category-select">
-          <option>Bikepacking (mehrtägig)</option>
-          <option>Overnighter</option>
-          <option>Tagestour</option>
-        </select>
-        <div id="needsList"></div>
-      </article>
 
-      <article class="card step-card" id="haveCard">
-        <div class="step-title">
-          <div class="step-num">2</div>
-          <div>
-            <h2>Was habe ich?</h2>
-            <p>Hier siehst du deine Ausrüstung. Markiere, was du einpacken möchtest, und lege das Gewicht fest.</p>
+        <div class="profile-card">
+          <div class="profile-head">
+            <div><div class="eyebrow">Höhenprofil</div><h3>Gesamtroute</h3></div>
+            <div class="muted" style="font-size:12px">Mit Maus/Finger auf Karte oder Profil zeigen</div>
           </div>
-        </div>
-        <div class="input-row">
-          <input class="search" placeholder="Ausrüstung suchen ...">
-          <select class="filter"><option>Alle Kategorien</option></select>
-        </div>
-        <div id="haveList" class="item-list"></div>
-      </article>
-
-      <article class="card pack-panel">
-        <div class="step-title">
-          <div class="step-num">3</div>
-          <div>
-            <h2>Was kommt wo hin?</h2>
-            <p>Verteile deine Ausrüstung auf die Taschen. Wähle die Taschengröße und verschiebe Gegenstände per Auswahl.</p>
-          </div>
-        </div>
-
-        <div class="suggestion">
-          <div>
-            <h3>Beste vorgeschlagene Variante</h3>
-            <p>Optimiert für verfügbares Volumen, sinnvolle Gewichtsverteilung und schnellen Zugriff auf wichtige Gegenstände.</p>
-            <div class="small-link">Variante anpassen</div>
-          </div>
-          <button class="btn" id="btnAutoSmall">Auto-Packen</button>
-        </div>
-
-        <div class="bike-hero">
-          <svg class="bike-figure" viewBox="0 0 720 360" aria-label="Gravelbike mit Taschen">
-            <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="170" cy="246" r="92" stroke="#f7f4ec" stroke-width="10"></circle>
-              <circle cx="544" cy="246" r="92" stroke="#f7f4ec" stroke-width="10"></circle>
-              <circle cx="170" cy="246" r="74" stroke="#efe9db" stroke-width="1.5"></circle>
-              <circle cx="544" cy="246" r="74" stroke="#efe9db" stroke-width="1.5"></circle>
-              <path d="M170 246 L292 112 L396 246 L170 246 M292 112 L456 120 L396 246 M456 120 L544 246" stroke="#fbf8ef" stroke-width="9"></path>
-              <path d="M292 112 L246 82 M246 82 L206 82" stroke="#fbf8ef" stroke-width="7"></path>
-              <path d="M452 120 L488 86 L530 92 M488 86 L502 68" stroke="#fbf8ef" stroke-width="7"></path>
-              <path d="M396 246 L544 246" stroke="#fbf8ef" stroke-width="7"></path>
-              <path d="M292 112 L396 246" stroke="#fbf8ef" stroke-width="8"></path>
-              <circle cx="396" cy="246" r="18" stroke="#fbf8ef" stroke-width="5"></circle>
-              <path d="M396 246 L428 270" stroke="#fbf8ef" stroke-width="5"></path>
-            </g>
-
-            <g id="bag-saddle-visual">
-              <path d="M246 92 Q205 82 154 103 L171 150 Q219 141 262 123 Z" fill="#53664c" stroke="#f5efe2" stroke-width="3"></path>
-              <circle cx="164" cy="123" r="6" fill="#b86a49" stroke="#f5efe2" stroke-width="2"></circle>
-              <path d="M176 148 L246 93" stroke="#f1e7d7" stroke-width="2.1"></path>
-              <path d="M196 143 L220 95" stroke="#f1e7d7" stroke-width="2.1"></path>
-            </g>
-
-            <g id="bag-top-visual">
-              <rect x="315" y="111" width="93" height="26" rx="10" fill="#b96e4d" stroke="#f5efe2" stroke-width="3"></rect>
-            </g>
-
-            <g id="bag-frame-visual">
-              <path d="M298 133 L465 133 L396 246 L248 246 Z" fill="#c7834d" stroke="#f5efe2" stroke-width="3"></path>
-            </g>
-
-            <g id="bag-bar-visual">
-              <path d="M497 94 Q548 76 598 95 L584 151 Q532 146 486 122 Z" fill="#c77741" stroke="#f5efe2" stroke-width="3"></path>
-              <path d="M513 86 Q528 131 540 150" stroke="#33503f" stroke-width="12" fill="none"></path>
-            </g>
-
-            <g id="bag-fork-visual">
-              <rect x="496" y="174" width="38" height="92" rx="16" fill="#5a6a51" stroke="#f5efe2" stroke-width="3"></rect>
-            </g>
-
-            <g>
-              <line x1="85" y1="129" x2="165" y2="123" stroke="#b57e65" stroke-width="1.5"></line>
-              <circle cx="165" cy="123" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"></circle>
-              <text x="22" y="118" class="bike-label">Satteltasche</text>
-              <text x="22" y="134" class="bike-label-sub" id="label-saddle">1,1 / 14 L · 8%</text>
-
-              <line x1="354" y1="92" x2="362" y2="124" stroke="#b57e65" stroke-width="1.5"></line>
-              <circle cx="362" cy="124" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"></circle>
-              <text x="323" y="60" class="bike-label">Oberrohr</text>
-              <text x="323" y="76" class="bike-label-sub" id="label-top">0,1 / 2 L · 5%</text>
-
-              <line x1="631" y1="125" x2="565" y2="117" stroke="#b57e65" stroke-width="1.5"></line>
-              <circle cx="565" cy="117" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"></circle>
-              <text x="601" y="114" class="bike-label">Lenkertasche</text>
-              <text x="601" y="130" class="bike-label-sub" id="label-bar">1,8 / 14 L · 13%</text>
-
-              <line x1="615" y1="202" x2="515" y2="222" stroke="#b57e65" stroke-width="1.5"></line>
-              <circle cx="515" cy="222" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"></circle>
-              <text x="585" y="194" class="bike-label">Gabeltaschen</text>
-              <text x="585" y="210" class="bike-label-sub" id="label-fork">2,6 / 7 L · 37%</text>
-
-              <line x1="392" y1="268" x2="392" y2="206" stroke="#b57e65" stroke-width="1.5"></line>
-              <circle cx="392" cy="206" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"></circle>
-              <text x="360" y="288" class="bike-label">Rahmentasche</text>
-              <text x="360" y="304" class="bike-label-sub" id="label-frame">5,1 / 8 L · 64%</text>
-            </g>
+          <svg id="elevationSvg" viewBox="0 0 1000 220" preserveAspectRatio="none">
+            <rect width="1000" height="220" fill="#f8f5ed"/>
+            <g stroke="#ded7cb" stroke-width="1"><line x1="55" x2="970" y1="40" y2="40"/><line x1="55" x2="970" y1="85" y2="85"/><line x1="55" x2="970" y1="130" y2="130"/><line x1="55" x2="970" y1="175" y2="175"/></g>
+            <path id="profileArea" d="" fill="#9da392" opacity=".74"/>
+            <path id="profileStroke" d="" fill="none" stroke="#556244" stroke-width="2"/>
+            <g id="profileTerrainBars"></g>
+            <line id="profileLine" x1="516" x2="516" y1="22" y2="191" stroke="#a2573c" stroke-width="2" stroke-dasharray="6 5"/>
+            <circle id="profileMarker" cx="516" cy="118" r="7" fill="#f8f5ed" stroke="#a2573c" stroke-width="4"/>
+            <g font-size="12" font-family="Inter, sans-serif" fill="#71766f"><text id="elevTickTop" x="10" y="45">–</text><text id="elevTickMid" x="20" y="90">–</text><text id="elevTickLow" x="28" y="135">–</text><text x="24" y="180">0m</text><text x="55" y="210">0</text><text id="distTick1" x="275" y="210">–</text><text id="distTick2" x="505" y="210">–</text><text id="distTick3" x="735" y="210">–</text><text id="distTick4" x="930" y="210">– km</text></g>
           </svg>
+          <div class="terrain-legend" id="profileTerrainLegend"><span class="legend-item"><i class="route-dot" style="background:#9aa39d"></i>Terrain wird geladen …</span></div>
         </div>
+      </div>
+    </div>
 
-        <h3 style="margin:16px 0 10px">Taschengrößen</h3>
-        <div class="size-grid" id="sizeGrid"></div>
-      </article>
+    <aside class="side">
+      <div class="card">
+        <h3>Terrain</h3>
+        <div class="surface-list" id="surfaceList"><div class="muted" style="font-size:12px">Terrain wird auf das OSM-Wegenetz gematcht …</div></div>
+        <div class="stackbar" id="terrainStackBar" style="margin-top:14px"><span style="width:100%;background:#9aa39d"></span></div>
+        <div id="terrainCoverageNote" class="terrain-live-note">Analyse wird geladen …</div>
+        <div class="route-visibility-note">Dunkle Linie = Route · Farbkern = Terrain</div>
+      </div>
 
-      <aside class="side-stack">
-        <section class="card summary">
-          <h3>Pack-Zusammenfassung</h3>
-          <div class="weight-main" id="weightMain">14,2 / 14,2 kg</div>
-          <div class="fillbar"><i style="width:51%"></i></div>
-          <div class="balance-head"><span id="frontBalance">51% vorne</span><span id="rearBalance">49% hinten</span></div>
-          <div class="stats-grid">
-            <div class="statbox"><b id="statBags">5</b><span>Taschen</span></div>
-            <div class="statbox"><b id="statItems">13</b><span>Gegenstände</span></div>
-            <div class="statbox"><b id="statCoverage">100%</b><span>Verteilt</span></div>
-          </div>
-        </section>
+      <div class="card">
+        <h3>Ausgewählter Punkt</h3>
+        <div style="margin-bottom:12px"><b id="pointName" style="font-size:18px;font-weight:750">Jaufenpass</b><div class="muted" id="pointKm">km 156</div></div>
+        <div class="point-details"><div>Höhe</div><b id="pointAlt">1.842 m</b><div>Terrain</div><b id="pointTerrain">Trail</b><div>Ø nächste 2 km</div><b id="pointGrade">–</b><div>Wind aktuell</div><b id="pointWind" class="point-wind">–</b></div>
+      </div>
 
-        <section class="card summary">
-          <h3>Tascheninhalt</h3>
-          <div class="bag-summary-list" id="bagSummary"></div>
-        </section>
+      <div class="card">
+        <div class="eyebrow">Wetter · Punkt</div>
+        <div class="weather-big"><div class="wx">⛅</div><div><b id="weatherTemp">16°</b><div class="muted" id="weatherText">leicht bewölkt · 14 km/h W</div></div></div>
+      </div>
 
-        <section class="card summary">
-          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
-            <div>
-              <div class="eyebrow" style="margin-bottom:3px">Packliste Fortschritt</div>
-              <h3 style="margin:0"><span id="progressDone">13</span> / 19</h3>
-            </div>
-            <div class="mini-badge" id="progressOpen">6 offen</div>
-          </div>
-          <div class="progress-list" id="progressList"></div>
-          <div class="tip"><strong>Tipp</strong>Schwere Gegenstände möglichst mittig und tief verstauen. Häufig benötigte Dinge griffbereit einpacken.</div>
-        </section>
-      </aside>
+      <div class="card">
+        <h3>Hinweise</h3>
+        <div class="hints">
+          <div class="hint-row"><div class="hint-ico">●</div><div><b>Wasser</b><div class="muted" style="font-size:11px">Brunnen bei km 78</div></div><span>›</span></div>
+          <div class="hint-row"><div class="hint-ico rust">!</div><div><b>Exponierter Abschnitt</b><div class="muted" style="font-size:11px">2 km · Wetter prüfen</div></div><span>›</span></div>
+          <div class="hint-row"><div class="hint-ico">⌂</div><div><b>Unterkunft</b><div class="muted" style="font-size:11px">Tag 2 vorgemerkt</div></div><span>›</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="screen" id="screen-stages">
+  <div class="route-title-row"><div><div class="eyebrow">Etappen</div><h1 id="stagePageTitle">Etappen</h1><div class="route-meta">Wetter · Terrain · Belastung · Übernachtungen</div></div></div>
+  <div class="stage-page">
+    <div class="card stage-list">
+      <div id="stageListItems"></div>
+      <div class="overnight-summary">
+        <div class="eyebrow">Übernachtungen</div>
+        <div id="overnightSummary"></div>
+      </div>
+    </div>
+    <div class="card stage-detail">
+      <div class="eyebrow" id="stageDay">Tag 1</div><h2 id="stageName">Etappe</h2>
+      <div class="stage-stat-grid">
+        <div class="stage-stat"><b id="stageKm">–</b><span>Distanz</span></div><div class="stage-stat"><b id="stageHm">–</b><span>Anstieg</span></div><div class="stage-stat"><b id="stageWx">–</b><span>Max.</span></div><div class="stage-stat"><b id="stageSurface">–</b><span>Gravel</span></div>
+      </div>
+      <div id="stageRiderFit">Fahrerprofil wird mit dieser Etappe abgeglichen …</div>
+      <div class="card" style="padding:16px;margin-top:16px;background:#f7f4ec">
+        <div class="eyebrow">Wetter entlang der Etappe</div>
+        <div class="weather-row" style="margin-top:10px"><div class="weather-day"><small>Start</small><div class="icon">☁</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Hochpunkt</small><div class="icon">☀</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Ziel</small><div class="icon">⛅</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Abend</small><div class="icon">◐</div><b>–</b><small>routengenau</small></div></div>
+      </div>
+      <div class="card" style="padding:16px;margin-top:14px;background:#f7f4ec">
+        <div class="eyebrow">Terrain</div><div class="terrain-legend" id="stageTerrainLegend" style="margin-top:12px"><span class="legend-item">wird geladen …</span></div>
+      </div>
+      <div class="card stay-card">
+        <div class="eyebrow">Übernachtung</div>
+        <div id="stageOvernightCard"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="screen" id="screen-pack">
+  <div class="route-title-row"><div><div class="eyebrow">Bike & Packen</div><h1>Packorganisation</h1><div class="route-meta" id="packMeta">Ausrüstung · Volumen · Gewichtsverteilung</div></div><div class="btn-row"><button class="btn" id="resetPack">Bike leeren</button><button class="btn" id="autoPack">Auto-Packen</button><button class="btn rust" id="packModeBtn">Beste Variante anwenden</button></div></div>
+  <div class="pack-v12-grid" style="margin-top:14px">
+    <section class="card pack-v12-card">
+      <div class="pack-v12-head"><div class="pack-v12-num">1</div><div><h2>Was brauche ich?</h2><p>ROAM schlägt die Ausrüstung passend zur Reise vor. Du entscheidest, was wirklich benötigt wird.</p></div></div>
+      <select class="v12-control" id="packTourType"><option>Bikepacking (mehrtägig)</option><option>Overnighter</option><option>Tagestour</option></select>
+      <div id="packNeedList"></div>
     </section>
-  </main>
-  <div class="prototype-pill">Web-Prototyp · Pack-Flow im ROAM Design</div>
+
+    <section class="card pack-v12-card">
+      <div class="pack-v12-head"><div class="pack-v12-num">2</div><div><h2>Was habe ich?</h2><p>Markiere vorhandene Teile. Fehlende, aber benötigte Gegenstände bleiben sofort sichtbar.</p></div></div>
+      <div class="pack-v12-search"><input id="packSearch" placeholder="Ausrüstung suchen …"><select id="packCategoryFilter"><option value="all">Alle Kategorien</option></select></div>
+      <div id="packHaveList"></div>
+    </section>
+
+    <section class="card pack-v12-card pack-v12-assign">
+      <div class="pack-v12-head"><div class="pack-v12-num">3</div><div><h2>Was kommt wo hin?</h2><p>Wähle Taschengrößen und ordne Gegenstände direkt um. Auto-Pack berechnet die beste vorgeschlagene Variante.</p></div></div>
+      <div class="pack-v12-best"><div><h3>Beste vorgeschlagene Variante</h3><p>Kapazität, Balance, zentrale Gewichtsposition und schneller Zugriff werden gemeinsam bewertet.</p><div class="pack-v12-score" id="packBestScore"><span>noch nicht bewertet</span></div></div><button class="btn" id="packBestBtn" type="button">Auto-Packen</button></div>
+      <div class="pack-v12-bike">
+        <svg viewBox="0 0 760 360" aria-label="Bikepacking Bike mit Taschen">
+          <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="188" cy="250" r="92" stroke="#f8f4eb" stroke-width="10"/><circle cx="585" cy="250" r="92" stroke="#f8f4eb" stroke-width="10"/>
+            <circle cx="188" cy="250" r="75" stroke="#eee6d6" stroke-width="1.4"/><circle cx="585" cy="250" r="75" stroke="#eee6d6" stroke-width="1.4"/>
+            <path d="M188 250 L322 108 L414 250 L188 250 M322 108 L500 120 L414 250 M500 120 L585 250" stroke="#fbf8ef" stroke-width="10"/>
+            <path d="M322 108 L278 78 M278 78 L236 78" stroke="#fbf8ef" stroke-width="7"/><path d="M497 120 L531 86 L570 91 M531 86 L548 68" stroke="#fbf8ef" stroke-width="7"/>
+            <path d="M322 108 L414 250" stroke="#fbf8ef" stroke-width="9"/><path d="M414 250 L585 250" stroke="#fbf8ef" stroke-width="7"/><circle cx="414" cy="250" r="18" stroke="#fbf8ef" stroke-width="5"/>
+          </g>
+          <g id="packBike-saddle"><path d="M277 86 Q235 73 180 96 L197 146 Q245 136 292 118 Z" fill="#53664c" stroke="#f6efe2" stroke-width="3"/><path d="M195 143 L272 88M218 138 L246 84" stroke="#efe4d4" stroke-width="2"/></g>
+          <g id="packBike-top"><rect x="351" y="101" width="91" height="28" rx="10" fill="#b86b49" stroke="#f6efe2" stroke-width="3"/></g>
+          <g id="packBike-frame"><path d="M323 135 L484 135 L414 239 L275 239 Z" fill="#c07b4a" stroke="#f6efe2" stroke-width="3"/></g>
+          <g id="packBike-bar"><path d="M532 91 Q575 75 624 95 L611 148 Q566 145 520 120 Z" fill="#c57440" stroke="#f6efe2" stroke-width="3"/><path d="M548 84 Q559 125 571 145" stroke="#334c3d" stroke-width="12" fill="none"/></g>
+          <g id="packBike-fork"><rect x="543" y="166" width="37" height="90" rx="15" fill="#607057" stroke="#f6efe2" stroke-width="3"/></g>
+          <g pointer-events="none">
+            <line x1="104" y1="117" x2="197" y2="116" stroke="#b57e65"/><circle cx="197" cy="116" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"/><text x="24" y="104" class="pack-v12-bikelabel">Satteltasche</text><text x="24" y="119" class="pack-v12-bikesub" id="packBikeLabel-saddle">–</text>
+            <line x1="392" y1="75" x2="395" y2="113" stroke="#b57e65"/><circle cx="395" cy="113" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"/><text x="355" y="48" class="pack-v12-bikelabel">Oberrohr</text><text x="355" y="63" class="pack-v12-bikesub" id="packBikeLabel-top">–</text>
+            <line x1="673" y1="118" x2="586" y2="115" stroke="#b57e65"/><circle cx="586" cy="115" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"/><text x="633" y="104" class="pack-v12-bikelabel">Lenkertasche</text><text x="633" y="119" class="pack-v12-bikesub" id="packBikeLabel-bar">–</text>
+            <line x1="662" y1="211" x2="561" y2="213" stroke="#b57e65"/><circle cx="561" cy="213" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"/><text x="625" y="197" class="pack-v12-bikelabel">Gabeltaschen</text><text x="625" y="212" class="pack-v12-bikesub" id="packBikeLabel-fork">–</text>
+            <line x1="420" y1="285" x2="420" y2="202" stroke="#b57e65"/><circle cx="420" cy="202" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"/><text x="377" y="304" class="pack-v12-bikelabel">Rahmentasche</text><text x="377" y="319" class="pack-v12-bikesub" id="packBikeLabel-frame">–</text>
+          </g>
+        </svg>
+      </div>
+      <div class="pack-v12-size-title">Taschengrößen</div><div class="pack-v12-sizes" id="packSizeGrid"></div>
+    </section>
+
+    <aside class="pack-v12-side">
+      <section class="card pack-v12-summary"><h3>Pack-Zusammenfassung</h3><div class="pack-v12-weight" id="packWeight">0,0 / 0,0 kg</div><div class="pack-v12-balance" id="balanceBar"><i></i><i></i></div><div class="pack-v12-balance-label"><span id="frontBalance">–</span><span id="rearBalance">–</span></div><div class="pack-v12-statgrid"><div class="pack-v12-stat"><b id="packStatBags">0</b><span>Taschen</span></div><div class="pack-v12-stat"><b id="packStatItems">0</b><span>Gegenstände</span></div><div class="pack-v12-stat"><b id="packStatCoverage">0%</b><span>verteilt</span></div></div></section>
+      <section class="card pack-v12-summary"><h3>Tascheninhalt</h3><div id="packBagSummary"></div></section>
+      <section class="card pack-v12-summary"><div style="display:flex;justify-content:space-between"><div><div class="eyebrow">Packliste Fortschritt</div><h3 id="packListTitle" style="margin:4px 0">0 / 0</h3></div><span class="badge warn" id="packOpenBadge">offen</span></div><div id="packProgress"></div><div class="pack-v12-tip"><b>Tipp</b>Schwere Gegenstände möglichst mittig und tief verstauen. Häufig benötigte Dinge griffbereit einpacken.</div></section>
+    </aside>
+  </div>
+</section>
+
+<section class="screen" id="screen-check">
+  <div class="route-title-row"><div><div class="eyebrow">Reise-Check</div><h1>Abfahrt in 3 Tagen</h1><div class="route-meta">Priorisiert nach Abfahrtsnähe</div></div><button class="btn">Reiseplan / PDF</button></div>
+  <div class="check-grid">
+    <div class="card departure">
+      <div class="trip-head"><div><div class="eyebrow">Departure Assistant</div><h2>Jetzt sinnvoll: Wetter aktualisieren</h2></div><span class="badge warn">3 offen</span></div>
+      <div class="readiness-list">
+        <div class="readiness-row"><span class="state warn">!</span><div><b>Wetter aktualisieren</b><div class="muted">Prognose für alle Etappen vollständig laden.</div></div><button class="btn">Öffnen</button></div>
+        <div class="readiness-row"><span class="state open">○</span><div><b>Übernachtung Tag 3 klären</b><div class="muted">Noch keine Reservierung bestätigt.</div></div><button class="btn">Öffnen</button></div>
+        <div class="readiness-row"><span class="state open">○</span><div><b>Packen abschließen</b><div class="muted">28 von 31 Gegenständen eingepackt.</div></div><button class="btn" data-go="pack">Packen</button></div>
+        <div class="readiness-row"><span class="state ok">✓</span><div><b>Navigation</b><div class="muted">Route und GPX stehen bereit.</div></div><span class="badge">bereit</span></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card setting-card"><div class="eyebrow">Reisestatus</div><h3>3 / 4 Bereiche bereit</h3><div class="progress"><i style="width:75%"></i></div></div>
+      <div class="card setting-card"><h3>Navigation</h3><p class="muted">GPX vorbereitet · 312 km · 4 Etappen</p><button class="btn">GPX exportieren</button></div>
+      <div class="card setting-card"><h3>Wetter</h3><p class="muted">Tag 3 mit erhöhtem Regenrisiko.</p><div class="notice">Prognose vor Abfahrt erneut prüfen.</div></div>
+      <div class="card setting-card"><h3>Packen</h3><p class="muted">3 Gegenstände fehlen noch.</p><button class="btn" data-go="pack">Packliste öffnen</button></div>
+    </div>
+  </div>
+</section>
+</main>
+<div class="prototype-pill">ROAM V12 · interaktiver Web-Prototyp</div>
 </div>
 
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const categories=[
-  {key:'sleep',name:'Schlafen',icon:'⛺'},
-  {key:'clothes',name:'Kleidung',icon:'🧥'},
-  {key:'food',name:'Food & Wasser',icon:'🍲'},
-  {key:'tools',name:'Werkzeug & Ersatzteile',icon:'🛠️'},
-  {key:'electronics',name:'Elektronik',icon:'🔋'},
-  {key:'docs',name:'Dokumente & Sonstiges',icon:'🪪'}
+const screens=[...document.querySelectorAll('.screen')];
+function showScreen(name){
+  screens.forEach(s=>s.classList.toggle('active',s.id==='screen-'+name));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(name==='route')setTimeout(()=>{
+    initRouteMap();
+    if(currentMapMode==='3d')roam3DMap?.resize(); else roamMap?.invalidateSize();
+  },80);
+}
+document.querySelectorAll('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.go)));
+
+const API='https://adventure-bike-os-api.onrender.com';
+
+const FALLBACK_ROUTE=[
+ [47.2692,11.4041],[47.2148,11.0238],[46.8390,11.3220],[46.7160,11.6560],
+ [46.4980,11.3540],[46.0748,11.1217],[45.8850,10.8410]
 ];
 
-const bagDefs={
-  saddle:{name:'Satteltasche',color:'#556a4c',sizes:[8,10,14],front:0,rear:1,icon:'saddle'},
-  frame:{name:'Rahmentasche',color:'#7b8a67',sizes:[4,6,8],front:.5,rear:.5,icon:'frame'},
-  top:{name:'Oberrohr',color:'#b86b49',sizes:[0.8,1.2,2],front:.55,rear:.45,icon:'top'},
-  bar:{name:'Lenkertasche',color:'#c67640',sizes:[8,10,14],front:1,rear:0,icon:'bar'},
-  fork:{name:'Gabeltaschen',color:'#5f7155',sizes:[3,5,7],front:1,rear:0,icon:'fork'}
+let routeGeo=[];
+let routeElev=[];
+let routeCum=[0];
+let routeGeoTotal=0;
+let routeDistanceKm=0;
+let routeNamedPoints=[];
+let routeSource='loading';
+let roamMap=null,roamCursor=null,esriLayer=null,osmLayer=null,openTopoLayer=null;
+let routeVisualLayers=[],routePointLayers=[],routeHitLayer=null;
+let currentMapMode='2d';
+let roam3DMap=null,roam3DReady=false,roam3DTerrainReady=false,pending3D=false;
+let flyProgress=0,flyPlaying=false,flyFollow=true,flySpeed=1,flyRAF=null,flyLastTs=0,flyCameraState=null;
+let routeStages=[];
+let routeTerrain={status:'idle',stages:[],source:null,reliableCoverage:0,warning:null};
+const TERRAIN_STYLE={
+ paved:{name:'Befestigt',short:'Asphalt',color:'#3a7f5f'},
+ fine:{name:'Fein',short:'Fein',color:'#9a8b63'},
+ gravel:{name:'Gravel',short:'Gravel',color:'#c8863b'},
+ rough:{name:'Grob / Trail',short:'Grob',color:'#b64b3b'},
+ unknown:{name:'Offen',short:'Offen',color:'#9aa39d'}
 };
 
-let bagSize={saddle:14,frame:8,top:2,bar:14,fork:7};
+function geoDistKm(a,b){
+ const R=6371,toRad=x=>x*Math.PI/180;
+ const dLat=toRad(b[0]-a[0]),dLon=toRad(b[1]-a[1]);
+ const la1=toRad(a[0]),la2=toRad(b[0]);
+ const h=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;
+ return 2*R*Math.asin(Math.sqrt(h));
+}
+function rebuildRouteMeasures(){
+ routeCum=[0];
+ for(let i=1;i<routeGeo.length;i++)routeCum.push(routeCum[i-1]+geoDistKm(routeGeo[i-1],routeGeo[i]));
+ routeGeoTotal=routeCum[routeCum.length-1]||0;
+ routeDistanceKm=routeGeoTotal;
+}
+function pAtRouteIndex(i){return routeGeoTotal?routeCum[Math.max(0,Math.min(routeCum.length-1,i))]/routeGeoTotal:0}
+function interpGeo(p){
+ if(routeGeo.length<2)return FALLBACK_ROUTE[0];
+ p=Math.max(0,Math.min(1,p));
+ const target=p*routeGeoTotal;
+ let i=1;
+ while(i<routeCum.length&&routeCum[i]<target)i++;
+ i=Math.min(routeCum.length-1,i);
+ const prev=routeCum[i-1],next=routeCum[i],t=next>prev?(target-prev)/(next-prev):0;
+ const a=routeGeo[i-1],b=routeGeo[i];
+ return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+}
+function routeIndexForP(p){
+ if(routeGeo.length<2)return 0;
+ const target=Math.max(0,Math.min(1,p))*routeGeoTotal;
+ let i=0;
+ while(i<routeCum.length-1&&routeCum[i]<target)i++;
+ return Math.max(0,Math.min(routeGeo.length-1,i));
+}
+function terrainStyle(cls){return TERRAIN_STYLE[cls]||TERRAIN_STYLE.unknown}
+function normalizedRouteStages(stages){
+ const max=Math.max(1,routeGeo.length-1);
+ const clean=(stages||[]).map((s,i)=>{
+   const a=Math.max(0,Math.min(max,Math.round(Number(s?.s)||0)));
+   const b=Math.max(a+1,Math.min(max,Math.round(Number(s?.e)||max)));
+   return {s:a,e:b,stage_index:i};
+ }).filter(x=>x.e>x.s);
+ return clean.length?clean:[{s:0,e:max,stage_index:0}];
+}
+function stageProgressBounds(i){
+ const st=routeStages?.[i]; if(!st)return {a:0,b:1};
+ return {a:pAtRouteIndex(st.s),b:pAtRouteIndex(st.e)};
+}
+function terrainAtP(p){
+ if(routeTerrain.status!=='ready')return {...terrainStyle('unknown'),cls:'unknown'};
+ let i=routeStages.findIndex((st,j)=>{const b=stageProgressBounds(j);return p>=b.a-1e-6&&p<=b.b+1e-6});
+ if(i<0)i=Math.max(0,routeStages.length-1);
+ const b=stageProgressBounds(i),span=Math.max(1e-6,b.b-b.a),local=Math.max(0,Math.min(1,(p-b.a)/span));
+ const seg=(routeTerrain.stages?.[i]?.segments||[]).find(s=>{
+   const a=Number(s.start_fraction)||0,e=Number(s.end_fraction);
+   return local>=a-1e-5&&local<=(Number.isFinite(e)?e:1)+1e-5;
+ });
+ const cls=seg?.class||'unknown';
+ return {...terrainStyle(cls),cls};
+}
+function terrainSummary(){
+ const total={paved:0,fine:0,gravel:0,rough:0,unknown:0};
+ if(routeTerrain.status!=='ready')return total;
+ let weightSum=0;
+ routeStages.forEach((st,i)=>{
+   const b=stageProgressBounds(i),w=Math.max(0,b.b-b.a),t=routeTerrain.stages?.[i]||{};
+   weightSum+=w;Object.keys(total).forEach(k=>total[k]+=w*(Number(t[k])||0));
+ });
+ if(weightSum>0)Object.keys(total).forEach(k=>total[k]/=weightSum);
+ return total;
+}
+function renderTerrainUI(){
+ const list=document.getElementById('surfaceList'),stack=document.getElementById('terrainStackBar'),
+       mapLegend=document.getElementById('routeMapLegend'),profileLegend=document.getElementById('profileTerrainLegend'),
+       note=document.getElementById('terrainCoverageNote'),classes=['paved','fine','gravel','rough','unknown'];
+ if(routeTerrain.status!=='ready'){
+   if(list)list.innerHTML='<div class="muted" style="font-size:12px">Terrain wird auf das OSM-Wegenetz gematcht …</div>';
+   if(note){note.textContent=routeTerrain.status==='error'?(routeTerrain.warning||'Terrain nicht verfügbar'):'Analyse wird geladen …';note.className='terrain-live-note '+(routeTerrain.status==='error'?'warn':'')}
+   return;
+ }
+ const s=terrainSummary();
+ if(list)list.innerHTML=classes.map(c=>{
+   const v=Math.max(0,Number(s[c])||0),m=terrainStyle(c);
+   return `<div class="surface-row"><b><i class="route-dot" style="background:${m.color}"></i> ${m.name}</b><span>${(routeDistanceKm*v/100).toFixed(0)} km</span><span>${v.toFixed(0)}%</span></div>`;
+ }).join('');
+ if(stack)stack.innerHTML=classes.map(c=>`<span style="width:${Math.max(0,s[c]||0)}%;background:${terrainStyle(c).color}"></span>`).join('');
+ if(mapLegend)mapLegend.innerHTML=classes.map(c=>`<span><i class="route-dot" style="background:${terrainStyle(c).color}"></i>${terrainStyle(c).short}</span>`).join('');
+ if(profileLegend)profileLegend.innerHTML=classes.map(c=>`<span class="legend-item"><i class="route-dot" style="background:${terrainStyle(c).color}"></i>${terrainStyle(c).short} ${(s[c]||0).toFixed(0)}%</span>`).join('');
+ if(note){
+   const cov=Math.round(Number(routeTerrain.reliableCoverage)||0),n=routeTerrain.stages.reduce((a,t)=>a+(t?.segments?.length||0),0);
+   note.textContent=`Valhalla/OSM · zuverlässige Abdeckung ${cov}% · ${n} gematchte Abschnitte`;
+   note.className='terrain-live-note '+(cov>=50?'ok':'warn');
+ }
+}
+function setGeometryStatus(text,cls=''){
+ const el=document.getElementById('routeGeometryStatus');
+ if(!el)return;
+ el.textContent=text;el.className='route-geometry-status '+cls;
+}
+function routeMetaLabel(){
+ const km=routeDistanceKm?`${Math.round(routeDistanceKm)} km`:'Distanz –';
+ const src=routeSource==='stored'?'gespeicherte Adventure-Bike-OS-Route':routeSource==='api'?'echte Routing-Geometrie':routeSource==='fallback'?'Demo-Fallback':'Route';
+ const terrain=routeTerrain.status==='ready'?` · Terrain ${Math.round(Number(routeTerrain.reliableCoverage)||0)}%`:'';
+ return `${km} · ${src} · Straße/Weg-genau${terrain}`;
+}
+function normalizeAdventureCoords(coords){
+ return (coords||[]).map(c=>{
+   const lon=Number(c?.[0]),lat=Number(c?.[1]),z=Number(c?.[2]);
+   if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
+   return {lat,lon,z:Number.isFinite(z)?z:null};
+ }).filter(Boolean);
+}
+function storedRouteCandidate(){
+ try{
+   const saved=JSON.parse(localStorage.getItem('abo-mobile-route')||'null');
+   const rows=normalizeAdventureCoords(saved?.coords);
+   if(rows.length<20)return null;
+   const named=(saved?.routePlan?.orderedPoints||[]).map(x=>({
+     name:String(x.name||x.label||'').trim(),
+     lat:Number(x.lat),lon:Number(x.lon),route_index:Number(x.route_index)
+   })).filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));
+   return {rows,named,start:saved.start||'',dest:saved.dest||'',metrics:saved.metrics||null,stages:Array.isArray(saved.stages)?saved.stages:[]};
+ }catch(e){return null}
+}
+async function enrichRouteElevation(rows){
+ if(rows.length<2)return rows;
+ const good=rows.filter(x=>Number.isFinite(x.z)).length;
+ if(good>=Math.min(rows.length,Math.max(2,Math.floor(rows.length*.7))))return rows;
+ try{
+   const r=await fetch(API+'/api/elevation',{
+     method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({coordinates:rows.map(x=>[x.lon,x.lat])})
+   });
+   const data=await r.json();
+   const enriched=normalizeAdventureCoords(data?.coordinates);
+   if(r.ok&&data?.ok&&enriched.length===rows.length)return enriched;
+ }catch(e){}
+ return rows;
+}
+async function apiRouteCandidate(){
+ const r=await fetch(API+'/api/route-plan',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({
+     start:'Innsbruck',
+     destination:'Riva del Garda',
+     loop:false,
+     waypoints:[],
+     profile:'trekking'
+   })
+ });
+ const data=await r.json();
+ if(!r.ok)throw new Error(data?.error||'Routing nicht verfügbar');
+ let rows=normalizeAdventureCoords(data?.geometry?.coordinates);
+ if(rows.length<20)throw new Error('Zu wenige Routingpunkte');
+ rows=await enrichRouteElevation(rows);
+ const named=(data?.ordered_points||[]).map(x=>({
+   name:String(x.name||x.label||'').trim(),
+   lat:Number(x.lat),lon:Number(x.lon),route_index:Number(x.route_index)
+ })).filter(x=>x.name&&Number.isFinite(x.lat)&&Number.isFinite(x.lon));
+ return {rows,named,start:'Innsbruck',dest:'Riva del Garda',stages:[{s:0,e:rows.length-1}]};
+}
+function applyRouteRows(rows,named=[],source='api',start='',dest='',stages=[]){
+ routeGeo=rows.map(x=>[x.lat,x.lon]);
+ routeElev=rows.map(x=>Number.isFinite(x.z)?x.z:null);
+ routeNamedPoints=Array.isArray(named)?named:[];
+ routeSource=source;
+ rebuildRouteMeasures();
+ routeStages=normalizedRouteStages(stages);
 
-const baseItems=[
-  {name:'Zelt',cat:'sleep',kg:1.2,l:1.8,selected:true,bag:'bar',emoji:'⛺'},
-  {name:'Schlafsack',cat:'sleep',kg:1.1,l:1.1,selected:true,bag:'saddle',emoji:'🛏️'},
-  {name:'Isomatte',cat:'sleep',kg:0.6,l:0.7,selected:true,bag:'bar',emoji:'🧩'},
-  {name:'Daunenjacke',cat:'clothes',kg:0.4,l:1.5,selected:true,bag:'saddle',emoji:'🧥'},
-  {name:'Regenjacke',cat:'clothes',kg:0.4,l:0.7,selected:false,bag:'fork',emoji:'🌧️'},
-  {name:'Unterwäsche',cat:'clothes',kg:0.3,l:0.4,selected:true,bag:'frame',emoji:'👕'},
-  {name:'Kleidung (sonstiges)',cat:'clothes',kg:1.0,l:1.2,selected:true,bag:'frame',emoji:'👖'},
-  {name:'Sandalen',cat:'clothes',kg:0.3,l:0.7,selected:false,bag:'frame',emoji:'👡'},
-  {name:'Kocher',cat:'food',kg:0.4,l:0.6,selected:true,bag:'bar',emoji:'🔥'},
-  {name:'Nahrung / Snacks',cat:'food',kg:1.0,l:1.2,selected:true,bag:'frame',emoji:'🥪'},
-  {name:'Wasser',cat:'food',kg:2.0,l:2.0,selected:true,bag:'fork',emoji:'💧'},
-  {name:'Werkzeug-Set',cat:'tools',kg:0.5,l:0.3,selected:true,bag:'frame',emoji:'🔧'},
-  {name:'Ersatzteile',cat:'tools',kg:0.4,l:0.4,selected:false,bag:'',emoji:'⚙️'},
-  {name:'Flickzeug',cat:'tools',kg:0.2,l:0.1,selected:false,bag:'',emoji:'🩹'},
-  {name:'Pumpe',cat:'tools',kg:0.2,l:0.2,selected:false,bag:'',emoji:'🚲'},
-  {name:'Powerbank',cat:'electronics',kg:0.3,l:0.2,selected:true,bag:'frame',emoji:'🔋'},
-  {name:'Elektronik (Sonstiges)',cat:'electronics',kg:0.2,l:0.3,selected:true,bag:'frame',emoji:'📱'},
-  {name:'Licht',cat:'electronics',kg:0.2,l:0.1,selected:false,bag:'',emoji:'💡'},
-  {name:'Dokumente',cat:'docs',kg:0.1,l:0.1,selected:false,bag:'top',emoji:'🪪'},
-  {name:'Erste Hilfe Set',cat:'docs',kg:0.3,l:0.3,selected:false,bag:'',emoji:'⛑️'}
+ if(!routeNamedPoints.length&&routeGeo.length){
+   routeNamedPoints=[
+     {name:start||'Start',lat:routeGeo[0][0],lon:routeGeo[0][1],route_index:0},
+     {name:dest||'Ziel',lat:routeGeo.at(-1)[0],lon:routeGeo.at(-1)[1],route_index:routeGeo.length-1}
+   ];
+ }
+ const title=document.getElementById('routePageTitle');
+ if(title&&start&&dest)title.textContent=`${start} → ${dest}`;
+ const meta=document.getElementById('routeMetaText');
+ if(meta)meta.textContent=routeMetaLabel();
+ setGeometryStatus(source==='stored'?'Gespeicherte Originalroute übernommen':'Echte Routengeometrie geladen','ok');
+
+ renderExactElevation();
+ if(roamMap){
+   drawRouteOnMap();
+   fitRoute();
+   updateLinked(.5,'load');
+ }
+ if(roam3DReady){update3DSources();updateFlyCamera(true)}
+ else if(currentMapMode==='3d'||pending3D)setTimeout(()=>init3DMap(),80);
+ renderStagePrototype();
+ renderHomePlanner();
+ loadExactTerrain().catch(()=>{});
+}
+async function loadExactRouteGeometry(){
+ setGeometryStatus('Routengeometrie wird geladen …');
+ const stored=storedRouteCandidate();
+ if(stored){
+   const rows=await enrichRouteElevation(stored.rows);
+   applyRouteRows(rows,stored.named,'stored',stored.start,stored.dest,stored.stages);
+   return;
+ }
+ try{
+   const api=await apiRouteCandidate();
+   applyRouteRows(api.rows,api.named,'api',api.start,api.dest,api.stages);
+ }catch(e){
+   const rows=FALLBACK_ROUTE.map(([lat,lon])=>({lat,lon,z:null}));
+   applyRouteRows(rows,[],'fallback','Innsbruck','Gardasee',[{s:0,e:rows.length-1}]);
+   setGeometryStatus('Routingdienst nicht erreichbar · Demo-Fallback','warn');
+ }
+}
+
+function routeTerrainShapes(maxPoints=46){
+ return routeStages.map((st,i)=>{
+   const slice=routeGeo.slice(st.s,st.e+1),n=Math.min(maxPoints,slice.length),shape=[];
+   for(let j=0;j<n;j++){const k=Math.round(j*(slice.length-1)/Math.max(1,n-1)),c=slice[k];shape.push({lat:c[0],lon:c[1]})}
+   return {stage_index:i,shape};
+ });
+}
+function terrainCacheMatchesRoute(cache){
+ if(!cache||!Array.isArray(cache.stages)||cache.stages.length!==routeStages.length)return false;
+ try{
+   const r=JSON.parse(localStorage.getItem('abo-mobile-route')||'null'),key=String(cache.key||'');
+   return !!(r?.start&&r?.dest&&key.includes(`|${r.start}|${r.dest}|`));
+ }catch(e){return false}
+}
+function normalizeTerrainStage(x){
+ return {
+   paved:Number(x?.paved)||0,fine:Number(x?.fine)||0,gravel:Number(x?.gravel)||0,rough:Number(x?.rough)||0,unknown:Number(x?.unknown)||0,
+   coverage:Number(x?.coverage)||0,samples:Number(x?.samples ?? x?.edge_count)||0,segments:Array.isArray(x?.segments)?x.segments:[]
+ };
+}
+async function loadExactTerrain(){
+ if(routeGeo.length<2||!routeStages.length)return;
+ routeTerrain={status:'loading',stages:[],source:null,reliableCoverage:0,warning:null};renderTerrainUI();
+ try{
+   const cached=JSON.parse(localStorage.getItem('abo-mobile-terrain-v6')||'null');
+   if(terrainCacheMatchesRoute(cached)){
+     routeTerrain={status:'ready',stages:cached.stages.map(normalizeTerrainStage),source:cached.source||'Valhalla',reliableCoverage:Number(cached.reliableCoverage)||0,warning:null};
+   }else{
+     const r=await fetch(API+'/api/terrain-profile-v2',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stages:routeTerrainShapes(46)})});
+     const d=await r.json();if(!r.ok||!d?.ok)throw new Error(d?.warning||'Terrain-Profil nicht verfügbar');
+     const by=new Map((d.stages||[]).map(x=>[Number(x.stage_index),x]));
+     routeTerrain={status:'ready',stages:routeStages.map((_,i)=>normalizeTerrainStage(by.get(i)||{unknown:100,segments:[]})),source:d.source||'Valhalla',reliableCoverage:Number(d.reliable_coverage)||0,warning:d.warning||null};
+   }
+   setGeometryStatus(`${routeSource==='stored'?'Gespeicherte Originalroute':'Echte Routengeometrie'} · Terrain ${Math.round(routeTerrain.reliableCoverage)}%`,routeTerrain.reliableCoverage>=50?'ok':'warn');
+ }catch(e){
+   routeTerrain={status:'error',stages:[],source:null,reliableCoverage:0,warning:e?.message||'Terrain-Profil nicht verfügbar'};
+   setGeometryStatus(`${routeSource==='stored'?'Gespeicherte Originalroute':'Echte Routengeometrie'} · Terrain offen`,'warn');
+ }
+ renderTerrainUI();renderExactElevation();
+ if(roamMap){drawRouteOnMap();updateLinked(.5,'terrain')}
+ if(roam3DReady)update3DSources();
+ renderStagePrototype();
+}
+
+function routePointProgress(x){
+ if(Number.isFinite(x.route_index)&&routeGeo.length>1)return pAtRouteIndex(Math.round(x.route_index));
+ if(!roamMap)return 0;
+ const target=roamMap.latLngToContainerPoint([x.lat,x.lon]);
+ let best={d:Infinity,p:0};
+ const samples=Math.min(800,Math.max(120,routeGeo.length));
+ for(let i=0;i<=samples;i++){
+   const p=i/samples,pt=roamMap.latLngToContainerPoint(interpGeo(p));
+   const dx=pt.x-target.x,dy=pt.y-target.y,d=dx*dx+dy*dy;
+   if(d<best.d)best={d,p};
+ }
+ return best.p;
+}
+function nearestNamedPoint(p){
+ if(!routeNamedPoints.length)return {name:'Streckenpunkt',p};
+ return routeNamedPoints.map(x=>({...x,p:routePointProgress(x)}))
+   .reduce((a,b)=>Math.abs(b.p-p)<Math.abs(a.p-p)?b:a);
+}
+function elevationStats(){
+ const vals=routeElev.filter(Number.isFinite);
+ if(!vals.length)return null;
+ return {min:Math.min(...vals),max:Math.max(...vals)};
+}
+function elevAtP(p){
+ if(!routeElev.some(Number.isFinite))return null;
+ const idx=routeIndexForP(p);
+ if(Number.isFinite(routeElev[idx]))return routeElev[idx];
+ for(let d=1;d<routeElev.length;d++){
+   if(idx-d>=0&&Number.isFinite(routeElev[idx-d]))return routeElev[idx-d];
+   if(idx+d<routeElev.length&&Number.isFinite(routeElev[idx+d]))return routeElev[idx+d];
+ }
+ return null;
+}
+function elevYForValue(z){
+ const s=elevationStats();
+ if(!s||!Number.isFinite(z))return 120;
+ const span=Math.max(100,s.max-s.min);
+ return 175-((z-s.min)/span)*125;
+}
+function renderExactElevation(){
+ const area=document.getElementById('profileArea'),stroke=document.getElementById('profileStroke');
+ if(!area||!stroke||routeGeo.length<2)return;
+ const sampleCount=Math.min(240,routeGeo.length);
+ const pts=[];
+ for(let j=0;j<sampleCount;j++){
+   const p=j/(sampleCount-1),x=55+p*(970-55),z=elevAtP(p);
+   const y=Number.isFinite(z)?elevYForValue(z):145;
+   pts.push([x,y]);
+ }
+ const line=pts.map(([x,y],i)=>`${i?'L':'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+ stroke.setAttribute('d',line);
+ area.setAttribute('d',line+` L970,180 L55,180 Z`);
+
+ const bars=document.getElementById('profileTerrainBars');
+ if(bars){
+   if(routeTerrain.status==='ready'){
+     const rects=[];
+     routeStages.forEach((st,i)=>{
+       const b=stageProgressBounds(i),span=Math.max(0,b.b-b.a),segs=routeTerrain.stages?.[i]?.segments||[];
+       if(segs.length)segs.forEach(seg=>{
+         const a=b.a+span*(Number(seg.start_fraction)||0),e=b.a+span*(Number(seg.end_fraction)||0),m=terrainStyle(seg.class||'unknown');
+         rects.push(`<rect x="${(55+a*915).toFixed(1)}" y="181" width="${Math.max(.8,(e-a)*915).toFixed(1)}" height="10" fill="${m.color}"/>`);
+       }); else rects.push(`<rect x="${(55+b.a*915).toFixed(1)}" y="181" width="${Math.max(.8,span*915).toFixed(1)}" height="10" fill="${terrainStyle('unknown').color}"/>`);
+     });
+     bars.innerHTML=rects.join('');
+   }else bars.innerHTML=`<rect x="55" y="181" width="915" height="10" fill="${terrainStyle('unknown').color}"/>`;
+ }
+ const s=elevationStats();
+ if(s){
+   const span=s.max-s.min;
+   document.getElementById('elevTickTop').textContent=Math.round(s.max)+'m';
+   document.getElementById('elevTickMid').textContent=Math.round(s.min+span*.66)+'m';
+   document.getElementById('elevTickLow').textContent=Math.round(s.min+span*.33)+'m';
+ }else{
+   document.getElementById('elevTickTop').textContent='–';
+   document.getElementById('elevTickMid').textContent='–';
+   document.getElementById('elevTickLow').textContent='–';
+ }
+ const d=routeDistanceKm||0;
+ document.getElementById('distTick1').textContent=Math.round(d*.25);
+ document.getElementById('distTick2').textContent=Math.round(d*.5);
+ document.getElementById('distTick3').textContent=Math.round(d*.75);
+ document.getElementById('distTick4').textContent=Math.round(d)+' km';
+}
+function clearRouteVisuals(){
+ routeVisualLayers.forEach(l=>l.remove());routeVisualLayers=[];
+ routePointLayers.forEach(l=>l.remove());routePointLayers=[];
+ if(routeHitLayer){routeHitLayer.remove();routeHitLayer=null}
+}
+function drawRouteOnMap(){
+ if(!roamMap||routeGeo.length<2)return;
+ clearRouteVisuals();
+
+ // Route is always readable: light casing + dark master line.
+ // Terrain remains a thinner inner stripe and never replaces the route itself.
+ const routeHalo=L.polyline(routeGeo,{
+   color:'#f8f4ec',weight:11,opacity:.98,lineCap:'round',lineJoin:'round',smoothFactor:0,interactive:false
+ }).addTo(roamMap);
+ routeVisualLayers.push(routeHalo);
+
+ const routeBase=L.polyline(routeGeo,{
+   color:'#26362d',weight:7,opacity:.98,lineCap:'round',lineJoin:'round',smoothFactor:0,interactive:false
+ }).addTo(roamMap);
+ routeVisualLayers.push(routeBase);
+
+ // Real Valhalla/OSM terrain geometry as a narrow inner stripe.
+ if(routeTerrain.status==='ready'){
+   routeTerrain.stages.forEach(t=>(t?.segments||[]).forEach(seg=>{
+     const ll=(seg.geometry||[]).map(c=>[Number(c?.[1]),Number(c?.[0])]).filter(x=>Number.isFinite(x[0])&&Number.isFinite(x[1]));
+     if(ll.length<2)return;
+     const m=terrainStyle(seg.class||'unknown');
+     routeVisualLayers.push(L.polyline(ll,{
+       color:m.color,weight:3.5,opacity:1,lineCap:'round',lineJoin:'round',smoothFactor:0,interactive:false
+     }).addTo(roamMap));
+   }));
+ }else{
+   routeVisualLayers.push(L.polyline(routeGeo,{
+     color:'#667168',weight:3.5,opacity:.95,lineCap:'round',lineJoin:'round',smoothFactor:0,interactive:false
+   }).addTo(roamMap));
+ }
+
+ routeNamedPoints.forEach((x,i)=>{
+   const first=i===0,last=i===routeNamedPoints.length-1;
+   const marker=L.circleMarker([x.lat,x.lon],{
+     radius:first||last?8:4.5,color:'#f8f5ed',weight:first||last?4:2.5,
+     fillColor:last?'#a2573c':'#556244',fillOpacity:1
+   }).addTo(roamMap);
+   marker.bindTooltip(x.name,{direction:'top',offset:[0,-4],opacity:.92,permanent:first||last,className:first||last?'roam-place-label':''});
+   routePointLayers.push(marker);
+ });
+
+ routeHitLayer=L.polyline(routeGeo,{color:'#000',weight:24,opacity:0,interactive:true,smoothFactor:0})
+  .on('click',e=>{L.DomEvent.stopPropagation(e);updateLinked(nearestRouteProgress(e.latlng),'map')})
+  .addTo(roamMap);
+}
+
+function routeLngLat(p){
+ const [lat,lon]=interpGeo(Math.max(0,Math.min(1,p)));
+ return [lon,lat];
+}
+function bearingBetween(a,b){
+ const toRad=x=>x*Math.PI/180,toDeg=x=>x*180/Math.PI;
+ const lon1=toRad(a[0]),lon2=toRad(b[0]),lat1=toRad(a[1]),lat2=toRad(b[1]);
+ const y=Math.sin(lon2-lon1)*Math.cos(lat2);
+ const x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(lon2-lon1);
+ return (toDeg(Math.atan2(y,x))+360)%360;
+}
+function routeGeoJSON(){
+ return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:routeGeo.map(c=>[c[1],c[0]])}};
+}
+function flyProgressGeoJSON(){
+ if(routeGeo.length<2)return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:[]}};
+ const idx=Math.max(1,routeIndexForP(flyProgress));
+ const coords=routeGeo.slice(0,idx+1).map(c=>[c[1],c[0]]);
+ const exact=routeLngLat(flyProgress);
+ if(coords.length)coords[coords.length-1]=exact;
+ return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:coords}};
+}
+function flyPointGeoJSON(){
+ return {type:'Feature',properties:{},geometry:{type:'Point',coordinates:routeLngLat(flyProgress)}};
+}
+function update3DSources(){
+ if(!roam3DReady||!roam3DMap)return;
+ roam3DMap.getSource('roam-route')?.setData(routeGeoJSON());
+ roam3DMap.getSource('roam-progress')?.setData(flyProgressGeoJSON());
+ roam3DMap.getSource('roam-point')?.setData(flyPointGeoJSON());
+}
+function cameraLookAheadP(p){
+ const step=Math.max(.003,Math.min(.018,3.2/Math.max(1,routeDistanceKm||1)));
+ return Math.min(1,p+step);
+}
+function cameraLookBehindP(p){
+ const step=Math.max(.0015,Math.min(.008,1.1/Math.max(1,routeDistanceKm||1)));
+ return Math.max(0,p-step);
+}
+function smoothAngle(current,target,alpha){
+ let d=((target-current+540)%360)-180;
+ return (current+d*alpha+360)%360;
+}
+function updateFlyCamera(force=false){
+ if(!roam3DReady||!roam3DMap||routeGeo.length<2)return;
+ update3DSources();
+ const slider=document.getElementById('flySlider'),kmEl=document.getElementById('flyKm');
+ if(slider)slider.value=String(Math.round(flyProgress*1000));
+ if(kmEl)kmEl.textContent=`${Math.round(flyProgress*routeDistanceKm)} km`;
+ if(!flyFollow&&!force)return;
+ const behind=routeLngLat(cameraLookBehindP(flyProgress));
+ const ahead=routeLngLat(cameraLookAheadP(flyProgress));
+ const targetBearing=bearingBetween(behind,ahead);
+ const targetCenter=routeLngLat(Math.min(1,flyProgress+(cameraLookAheadP(flyProgress)-flyProgress)*.55));
+ const targetZoom=routeDistanceKm>300?13.25:13.55,targetPitch=64;
+ if(!flyCameraState||force){
+   flyCameraState={center:[targetCenter[0],targetCenter[1]],bearing:targetBearing,zoom:targetZoom,pitch:targetPitch};
+ }else{
+   const a=.055;
+   flyCameraState.center[0]+=(targetCenter[0]-flyCameraState.center[0])*a;
+   flyCameraState.center[1]+=(targetCenter[1]-flyCameraState.center[1])*a;
+   flyCameraState.bearing=smoothAngle(flyCameraState.bearing,targetBearing,.04);
+   flyCameraState.zoom+=(targetZoom-flyCameraState.zoom)*.035;
+   flyCameraState.pitch+=(targetPitch-flyCameraState.pitch)*.035;
+ }
+ roam3DMap.jumpTo({center:flyCameraState.center,zoom:flyCameraState.zoom,pitch:flyCameraState.pitch,bearing:flyCameraState.bearing});
+ const st=document.getElementById('flyStatus');if(st)st.textContent=flyFollow?'Ruhige Kameraführung':'Freie Kamera';
+}
+function baseFlyDurationMs(){
+ return Math.max(180000,Math.min(480000,(routeDistanceKm||240)*800));
+}
+function setFlyPlaying(on){
+ if(on&&!roam3DReady){flyPlaying=false;return}
+ flyPlaying=!!on;
+ const btn=document.getElementById('flyPlayBtn');
+ if(btn)btn.textContent=flyPlaying?'Ⅱ':'▶';
+ if(!flyPlaying){flyLastTs=0;if(flyRAF){cancelAnimationFrame(flyRAF);flyRAF=null};return}
+ if(flyProgress>=.999)setFlyProgress(0,true);
+ flyLastTs=0;
+ flyRAF=requestAnimationFrame(flyTick);
+}
+function flyTick(ts){
+ if(!flyPlaying)return;
+ if(!flyLastTs)flyLastTs=ts;
+ const dt=Math.min(100,ts-flyLastTs);flyLastTs=ts;
+ flyProgress=Math.min(1,flyProgress+(dt/baseFlyDurationMs())*flySpeed);
+ updateFlyCamera(false);
+ if(flyProgress>=1){setFlyPlaying(false);return}
+ flyRAF=requestAnimationFrame(flyTick);
+}
+function setFlyProgress(p,forceCamera=false){
+ flyProgress=Math.max(0,Math.min(1,Number(p)||0));
+ updateFlyCamera(forceCamera);
+}
+function setFlyFollow(on){
+ flyFollow=!!on;
+ const btn=document.getElementById('flyFollowBtn');
+ if(btn){
+   btn.textContent=flyFollow?'Folgen':'Freie Kamera';
+   btn.classList.toggle('following',flyFollow);
+ }
+ if(flyFollow){flyCameraState=null;updateFlyCamera(true)}
+}
+function fitRoute3D(){
+ if(!roam3DReady||!roam3DMap||routeGeo.length<2)return;
+ flyCameraState=null;
+ const bounds=new maplibregl.LngLatBounds();
+ routeGeo.forEach(c=>bounds.extend([c[1],c[0]]));
+ setFlyPlaying(false);
+ roam3DMap.fitBounds(bounds,{padding:70,duration:800,maxZoom:10});
+ setTimeout(()=>roam3DMap.easeTo({pitch:48,bearing:0,duration:500}),820);
+}
+let mapLibreLoadPromise=null;
+function ensureMapLibre(){
+ if(typeof maplibregl!=='undefined')return Promise.resolve(true);
+ if(mapLibreLoadPromise)return mapLibreLoadPromise;
+ mapLibreLoadPromise=new Promise(resolve=>{
+   const s=document.createElement('script');
+   s.src='https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js';
+   s.async=true;
+   s.onload=()=>resolve(typeof maplibregl!=='undefined');
+   s.onerror=()=>resolve(false);
+   document.head.appendChild(s);
+ });
+ return mapLibreLoadPromise;
+}
+function webGLCapability(){
+ try{
+   const c=document.createElement('canvas');
+   if(c.getContext('webgl2'))return 'WebGL2';
+   if(c.getContext('webgl')||c.getContext('experimental-webgl'))return 'WebGL1';
+ }catch(e){}
+ return '';
+}
+function setMapDiagnostic(msg,kind=''){
+ const el=document.getElementById('mapDiagnostic');if(!el)return;
+ el.textContent=msg;
+ el.style.color=kind==='warn'?'#8a563e':'#596159';
+}
+function setFlyControlsEnabled(enabled){
+ ['flyPlayBtn','flySpeed','flySlider','flyFollowBtn','flyResetBtn'].forEach(id=>{
+   const el=document.getElementById(id);if(el)el.disabled=!enabled;
+ });
+}
+async function init3DMap(){
+ pending3D=true;
+ if(roam3DMap){
+   setTimeout(()=>{roam3DMap.resize();update3DSources();updateFlyCamera(true)},60);
+   return;
+ }
+ if(routeGeo.length<2){
+   setFlyControlsEnabled(false);
+   setGeometryStatus('Route wird für 3D vorbereitet …','');
+   setMapDiagnostic('Warte auf Routengeometrie …');
+   return;
+ }
+ const libReady=await ensureMapLibre();
+ const gl=webGLCapability();
+ if(!libReady||!gl){
+   pending3D=false;setFlyPlaying(false);setFlyControlsEnabled(false);
+   setGeometryStatus('3D nicht verfügbar','warn');
+   setMapDiagnostic(!libReady?'MapLibre konnte nicht geladen werden.':'WebGL ist auf diesem Gerät/Browser deaktiviert.','warn');
+   return;
+ }
+ setMapDiagnostic(`MapLibre 5.24 · ${gl} · Basiskarte wird geladen …`);
+ const start=routeLngLat(0);
+ try{
+   roam3DMap=new maplibregl.Map({
+     container:'routeMap3d',
+     center:start,
+     zoom:13.4,
+     pitch:66,
+     bearing:0,
+     maxPitch:80,
+     renderWorldCopies:false,
+     canvasContextAttributes:{antialias:true},
+     style:{
+       version:8,
+       sources:{
+         osm:{
+           type:'raster',
+           tiles:['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+           tileSize:256,maxzoom:19,
+           attribution:'© OpenStreetMap contributors'
+         }
+       },
+       layers:[
+         {id:'roam-bg',type:'background',paint:{'background-color':'#d9ded5'}},
+         {id:'osm',type:'raster',source:'osm'}
+       ]
+     }
+   });
+ }catch(e){
+   roam3DMap=null;pending3D=false;setFlyControlsEnabled(false);
+   setGeometryStatus('3D konnte nicht gestartet werden','warn');
+   setMapDiagnostic(`3D-Startfehler · ${gl}: ${e?.message||'unbekannter Fehler'}`,'warn');
+   return;
+ }
+
+ roam3DMap.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
+
+ roam3DMap.on('load',()=>{
+   try{
+     roam3DMap.addSource('roam-route',{type:'geojson',data:routeGeoJSON(),lineMetrics:true});
+     roam3DMap.addLayer({id:'roam-route-halo',type:'line',source:'roam-route',paint:{
+       'line-color':'#f8f4ec','line-width':9,'line-opacity':.98
+     },layout:{'line-cap':'round','line-join':'round'}});
+     roam3DMap.addLayer({id:'roam-route-line',type:'line',source:'roam-route',paint:{
+       'line-color':'#26362d','line-width':5,'line-opacity':1
+     },layout:{'line-cap':'round','line-join':'round'}});
+     roam3DMap.addSource('roam-progress',{type:'geojson',data:flyProgressGeoJSON()});
+     roam3DMap.addLayer({id:'roam-progress-line',type:'line',source:'roam-progress',paint:{
+       'line-color':'#a2573c','line-width':5.5,'line-opacity':1
+     },layout:{'line-cap':'round','line-join':'round'}});
+     roam3DMap.addSource('roam-point',{type:'geojson',data:flyPointGeoJSON()});
+     roam3DMap.addLayer({id:'roam-point-dot',type:'circle',source:'roam-point',paint:{
+       'circle-radius':7,'circle-color':'#f8f4ec','circle-stroke-width':4,'circle-stroke-color':'#a2573c'
+     }});
+   }catch(e){}
+
+   roam3DReady=true;pending3D=false;
+   setFlyControlsEnabled(true);
+   setFlyFollow(true);
+   updateFlyCamera(true);
+   setGeometryStatus(`${routeSource==='stored'?'Gespeicherte Originalroute':'Echte Routengeometrie'} · Flyover bereit`,'ok');
+   setMapDiagnostic(`Flyover bereit · ${gl} · Höhenrelief wird geladen …`);
+
+   // Terrain is optional: the Flyover stays usable even if the DEM service fails.
+   try{
+     roam3DMap.addSource('terrainSource',{type:'raster-dem',url:'https://tiles.mapterhorn.com/tilejson.json'});
+     roam3DMap.addSource('hillshadeSource',{type:'raster-dem',url:'https://tiles.mapterhorn.com/tilejson.json'});
+     roam3DMap.addLayer({
+       id:'hillshade',type:'hillshade',source:'hillshadeSource',
+       paint:{'hillshade-exaggeration':.36,'hillshade-shadow-color':'#475047','hillshade-highlight-color':'#f4efe3','hillshade-accent-color':'#7a806f'}
+     },'roam-route-halo');
+     roam3DMap.setTerrain({source:'terrainSource',exaggeration:1.08});
+     roam3DTerrainReady=true;
+     setMapDiagnostic(`3D-Terrain aktiv · ${gl} · Route folgt dem Gelände`);
+   }catch(e){
+     roam3DTerrainReady=false;
+     setMapDiagnostic(`Flyover aktiv · ${gl} · Relief derzeit nicht verfügbar`,'warn');
+   }
+ });
+
+ roam3DMap.on('error',e=>{
+   const msg=String(e?.error?.message||'');
+   if(/webgl|gpu|context/i.test(msg)){
+     setMapDiagnostic(`Grafikfehler: ${msg}`,'warn');
+   }else if(!roam3DReady){
+     setMapDiagnostic(`Kartendaten laden … ${msg.slice(0,90)}`,'warn');
+   }
+ });
+ roam3DMap.getCanvas().addEventListener('pointerdown',()=>{if(currentMapMode==='3d')setFlyFollow(false)});
+}
+function setMapMode(mode){
+ currentMapMode=mode==='3d'?'3d':'2d';
+ const wrap=document.getElementById('mapWrap');
+ wrap?.classList.toggle('mode-3d',currentMapMode==='3d');
+ document.getElementById('mapMode2dBtn')?.classList.toggle('active',currentMapMode==='2d');
+ document.getElementById('mapMode3dBtn')?.classList.toggle('active',currentMapMode==='3d');
+ if(currentMapMode==='3d'){
+   init3DMap();
+   setTimeout(()=>roam3DMap?.resize(),80);
+ }else{
+   setFlyPlaying(false);
+   setTimeout(()=>roamMap?.invalidateSize(),60);
+   setGeometryStatus(
+     `${routeSource==='stored'?'Gespeicherte Originalroute':'Echte Routengeometrie'} · Terrain ${Math.round(routeTerrain.reliableCoverage||0)}%`,
+     (routeTerrain.reliableCoverage||0)>=50?'ok':'warn'
+   );
+ }
+}
+
+function fitRoute(){
+ if(currentMapMode==='3d'){fitRoute3D();return}
+ if(!roamMap||routeGeo.length<2)return;
+ roamMap.fitBounds(L.latLngBounds(routeGeo),{padding:[32,32],animate:true,maxZoom:12});
+}
+function initRouteMap(){
+ if(roamMap||!document.getElementById('routeMapLeaflet')||typeof L==='undefined')return;
+ const isTouch=window.matchMedia('(hover:none), (pointer:coarse)').matches;
+ roamMap=L.map('routeMapLeaflet',{
+   zoomControl:true,scrollWheelZoom:!isTouch,touchZoom:true,doubleClickZoom:true,dragging:true,
+   boxZoom:!isTouch,keyboard:!isTouch,zoomSnap:.25,zoomDelta:.5,attributionControl:true
+ });
+ esriLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{
+   maxZoom:19,attribution:'Tiles © Esri · Map data contributors'
+ });
+ osmLayer=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+   maxZoom:19,attribution:'© OpenStreetMap contributors'
+ });
+ openTopoLayer=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
+   maxZoom:17,attribution:'Map data © OpenStreetMap contributors · Map style © OpenTopoMap'
+ });
+ esriLayer.addTo(roamMap);
+
+ roamCursor=L.circleMarker([47.2692,11.4041],{radius:7,color:'#a2573c',weight:4,fillColor:'#f8f5ed',fillOpacity:1}).addTo(roamMap);
+ roamCursor.bindTooltip('',{permanent:true,direction:'top',offset:[0,-10],className:'roam-map-tip',opacity:1}).openTooltip();
+
+ const canHover=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+ if(canHover)roamMap.on('mousemove',e=>{if(routeGeo.length>1)updateLinked(nearestRouteProgress(e.latlng),'map')});
+ roamMap.on('click',e=>{if(routeGeo.length>1)updateLinked(nearestRouteProgress(e.latlng),'map')});
+
+ const fitBtn=document.getElementById('fitRouteBtn');
+ if(fitBtn)fitBtn.addEventListener('click',e=>{e.stopPropagation();fitRoute()});
+
+ const fullBtn=document.getElementById('fullMapBtn'),wrap=document.getElementById('mapWrap');
+ function setFullMap(on){
+   wrap.classList.toggle('map-fullscreen',on);document.body.classList.toggle('map-open',on);
+   fullBtn.textContent=on?'×':'⛶';fullBtn.setAttribute('aria-label',on?'Vollbild schließen':'Karte Vollbild');
+   setTimeout(()=>{
+     roamMap?.invalidateSize();
+     roam3DMap?.resize();
+     if(on)fitRoute();
+   },80);
+ }
+ if(fullBtn)fullBtn.addEventListener('click',e=>{e.stopPropagation();setFullMap(!wrap.classList.contains('map-fullscreen'))});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&wrap.classList.contains('map-fullscreen'))setFullMap(false)});
+
+ const mode2d=document.getElementById('mapMode2dBtn'),mode3d=document.getElementById('mapMode3dBtn');
+ if(mode2d)mode2d.addEventListener('click',e=>{e.stopPropagation();setMapMode('2d')});
+ if(mode3d)mode3d.addEventListener('click',e=>{e.stopPropagation();setMapMode('3d')});
+ const flyPlay=document.getElementById('flyPlayBtn'),flySpeedEl=document.getElementById('flySpeed'),
+       flySlider=document.getElementById('flySlider'),flyFollowBtn=document.getElementById('flyFollowBtn'),
+       flyReset=document.getElementById('flyResetBtn');
+ if(flyPlay)flyPlay.addEventListener('click',e=>{e.stopPropagation();setFlyPlaying(!flyPlaying)});
+ if(flySpeedEl)flySpeedEl.addEventListener('change',()=>{flySpeed=Number(flySpeedEl.value)||1});
+ if(flySlider)flySlider.addEventListener('input',()=>{setFlyPlaying(false);setFlyProgress(Number(flySlider.value)/1000,true)});
+ if(flyFollowBtn)flyFollowBtn.addEventListener('click',e=>{e.stopPropagation();setFlyFollow(!flyFollow)});
+ if(flyReset)flyReset.addEventListener('click',e=>{e.stopPropagation();setFlyPlaying(false);setFlyFollow(true);setFlyProgress(0,true)});
+
+ const select=document.getElementById('mapStyleSelect');
+ if(select)select.addEventListener('change',()=>{
+   [esriLayer,osmLayer,openTopoLayer].forEach(layer=>{if(layer&&roamMap.hasLayer(layer))roamMap.removeLayer(layer)});
+   if(select.value==='osm')osmLayer.addTo(roamMap);
+   else if(select.value==='opentopo')openTopoLayer.addTo(roamMap);
+   else esriLayer.addTo(roamMap);
+ });
+
+ if(routeGeo.length>1){drawRouteOnMap();fitRoute();updateLinked(.5,'init')}
+}
+function nearestRouteProgress(latlng){
+ if(!roamMap||routeGeo.length<2)return .5;
+ const target=roamMap.latLngToContainerPoint(latlng);
+ let best={d:Infinity,p:.5};
+ const samples=Math.min(1200,Math.max(320,routeGeo.length));
+ for(let i=0;i<=samples;i++){
+   const p=i/samples,pt=roamMap.latLngToContainerPoint(interpGeo(p));
+   const dx=pt.x-target.x,dy=pt.y-target.y,d=dx*dx+dy*dy;
+   if(d<best.d)best={d,p};
+ }
+ return best.p;
+}
+function pAtDistanceKm(d){
+ if(!routeGeoTotal)return 0;
+ return Math.max(0,Math.min(1,d/routeGeoTotal));
+}
+function gradientAhead(p,km=2){
+ if(routeGeo.length<2)return null;
+ const startD=Math.max(0,Math.min(routeGeoTotal,p*routeGeoTotal));
+ const endD=Math.min(routeGeoTotal,startD+km);
+ const dist=endD-startD;
+ if(dist<.05)return null;
+ const z0=elevAtP(pAtDistanceKm(startD)),z1=elevAtP(pAtDistanceKm(endD));
+ if(!Number.isFinite(z0)||!Number.isFinite(z1))return null;
+ const delta=z1-z0,grade=(delta/(dist*1000))*100;
+ return {dist,delta,grade};
+}
+function windDirLabel(deg){
+ const dirs=['N','NO','O','SO','S','SW','W','NW'];
+ return dirs[Math.round((((Number(deg)||0)%360)+360)%360/45)%8];
+}
+function weatherCodeInfo(code){
+ code=Number(code);
+ if(code===0)return ['☀️','klar'];
+ if([1,2].includes(code))return ['🌤️','leicht bewölkt'];
+ if(code===3)return ['☁️','bewölkt'];
+ if([45,48].includes(code))return ['🌫️','Nebel'];
+ if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code))return ['🌧️','Regen'];
+ if([71,73,75,77,85,86].includes(code))return ['🌨️','Schnee'];
+ if([95,96,99].includes(code))return ['⛈️','Gewitter'];
+ return ['⛅','Wetter'];
+}
+let pointWeatherTimer=null,pointWeatherSeq=0;
+const pointWeatherCache=new Map();
+function schedulePointWeather(p){
+ clearTimeout(pointWeatherTimer);
+ pointWeatherTimer=setTimeout(()=>loadPointWeather(p),260);
+}
+async function loadPointWeather(p){
+ if(routeGeo.length<2)return;
+ const [lat,lon]=interpGeo(p),key=`${lat.toFixed(2)}|${lon.toFixed(2)}`;
+ const cached=pointWeatherCache.get(key);
+ if(cached&&Date.now()-cached.ts<10*60*1000){applyPointWeather(cached.data,p);return}
+ const seq=++pointWeatherSeq;
+ try{
+   const q=new URLSearchParams({
+     latitude:String(lat),longitude:String(lon),
+     current:'temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
+     timezone:'auto'
+   });
+   const r=await fetch(`https://api.open-meteo.com/v1/forecast?${q}`);
+   const d=await r.json();
+   if(!r.ok||!d?.current)throw new Error('Wetter nicht verfügbar');
+   if(seq!==pointWeatherSeq)return;
+   pointWeatherCache.set(key,{ts:Date.now(),data:d.current});
+   applyPointWeather(d.current,p);
+ }catch(e){
+   if(seq!==pointWeatherSeq)return;
+   document.getElementById('pointWind').textContent='–';
+   document.getElementById('weatherTemp').textContent='–';
+   document.getElementById('weatherText').textContent='Wetter aktuell nicht verfügbar';
+ }
+}
+function routeBearingAtP(p){
+ if(routeGeo.length<2)return 0;
+ const a=routeLngLat(Math.max(0,p-.003)),b=routeLngLat(Math.min(1,p+.003));
+ return bearingBetween(a,b);
+}
+function windRelationLabel(windFromDeg,p){
+ const travel=routeBearingAtP(p),windTo=(Number(windFromDeg||0)+180)%360;
+ const diff=Math.abs(((windTo-travel+540)%360)-180);
+ if(diff<=45)return 'Rückenwind';
+ if(diff>=135)return 'Gegenwind';
+ return 'Seitenwind';
+}
+function windArrow(deg){
+ const arrows=['↓','↙','←','↖','↑','↗','→','↘'];
+ return arrows[Math.round((((Number(deg)||0)%360)+360)%360/45)%8];
+}
+function applyPointWeather(w,p=.5){
+ const speed=Math.round(Number(w.wind_speed_10m)||0),gust=Math.round(Number(w.wind_gusts_10m)||0),deg=Number(w.wind_direction_10m)||0,dir=windDirLabel(deg),relation=windRelationLabel(deg,p),arrow=windArrow(deg);
+ const [icon,label]=weatherCodeInfo(w.weather_code);
+ document.querySelector('.weather-big .wx').textContent=icon;
+ document.getElementById('pointWind').textContent=`${arrow} ${speed} km/h ${dir}${gust?` · Böen ${gust}`:''} · ${relation}`;
+ document.getElementById('weatherTemp').textContent=`${Math.round(Number(w.temperature_2m)||0)}°`;
+ document.getElementById('weatherText').textContent=`${label} · ${relation} · ${speed} km/h ${dir}${gust?` · Böen ${gust}`:''}`;
+}
+function updateLinked(p,source){
+ if(routeGeo.length<2)return;
+ p=Math.max(0,Math.min(1,p));
+ const named=nearestNamedPoint(p),terrain=terrainAtP(p),km=Math.round(p*routeDistanceKm);
+ const z=elevAtP(p);
+ if(roamCursor){
+   roamCursor.setLatLng(interpGeo(p));
+   roamCursor.setTooltipContent(`<div class="roam-tip-inner"><b>km ${km} · ${named.name||'Streckenpunkt'}</b><small>${Number.isFinite(z)?Math.round(z).toLocaleString('de-DE')+' m':'Höhe –'}</small><div class="roam-tip-meta"><i class="dot ${terrain.name.toLowerCase()}"></i><span>${terrain.name}</span></div></div>`);
+ }
+ const xprof=55+p*915,yprof=Number.isFinite(z)?elevYForValue(z):120;
+ document.getElementById('profileLine').setAttribute('x1',xprof);
+ document.getElementById('profileLine').setAttribute('x2',xprof);
+ const pm=document.getElementById('profileMarker');pm.setAttribute('cx',xprof);pm.setAttribute('cy',yprof);
+
+ document.getElementById('pointName').textContent=named.name||'Streckenpunkt';
+ document.getElementById('pointKm').textContent=`km ${km}`;
+ document.getElementById('pointAlt').textContent=Number.isFinite(z)?Math.round(z).toLocaleString('de-DE')+' m':'–';
+ document.getElementById('pointTerrain').textContent=terrain.name;
+ const g=gradientAhead(p,2);
+ document.getElementById('pointGrade').textContent=g
+   ?`${g.grade>=0?'+':''}${g.grade.toFixed(1).replace('.',',')}% · ${g.delta>=0?'+':''}${Math.round(g.delta)} m`
+   :'–';
+ schedulePointWeather(p);
+}
+function pointerToP(el,e){
+ const r=el.getBoundingClientRect();
+ return Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+}
+document.getElementById('elevationSvg').addEventListener('pointermove',e=>updateLinked(pointerToP(e.currentTarget,e),'profile'));
+document.getElementById('elevationSvg').addEventListener('click',e=>updateLinked(pointerToP(e.currentTarget,e),'profile'));
+
+
+function parseDateOnly(v){
+ const p=String(v||'').split('-').map(Number);
+ if(p.length!==3||p.some(x=>!Number.isFinite(x)))return null;
+ return new Date(Date.UTC(p[0],p[1]-1,p[2]));
+}
+function plannedTripDays(){
+ const a=parseDateOnly(document.getElementById('planStartDate')?.value);
+ const b=parseDateOnly(document.getElementById('planEndDate')?.value);
+ if(!a||!b)return null;
+ const n=Math.round((b-a)/86400000)+1;
+ return n>0?n:null;
+}
+function webRouteMetrics(rows){
+ const dist=[0],gain=[0];
+ let totalGain=0;
+ for(let i=1;i<rows.length;i++){
+   dist[i]=dist[i-1]+geoDistKm([rows[i-1].lat,rows[i-1].lon],[rows[i].lat,rows[i].lon]);
+   const z0=Number(rows[i-1].z),z1=Number(rows[i].z);
+   if(Number.isFinite(z0)&&Number.isFinite(z1)&&z1>z0)totalGain+=z1-z0;
+   gain[i]=totalGain;
+ }
+ return {dist,gain,totalDist:dist.at(-1)||0,totalGain};
+}
+function buildWebStages(rows,m,days,targetKm,maxHm){
+ const count=rows.length;if(count<2)return [];
+ if(!days){
+   const byKm=Math.ceil(m.totalDist/Math.max(20,targetKm||120));
+   const byHm=Math.ceil(m.totalGain/Math.max(200,maxHm||1800));
+   days=Math.max(1,byKm,byHm);
+ }
+ days=Math.max(1,Math.min(days,count-1));
+ const totalScore=Math.max(.001,m.totalDist/Math.max(20,targetKm||120)+m.totalGain/Math.max(200,maxHm||1800));
+ const cuts=[0];let last=0;
+ for(let part=1;part<days;part++){
+   const target=totalScore*(part/days);
+   let best=last+1,bestDelta=Infinity;
+   for(let i=last+1;i<count-(days-part);i++){
+     const score=m.dist[i]/Math.max(20,targetKm||120)+m.gain[i]/Math.max(200,maxHm||1800);
+     const d=Math.abs(score-target);
+     if(d<bestDelta){bestDelta=d;best=i}
+   }
+   cuts.push(best);last=best;
+ }
+ cuts.push(count-1);
+ return cuts.slice(1).map((e,i)=>{
+   const s=cuts[i];
+   return {s,e,km:m.dist[e]-m.dist[s],hm:m.gain[e]-m.gain[s]};
+ });
+}
+function setPlanStatus(msg,kind=''){
+ const el=document.getElementById('planStatus');if(!el)return;
+ el.textContent=msg;el.className='plan-status '+kind;
+}
+const RIDER_PROFILE_KEY='abo-web-rider-profile-v1';
+let planTerrainPref='mixed';
+function selectedSegmentValue(id,fallback){
+ const el=document.querySelector(`#${id} button.active`);return el?.dataset.value||fallback;
+}
+function readRiderProfileForm(){
+ return {
+   km:Math.max(10,Number(document.getElementById('riderKmDay')?.value)||80),
+   hm:Math.max(100,Number(document.getElementById('riderHmDay')?.value)||800),
+   multi:selectedSegmentValue('riderMulti','regular'),
+   intensity:selectedSegmentValue('riderIntensity','balanced'),
+   tech:selectedSegmentValue('riderTech','moderate'),
+   surface:selectedSegmentValue('riderSurface','gravel')
+ };
+}
+function saveRiderProfile(){try{localStorage.setItem(RIDER_PROFILE_KEY,JSON.stringify(readRiderProfileForm()))}catch(e){}}
+function riderLabel(type,v){
+ const maps={multi:{beginner:'Anfänger',regular:'Fortgeschritten',expert:'Sehr erfahren'},intensity:{easy:'Entspannt',balanced:'Ausgewogen',sporty:'Sportlich'},tech:{easy:'Einfach',moderate:'Moderat technisch',advanced:'Anspruchsvoll'},surface:{asphalt:'Asphalt ok',gravel:'Schotter ok',both:'Asphalt & Schotter',nature:'Naturwege'}};
+ return maps[type]?.[v]||v;
+}
+function restoreRiderProfile(){
+ let p=null;try{p=JSON.parse(localStorage.getItem(RIDER_PROFILE_KEY)||'null')}catch(e){}
+ p=p||{km:80,hm:800,multi:'regular',intensity:'balanced',tech:'moderate',surface:'gravel'};
+ const km=document.getElementById('riderKmDay'),hm=document.getElementById('riderHmDay');if(km)km.value=p.km;if(hm)hm.value=p.hm;
+ [['riderMulti','multi'],['riderIntensity','intensity'],['riderTech','tech'],['riderSurface','surface']].forEach(([id,key])=>document.querySelectorAll(`#${id} button`).forEach(b=>b.classList.toggle('active',b.dataset.value===p[key])));
+}
+function parseWaypoints(){
+ const raw=document.getElementById('planWaypoints')?.value||'';
+ return raw.split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean).slice(0,8).map(name=>({name,kind:'via'}));
+}
+function terrainText(v){return {mixed:'Gemischt',road:'Eher Straße',gravel:'Eher Schotter',offroad:'Eher Offroad'}[v]||'Gemischt'}
+function lodgingText(v){return {hotel:'Hotel / Pension',camping:'Camping / Zelt',mixed:'Gemischt'}[v]||v}
+function profileFeasibility(stages,rider){
+ if(!stages?.length)return {cls:'',title:'Bereit zur Planung',text:'Route und Fahrerprofil werden gemeinsam bewertet.'};
+ const ratios=stages.map(s=>Math.max((Number(s.km)||0)/rider.km,(Number(s.hm)||0)/rider.hm));
+ const max=Math.max(...ratios),over=ratios.filter(r=>r>1.25).length;
+ if(max<=1.15)return {cls:'',title:'Sehr passend',text:'Die Etappen liegen überwiegend in deinem gewohnten Tagesbereich.'};
+ if(max<=1.45)return {cls:'fit-warn',title:'Anspruchsvoll',text:`${Math.max(1,over)} Etappe(n) liegen merklich über deinem normalen Tagesniveau.`};
+ return {cls:'fit-hard',title:'Deutlich über gewohnt',text:`Mehrere Etappen übersteigen dein übliches km-/HM-Niveau deutlich. Etappenanzahl prüfen.`};
+}
+function drawHomePreview(saved){
+ const poly=document.getElementById('homePreviewRoute'),startDot=document.getElementById('homePreviewStart'),endDot=document.getElementById('homePreviewEnd');
+ const startLabel=document.getElementById('homePreviewStartLabel'),endLabel=document.getElementById('homePreviewEndLabel');
+ const area=document.getElementById('homeElevArea'),line=document.getElementById('homeElevLine');
+ if(!saved?.coords?.length||saved.coords.length<2)return;
+ const rows=normalizeAdventureCoords(saved.coords);if(rows.length<2)return;
+ const lats=rows.map(x=>x.lat),lons=rows.map(x=>x.lon),minLat=Math.min(...lats),maxLat=Math.max(...lats),minLon=Math.min(...lons),maxLon=Math.max(...lons);
+ const dx=Math.max(.0001,maxLon-minLon),dy=Math.max(.0001,maxLat-minLat),sample=Math.min(120,rows.length),pts=[];
+ for(let j=0;j<sample;j++){const r=rows[Math.round(j*(rows.length-1)/(sample-1))],x=45+(r.lon-minLon)/dx*550,y=188-(r.lat-minLat)/dy*150;pts.push([x,y])}
+ poly.setAttribute('points',pts.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' '));
+ startDot.setAttribute('cx',pts[0][0]);startDot.setAttribute('cy',pts[0][1]);endDot.setAttribute('cx',pts.at(-1)[0]);endDot.setAttribute('cy',pts.at(-1)[1]);
+ startLabel.setAttribute('x',Math.min(540,pts[0][0]+12));startLabel.setAttribute('y',Math.min(210,pts[0][1]+15));startLabel.textContent=saved.start||'Start';
+ endLabel.setAttribute('x',Math.max(30,pts.at(-1)[0]-55));endLabel.setAttribute('y',Math.max(18,pts.at(-1)[1]-10));endLabel.textContent=saved.dest||'Ziel';
+ const z=rows.map(x=>x.z).filter(Number.isFinite);if(z.length>2){
+   const minZ=Math.min(...z),maxZ=Math.max(...z),span=Math.max(100,maxZ-minZ),epts=[];
+   for(let j=0;j<sample;j++){const r=rows[Math.round(j*(rows.length-1)/(sample-1))],zz=Number.isFinite(r.z)?r.z:minZ,x=30+j/(sample-1)*470,y=145-(zz-minZ)/span*105;epts.push([x,y])}
+   const d=epts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');line.setAttribute('d',d);area.setAttribute('d',d+' L500,150 L30,150 Z');
+ }
+}
+function renderHomeStages(saved){
+ const wrap=document.getElementById('homeStageRough');if(!wrap)return;
+ const stages=Array.isArray(saved?.stages)?saved.stages:[];let names=null;try{names=JSON.parse(localStorage.getItem('abo-mobile-stage-names')||'null')}catch(e){}
+ if(!stages.length){wrap.innerHTML='<div class="v12-stage-rough-row"><i>1</i><span>Route berechnen</span><span>–</span></div>';return}
+ wrap.innerHTML=stages.slice(0,8).map((s,i)=>`<div class="v12-stage-rough-row"><i>${i+1}</i><span>${Array.isArray(names)?(names[i]||`Etappe ${i+1}`):`Etappe ${i+1}`} → ${Array.isArray(names)?(names[i+1]||'Ziel'):'Ziel'}</span><span>${Math.round(Number(s.km)||0)} km · ${Math.round(Number(s.hm)||0).toLocaleString('de-DE')} HM</span></div>`).join('');
+}
+function renderHomePlanner(){
+ const saved=(()=>{try{return JSON.parse(localStorage.getItem('abo-mobile-route')||'null')}catch(e){return null}})();
+ const rider=readRiderProfileForm();
+ const chips=document.getElementById('homeProfileChips');if(chips)chips.innerHTML=`<div class="v12-profile-chip">◴ ${rider.km} km/Tag</div><div class="v12-profile-chip">▲ ${rider.hm} HM/Tag</div><div class="v12-profile-chip">▥ ${riderLabel('multi',rider.multi)}</div><div class="v12-profile-chip">♥ ${riderLabel('intensity',rider.intensity)}</div><div class="v12-profile-chip">✹ ${riderLabel('tech',rider.tech)}</div><div class="v12-profile-chip">▱ ${riderLabel('surface',rider.surface)}</div>`;
+ const fitText=document.getElementById('homeRiderFit');if(fitText)fitText.innerHTML=`<strong>Fahrerprofil:</strong> ${rider.km} km / ${rider.hm} HM gewohnt · ${riderLabel('multi',rider.multi)} · ${riderLabel('intensity',rider.intensity)}.`;
+ if(saved?.coords?.length>1){
+   const metrics=saved.metrics||{},stages=Array.isArray(saved.stages)?saved.stages:[];
+   document.getElementById('homeTripTitle').textContent=`${saved.start||'Start'} → ${saved.dest||'Ziel'}`;
+   document.getElementById('homeTripMeta').textContent='Gespeicherte Adventure-Bike-OS-Route · bereit für Route, Etappen und Packen';
+   document.getElementById('homeDist').textContent=`${Math.round(Number(metrics.totalDist)||routeDistanceKm||0)} km`;
+   document.getElementById('homeGain').textContent=`${Math.round(Number(metrics.totalGain)||0).toLocaleString('de-DE')} m`;
+   document.getElementById('homeStages').textContent=stages.length||'–';
+   const sd=saved.tripDates?.startDate||'',ed=saved.tripDates?.endDate||'';document.getElementById('homeDates').textContent=sd?(ed?`${sd.slice(5)} – ${ed.slice(5)}`:sd.slice(5)):'offen';
+   document.getElementById('homeRouteBadge').textContent='Route gespeichert';
+   if(document.activeElement!==document.getElementById('planStart'))document.getElementById('planStart').value=saved.start||'';
+   if(document.activeElement!==document.getElementById('planDest'))document.getElementById('planDest').value=saved.dest||'';
+   if(sd)document.getElementById('planStartDate').value=sd;if(ed)document.getElementById('planEndDate').value=ed;
+   const fit=profileFeasibility(stages,rider),box=document.getElementById('homeFeasibility');box.className='v12-feasibility '+fit.cls;box.innerHTML=`<span style="font-size:22px">${fit.cls?'!':'✓'}</span><div><strong>${fit.title}</strong>${fit.text}</div>`;
+   document.getElementById('homePreviewText').textContent=`${saved.start||'Start'} → ${saved.dest||'Ziel'} · echte Routengeometrie`;
+   document.getElementById('homeElevMeta').textContent=`${Math.round(Number(metrics.totalDist)||0)} km · ${Math.round(Number(metrics.totalGain)||0).toLocaleString('de-DE')} HM`;
+   drawHomePreview(saved);renderHomeStages(saved);
+ }else{
+   document.getElementById('homeTripTitle').textContent='Noch keine Route';document.getElementById('homeTripMeta').textContent='Start und Ziel eingeben und Route berechnen.';
+   document.getElementById('homeDist').textContent='–';document.getElementById('homeGain').textContent='–';document.getElementById('homeStages').textContent='–';document.getElementById('homeDates').textContent='–';document.getElementById('homeRouteBadge').textContent='noch offen';
+ }
+ try{const lp=JSON.parse(localStorage.getItem('abo-mobile-lodging-prefs')||'null');if(lp?.type&&document.getElementById('planLodging'))document.getElementById('planLodging').value=lp.type}catch(e){}
+}
+async function calculateWebRoute(){
+ const start=document.getElementById('planStart').value.trim(),dest=document.getElementById('planDest').value.trim();
+ const startDate=document.getElementById('planStartDate').value,endDate=document.getElementById('planEndDate').value;
+ const kmDay=Math.max(20,Number(document.getElementById('planKmDay').value)||120),hmDay=Math.max(200,Number(document.getElementById('planHmDay').value)||1800);
+ const profile=document.getElementById('planProfile').value||'trekking',lodging=document.getElementById('planLodging').value||'hotel';
+ const waypoints=parseWaypoints(),rider=readRiderProfileForm();saveRiderProfile();
+ if(!start||!dest){setPlanStatus('Bitte Start und Ziel eingeben.','warn');return}if(startDate&&endDate&&!plannedTripDays()){setPlanStatus('Das Bis-Datum muss nach dem Startdatum liegen.','warn');return}
+ const btn=document.getElementById('planRouteBtn');btn.disabled=true;setPlanStatus('Route wird berechnet …');
+ try{
+   const r=await fetch(API+'/api/route-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({start,destination:dest,loop:false,waypoints,profile})});
+   const d=await r.json();if(!r.ok)throw new Error(d?.error||'Routing nicht verfügbar');let rows=normalizeAdventureCoords(d?.geometry?.coordinates);if(rows.length<20)throw new Error('Die Routingantwort enthält zu wenige Punkte.');rows=await enrichRouteElevation(rows);
+   const m=webRouteMetrics(rows),days=plannedTripDays(),stages=buildWebStages(rows,m,days,kmDay,hmDay),ordered=Array.isArray(d?.ordered_points)?d.ordered_points:[];
+   const fixedNames=[start,...stages.slice(0,-1).map((_,i)=>ordered.find(x=>Number(x.route_index)===stages[i].e)?.name||`Etappenziel ${i+1}`),dest];
+   const routePlan={type:'point',source:'generated',waypoints,orderedPoints:ordered,importName:''};
+   localStorage.setItem('abo-mobile-stage-names',JSON.stringify(fixedNames));localStorage.setItem('abo-mobile-trip-prefs-v2',JSON.stringify({startDate,endDate}));
+   localStorage.setItem('abo-mobile-lodging-prefs',JSON.stringify({type:lodging,priceLevel:document.getElementById('planPrice')?.value||'mid',nightBudget:Number(document.getElementById('planNightBudget')?.value)||90,totalBudget:0}));
+   localStorage.setItem('abo-mobile-route',JSON.stringify({start,dest,coords:rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]),metrics:m,stages,routePlan,tripDates:{startDate,endDate},riderProfile:rider,terrainPreference:planTerrainPref}));
+   routeTerrain={status:'idle',stages:[],source:null,reliableCoverage:0,warning:null};applyRouteRows(rows,routePlan.orderedPoints,'stored',start,dest,stages);
+   setPlanStatus(`${Math.round(m.totalDist)} km · ${Math.round(m.totalGain).toLocaleString('de-DE')} HM · ${stages.length} Etappen gespeichert.`,'ok');renderHomePlanner();renderStagePrototype();setTimeout(()=>showScreen('route'),250);
+ }catch(e){setPlanStatus(e?.message||'Route konnte nicht berechnet werden.','warn')}finally{btn.disabled=false}
+}
+async function handleWebGpxImport(file){
+ if(!file)return;setPlanStatus('GPX wird gelesen …');
+ try{
+   const xml=await file.text(),doc=new DOMParser().parseFromString(xml,'application/xml'),pts=[...doc.querySelectorAll('trkpt,rtept')];if(pts.length<2)throw new Error('Keine GPX-Trackpunkte gefunden.');
+   let rows=pts.map(p=>({lat:Number(p.getAttribute('lat')),lon:Number(p.getAttribute('lon')),z:Number(p.querySelector('ele')?.textContent)})).filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lon));rows=await enrichRouteElevation(rows);
+   const m=webRouteMetrics(rows),kmDay=Math.max(20,Number(document.getElementById('planKmDay').value)||120),hmDay=Math.max(200,Number(document.getElementById('planHmDay').value)||1800),stages=buildWebStages(rows,m,plannedTripDays(),kmDay,hmDay);
+   const start=document.getElementById('planStart').value.trim()||'GPX Start',dest=document.getElementById('planDest').value.trim()||'GPX Ziel';
+   localStorage.setItem('abo-mobile-stage-names',JSON.stringify([start,...stages.slice(0,-1).map((_,i)=>`Etappenziel ${i+1}`),dest]));localStorage.setItem('abo-mobile-route',JSON.stringify({start,dest,coords:rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]),metrics:m,stages,routePlan:{type:'gpx',source:'imported',waypoints:[],orderedPoints:[],importName:file.name},tripDates:{startDate:document.getElementById('planStartDate').value,endDate:document.getElementById('planEndDate').value}}));
+   applyRouteRows(rows,[],'stored',start,dest,stages);setPlanStatus(`GPX übernommen · ${Math.round(m.totalDist)} km · Originaltrack bleibt erhalten.`,'ok');renderHomePlanner();renderStagePrototype();
+ }catch(e){setPlanStatus(e?.message||'GPX konnte nicht importiert werden.','warn')}
+}
+function loadSavedRouteFromPlanner(){loadExactRouteGeometry().then(()=>{renderHomePlanner();setPlanStatus('Gespeicherte Route geladen.','ok');showScreen('route')})}
+restoreRiderProfile();
+['riderMulti','riderIntensity','riderTech','riderSurface'].forEach(id=>document.querySelectorAll(`#${id} button`).forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll(`#${id} button`).forEach(x=>x.classList.remove('active'));b.classList.add('active');saveRiderProfile();renderHomePlanner()})));
+document.getElementById('riderKmDay')?.addEventListener('change',()=>{saveRiderProfile();renderHomePlanner()});document.getElementById('riderHmDay')?.addEventListener('change',()=>{saveRiderProfile();renderHomePlanner()});
+document.querySelectorAll('#planTerrainChips [data-terrain]').forEach(b=>b.addEventListener('click',()=>{planTerrainPref=b.dataset.terrain;document.querySelectorAll('#planTerrainChips [data-terrain]').forEach(x=>x.classList.toggle('active',x===b))}));
+document.getElementById('profileFocusBtn')?.addEventListener('click',()=>document.getElementById('riderKmDay')?.focus());document.getElementById('planRouteBtn')?.addEventListener('click',calculateWebRoute);document.getElementById('useSavedRouteBtn')?.addEventListener('click',loadSavedRouteFromPlanner);document.getElementById('planGpxInput')?.addEventListener('change',e=>handleWebGpxImport(e.target.files?.[0]));document.getElementById('saveDraftBtn')?.addEventListener('click',()=>{saveRiderProfile();setPlanStatus('Entwurf lokal gespeichert.','ok')});
+renderHomePlanner();
+renderTerrainUI();loadExactRouteGeometry();initRouteMap();
+
+const fallbackStageData=[
+ {day:'Tag 1',from:'Innsbruck',to:'Kühtai',km:73,hm:1250,wx:'18°',gravel:52,lodging:null},
+ {day:'Tag 2',from:'Kühtai',to:'Brixen',km:96,hm:1760,wx:'16°',gravel:61,lodging:null},
+ {day:'Tag 3',from:'Brixen',to:'Riva',km:89,hm:1340,wx:'14°',gravel:46,lodging:null},
+ {day:'Tag 4',from:'Riva',to:'Ziel',km:54,hm:500,wx:'20°',gravel:31,lodging:null}
 ];
-
-let items=JSON.parse(JSON.stringify(baseItems));
-
-function bagSvg(type,color){
-  const fill=color;
-  const common=`fill="${fill}" stroke="#e9e1d4" stroke-width="2"`;
-  if(type==='saddle') return `<svg viewBox="0 0 42 28"><path d="M4 8 Q16 2 36 7 L32 24 H7 Q5 24 4 22 Z" ${common}/></svg>`;
-  if(type==='frame') return `<svg viewBox="0 0 42 28"><path d="M4 6 H38 L29 23 H4 Z" ${common}/></svg>`;
-  if(type==='top') return `<svg viewBox="0 0 42 28"><rect x="4" y="8" width="34" height="12" rx="5" ${common}/></svg>`;
-  if(type==='bar') return `<svg viewBox="0 0 42 28"><rect x="5" y="6" width="30" height="16" rx="8" ${common}/><path d="M35 10 Q39 12 39 17" fill="none" stroke="#e9e1d4" stroke-width="2"/></svg>`;
-  return `<svg viewBox="0 0 42 28"><rect x="6" y="3" width="10" height="22" rx="4" ${common}/><rect x="24" y="3" width="10" height="22" rx="4" ${common}/></svg>`;
+let stageData=fallbackStageData;
+let selectedStagePrototype=0;
+function lodgingTypeName(t){
+ return {hotel:'Hotel',guest_house:'Pension',hostel:'Hostel',motel:'Motel',apartment:'Apartment',chalet:'Chalet',alpine_hut:'Berghütte',wilderness_hut:'Schutzhütte',camp_site:'Camping',caravan_site:'Camping / Caravan'}[t]||'Unterkunft';
+}
+function isCampingLodging(x){return ['camp_site','caravan_site'].includes(x?.type)}
+function readStagePrototypeData(){
+ try{
+   const saved=JSON.parse(localStorage.getItem('abo-mobile-route')||'null');
+   const names=JSON.parse(localStorage.getItem('abo-mobile-stage-names')||'null');
+   const lodgings=JSON.parse(localStorage.getItem('abo-mobile-lodging-selected')||'{}');
+   if(!saved?.stages?.length)return fallbackStageData;
+   const start=saved.start||'Start',dest=saved.dest||'Ziel';
+   return saved.stages.map((st,i)=>{
+     const from=Array.isArray(names)?(names[i]||start):(i===0?start:`Etappe ${i}`);
+     const to=Array.isArray(names)?(names[i+1]||dest):(i===saved.stages.length-1?dest:`Etappenziel ${i+1}`);
+     const terrain=routeTerrain.status==='ready'?routeTerrain.stages?.[i]:null;
+     return {
+       day:`Tag ${i+1}`,from,to,
+       km:Number(st.km)||0,hm:Number(st.hm)||0,wx:'–',
+       gravel:terrain?Math.round(Number(terrain.gravel)||0):null,
+       lodging:lodgings?.[i]||null,
+       last:i===saved.stages.length-1
+     };
+   });
+ }catch(e){return fallbackStageData}
+}
+function renderStagePrototype(){
+ stageData=readStagePrototypeData();
+ const list=document.getElementById('stageListItems'),summary=document.getElementById('overnightSummary');
+ if(!list||!summary)return;
+ document.getElementById('stagePageTitle').textContent=`${stageData.length} ${stageData.length===1?'Tag':'Tage'}`;
+ list.innerHTML=stageData.map((d,i)=>`<div class="stage-item ${i===selectedStagePrototype?'active':''}" data-stage="${i}">
+   <b>${d.day} · ${d.from} → ${d.to}</b>
+   <small>${d.km.toFixed(0)} km · ${Math.round(d.hm).toLocaleString('de-DE')} HM${d.gravel!=null?` · ${d.gravel}% Gravel`:''}</small>
+ </div>`).join('');
+ const nights=stageData.slice(0,-1);
+ summary.innerHTML=nights.length?nights.map((d,i)=>{
+   const l=d.lodging,icon=l?(isCampingLodging(l)?'⛺':'⌂'):'○';
+   const status=l?(l.status==='booked'?'reserviert':'vorgemerkt'):'noch offen';
+   return `<div class="night-row"><span class="night-icon">${icon}</span><div><b>Nacht ${i+1} · ${d.to}</b><small>${l?l.name:'Noch keine Unterkunft ausgewählt'}</small></div><span class="night-status">${status}</span></div>`;
+ }).join(''):'<div class="muted" style="font-size:11px">Keine Zwischenübernachtung erforderlich.</div>';
+ list.querySelectorAll('.stage-item').forEach(el=>el.addEventListener('click',()=>showStagePrototype(+el.dataset.stage)));
+ selectedStagePrototype=Math.min(selectedStagePrototype,stageData.length-1);
+ showStagePrototype(selectedStagePrototype,false);
+}
+function showStagePrototype(i,rerender=True){
+ selectedStagePrototype=Math.max(0,Math.min(stageData.length-1,i));
+ if(rerender)document.querySelectorAll('#stageListItems .stage-item').forEach((x,j)=>x.classList.toggle('active',j===selectedStagePrototype));
+ const d=stageData[selectedStagePrototype],l=d.lodging;
+ document.getElementById('stageDay').textContent=d.day;
+ document.getElementById('stageName').textContent=`${d.from} → ${d.to}`;
+ document.getElementById('stageKm').textContent=`${d.km.toFixed(0)} km`;
+ document.getElementById('stageHm').textContent=`${Math.round(d.hm).toLocaleString('de-DE')} m`;
+ document.getElementById('stageWx').textContent=d.wx||'–';
+ document.getElementById('stageSurface').textContent=d.gravel==null?'–':`${d.gravel}%`;
+ const rider=readRiderProfileForm(),ratio=Math.max(d.km/Math.max(1,rider.km),d.hm/Math.max(1,rider.hm)),fitEl=document.getElementById('stageRiderFit');
+ if(fitEl){
+   if(ratio<=1.15){fitEl.className='';fitEl.innerHTML=`<b>Im gewohnten Bereich.</b> ${d.km.toFixed(0)} km / ${Math.round(d.hm)} HM gegenüber ${rider.km} km / ${rider.hm} HM gewohnt.`}
+   else if(ratio<=1.45){fitEl.className='fit-warn';fitEl.innerHTML=`<b>Anspruchsvoller als gewohnt.</b> Diese Etappe liegt rund ${Math.round((ratio-1)*100)}% über deinem normalen Tagesniveau.`}
+   else{fitEl.className='fit-hard';fitEl.innerHTML=`<b>Deutlich über deinem gewohnten Niveau.</b> Etappenteilung prüfen – km oder HM liegen erheblich über deinem Fahrerprofil.`}
+ }
+ const t=routeTerrain.status==='ready'?routeTerrain.stages?.[selectedStagePrototype]:null;
+ document.getElementById('stageTerrainLegend').innerHTML=t
+   ?['paved','fine','gravel','rough','unknown'].map(c=>`<span class="legend-item"><i class="route-dot" style="background:${terrainStyle(c).color}"></i>${terrainStyle(c).short} ${Math.round(Number(t[c])||0)}%</span>`).join('')
+   :'<span class="legend-item">Terrain wird geladen …</span>';
+ const box=document.getElementById('stageOvernightCard');
+ if(d.last&&!l){
+   box.innerHTML='<div class="stay-card-main"><span class="stay-card-icon">◎</span><div><b>Reiseziel erreicht</b><div class="stay-meta">Keine weitere Zwischenübernachtung nötig.</div></div></div>';
+ }else if(l){
+   const icon=isCampingLodging(l)?'⛺':'⌂',status=l.status==='booked'?'reserviert':'vorgemerkt',price=Number(l.quotedPrice)||0;
+   box.innerHTML=`<div class="stay-card-main"><span class="stay-card-icon">${icon}</span><div><b>${l.name||lodgingTypeName(l.type)}</b><div class="stay-meta">${lodgingTypeName(l.type)} · ${status}${price?` · ${price.toFixed(0)} €`:''}</div></div><span class="badge">${status}</span></div>`;
+ }else{
+   box.innerHTML=`<div class="stay-card-main"><span class="stay-card-icon">○</span><div><b>Übernachtung in ${d.to}</b><div class="stay-meta">Noch keine Unterkunft vorgemerkt. Auswahl aus der Mobile-App wird hier automatisch übernommen.</div></div><span class="badge warn">offen</span></div>`;
+ }
 }
 
-function grouped(){
-  const map={};
-  categories.forEach(c=>map[c.key]=[]);
-  items.forEach(i=>map[i.cat].push(i));
-  return map;
-}
-
-function bagUsage(){
-  const usage={};
-  Object.keys(bagDefs).forEach(k=>usage[k]={count:0,liters:0,items:[]});
-  items.filter(i=>i.selected && i.bag).forEach(i=>{
-    usage[i.bag].count++;
-    usage[i.bag].liters+=i.l;
-    usage[i.bag].items.push(i);
-  });
-  return usage;
-}
-
-function totalSelectedWeight(){
-  return items.filter(i=>i.selected).reduce((a,b)=>a+b.kg,0);
-}
-
-function totalAssignedWeight(){
-  return items.filter(i=>i.selected && i.bag).reduce((a,b)=>a+b.kg,0);
-}
-
-function selectedCount(){return items.filter(i=>i.selected).length}
-function activeBags(){return Object.values(bagUsage()).filter(v=>v.count>0).length}
-
-function balance(){
-  let front=0,rear=0;
-  items.filter(i=>i.selected && i.bag).forEach(i=>{
-    const def=bagDefs[i.bag];
-    front+=i.kg*def.front;
-    rear+=i.kg*def.rear;
-  });
-  const total=front+rear||1;
-  return {front:Math.round(front/total*100),rear:Math.round(rear/total*100)};
-}
-
-function percent(liters,size){ return Math.max(0,Math.min(100,Math.round((liters/size)*100))); }
-
-function renderNeeds(){
-  const wrap=document.getElementById('needsList');
-  const groupedItems=grouped();
-  wrap.innerHTML='';
-  categories.forEach(cat=>{
-    const arr=groupedItems[cat.key];
-    const done=arr.filter(i=>i.selected).length;
-    const block=document.createElement('div');
-    block.className='category-block';
-    block.innerHTML=`
-      <div class="category-head">
-        <div class="category-head-left">
-          <div class="cat-icon">${cat.icon}</div>
-          <strong>${cat.name}</strong>
-        </div>
-        <div class="count">${done}/${arr.length}</div>
-      </div>
-      <div class="item-list">
-        ${arr.map((item,idx)=>`
-          <div class="item-row">
-            <div class="check ${item.selected?'':'off'}">✓</div>
-            <div class="item-name">${item.name}</div>
-            <div class="mini-badge">${item.selected?'✓':''}</div>
-          </div>`).join('')}
-      </div>`;
-    wrap.appendChild(block);
-  });
-}
-
-function renderHave(){
-  const wrap=document.getElementById('haveList');
-  wrap.innerHTML='';
-  items.forEach((item,index)=>{
-    const row=document.createElement('div');
-    row.className='item-row compact';
-    const bag=item.bag?`<span class="bag-tag"><span class="bag-dot" style="background:${bagDefs[item.bag].color}"></span>${bagDefs[item.bag].name}</span>`:'<span class="bag-tag">nicht zugewiesen</span>';
-    row.innerHTML=`
-      <div class="check ${item.selected?'':'off'}" data-toggle="${index}">✓</div>
-      <div class="gear-thumb">${item.emoji}</div>
-      <div>
-        <div class="item-name"><strong>${item.name}</strong></div>
-        <div class="item-sub">${item.kg.toFixed(1).replace('.',',')} kg</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">${bag}<span class="menu-dots">⋮</span></div>`;
-    wrap.appendChild(row);
-  });
-  wrap.querySelectorAll('[data-toggle]').forEach(el=>el.onclick=()=>{
-    const idx=+el.dataset.toggle;
-    items[idx].selected=!items[idx].selected;
-    if(!items[idx].selected) items[idx].bag='';
-    render();
-  });
-}
-
-function renderSizeGrid(){
-  const usage=bagUsage();
-  const grid=document.getElementById('sizeGrid');
-  grid.innerHTML='';
-  Object.entries(bagDefs).forEach(([key,bag])=>{
-    const liters=usage[key].liters;
-    const size=bagSize[key];
-    const p=percent(liters,size);
-    const card=document.createElement('div');
-    card.className='size-card';
-    card.innerHTML=`
-      <div class="headrow">
-        <div class="size-icon">${bagSvg(bag.icon, bag.color)}</div>
-        <div><strong>${bag.name}</strong></div>
-      </div>
-      <div class="size-options">
-        ${bag.sizes.map(s=>`<button class="${s===size?'active':''}" data-size="${s}" data-bag="${key}">${String(s).replace('.',',')} L</button>`).join('')}
-      </div>
-      <div class="fillbar"><i style="width:${p}%"></i></div>
-      <div class="size-meta">${liters.toFixed(1).replace('.',',')} / ${String(size).replace('.',',')} L · ${p}%</div>`;
-    grid.appendChild(card);
-  });
-  grid.querySelectorAll('[data-size]').forEach(btn=>btn.onclick=()=>{
-    bagSize[btn.dataset.bag]=parseFloat(btn.dataset.size);
-    render();
-  });
-}
-
-function renderBagSummary(){
-  const usage=bagUsage();
-  const wrap=document.getElementById('bagSummary');
-  wrap.innerHTML='';
-  Object.entries(bagDefs).forEach(([key,bag])=>{
-    const u=usage[key];
-    const row=document.createElement('div');
-    row.className='bag-summary-row';
-    row.innerHTML=`
-      <div class="bag-dot" style="background:${bag.color}"></div>
-      <strong>${bag.name}</strong>
-      <div class="vol">${u.liters.toFixed(1).replace('.',',')} / ${String(bagSize[key]).replace('.',',')} L</div>
-      <div class="countbubble">${u.count}</div>`;
-    wrap.appendChild(row);
-  });
-}
-
-function renderProgress(){
-  const wrap=document.getElementById('progressList');
-  const groupedItems=grouped();
-  wrap.innerHTML='';
-  let done=0,total=0;
-  categories.forEach(cat=>{
-    const arr=groupedItems[cat.key];
-    const d=arr.filter(i=>i.selected).length;
-    done+=d; total+=arr.length;
-    const pct=Math.round((d/arr.length)*100);
-    const row=document.createElement('div');
-    row.innerHTML=`
-      <div class="prog-row">
-        <div class="prog-label">${cat.name}</div>
-        <div class="prog-numbers">${d}/${arr.length}</div>
-        <div class="prog-numbers">${pct}%</div>
-        <div class="progbar"><i style="width:${pct}%"></i></div>
-      </div>`;
-    wrap.appendChild(row);
-  });
-  document.getElementById('progressDone').textContent=done;
-  document.getElementById('progressOpen').textContent=`${total-done} offen`;
-}
-
-function updateBikeLabels(){
-  const usage=bagUsage();
-  const ids={saddle:'label-saddle',frame:'label-frame',top:'label-top',bar:'label-bar',fork:'label-fork'};
-  Object.keys(ids).forEach(key=>{
-    const liters=usage[key].liters;
-    const size=bagSize[key];
-    const p=percent(liters,size);
-    document.getElementById(ids[key]).textContent=`${liters.toFixed(1).replace('.',',')} / ${String(size).replace('.',',')} L · ${p}%`;
-  });
-}
-
-function updateSummary(){
-  const totalW=totalSelectedWeight();
-  const assignedW=totalAssignedWeight();
-  const bal=balance();
-  document.getElementById('weightMain').textContent=`${assignedW.toFixed(1).replace('.',',')} / ${totalW.toFixed(1).replace('.',',')} kg`;
-  document.getElementById('frontBalance').textContent=`${bal.front}% vorne`;
-  document.getElementById('rearBalance').textContent=`${bal.rear}% hinten`;
-  document.getElementById('statBags').textContent=activeBags();
-  document.getElementById('statItems').textContent=items.filter(i=>i.selected && i.bag).length;
-  const cov=selectedCount()?Math.round((items.filter(i=>i.selected && i.bag).length/selectedCount())*100):0;
-  document.getElementById('statCoverage').textContent=`${cov}%`;
-  document.getElementById('pageMeta').textContent=`${assignedW.toFixed(1).replace('.',',')} / ${totalW.toFixed(1).replace('.',',')} kg verteilt · ${activeBags()} aktive Taschen · Balance ${bal.front} / ${bal.rear}`;
-}
-
-function emptyBike(){
-  items.forEach(i=>{ if(i.selected) i.bag=''; });
-  render();
-}
-
-function autoPack(){
-  items.forEach(i=>{
-    if(!i.selected) return;
-    const suggested={
-      'Zelt':'bar','Schlafsack':'saddle','Isomatte':'bar','Daunenjacke':'saddle','Regenjacke':'fork','Unterwäsche':'frame',
-      'Kleidung (sonstiges)':'frame','Sandalen':'frame','Kocher':'bar','Nahrung / Snacks':'frame','Wasser':'fork',
-      'Werkzeug-Set':'frame','Ersatzteile':'fork','Flickzeug':'frame','Pumpe':'frame','Powerbank':'frame','Elektronik (Sonstiges)':'frame','Licht':'top','Dokumente':'top','Erste Hilfe Set':'fork'
-    };
-    i.bag=suggested[i.name]||'frame';
-  });
-  render();
-}
-
-function render(){
-  renderNeeds();
-  renderHave();
-  renderSizeGrid();
-  renderBagSummary();
-  renderProgress();
-  updateBikeLabels();
-  updateSummary();
-}
-
-document.getElementById('btnReset').onclick=emptyBike;
-document.getElementById('btnAuto').onclick=autoPack;
-document.getElementById('btnApply').onclick=autoPack;
-document.getElementById('btnAutoSmall').onclick=autoPack;
-
-render();
+const packBags={
+ saddle:{name:'Satteltasche',sizes:[8,10,14],size:14,zone:'rear',qty:1,color:'#53664c'},
+ frame:{name:'Rahmentasche',sizes:[4,6,8],size:8,zone:'center',qty:1,color:'#bf7b4a'},
+ top:{name:'Oberrohr',sizes:[0.8,1.2,2],size:2,zone:'center',qty:1,color:'#b86b49'},
+ bar:{name:'Lenkertasche',sizes:[8,10,14],size:14,zone:'front',qty:1,color:'#c57440'},
+ fork:{name:'Gabeltaschen',sizes:[3,5,7],size:7,zone:'front',qty:1,color:'#607057'}
+};
+const PACK_STATE_KEY='abo-web-pack-v12',BAG_SIZE_STORAGE='abo-web-bag-sizes-v12';
+const packCategoryDefs=[
+ {id:'sleep',name:'Schlafen',items:['sleep','tent','mat']},{id:'clothes',name:'Kleidung',items:['down','under','clothes','rain','sandals']},{id:'food',name:'Food & Wasser',items:['water','food','snacks','stove','dishes','fuel']},{id:'tools',name:'Werkzeug & Ersatzteile',items:['tools','spares']},{id:'electronics',name:'Elektronik',items:['power','electronics']},{id:'docs',name:'Dokumente & Sonstiges',items:['docs']}
+];
+const packInitialItems=[
+ {id:'sleep',name:'Schlafsack',bag:'saddle',l:5,kg:.9,cat:'sleep',needed:true,have:true,access:'low'},
+ {id:'down',name:'Daunenjacke',bag:'saddle',l:2.5,kg:.4,cat:'clothes',needed:true,have:true,access:'mid'},
+ {id:'under',name:'Unterwäsche',bag:'frame',l:.5,kg:.3,cat:'clothes',needed:true,have:true,access:'low'},
+ {id:'clothes',name:'Kleidung',bag:'frame',l:4,kg:1.2,cat:'clothes',needed:true,have:true,access:'low'},
+ {id:'water',name:'Wasser',bag:'fork',l:2,kg:2,cat:'food',needed:true,have:true,access:'high'},
+ {id:'tools',name:'Werkzeug-Set',bag:'frame',l:1.4,kg:1.2,cat:'tools',needed:true,have:true,access:'mid'},
+ {id:'power',name:'Powerbank',bag:'frame',l:.4,kg:.45,cat:'electronics',needed:true,have:true,access:'mid'},
+ {id:'food',name:'Nahrung',bag:'frame',l:1,kg:1.8,cat:'food',needed:true,have:true,access:'mid'},
+ {id:'snacks',name:'Snacks',bag:'top',l:.4,kg:.5,cat:'food',needed:true,have:true,access:'high'},
+ {id:'electronics',name:'Elektronik',bag:'frame',l:.3,kg:.35,cat:'electronics',needed:true,have:true,access:'mid'},
+ {id:'docs',name:'Dokumente',bag:'top',l:.1,kg:.1,cat:'docs',needed:true,have:false,access:'high'},
+ {id:'tent',name:'Zelt',bag:'bar',l:2.5,kg:1.6,cat:'sleep',needed:true,have:true,access:'low'},
+ {id:'mat',name:'Isomatte',bag:'bar',l:.5,kg:.5,cat:'sleep',needed:true,have:true,access:'low'},
+ {id:'stove',name:'Kocher',bag:'bar',l:1.1,kg:.45,cat:'food',needed:true,have:false,access:'mid'},
+ {id:'dishes',name:'Essgeschirr',bag:'bar',l:.8,kg:.35,cat:'food',needed:true,have:false,access:'mid'},
+ {id:'spares',name:'Ersatzteile',bag:'fork',l:1,kg:.6,cat:'tools',needed:true,have:false,access:'low'},
+ {id:'rain',name:'Regenjacke',bag:'fork',l:.9,kg:.35,cat:'clothes',needed:true,have:true,access:'high'},
+ {id:'fuel',name:'Fuel',bag:'fork',l:.7,kg:.4,cat:'food',needed:false,have:false,access:'low'},
+ {id:'sandals',name:'Sandalen',bag:'saddle',l:1.8,kg:.75,cat:'clothes',needed:false,have:false,access:'low'}
+];
+let packItems=packInitialItems.map(x=>({...x}));
+function bagCapacity(id){const b=packBags[id];return (Number(b.size)||0)*(Number(b.qty)||1)}
+function formatLiters(v){const n=Number(v)||0;return Number.isInteger(n)?String(n):n.toFixed(1).replace('.',',')}
+function packPersist(){try{localStorage.setItem(PACK_STATE_KEY,JSON.stringify(packItems));localStorage.setItem(BAG_SIZE_STORAGE,JSON.stringify(Object.fromEntries(Object.entries(packBags).map(([k,b])=>[k,b.size]))))}catch(e){}}
+function restorePack(){try{const a=JSON.parse(localStorage.getItem(PACK_STATE_KEY)||'null');if(Array.isArray(a)){packItems=packInitialItems.map(base=>({...base,...(a.find(x=>x.id===base.id)||{})}))}const s=JSON.parse(localStorage.getItem(BAG_SIZE_STORAGE)||'null');if(s)Object.entries(s).forEach(([k,v])=>{if(packBags[k]?.sizes.includes(Number(v)))packBags[k].size=Number(v)})}catch(e){}}
+restorePack();
+function bagStats(id){const arr=packItems.filter(x=>x.needed&&x.have&&x.bag===id),l=arr.reduce((s,x)=>s+x.l,0),kg=arr.reduce((s,x)=>s+x.kg,0),cap=bagCapacity(id);return {items:arr,l,kg,cap,pct:cap?Math.round(l/cap*100):0,over:l>cap+1e-6}}
+function relevantPackItems(){return packItems.filter(x=>x.needed&&x.have)}
+function packTotalKg(){return relevantPackItems().reduce((s,x)=>s+x.kg,0)}
+function assignedPackItems(){return relevantPackItems().filter(x=>x.bag)}
+function packBalance(){let front=0,rear=0,center=0;assignedPackItems().forEach(x=>{const z=packBags[x.bag]?.zone;if(z==='front')front+=x.kg;else if(z==='rear')rear+=x.kg;else center+=x.kg});const f=front+center/2,r=rear+center/2,t=f+r||1;return {front:Math.round(f/t*100),rear:Math.round(r/t*100)}}
+function packToast(msg){let el=document.getElementById('packToast');if(!el){el=document.createElement('div');el.id='packToast';el.className='pack-toast';document.body.appendChild(el)}el.textContent=msg;el.classList.add('show');clearTimeout(packToast.t);packToast.t=setTimeout(()=>el.classList.remove('show'),1600)}
+function itemCategory(item){return packCategoryDefs.find(c=>c.items.includes(item.id))}
+function renderPackNeeds(){const box=document.getElementById('packNeedList');if(!box)return;box.innerHTML=packCategoryDefs.map(c=>{const arr=c.items.map(id=>packItems.find(x=>x.id===id)).filter(Boolean),needed=arr.filter(x=>x.needed).length;return `<div class="pack-v12-category"><div class="pack-v12-cathead"><b>${c.name}</b><span>${needed}/${arr.length}</span></div>${arr.map(i=>`<div class="pack-v12-needrow"><button class="pack-v12-check ${i.needed?'':'off'}" data-need="${i.id}" type="button">✓</button><span>${i.name}</span><span class="mini-badge">${i.needed?'':'optional'}</span></div>`).join('')}</div>`}).join('');box.querySelectorAll('[data-need]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.need);i.needed=!i.needed;if(!i.needed)i.bag='';packPersist();renderPackPrototype()})}
+function bagOptions(selected){return `<option value="">nicht zugewiesen</option>`+Object.entries(packBags).map(([id,b])=>`<option value="${id}" ${selected===id?'selected':''}>${b.name}</option>`).join('')}
+function renderPackHave(){const box=document.getElementById('packHaveList');if(!box)return;const q=(document.getElementById('packSearch')?.value||'').toLowerCase(),filter=document.getElementById('packCategoryFilter')?.value||'all';const list=packItems.filter(i=>i.needed&&(!q||i.name.toLowerCase().includes(q))&&(filter==='all'||i.cat===filter));box.innerHTML=list.map(i=>`<div class="pack-v12-item"><button class="pack-v12-check ${i.have?'':'off'}" data-have="${i.id}" type="button">✓</button><div class="thumb">${i.cat==='sleep'?'▰':i.cat==='clothes'?'♙':i.cat==='food'?'◉':i.cat==='tools'?'⚒':i.cat==='electronics'?'ϟ':'▣'}</div><div><b>${i.name}</b><small>${i.kg.toFixed(2).replace('.',',')} kg · ${formatLiters(i.l)} L${i.have?'':' · fehlt'}</small></div><select class="pack-v12-bagselect" data-bagitem="${i.id}" ${i.have?'':'disabled'}>${bagOptions(i.bag)}</select><span class="menu-dots">⋮</span></div>`).join('')||'<div class="muted" style="font-size:11px;padding:12px">Keine Gegenstände im Filter.</div>';box.querySelectorAll('[data-have]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.have);i.have=!i.have;if(!i.have)i.bag='';packPersist();renderPackPrototype()});box.querySelectorAll('[data-bagitem]').forEach(s=>s.onchange=()=>{const i=packItems.find(x=>x.id===s.dataset.bagitem);if(!i)return;if(s.value){const st=bagStats(s.value);if(st.l+i.l>st.cap+1e-6){packToast(`${packBags[s.value].name}: zu wenig Platz`);renderPackPrototype();return}}i.bag=s.value;packPersist();renderPackPrototype()})}
+function renderPackSizeGrid(){const box=document.getElementById('packSizeGrid');if(!box)return;box.innerHTML=Object.entries(packBags).map(([id,b])=>{const s=bagStats(id);return `<div class="pack-v12-size ${s.over?'pack-v12-over':''}"><b>${b.name}</b><div class="pack-v12-sizeopts">${b.sizes.map(v=>`<button type="button" class="${Number(v)===Number(b.size)?'active':''}" data-sizebag="${id}" data-size="${v}">${formatLiters(v)}L</button>`).join('')}</div><div class="pack-v12-sizebar"><i style="width:${Math.min(100,s.pct)}%"></i></div><div class="pack-v12-sizemeta">${formatLiters(s.l)} / ${formatLiters(s.cap)} L · ${s.pct}%${s.over?' · überfüllt':''}</div></div>`}).join('');box.querySelectorAll('[data-sizebag]').forEach(b=>b.onclick=()=>{packBags[b.dataset.sizebag].size=Number(b.dataset.size);packPersist();renderPackPrototype()})}
+function renderPackBike(){Object.keys(packBags).forEach(id=>{const s=bagStats(id),g=document.getElementById(`packBike-${id}`),lab=document.getElementById(`packBikeLabel-${id}`);if(g){g.classList.toggle('pack-v12-empty',!s.items.length);g.classList.toggle('pack-v12-over',s.over)}if(lab)lab.textContent=`${formatLiters(s.l)} / ${formatLiters(s.cap)} L · ${s.pct}%`})}
+function renderPackSummary(){const assigned=assignedPackItems(),total=packTotalKg(),assignedKg=assigned.reduce((s,x)=>s+x.kg,0),bal=packBalance(),active=Object.keys(packBags).filter(k=>bagStats(k).items.length).length,cov=relevantPackItems().length?Math.round(assigned.length/relevantPackItems().length*100):0;document.getElementById('packWeight').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg`;document.getElementById('frontBalance').textContent=`${bal.front}% vorne`;document.getElementById('rearBalance').textContent=`${bal.rear}% hinten`;document.getElementById('balanceBar').style.gridTemplateColumns=`${bal.front}fr ${bal.rear}fr`;document.getElementById('packStatBags').textContent=active;document.getElementById('packStatItems').textContent=assigned.length;document.getElementById('packStatCoverage').textContent=`${cov}%`;document.getElementById('packMeta').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg verteilt · ${active} aktive Taschen · Balance ${bal.front} / ${bal.rear}`;const bagBox=document.getElementById('packBagSummary');bagBox.innerHTML=Object.entries(packBags).map(([id,b])=>{const s=bagStats(id);return `<div class="pack-v12-bagrow"><i class="bag-dot" style="background:${b.color}"></i><b>${b.name}</b><span>${formatLiters(s.l)} / ${formatLiters(s.cap)} L</span><span class="mini-badge">${s.items.length}</span></div>`}).join('')}
+function renderPackProgress(){const box=document.getElementById('packProgress');let needed=0,have=0;box.innerHTML=packCategoryDefs.map(c=>{const arr=c.items.map(id=>packItems.find(x=>x.id===id)).filter(x=>x?.needed),h=arr.filter(x=>x.have).length;needed+=arr.length;have+=h;const pct=arr.length?Math.round(h/arr.length*100):100;return `<div class="pack-v12-progrow"><div class="pack-v12-proghead"><span>${c.name}</span><span>${h}/${arr.length} · ${pct}%</span></div><div class="pack-v12-progbar"><i style="width:${pct}%"></i></div></div>`}).join('');document.getElementById('packListTitle').textContent=`${have} / ${needed}`;const open=needed-have,b=document.getElementById('packOpenBadge');b.textContent=open?`${open} offen`:'komplett';b.classList.toggle('warn',open>0)}
+function bestPackMetrics(unassigned=[]){const bal=packBalance(),active=Object.keys(packBags).filter(k=>bagStats(k).items.length).length,totalCap=Object.keys(packBags).filter(k=>bagStats(k).items.length).reduce((s,k)=>s+bagCapacity(k),0),used=Object.keys(packBags).reduce((s,k)=>s+bagStats(k).l,0),reserve=Math.max(0,totalCap-used),heavy=relevantPackItems().filter(x=>x.kg>=1).length,central=relevantPackItems().filter(x=>x.kg>=1&&x.bag==='frame').length;return {balance:Math.abs(bal.front-50),active,reserve,unassigned:unassigned.length,central:heavy?Math.round(central/heavy*100):100}}
+function renderBestPack(unassigned=[]){const m=bestPackMetrics(unassigned),box=document.getElementById('packBestScore');box.innerHTML=`<span>Balance ${packBalance().front}/${packBalance().rear}${m.balance<=7?' ✓':''}</span><span>${m.active} Taschen</span><span>${formatLiters(m.reserve)} L Reserve</span><span>${m.central}% schwere Teile zentral</span>${m.unassigned?`<span>${m.unassigned} ohne Platz</span>`:'<span>alles verteilt ✓</span>'}`}
+function preferredBags(item){if(item.kg>=1.4)return ['frame','fork','bar','saddle'];if(item.access==='high')return ['top','bar','frame','fork','saddle'];if(item.cat==='sleep')return ['saddle','bar','frame','fork'];if(item.cat==='tools')return ['frame','fork','bar','top'];if(item.cat==='food')return ['frame','fork','bar','top','saddle'];return ['frame','saddle','bar','top','fork']}
+function candidateScore(item,bagId){const b=packBags[bagId],s=bagStats(bagId),cap=bagCapacity(bagId),after=s.l+item.l;if(after>cap+1e-6)return 1e9;let score=0;score+=preferredBags(item).indexOf(bagId)*12;if(!s.items.length)score+=5;if(item.kg>=1&&b.zone!=='center')score+=18;if(item.access==='high'&&!['top','bar'].includes(bagId))score+=12;score+=(after/cap)*3;return score}
+function autoPackPrototype(){relevantPackItems().forEach(i=>i.bag='');const ordered=[...relevantPackItems()].sort((a,b)=>b.kg-a.kg||b.l-a.l),unassigned=[];for(const item of ordered){let best=null,bestScore=1e9;for(const id of Object.keys(packBags)){const sc=candidateScore(item,id);if(sc<bestScore){bestScore=sc;best=id}}if(best&&bestScore<1e8)item.bag=best;else unassigned.push(item)}packPersist();renderPackPrototype(unassigned);packToast(unassigned.length?`${unassigned.length} Teil(e) ohne Platz – Taschengrößen prüfen`:'Beste vorgeschlagene Variante berechnet')}
+function resetPackPrototype(){packItems=packInitialItems.map(x=>({...x,bag:''}));packPersist();renderPackPrototype();packToast('Bike geleert · Bedarf und Bestand bleiben erhalten')}
+function renderPackPrototype(unassigned=[]){renderPackNeeds();renderPackHave();renderPackSizeGrid();renderPackBike();renderPackSummary();renderPackProgress();renderBestPack(unassigned)}
+document.getElementById('packSearch')?.addEventListener('input',renderPackHave);document.getElementById('packCategoryFilter')?.addEventListener('change',renderPackHave);document.getElementById('autoPack')?.addEventListener('click',autoPackPrototype);document.getElementById('packBestBtn')?.addEventListener('click',autoPackPrototype);document.getElementById('packModeBtn')?.addEventListener('click',()=>{autoPackPrototype();packToast('Beste Variante angewendet')});document.getElementById('resetPack')?.addEventListener('click',resetPackPrototype);
+(function initPackFilter(){const s=document.getElementById('packCategoryFilter');if(s){packCategoryDefs.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;s.appendChild(o)})}})();
+renderPackPrototype();
 </script>
 </body>
 </html>
