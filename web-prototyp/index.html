@@ -6,6 +6,7 @@
 <meta name="color-scheme" content="light">
 <title>ROAM · Web Prototype</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.0/dist/maplibre-gl.css"/>
 <style>
 :root{
   --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -90,7 +91,17 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
 .tabs button.active{color:var(--forest);font-weight:800;border-bottom:2px solid var(--rust)}
 .route-visual-card{overflow:hidden}
 .map-wrap{position:relative;height:520px;background:#e7e5dc;border-bottom:1px solid var(--line)}
-#routeMapLeaflet{width:100%;height:100%;display:block;background:#dfe1d2}
+#routeMapLeaflet,#routeMap3d{width:100%;height:100%;background:#dfe1d2}
+#routeMapLeaflet{display:block}
+#routeMap3d{display:none}
+.map-wrap.mode-3d #routeMapLeaflet{display:none}
+.map-wrap.mode-3d #routeMap3d{display:block}
+.map-wrap.mode-3d .map-style-select{display:none}
+.map-wrap.mode-3d .map-scale-note{display:none}
+.map-wrap.mode-3d .route-map-legend{display:none}
+.map-wrap.mode-3d .route-geometry-status{bottom:92px}
+#routeMap3d .maplibregl-ctrl-attrib{font-size:8px;background:rgba(248,245,237,.78)}
+#routeMap3d .maplibregl-ctrl-group{border-radius:10px;overflow:hidden}
 #routeMapLeaflet .leaflet-container{font:inherit}
 #routeMapLeaflet .leaflet-control-zoom{border:1px solid rgba(56,62,54,.18);box-shadow:0 4px 14px rgba(50,45,38,.08);border-radius:9px;overflow:hidden}
 #routeMapLeaflet .leaflet-control-zoom a{color:var(--forest);background:rgba(250,247,239,.95);border-bottom-color:var(--line)}
@@ -103,6 +114,33 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
 .map-tools{
  position:absolute;left:14px;top:14px;z-index:710;display:flex;gap:8px;align-items:center
 }
+.map-mode-switch{
+ position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:715;
+ display:flex;padding:3px;border:1px solid rgba(56,62,54,.15);border-radius:12px;
+ background:rgba(250,247,239,.96);box-shadow:0 5px 16px rgba(50,45,38,.08)
+}
+.map-mode-switch button{
+ border:0;background:transparent;color:#60675f;border-radius:9px;padding:8px 12px;
+ font-size:11px;font-weight:800;white-space:nowrap
+}
+.map-mode-switch button.active{background:#2e3a2f;color:#fff}
+.flyover-controls{
+ display:none;position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+ z-index:720;width:min(760px,calc(100% - 36px));align-items:center;gap:9px;
+ padding:10px 12px;border-radius:14px;border:1px solid rgba(56,62,54,.17);
+ background:rgba(248,245,237,.95);box-shadow:0 12px 28px rgba(35,40,35,.16);
+ backdrop-filter:blur(12px)
+}
+.map-wrap.mode-3d .flyover-controls{display:flex}
+.fly-btn,.fly-select{
+ min-height:38px;border:1px solid #d4cdbf;border-radius:9px;background:#fffaf1;
+ color:#2e3a2f;font-size:11px;font-weight:800;padding:0 11px
+}
+.fly-btn.primary{background:#2e3a2f;color:#fff;border-color:#2e3a2f}
+.fly-btn.following{background:#556244;color:#fff;border-color:#556244}
+.fly-progress{flex:1;min-width:120px;accent-color:#a2573c}
+.fly-km{min-width:72px;text-align:right;font-size:11px;font-weight:800;color:#4f574f}
+.fly-status{font-size:10px;color:#6b716b;white-space:nowrap}
 .map-tool{
  min-height:42px;border:1px solid rgba(56,62,54,.16);border-radius:10px;background:rgba(250,247,239,.96);
  color:var(--forest);font-weight:800;font-size:11px;padding:0 12px;box-shadow:0 5px 16px rgba(50,45,38,.08)
@@ -112,7 +150,7 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
  position:fixed!important;inset:0!important;height:100dvh!important;width:100vw!important;z-index:9999!important;
  border:0!important;border-radius:0!important;background:#e7e5dc!important
 }
-.map-wrap.map-fullscreen #routeMapLeaflet{height:100%!important}
+.map-wrap.map-fullscreen #routeMapLeaflet,.map-wrap.map-fullscreen #routeMap3d{height:100%!important}
 .map-wrap.map-fullscreen .map-scale-note{bottom:18px}
 .map-wrap.map-fullscreen .route-map-legend{bottom:18px}
 .map-wrap.map-fullscreen .map-style-select{top:18px;right:18px}
@@ -123,7 +161,7 @@ body.map-open{overflow:hidden!important}
 }
 #routeMapLeaflet .leaflet-control-zoom{margin-top:72px!important;margin-left:14px!important}
 .touch-hint{
- display:none;position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:705;
+ display:none;position:absolute;left:50%;top:62px;transform:translateX(-50%);z-index:705;
  background:rgba(250,247,239,.94);border:1px solid rgba(56,62,54,.14);border-radius:999px;
  padding:7px 10px;font-size:10px;color:#626861;pointer-events:none
 }
@@ -141,6 +179,8 @@ body.map-open{overflow:hidden!important}
  .touch-hint{display:block}
  .map-scale-note{display:none}
  #routeMapLeaflet .leaflet-control-zoom{margin-top:76px!important}
+ .flyover-controls{gap:7px;padding:9px}
+ .fly-status{display:none}
 }
 .map-scale-note{
  position:absolute;left:15px;bottom:14px;z-index:650;background:rgba(250,247,239,.87);border:1px solid rgba(56,62,54,.12);
@@ -362,12 +402,30 @@ body.map-open{overflow:hidden!important}
       <div class="card route-visual-card">
         <div class="map-wrap" id="mapWrap">
           <div id="routeMapLeaflet" aria-label="Topografische Routenkarte"></div>
+          <div id="routeMap3d" aria-label="3D Flyover der Route"></div>
           <div class="map-tools">
             <button id="fitRouteBtn" class="map-tool" type="button">Route anzeigen</button>
             <button id="fullMapBtn" class="map-tool icon" type="button" aria-label="Karte Vollbild">⛶</button>
           </div>
+          <div class="map-mode-switch" aria-label="Kartenmodus">
+            <button id="mapMode2dBtn" class="active" type="button">2D</button>
+            <button id="mapMode3dBtn" type="button">3D Flyover</button>
+          </div>
           <div class="touch-hint">Mit 2 Fingern zoomen · Tippen = Streckenpunkt</div>
           <div id="routeGeometryStatus" class="route-geometry-status">Routengeometrie wird geladen …</div>
+          <div id="flyoverControls" class="flyover-controls">
+            <button id="flyPlayBtn" class="fly-btn primary" type="button">▶</button>
+            <select id="flySpeed" class="fly-select" aria-label="Flyover Geschwindigkeit">
+              <option value="1">1×</option>
+              <option value="2">2×</option>
+              <option value="4">4×</option>
+            </select>
+            <input id="flySlider" class="fly-progress" type="range" min="0" max="1000" value="0" aria-label="Position auf der Route">
+            <span id="flyKm" class="fly-km">0 km</span>
+            <button id="flyFollowBtn" class="fly-btn following" type="button">Folgen</button>
+            <button id="flyResetBtn" class="fly-btn" type="button">↺</button>
+            <span id="flyStatus" class="fly-status">Drohnenansicht</span>
+          </div>
           <select id="mapStyleSelect" class="map-style-select" aria-label="Kartenstil">
             <option value="esri">Esri Topo</option>
             <option value="osm">OSM</option>
@@ -520,6 +578,7 @@ body.map-open{overflow:hidden!important}
 <div class="prototype-pill">Interaktiver Design-Prototyp · keine Live-Daten</div>
 </div>
 
+<script src="https://unpkg.com/maplibre-gl@6.11.0/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const screens=[...document.querySelectorAll('.screen')];
@@ -527,7 +586,10 @@ function showScreen(name){
   screens.forEach(s=>s.classList.toggle('active',s.id==='screen-'+name));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));
   window.scrollTo({top:0,behavior:'smooth'});
-  if(name==='route')setTimeout(()=>{initRouteMap();roamMap?.invalidateSize();},80);
+  if(name==='route')setTimeout(()=>{
+    initRouteMap();
+    if(currentMapMode==='3d')roam3DMap?.resize(); else roamMap?.invalidateSize();
+  },80);
 }
 document.querySelectorAll('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.go)));
@@ -548,6 +610,9 @@ let routeNamedPoints=[];
 let routeSource='loading';
 let roamMap=null,roamCursor=null,esriLayer=null,osmLayer=null,openTopoLayer=null;
 let routeVisualLayers=[],routePointLayers=[],routeHitLayer=null;
+let currentMapMode='2d';
+let roam3DMap=null,roam3DReady=false;
+let flyProgress=0,flyPlaying=false,flyFollow=true,flySpeed=1,flyRAF=null,flyLastTs=0;
 let routeStages=[];
 let routeTerrain={status:'idle',stages:[],source:null,reliableCoverage:0,warning:null};
 const TERRAIN_STYLE={
@@ -744,6 +809,7 @@ function applyRouteRows(rows,named=[],source='api',start='',dest='',stages=[]){
    fitRoute();
    updateLinked(.5,'load');
  }
+ if(roam3DReady){update3DSources();updateFlyCamera(true)}
  loadExactTerrain().catch(()=>{});
 }
 async function loadExactRouteGeometry(){
@@ -804,6 +870,7 @@ async function loadExactTerrain(){
  }
  renderTerrainUI();renderExactElevation();
  if(roamMap){drawRouteOnMap();updateLinked(.5,'terrain')}
+ if(roam3DReady)update3DSources();
 }
 
 function routePointProgress(x){
@@ -941,7 +1008,199 @@ function drawRouteOnMap(){
   .on('click',e=>{L.DomEvent.stopPropagation(e);updateLinked(nearestRouteProgress(e.latlng),'map')})
   .addTo(roamMap);
 }
+
+function routeLngLat(p){
+ const [lat,lon]=interpGeo(Math.max(0,Math.min(1,p)));
+ return [lon,lat];
+}
+function bearingBetween(a,b){
+ const toRad=x=>x*Math.PI/180,toDeg=x=>x*180/Math.PI;
+ const lon1=toRad(a[0]),lon2=toRad(b[0]),lat1=toRad(a[1]),lat2=toRad(b[1]);
+ const y=Math.sin(lon2-lon1)*Math.cos(lat2);
+ const x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(lon2-lon1);
+ return (toDeg(Math.atan2(y,x))+360)%360;
+}
+function routeGeoJSON(){
+ return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:routeGeo.map(c=>[c[1],c[0]])}};
+}
+function flyProgressGeoJSON(){
+ if(routeGeo.length<2)return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:[]}};
+ const idx=Math.max(1,routeIndexForP(flyProgress));
+ const coords=routeGeo.slice(0,idx+1).map(c=>[c[1],c[0]]);
+ const exact=routeLngLat(flyProgress);
+ if(coords.length)coords[coords.length-1]=exact;
+ return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:coords}};
+}
+function flyPointGeoJSON(){
+ return {type:'Feature',properties:{},geometry:{type:'Point',coordinates:routeLngLat(flyProgress)}};
+}
+function update3DSources(){
+ if(!roam3DReady||!roam3DMap)return;
+ roam3DMap.getSource('roam-route')?.setData(routeGeoJSON());
+ roam3DMap.getSource('roam-progress')?.setData(flyProgressGeoJSON());
+ roam3DMap.getSource('roam-point')?.setData(flyPointGeoJSON());
+}
+function cameraLookAheadP(p){
+ const step=Math.max(.0015,Math.min(.015,1.2/Math.max(1,routeDistanceKm||1)));
+ return Math.min(1,p+step);
+}
+function updateFlyCamera(force=false){
+ if(!roam3DReady||!roam3DMap||routeGeo.length<2)return;
+ update3DSources();
+ const slider=document.getElementById('flySlider'),kmEl=document.getElementById('flyKm');
+ if(slider)slider.value=String(Math.round(flyProgress*1000));
+ if(kmEl)kmEl.textContent=`${Math.round(flyProgress*routeDistanceKm)} km`;
+ if(!flyFollow&&!force)return;
+
+ const here=routeLngLat(flyProgress),look=routeLngLat(cameraLookAheadP(flyProgress));
+ const bearing=bearingBetween(here,look);
+ const zoom=routeDistanceKm>300?13.7:14.0;
+ roam3DMap.jumpTo({
+   center:look,
+   zoom,
+   pitch:68,
+   bearing
+ });
+}
+function baseFlyDurationMs(){
+ return Math.max(60000,Math.min(180000,(routeDistanceKm||240)*250));
+}
+function setFlyPlaying(on){
+ flyPlaying=!!on;
+ const btn=document.getElementById('flyPlayBtn');
+ if(btn)btn.textContent=flyPlaying?'Ⅱ':'▶';
+ if(!flyPlaying){flyLastTs=0;if(flyRAF){cancelAnimationFrame(flyRAF);flyRAF=null};return}
+ if(flyProgress>=.999)setFlyProgress(0,true);
+ flyLastTs=0;
+ flyRAF=requestAnimationFrame(flyTick);
+}
+function flyTick(ts){
+ if(!flyPlaying)return;
+ if(!flyLastTs)flyLastTs=ts;
+ const dt=Math.min(100,ts-flyLastTs);flyLastTs=ts;
+ flyProgress=Math.min(1,flyProgress+(dt/baseFlyDurationMs())*flySpeed);
+ updateFlyCamera(false);
+ if(flyProgress>=1){setFlyPlaying(false);return}
+ flyRAF=requestAnimationFrame(flyTick);
+}
+function setFlyProgress(p,forceCamera=false){
+ flyProgress=Math.max(0,Math.min(1,Number(p)||0));
+ updateFlyCamera(forceCamera);
+}
+function setFlyFollow(on){
+ flyFollow=!!on;
+ const btn=document.getElementById('flyFollowBtn');
+ if(btn){
+   btn.textContent=flyFollow?'Folgen':'Freie Kamera';
+   btn.classList.toggle('following',flyFollow);
+ }
+ if(flyFollow)updateFlyCamera(true);
+}
+function fitRoute3D(){
+ if(!roam3DReady||!roam3DMap||routeGeo.length<2)return;
+ const bounds=new maplibregl.LngLatBounds();
+ routeGeo.forEach(c=>bounds.extend([c[1],c[0]]));
+ setFlyPlaying(false);
+ roam3DMap.fitBounds(bounds,{padding:70,duration:800,maxZoom:10});
+ setTimeout(()=>roam3DMap.easeTo({pitch:48,bearing:0,duration:500}),820);
+}
+function init3DMap(){
+ if(roam3DMap){setTimeout(()=>{roam3DMap.resize();update3DSources();updateFlyCamera(true)},60);return}
+ if(typeof maplibregl==='undefined'||routeGeo.length<2){
+   setGeometryStatus('3D-Modus konnte nicht geladen werden','warn');
+   return;
+ }
+ const start=routeLngLat(0);
+ roam3DMap=new maplibregl.Map({
+   container:'routeMap3d',
+   center:start,
+   zoom:13.7,
+   pitch:68,
+   bearing:0,
+   maxPitch:82,
+   renderWorldCopies:false,
+   canvasContextAttributes:{antialias:true},
+   style:{
+     version:8,
+     sources:{
+       osm:{
+         type:'raster',
+         tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+         tileSize:256,
+         maxzoom:19,
+         attribution:'© OpenStreetMap contributors'
+       },
+       terrainSource:{
+         type:'raster-dem',
+         url:'https://tiles.mapterhorn.com/tilejson.json'
+       },
+       hillshadeSource:{
+         type:'raster-dem',
+         url:'https://tiles.mapterhorn.com/tilejson.json'
+       }
+     },
+     layers:[
+       {id:'roam-bg',type:'background',paint:{'background-color':'#d9ded5'}},
+       {id:'osm',type:'raster',source:'osm'},
+       {
+         id:'hillshade',type:'hillshade',source:'hillshadeSource',
+         paint:{
+           'hillshade-exaggeration':.38,
+           'hillshade-shadow-color':'#475047',
+           'hillshade-highlight-color':'#f4efe3',
+           'hillshade-accent-color':'#7a806f'
+         }
+       }
+     ]
+   }
+ });
+ roam3DMap.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
+ roam3DMap.on('load',()=>{
+   roam3DMap.setTerrain({source:'terrainSource',exaggeration:1.15});
+   roam3DMap.addSource('roam-route',{type:'geojson',data:routeGeoJSON(),lineMetrics:true});
+   roam3DMap.addLayer({id:'roam-route-halo',type:'line',source:'roam-route',paint:{
+     'line-color':'#f8f4ec','line-width':9,'line-opacity':.98
+   },layout:{'line-cap':'round','line-join':'round'}});
+   roam3DMap.addLayer({id:'roam-route-line',type:'line',source:'roam-route',paint:{
+     'line-color':'#26362d','line-width':5,'line-opacity':1
+   },layout:{'line-cap':'round','line-join':'round'}});
+   roam3DMap.addSource('roam-progress',{type:'geojson',data:flyProgressGeoJSON()});
+   roam3DMap.addLayer({id:'roam-progress-line',type:'line',source:'roam-progress',paint:{
+     'line-color':'#a2573c','line-width':5.5,'line-opacity':1
+   },layout:{'line-cap':'round','line-join':'round'}});
+   roam3DMap.addSource('roam-point',{type:'geojson',data:flyPointGeoJSON()});
+   roam3DMap.addLayer({id:'roam-point-dot',type:'circle',source:'roam-point',paint:{
+     'circle-radius':7,'circle-color':'#f8f4ec','circle-stroke-width':4,'circle-stroke-color':'#a2573c'
+   }});
+   roam3DReady=true;
+   setFlyFollow(true);
+   updateFlyCamera(true);
+   setGeometryStatus(`${routeSource==='stored'?'Gespeicherte Originalroute':'Echte Routengeometrie'} · 3D bereit`,'ok');
+ });
+ roam3DMap.on('error',()=>{});
+ roam3DMap.getCanvas().addEventListener('pointerdown',()=>{if(currentMapMode==='3d')setFlyFollow(false)});
+}
+function setMapMode(mode){
+ currentMapMode=mode==='3d'?'3d':'2d';
+ const wrap=document.getElementById('mapWrap');
+ wrap?.classList.toggle('mode-3d',currentMapMode==='3d');
+ document.getElementById('mapMode2dBtn')?.classList.toggle('active',currentMapMode==='2d');
+ document.getElementById('mapMode3dBtn')?.classList.toggle('active',currentMapMode==='3d');
+ if(currentMapMode==='3d'){
+   init3DMap();
+   setTimeout(()=>roam3DMap?.resize(),80);
+ }else{
+   setFlyPlaying(false);
+   setTimeout(()=>roamMap?.invalidateSize(),60);
+   setGeometryStatus(
+     `${routeSource==='stored'?'Gespeicherte Originalroute':'Echte Routengeometrie'} · Terrain ${Math.round(routeTerrain.reliableCoverage||0)}%`,
+     (routeTerrain.reliableCoverage||0)>=50?'ok':'warn'
+   );
+ }
+}
+
 function fitRoute(){
+ if(currentMapMode==='3d'){fitRoute3D();return}
  if(!roamMap||routeGeo.length<2)return;
  roamMap.fitBounds(L.latLngBounds(routeGeo),{padding:[32,32],animate:true,maxZoom:12});
 }
@@ -977,10 +1236,26 @@ function initRouteMap(){
  function setFullMap(on){
    wrap.classList.toggle('map-fullscreen',on);document.body.classList.toggle('map-open',on);
    fullBtn.textContent=on?'×':'⛶';fullBtn.setAttribute('aria-label',on?'Vollbild schließen':'Karte Vollbild');
-   setTimeout(()=>{roamMap.invalidateSize();if(on)fitRoute()},80);
+   setTimeout(()=>{
+     roamMap?.invalidateSize();
+     roam3DMap?.resize();
+     if(on)fitRoute();
+   },80);
  }
  if(fullBtn)fullBtn.addEventListener('click',e=>{e.stopPropagation();setFullMap(!wrap.classList.contains('map-fullscreen'))});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&wrap.classList.contains('map-fullscreen'))setFullMap(false)});
+
+ const mode2d=document.getElementById('mapMode2dBtn'),mode3d=document.getElementById('mapMode3dBtn');
+ if(mode2d)mode2d.addEventListener('click',e=>{e.stopPropagation();setMapMode('2d')});
+ if(mode3d)mode3d.addEventListener('click',e=>{e.stopPropagation();setMapMode('3d')});
+ const flyPlay=document.getElementById('flyPlayBtn'),flySpeedEl=document.getElementById('flySpeed'),
+       flySlider=document.getElementById('flySlider'),flyFollowBtn=document.getElementById('flyFollowBtn'),
+       flyReset=document.getElementById('flyResetBtn');
+ if(flyPlay)flyPlay.addEventListener('click',e=>{e.stopPropagation();setFlyPlaying(!flyPlaying)});
+ if(flySpeedEl)flySpeedEl.addEventListener('change',()=>{flySpeed=Number(flySpeedEl.value)||1});
+ if(flySlider)flySlider.addEventListener('input',()=>{setFlyPlaying(false);setFlyProgress(Number(flySlider.value)/1000,true)});
+ if(flyFollowBtn)flyFollowBtn.addEventListener('click',e=>{e.stopPropagation();setFlyFollow(!flyFollow)});
+ if(flyReset)flyReset.addEventListener('click',e=>{e.stopPropagation();setFlyPlaying(false);setFlyFollow(true);setFlyProgress(0,true)});
 
  const select=document.getElementById('mapStyleSelect');
  if(select)select.addEventListener('change',()=>{
