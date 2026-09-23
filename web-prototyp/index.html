@@ -151,6 +151,12 @@ body.map-open{overflow:hidden!important}
  background:rgba(250,247,239,.9);border:1px solid rgba(56,62,54,.12);border-radius:9px;padding:7px 9px;font-size:9px;color:#5e645d
 }
 .route-map-legend span{display:flex;gap:5px;align-items:center}
+.route-visibility-note{
+ display:flex;align-items:center;gap:7px;font-size:10px;color:#5c625c;margin-top:8px
+}
+.route-visibility-note:before{
+ content:"";width:26px;height:6px;border-radius:999px;background:#26362d;box-shadow:0 0 0 2px #f8f4ec
+}
 .route-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
 .roam-map-tip{
  background:rgba(250,247,239,.97)!important;border:1px solid #cfc7b9!important;border-radius:10px!important;
@@ -399,6 +405,7 @@ body.map-open{overflow:hidden!important}
         <div class="surface-list" id="surfaceList"><div class="muted" style="font-size:12px">Terrain wird auf das OSM-Wegenetz gematcht …</div></div>
         <div class="stackbar" id="terrainStackBar" style="margin-top:14px"><span style="width:100%;background:#9aa39d"></span></div>
         <div id="terrainCoverageNote" class="terrain-live-note">Analyse wird geladen …</div>
+        <div class="route-visibility-note">Dunkle Linie = Route · Farbkern = Terrain</div>
       </div>
 
       <div class="card">
@@ -892,18 +899,33 @@ function drawRouteOnMap(){
  if(!roamMap||routeGeo.length<2)return;
  clearRouteVisuals();
 
- const base=L.polyline(routeGeo,{color:'#f8f4ec',weight:8,opacity:.98,lineCap:'round',lineJoin:'round'}).addTo(roamMap);
- routeVisualLayers.push(base);
+ // Route is always readable: light casing + dark master line.
+ // Terrain remains a thinner inner stripe and never replaces the route itself.
+ const routeHalo=L.polyline(routeGeo,{
+   color:'#f8f4ec',weight:11,opacity:.98,lineCap:'round',lineJoin:'round',smoothFactor:0,interactive:false
+ }).addTo(roamMap);
+ routeVisualLayers.push(routeHalo);
 
- // Real Valhalla/OSM terrain geometry overlays the exact routed geometry.
+ const routeBase=L.polyline(routeGeo,{
+   color:'#26362d',weight:7,opacity:.98,lineCap:'round',lineJoin:'round',smoothFactor:0,interactive:false
+ }).addTo(roamMap);
+ routeVisualLayers.push(routeBase);
+
+ // Real Valhalla/OSM terrain geometry as a narrow inner stripe.
  if(routeTerrain.status==='ready'){
    routeTerrain.stages.forEach(t=>(t?.segments||[]).forEach(seg=>{
      const ll=(seg.geometry||[]).map(c=>[Number(c?.[1]),Number(c?.[0])]).filter(x=>Number.isFinite(x[0])&&Number.isFinite(x[1]));
      if(ll.length<2)return;
      const m=terrainStyle(seg.class||'unknown');
-     routeVisualLayers.push(L.polyline(ll,{color:m.color,weight:5,opacity:.96,lineCap:'round',lineJoin:'round',smoothFactor:0}).addTo(roamMap));
+     routeVisualLayers.push(L.polyline(ll,{
+       color:m.color,weight:3.5,opacity:1,lineCap:'round',lineJoin:'round',smoothFactor:0,interactive:false
+     }).addTo(roamMap));
    }));
- }else routeVisualLayers.push(L.polyline(routeGeo,{color:'#8b9189',weight:4.5,opacity:.78,lineCap:'round',lineJoin:'round',smoothFactor:0}).addTo(roamMap));
+ }else{
+   routeVisualLayers.push(L.polyline(routeGeo,{
+     color:'#667168',weight:3.5,opacity:.95,lineCap:'round',lineJoin:'round',smoothFactor:0,interactive:false
+   }).addTo(roamMap));
+ }
 
  routeNamedPoints.forEach((x,i)=>{
    const first=i===0,last=i===routeNamedPoints.length-1;
