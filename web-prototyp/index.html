@@ -6,23 +6,24 @@
 <meta name="color-scheme" content="light">
 <title>ROAM · Web Prototype</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.11.0/dist/maplibre-gl.css"/>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.css"/>
 <style>
 :root{
   --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
   --sage:#b7bcae; --paper:#f3efe6; --card:#f8f5ed; --ink:#202820;
   --muted:#6f746d; --line:#d9d2c5; --asphalt:#525756; --trail:#718260;
   --mixed:#bd955d; --soft:#ece7dc; --danger:#9e5b45;
+  --font-ui:"Avenir Next",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 *{box-sizing:border-box}
 html,body,.app{background:var(--paper)!important;color-scheme:light}
 body{
-  margin:0;color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  margin:0;color:var(--ink);font-family:var(--font-ui);
   min-height:100vh;
 }
 button,input,select{font:inherit}
 button{cursor:pointer}
-.serif{font-family:Georgia,"Times New Roman",serif}
+.serif{font-family:var(--font-ui)}
 .app{min-height:100vh}
 .topbar{
   height:76px;display:flex;align-items:center;gap:36px;padding:0 38px;border-bottom:1px solid rgba(46,58,47,.12);
@@ -45,9 +46,9 @@ button{cursor:pointer}
 .screen{display:none}.screen.active{display:block}
 .eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#77776f;font-weight:800}
 h1,h2,h3,p{margin-top:0}
-h1{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:720;font-size:46px;line-height:1.04;letter-spacing:-.035em;margin-bottom:8px}
-h2{font-family:Georgia,serif;font-weight:500;font-size:29px}
-h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
+h1{font-family:var(--font-ui);font-weight:680;font-size:46px;line-height:1.04;letter-spacing:-.025em;margin-bottom:8px}
+h2{font-family:var(--font-ui);font-weight:650;font-size:29px;letter-spacing:-.018em}
+h3{font-family:var(--font-ui);font-weight:650;font-size:20px;letter-spacing:-.01em}
 .muted{color:var(--muted)}
 .card{
   border:1px solid rgba(73,78,68,.15);background:rgba(250,247,239,.83);border-radius:16px;
@@ -59,7 +60,7 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
 .kpi-grid{grid-template-columns:repeat(4,1fr)}
 .kpi{padding:16px;border-top:1px solid var(--line)}
 .kpi:first-child{border-top:0}
-.kpi b{font-family:Georgia,serif;font-size:27px;font-weight:500;display:block}
+.kpi b{font-family:var(--font-ui);font-size:27px;font-weight:600;display:block}
 .kpi span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .trip-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}
 .badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 9px;background:#e7e7dd;color:var(--forest);font-size:11px;font-weight:800}
@@ -74,13 +75,13 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
 .stage-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .stage-mini .mini{padding:14px;border:1px solid var(--line);border-radius:12px;background:#f9f6ef}
 .mini .day{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#7a7c74}
-.mini b{font-family:Georgia,serif;font-weight:500}
+.mini b{font-family:var(--font-ui);font-weight:600}
 .mini small{display:block;color:#737870;margin-top:5px}
 .dashboard-footer{margin-top:16px;display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
 .elev-simple{height:115px;width:100%}
 .weather-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .weather-day{padding:10px;border:1px solid var(--line);border-radius:10px;text-align:center;background:#faf7f0}
-.weather-day .icon{font-size:21px}.weather-day b{font-family:Georgia,serif;font-weight:500;font-size:19px}
+.weather-day .icon{font-size:21px}.weather-day b{font-family:var(--font-ui);font-weight:600;font-size:19px}
 .weather-day small{display:block;color:#7a7e76}
 .route-layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}
 .route-main{display:grid;gap:0}
@@ -141,6 +142,26 @@ h3{font-family:Georgia,serif;font-weight:500;font-size:20px}
 .fly-progress{flex:1;min-width:120px;accent-color:#a2573c}
 .fly-km{min-width:72px;text-align:right;font-size:11px;font-weight:800;color:#4f574f}
 .fly-status{font-size:10px;color:#6b716b;white-space:nowrap}
+.fly-btn:disabled,.fly-select:disabled,.fly-progress:disabled{opacity:.42;cursor:not-allowed}
+.point-wind{display:inline-flex;gap:6px;align-items:center}
+.overnight-summary{border-top:1px solid var(--line);margin-top:8px;padding:14px 8px 4px}
+.overnight-summary .eyebrow{margin-bottom:8px}
+.night-row{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center;padding:9px 0;border-top:1px solid rgba(80,84,75,.10)}
+.night-row:first-of-type{border-top:0}
+.night-icon{width:28px;height:28px;border-radius:8px;background:#e8e5da;display:grid;place-items:center;font-size:14px}
+.night-row b{font-size:12px}.night-row small{display:block;color:var(--muted);margin-top:2px}.night-status{font-size:10px;font-weight:800;color:#596159}
+.stay-card{padding:16px;margin-top:14px;background:#f7f4ec}
+.stay-card-main{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;margin-top:10px}
+.stay-card-icon{width:40px;height:40px;border-radius:11px;background:#e5e7dc;display:grid;place-items:center;font-size:20px}
+.stay-card b{font-size:14px}.stay-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.bike-card{position:relative}
+.bike-empty-state{position:absolute;left:50%;top:162px;transform:translateX(-50%);z-index:2;background:rgba(248,245,237,.94);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:11px;color:#666d65;pointer-events:none}
+.bike-empty-state.hidden{display:none}
+.bag-icon{width:42px;height:30px;display:grid;place-items:center;margin-bottom:6px}
+.bag-icon svg{width:42px;height:28px;overflow:visible}
+.bag-pill{min-width:0}
+.bag-pill.empty .ring{opacity:.35}
+.unassigned-row{background:#f4f0e7;border-radius:11px;padding-left:9px!important;padding-right:9px!important}
 .map-tool{
  min-height:42px;border:1px solid rgba(56,62,54,.16);border-radius:10px;background:rgba(250,247,239,.96);
  color:var(--forest);font-weight:800;font-size:11px;padding:0 12px;box-shadow:0 5px 16px rgba(50,45,38,.08)
@@ -230,7 +251,7 @@ body.map-open{overflow:hidden!important}
 .stackbar span{height:100%}
 .weather-big{display:flex;gap:14px;align-items:center}
 .weather-big .wx{font-size:42px}
-.weather-big b{font-family:Georgia,serif;font-size:38px;font-weight:500}
+.weather-big b{font-family:var(--font-ui);font-size:38px;font-weight:600}
 .point-details{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:12px}
 .point-details div:nth-child(odd){color:#70766e}
 .hints{display:grid;gap:0}
@@ -242,12 +263,12 @@ body.map-open{overflow:hidden!important}
 .stage-list{padding:10px}
 .stage-item{padding:14px;border-bottom:1px solid var(--line);border-radius:10px}
 .stage-item:hover,.stage-item.active{background:#ebe7dc}
-.stage-item b{font-family:Georgia,serif;font-weight:500}
+.stage-item b{font-family:var(--font-ui);font-weight:600}
 .stage-item small{display:block;color:#777b74;margin-top:4px}
 .stage-detail{padding:20px}
 .stage-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .stage-stat{padding:12px;border:1px solid var(--line);border-radius:12px;background:#faf7ef}
-.stage-stat b{font-family:Georgia,serif;font-size:22px;font-weight:500;display:block}
+.stage-stat b{font-family:var(--font-ui);font-size:22px;font-weight:600;display:block}
 .pack-layout{display:grid;grid-template-columns:minmax(0,1.15fr) .85fr;gap:18px}
 .bike-card{padding:20px}
 .bike-header{display:flex;justify-content:space-between;gap:12px}
@@ -414,16 +435,16 @@ body.map-open{overflow:hidden!important}
           <div class="touch-hint">Mit 2 Fingern zoomen · Tippen = Streckenpunkt</div>
           <div id="routeGeometryStatus" class="route-geometry-status">Routengeometrie wird geladen …</div>
           <div id="flyoverControls" class="flyover-controls">
-            <button id="flyPlayBtn" class="fly-btn primary" type="button">▶</button>
-            <select id="flySpeed" class="fly-select" aria-label="Flyover Geschwindigkeit">
+            <button id="flyPlayBtn" class="fly-btn primary" type="button" disabled>▶</button>
+            <select id="flySpeed" class="fly-select" aria-label="Flyover Geschwindigkeit" disabled>
               <option value="1">1×</option>
               <option value="2">2×</option>
               <option value="4">4×</option>
             </select>
-            <input id="flySlider" class="fly-progress" type="range" min="0" max="1000" value="0" aria-label="Position auf der Route">
+            <input id="flySlider" class="fly-progress" type="range" min="0" max="1000" value="0" disabled aria-label="Position auf der Route">
             <span id="flyKm" class="fly-km">0 km</span>
-            <button id="flyFollowBtn" class="fly-btn following" type="button">Folgen</button>
-            <button id="flyResetBtn" class="fly-btn" type="button">↺</button>
+            <button id="flyFollowBtn" class="fly-btn following" type="button" disabled>Folgen</button>
+            <button id="flyResetBtn" class="fly-btn" type="button" disabled>↺</button>
             <span id="flyStatus" class="fly-status">Drohnenansicht</span>
           </div>
           <select id="mapStyleSelect" class="map-style-select" aria-label="Kartenstil">
@@ -469,7 +490,7 @@ body.map-open{overflow:hidden!important}
       <div class="card">
         <h3>Ausgewählter Punkt</h3>
         <div style="margin-bottom:12px"><b id="pointName" style="font-size:18px;font-weight:750">Jaufenpass</b><div class="muted" id="pointKm">km 156</div></div>
-        <div class="point-details"><div>Höhe</div><b id="pointAlt">1.842 m</b><div>Terrain</div><b id="pointTerrain">Trail</b><div>Steigung nächste 2 km</div><b id="pointGrade">7%</b><div>Wind</div><b id="pointWind">14 km/h W</b></div>
+        <div class="point-details"><div>Höhe</div><b id="pointAlt">1.842 m</b><div>Terrain</div><b id="pointTerrain">Trail</b><div>Ø nächste 2 km</div><b id="pointGrade">–</b><div>Wind aktuell</div><b id="pointWind" class="point-wind">–</b></div>
       </div>
 
       <div class="card">
@@ -490,52 +511,75 @@ body.map-open{overflow:hidden!important}
 </section>
 
 <section class="screen" id="screen-stages">
-  <div class="route-title-row"><div><div class="eyebrow">Etappen</div><h1>4 Tage</h1><div class="route-meta">Wetter · Terrain · Belastung · Übernachtung</div></div></div>
+  <div class="route-title-row"><div><div class="eyebrow">Etappen</div><h1 id="stagePageTitle">Etappen</h1><div class="route-meta">Wetter · Terrain · Belastung · Übernachtungen</div></div></div>
   <div class="stage-page">
-    <div class="card stage-list" id="stageList">
-      <div class="stage-item active" data-stage="0"><b>Tag 1 · Innsbruck → Kühtai</b><small>73 km · 1.250 HM · 52% Gravel</small></div>
-      <div class="stage-item" data-stage="1"><b>Tag 2 · Kühtai → Brixen</b><small>96 km · 1.760 HM · 61% Gravel</small></div>
-      <div class="stage-item" data-stage="2"><b>Tag 3 · Brixen → Riva</b><small>89 km · 1.340 HM · 46% Gravel</small></div>
-      <div class="stage-item" data-stage="3"><b>Tag 4 · Riva → Ziel</b><small>54 km · 500 HM · 31% Gravel</small></div>
+    <div class="card stage-list">
+      <div id="stageListItems"></div>
+      <div class="overnight-summary">
+        <div class="eyebrow">Übernachtungen</div>
+        <div id="overnightSummary"></div>
+      </div>
     </div>
     <div class="card stage-detail">
-      <div class="eyebrow" id="stageDay">Tag 1</div><h2 id="stageName">Innsbruck → Kühtai</h2>
+      <div class="eyebrow" id="stageDay">Tag 1</div><h2 id="stageName">Etappe</h2>
       <div class="stage-stat-grid">
-        <div class="stage-stat"><b id="stageKm">73 km</b><span>Distanz</span></div><div class="stage-stat"><b id="stageHm">1.250 m</b><span>Anstieg</span></div><div class="stage-stat"><b id="stageWx">18°</b><span>Max.</span></div><div class="stage-stat"><b id="stageSurface">52%</b><span>Gravel</span></div>
+        <div class="stage-stat"><b id="stageKm">–</b><span>Distanz</span></div><div class="stage-stat"><b id="stageHm">–</b><span>Anstieg</span></div><div class="stage-stat"><b id="stageWx">–</b><span>Max.</span></div><div class="stage-stat"><b id="stageSurface">–</b><span>Gravel</span></div>
       </div>
       <div class="card" style="padding:16px;margin-top:16px;background:#f7f4ec">
         <div class="eyebrow">Wetter entlang der Etappe</div>
-        <div class="weather-row" style="margin-top:10px"><div class="weather-day"><small>Start</small><div class="icon">☁</div><b>12°</b><small>10% · 8 km/h</small></div><div class="weather-day"><small>Hochpunkt</small><div class="icon">☀</div><b>8°</b><small>25% · 22 km/h</small></div><div class="weather-day"><small>Ziel</small><div class="icon">⛅</div><b>17°</b><small>15% · 12 km/h</small></div><div class="weather-day"><small>Abend</small><div class="icon">◐</div><b>10°</b><small>5% · 5 km/h</small></div></div>
+        <div class="weather-row" style="margin-top:10px"><div class="weather-day"><small>Start</small><div class="icon">☁</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Hochpunkt</small><div class="icon">☀</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Ziel</small><div class="icon">⛅</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Abend</small><div class="icon">◐</div><b>–</b><small>routengenau</small></div></div>
       </div>
       <div class="card" style="padding:16px;margin-top:14px;background:#f7f4ec">
-        <div class="eyebrow">Terrain</div><div class="terrain-legend" style="margin-top:12px"><span class="legend-item"><i class="dot gravel"></i>Gravel 52%</span><span class="legend-item"><i class="dot asphalt"></i>Asphalt 28%</span><span class="legend-item"><i class="dot trail"></i>Trail 14%</span><span class="legend-item"><i class="dot mixed"></i>Mixed 6%</span></div>
+        <div class="eyebrow">Terrain</div><div class="terrain-legend" id="stageTerrainLegend" style="margin-top:12px"><span class="legend-item">wird geladen …</span></div>
+      </div>
+      <div class="card stay-card">
+        <div class="eyebrow">Übernachtung</div>
+        <div id="stageOvernightCard"></div>
       </div>
     </div>
   </div>
 </section>
 
 <section class="screen" id="screen-pack">
-  <div class="route-title-row"><div><div class="eyebrow">Bike & Packen</div><h1>Packorganisation</h1><div class="route-meta" id="packMeta">14,2 kg · 5 aktive Taschen · Balance wird berechnet</div></div><div class="btn-row"><button class="btn" id="resetPack">Zurücksetzen</button><button class="btn" id="autoPack">Auto-Packen</button><button class="btn rust" id="packModeBtn">Zum Packen</button></div></div>
+  <div class="route-title-row"><div><div class="eyebrow">Bike & Packen</div><h1>Packorganisation</h1><div class="route-meta" id="packMeta">Ausrüstung bereit · noch keine Tasche belegt</div></div><div class="btn-row"><button class="btn" id="resetPack">Bike leeren</button><button class="btn" id="autoPack">Auto-Packen</button><button class="btn rust" id="packModeBtn">Zum Packen</button></div></div>
   <div class="pack-layout">
     <div class="card bike-card">
       <div class="bike-header"><div><h3>Dein Bike</h3><div class="muted">Gegenstand antippen und danach eine Zieltasche am Bike oder unten auswählen.</div></div><span class="badge">Gravel · 40 mm</span></div>
-      <svg class="bike-svg" viewBox="0 0 760 330">
-        <circle cx="185" cy="225" r="82" fill="none" stroke="#303630" stroke-width="11"/><circle cx="568" cy="225" r="82" fill="none" stroke="#303630" stroke-width="11"/>
-        <circle cx="185" cy="225" r="72" fill="none" stroke="#bd955d" stroke-width="4"/><circle cx="568" cy="225" r="72" fill="none" stroke="#bd955d" stroke-width="4"/>
-        <path d="M185 225 L305 92 L392 225 L185 225 M305 92 L470 105 L392 225 M470 105 L568 225" fill="none" stroke="#556244" stroke-width="12" stroke-linecap="round"/>
-        <path d="M300 90 L275 65 M275 65 L235 64" stroke="#303630" stroke-width="8" stroke-linecap="round"/><path d="M468 104 L500 76 L530 78" stroke="#303630" stroke-width="8" stroke-linecap="round"/>
-        <g class="bag-node" id="bikeBag-saddle" data-bag="saddle"><path d="M228 71 Q180 58 152 79 L170 116 Q205 107 246 104 Z" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
-        <g class="bag-node" id="bikeBag-frame" data-bag="frame"><path d="M300 112 L380 212 L244 212 Z" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
-        <g class="bag-node" id="bikeBag-top" data-bag="top"><rect x="335" y="83" width="72" height="30" rx="12" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
-        <g class="bag-node" id="bikeBag-bar" data-bag="bar"><path d="M484 67 Q525 57 552 83 L542 122 Q503 117 469 105 Z" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
-        <g class="bag-node" id="bikeBag-fork" data-bag="fork"><rect x="523" y="128" width="28" height="72" rx="10" fill="#465044" stroke="#f5f0e7" stroke-width="2"/></g>
+      <svg class="bike-svg" viewBox="0 0 800 360" aria-label="Gravelbike Seitenansicht">
+        <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="185" cy="252" r="92" stroke="#2d342f" stroke-width="10"/>
+          <circle cx="615" cy="252" r="92" stroke="#2d342f" stroke-width="10"/>
+          <circle cx="185" cy="252" r="78" stroke="#c3b99e" stroke-width="2"/>
+          <circle cx="615" cy="252" r="78" stroke="#c3b99e" stroke-width="2"/>
+          <g stroke="#cfc7b8" stroke-width="1.4" opacity=".85">
+            <path d="M185 174V330M107 252H263M130 197L240 307M130 307L240 197"/>
+            <path d="M615 174V330M537 252H693M560 197L670 307M560 307L670 197"/>
+          </g>
+          <path d="M185 252 L322 105 L414 252 L185 252 M322 105 L510 119 L414 252 M510 119 L615 252" stroke="#536347" stroke-width="12"/>
+          <path d="M322 105 L414 252" stroke="#536347" stroke-width="10"/>
+          <path d="M414 252 L615 252" stroke="#536347" stroke-width="9"/>
+          <path d="M507 118 L535 88 L570 91 M535 88 L553 70" stroke="#2d342f" stroke-width="8"/>
+          <path d="M321 105 L294 76 M294 76 L252 76" stroke="#2d342f" stroke-width="8"/>
+          <path d="M503 119 L615 252" stroke="#2d342f" stroke-width="6"/>
+          <circle cx="414" cy="252" r="19" stroke="#2d342f" stroke-width="5"/>
+          <circle cx="414" cy="252" r="5" fill="#2d342f" stroke="none"/>
+          <path d="M414 252 L443 267" stroke="#2d342f" stroke-width="5"/>
+          <path d="M443 267 h20" stroke="#2d342f" stroke-width="5"/>
+          <path d="M286 77 h58" stroke="#2d342f" stroke-width="7"/>
+        </g>
+        <g class="bag-node" id="bikeBag-saddle" data-bag="saddle"><path d="M267 80 Q218 68 184 88 L202 129 Q237 121 286 113 Z" fill="#465044" stroke="#f5f0e7" stroke-width="3"/></g>
+        <g class="bag-node" id="bikeBag-frame" data-bag="frame"><path d="M323 128 L400 235 L242 235 Z" fill="#465044" stroke="#f5f0e7" stroke-width="3"/></g>
+        <g class="bag-node" id="bikeBag-top" data-bag="top"><rect x="358" y="101" width="83" height="29" rx="11" fill="#465044" stroke="#f5f0e7" stroke-width="3"/></g>
+        <g class="bag-node" id="bikeBag-bar" data-bag="bar"><path d="M526 78 Q565 66 596 91 L584 133 Q546 127 511 115 Z" fill="#465044" stroke="#f5f0e7" stroke-width="3"/></g>
+        <g class="bag-node" id="bikeBag-fork" data-bag="fork"><rect x="566" y="139" width="31" height="84" rx="11" fill="#465044" stroke="#f5f0e7" stroke-width="3"/></g>
       </svg>
+      <div class="bike-empty-state" id="bikeEmptyState">Leeres Bike · Auto-Packen startet die Verteilung</div>
       <div class="bag-overview" id="bagOverview"></div>
     </div>
 
     <div class="pack-panels">
       <div class="card pack-org">
-        <div class="trip-head"><div><div class="eyebrow">Pack-Organisation</div><h3>Tascheninhalt</h3></div><span class="badge" id="consolidationBadge">interaktiv</span></div>
+        <div class="trip-head"><div><div class="eyebrow">Pack-Organisation</div><h3>Tascheninhalt</h3></div><span class="badge" id="consolidationBadge">leer</span></div>
         <div class="pack-interaction" id="packInteraction"><b>Tipp:</b> Wähle unten einen Gegenstand. Danach eine andere Tasche anklicken. Auf Desktop kannst du Gegenstände auch ziehen.</div>
         <div id="packOrgRows"></div>
       </div>
@@ -545,7 +589,7 @@ body.map-open{overflow:hidden!important}
         <div class="pack-mini-note">Die Häkchen lassen sich einzeln ändern. Die Tasche selbst bleibt davon unabhängig.</div>
       </div>
       <div class="card card-pad">
-        <div class="eyebrow">Gewicht & Balance</div><h3 id="packWeight">14,2 kg</h3>
+        <div class="eyebrow">Gewicht & Balance</div><h3 id="packWeight">0,0 / 0,0 kg</h3>
         <div class="balancebar" id="balanceBar"><i></i><i></i></div>
         <div style="display:flex;justify-content:space-between;font-size:12px"><span id="frontBalance">–</span><span id="rearBalance">–</span></div>
         <div class="status-ok" id="balanceStatus" style="display:inline-block;margin-top:10px">wird berechnet</div>
@@ -578,7 +622,7 @@ body.map-open{overflow:hidden!important}
 <div class="prototype-pill">Interaktiver Design-Prototyp · keine Live-Daten</div>
 </div>
 
-<script src="https://unpkg.com/maplibre-gl@6.11.0/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/maplibre-gl@6.10.0/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const screens=[...document.querySelectorAll('.screen')];
@@ -810,6 +854,7 @@ function applyRouteRows(rows,named=[],source='api',start='',dest='',stages=[]){
    updateLinked(.5,'load');
  }
  if(roam3DReady){update3DSources();updateFlyCamera(true)}
+ renderStagePrototype();
  loadExactTerrain().catch(()=>{});
 }
 async function loadExactRouteGeometry(){
@@ -871,6 +916,7 @@ async function loadExactTerrain(){
  renderTerrainUI();renderExactElevation();
  if(roamMap){drawRouteOnMap();updateLinked(.5,'terrain')}
  if(roam3DReady)update3DSources();
+ renderStagePrototype();
 }
 
 function routePointProgress(x){
@@ -1066,6 +1112,7 @@ function baseFlyDurationMs(){
  return Math.max(60000,Math.min(180000,(routeDistanceKm||240)*250));
 }
 function setFlyPlaying(on){
+ if(on&&!roam3DReady){flyPlaying=false;return}
  flyPlaying=!!on;
  const btn=document.getElementById('flyPlayBtn');
  if(btn)btn.textContent=flyPlaying?'Ⅱ':'▶';
@@ -1104,10 +1151,32 @@ function fitRoute3D(){
  roam3DMap.fitBounds(bounds,{padding:70,duration:800,maxZoom:10});
  setTimeout(()=>roam3DMap.easeTo({pitch:48,bearing:0,duration:500}),820);
 }
-function init3DMap(){
+let mapLibreLoadPromise=null;
+function ensureMapLibre(){
+ if(typeof maplibregl!=='undefined')return Promise.resolve(true);
+ if(mapLibreLoadPromise)return mapLibreLoadPromise;
+ mapLibreLoadPromise=new Promise(resolve=>{
+   const s=document.createElement('script');
+   s.src='https://cdn.jsdelivr.net/npm/maplibre-gl@6.10.0/dist/maplibre-gl.js';
+   s.async=true;
+   s.onload=()=>resolve(typeof maplibregl!=='undefined');
+   s.onerror=()=>resolve(false);
+   document.head.appendChild(s);
+ });
+ return mapLibreLoadPromise;
+}
+function setFlyControlsEnabled(enabled){
+ ['flyPlayBtn','flySpeed','flySlider','flyFollowBtn','flyResetBtn'].forEach(id=>{
+   const el=document.getElementById(id);if(el)el.disabled=!enabled;
+ });
+}
+async function init3DMap(){
  if(roam3DMap){setTimeout(()=>{roam3DMap.resize();update3DSources();updateFlyCamera(true)},60);return}
- if(typeof maplibregl==='undefined'||routeGeo.length<2){
+ const libReady=await ensureMapLibre();
+ if(!libReady||routeGeo.length<2){
+   setFlyPlaying(false);setFlyControlsEnabled(false);
    setGeometryStatus('3D-Modus konnte nicht geladen werden','warn');
+   const s=document.getElementById('flyStatus');if(s)s.textContent='MapLibre nicht verfügbar';
    return;
  }
  const start=routeLngLat(0);
@@ -1173,6 +1242,7 @@ function init3DMap(){
      'circle-radius':7,'circle-color':'#f8f4ec','circle-stroke-width':4,'circle-stroke-color':'#a2573c'
    }});
    roam3DReady=true;
+   setFlyControlsEnabled(true);
    setFlyFollow(true);
    updateFlyCamera(true);
    setGeometryStatus(`${routeSource==='stored'?'Gespeicherte Originalroute':'Echte Routengeometrie'} · 3D bereit`,'ok');
@@ -1279,6 +1349,75 @@ function nearestRouteProgress(latlng){
  }
  return best.p;
 }
+function pAtDistanceKm(d){
+ if(!routeGeoTotal)return 0;
+ return Math.max(0,Math.min(1,d/routeGeoTotal));
+}
+function gradientAhead(p,km=2){
+ if(routeGeo.length<2)return null;
+ const startD=Math.max(0,Math.min(routeGeoTotal,p*routeGeoTotal));
+ const endD=Math.min(routeGeoTotal,startD+km);
+ const dist=endD-startD;
+ if(dist<.05)return null;
+ const z0=elevAtP(pAtDistanceKm(startD)),z1=elevAtP(pAtDistanceKm(endD));
+ if(!Number.isFinite(z0)||!Number.isFinite(z1))return null;
+ const delta=z1-z0,grade=(delta/(dist*1000))*100;
+ return {dist,delta,grade};
+}
+function windDirLabel(deg){
+ const dirs=['N','NO','O','SO','S','SW','W','NW'];
+ return dirs[Math.round((((Number(deg)||0)%360)+360)%360/45)%8];
+}
+function weatherCodeInfo(code){
+ code=Number(code);
+ if(code===0)return ['☀️','klar'];
+ if([1,2].includes(code))return ['🌤️','leicht bewölkt'];
+ if(code===3)return ['☁️','bewölkt'];
+ if([45,48].includes(code))return ['🌫️','Nebel'];
+ if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code))return ['🌧️','Regen'];
+ if([71,73,75,77,85,86].includes(code))return ['🌨️','Schnee'];
+ if([95,96,99].includes(code))return ['⛈️','Gewitter'];
+ return ['⛅','Wetter'];
+}
+let pointWeatherTimer=null,pointWeatherSeq=0;
+const pointWeatherCache=new Map();
+function schedulePointWeather(p){
+ clearTimeout(pointWeatherTimer);
+ pointWeatherTimer=setTimeout(()=>loadPointWeather(p),260);
+}
+async function loadPointWeather(p){
+ if(routeGeo.length<2)return;
+ const [lat,lon]=interpGeo(p),key=`${lat.toFixed(2)}|${lon.toFixed(2)}`;
+ const cached=pointWeatherCache.get(key);
+ if(cached&&Date.now()-cached.ts<10*60*1000){applyPointWeather(cached.data);return}
+ const seq=++pointWeatherSeq;
+ try{
+   const q=new URLSearchParams({
+     latitude:String(lat),longitude:String(lon),
+     current:'temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
+     timezone:'auto'
+   });
+   const r=await fetch(`https://api.open-meteo.com/v1/forecast?${q}`);
+   const d=await r.json();
+   if(!r.ok||!d?.current)throw new Error('Wetter nicht verfügbar');
+   if(seq!==pointWeatherSeq)return;
+   pointWeatherCache.set(key,{ts:Date.now(),data:d.current});
+   applyPointWeather(d.current);
+ }catch(e){
+   if(seq!==pointWeatherSeq)return;
+   document.getElementById('pointWind').textContent='–';
+   document.getElementById('weatherTemp').textContent='–';
+   document.getElementById('weatherText').textContent='Wetter aktuell nicht verfügbar';
+ }
+}
+function applyPointWeather(w){
+ const speed=Math.round(Number(w.wind_speed_10m)||0),gust=Math.round(Number(w.wind_gusts_10m)||0),dir=windDirLabel(w.wind_direction_10m);
+ const [icon,label]=weatherCodeInfo(w.weather_code);
+ document.querySelector('.weather-big .wx').textContent=icon;
+ document.getElementById('pointWind').textContent=`${speed} km/h ${dir}${gust?` · Böen ${gust}`:''}`;
+ document.getElementById('weatherTemp').textContent=`${Math.round(Number(w.temperature_2m)||0)}°`;
+ document.getElementById('weatherText').textContent=`${label} · Wind ${speed} km/h ${dir}${gust?` · Böen ${gust}`:''}`;
+}
 function updateLinked(p,source){
  if(routeGeo.length<2)return;
  p=Math.max(0,Math.min(1,p));
@@ -1297,10 +1436,11 @@ function updateLinked(p,source){
  document.getElementById('pointKm').textContent=`km ${km}`;
  document.getElementById('pointAlt').textContent=Number.isFinite(z)?Math.round(z).toLocaleString('de-DE')+' m':'–';
  document.getElementById('pointTerrain').textContent=terrain.name;
- document.getElementById('pointGrade').textContent='–';
- document.getElementById('pointWind').textContent='–';
- document.getElementById('weatherTemp').textContent='–';
- document.getElementById('weatherText').textContent='Wetter wird im Live-System routengenau geladen';
+ const g=gradientAhead(p,2);
+ document.getElementById('pointGrade').textContent=g
+   ?`${g.grade>=0?'+':''}${g.grade.toFixed(1).replace('.',',')}% · ${g.delta>=0?'+':''}${Math.round(g.delta)} m`
+   :'–';
+ schedulePointWeather(p);
 }
 function pointerToP(el,e){
  const r=el.getBoundingClientRect();
@@ -1313,17 +1453,83 @@ renderTerrainUI();
 loadExactRouteGeometry();
 initRouteMap();
 
-const stageData=[
- ['Tag 1','Innsbruck → Kühtai','73 km','1.250 m','18°','52%'],
- ['Tag 2','Kühtai → Brixen','96 km','1.760 m','16°','61%'],
- ['Tag 3','Brixen → Riva','89 km','1.340 m','14°','46%'],
- ['Tag 4','Riva → Ziel','54 km','500 m','20°','31%']
+const fallbackStageData=[
+ {day:'Tag 1',from:'Innsbruck',to:'Kühtai',km:73,hm:1250,wx:'18°',gravel:52,lodging:null},
+ {day:'Tag 2',from:'Kühtai',to:'Brixen',km:96,hm:1760,wx:'16°',gravel:61,lodging:null},
+ {day:'Tag 3',from:'Brixen',to:'Riva',km:89,hm:1340,wx:'14°',gravel:46,lodging:null},
+ {day:'Tag 4',from:'Riva',to:'Ziel',km:54,hm:500,wx:'20°',gravel:31,lodging:null}
 ];
-document.querySelectorAll('.stage-item').forEach(el=>el.addEventListener('click',()=>{
- document.querySelectorAll('.stage-item').forEach(x=>x.classList.remove('active'));el.classList.add('active');
- const d=stageData[+el.dataset.stage];
- ['stageDay','stageName','stageKm','stageHm','stageWx','stageSurface'].forEach((id,i)=>document.getElementById(id).textContent=d[i]);
-}));
+let stageData=fallbackStageData;
+let selectedStagePrototype=0;
+function lodgingTypeName(t){
+ return {hotel:'Hotel',guest_house:'Pension',hostel:'Hostel',motel:'Motel',apartment:'Apartment',chalet:'Chalet',alpine_hut:'Berghütte',wilderness_hut:'Schutzhütte',camp_site:'Camping',caravan_site:'Camping / Caravan'}[t]||'Unterkunft';
+}
+function isCampingLodging(x){return ['camp_site','caravan_site'].includes(x?.type)}
+function readStagePrototypeData(){
+ try{
+   const saved=JSON.parse(localStorage.getItem('abo-mobile-route')||'null');
+   const names=JSON.parse(localStorage.getItem('abo-mobile-stage-names')||'null');
+   const lodgings=JSON.parse(localStorage.getItem('abo-mobile-lodging-selected')||'{}');
+   if(!saved?.stages?.length)return fallbackStageData;
+   const start=saved.start||'Start',dest=saved.dest||'Ziel';
+   return saved.stages.map((st,i)=>{
+     const from=Array.isArray(names)?(names[i]||start):(i===0?start:`Etappe ${i}`);
+     const to=Array.isArray(names)?(names[i+1]||dest):(i===saved.stages.length-1?dest:`Etappenziel ${i+1}`);
+     const terrain=routeTerrain.status==='ready'?routeTerrain.stages?.[i]:null;
+     return {
+       day:`Tag ${i+1}`,from,to,
+       km:Number(st.km)||0,hm:Number(st.hm)||0,wx:'–',
+       gravel:terrain?Math.round(Number(terrain.gravel)||0):null,
+       lodging:lodgings?.[i]||null,
+       last:i===saved.stages.length-1
+     };
+   });
+ }catch(e){return fallbackStageData}
+}
+function renderStagePrototype(){
+ stageData=readStagePrototypeData();
+ const list=document.getElementById('stageListItems'),summary=document.getElementById('overnightSummary');
+ if(!list||!summary)return;
+ document.getElementById('stagePageTitle').textContent=`${stageData.length} ${stageData.length===1?'Tag':'Tage'}`;
+ list.innerHTML=stageData.map((d,i)=>`<div class="stage-item ${i===selectedStagePrototype?'active':''}" data-stage="${i}">
+   <b>${d.day} · ${d.from} → ${d.to}</b>
+   <small>${d.km.toFixed(0)} km · ${Math.round(d.hm).toLocaleString('de-DE')} HM${d.gravel!=null?` · ${d.gravel}% Gravel`:''}</small>
+ </div>`).join('');
+ const nights=stageData.slice(0,-1);
+ summary.innerHTML=nights.length?nights.map((d,i)=>{
+   const l=d.lodging,icon=l?(isCampingLodging(l)?'⛺':'⌂'):'○';
+   const status=l?(l.status==='booked'?'reserviert':'vorgemerkt'):'noch offen';
+   return `<div class="night-row"><span class="night-icon">${icon}</span><div><b>Nacht ${i+1} · ${d.to}</b><small>${l?l.name:'Noch keine Unterkunft ausgewählt'}</small></div><span class="night-status">${status}</span></div>`;
+ }).join(''):'<div class="muted" style="font-size:11px">Keine Zwischenübernachtung erforderlich.</div>';
+ list.querySelectorAll('.stage-item').forEach(el=>el.addEventListener('click',()=>showStagePrototype(+el.dataset.stage)));
+ selectedStagePrototype=Math.min(selectedStagePrototype,stageData.length-1);
+ showStagePrototype(selectedStagePrototype,false);
+}
+function showStagePrototype(i,rerender=True){
+ selectedStagePrototype=Math.max(0,Math.min(stageData.length-1,i));
+ if(rerender)document.querySelectorAll('#stageListItems .stage-item').forEach((x,j)=>x.classList.toggle('active',j===selectedStagePrototype));
+ const d=stageData[selectedStagePrototype],l=d.lodging;
+ document.getElementById('stageDay').textContent=d.day;
+ document.getElementById('stageName').textContent=`${d.from} → ${d.to}`;
+ document.getElementById('stageKm').textContent=`${d.km.toFixed(0)} km`;
+ document.getElementById('stageHm').textContent=`${Math.round(d.hm).toLocaleString('de-DE')} m`;
+ document.getElementById('stageWx').textContent=d.wx||'–';
+ document.getElementById('stageSurface').textContent=d.gravel==null?'–':`${d.gravel}%`;
+ const t=routeTerrain.status==='ready'?routeTerrain.stages?.[selectedStagePrototype]:null;
+ document.getElementById('stageTerrainLegend').innerHTML=t
+   ?['paved','fine','gravel','rough','unknown'].map(c=>`<span class="legend-item"><i class="route-dot" style="background:${terrainStyle(c).color}"></i>${terrainStyle(c).short} ${Math.round(Number(t[c])||0)}%</span>`).join('')
+   :'<span class="legend-item">Terrain wird geladen …</span>';
+ const box=document.getElementById('stageOvernightCard');
+ if(d.last&&!l){
+   box.innerHTML='<div class="stay-card-main"><span class="stay-card-icon">◎</span><div><b>Reiseziel erreicht</b><div class="stay-meta">Keine weitere Zwischenübernachtung nötig.</div></div></div>';
+ }else if(l){
+   const icon=isCampingLodging(l)?'⛺':'⌂',status=l.status==='booked'?'reserviert':'vorgemerkt',price=Number(l.quotedPrice)||0;
+   box.innerHTML=`<div class="stay-card-main"><span class="stay-card-icon">${icon}</span><div><b>${l.name||lodgingTypeName(l.type)}</b><div class="stay-meta">${lodgingTypeName(l.type)} · ${status}${price?` · ${price.toFixed(0)} €`:''}</div></div><span class="badge">${status}</span></div>`;
+ }else{
+   box.innerHTML=`<div class="stay-card-main"><span class="stay-card-icon">○</span><div><b>Übernachtung in ${d.to}</b><div class="stay-meta">Noch keine Unterkunft vorgemerkt. Auswahl aus der Mobile-App wird hier automatisch übernommen.</div></div><span class="badge warn">offen</span></div>`;
+ }
+}
+
 const packBags={
  saddle:{name:'Satteltasche',cap:16,zone:'rear'},
  frame:{name:'Rahmentasche',cap:8,zone:'center'},
@@ -1332,29 +1538,29 @@ const packBags={
  fork:{name:'Gabeltaschen',cap:8,zone:'front'}
 };
 const packInitialItems=[
- {id:'sleep',name:'Schlafsack',bag:'saddle',l:5,kg:.9,cat:'Schlafen',packed:true},
- {id:'down',name:'Daunenjacke',bag:'saddle',l:2.5,kg:.4,cat:'Kleidung',packed:true},
- {id:'under',name:'Unterwäsche',bag:'saddle',l:.5,kg:.3,cat:'Kleidung',packed:true},
- {id:'clothes',name:'Kleidung',bag:'saddle',l:4,kg:1.2,cat:'Kleidung',packed:true},
- {id:'water',name:'Wasser',bag:'frame',l:2,kg:2,cat:'Food',packed:true},
- {id:'tools',name:'Werkzeug',bag:'frame',l:1.4,kg:1.2,cat:'Werkzeug',packed:true},
- {id:'power',name:'Powerbank',bag:'frame',l:.4,kg:.45,cat:'Werkzeug',packed:true},
- {id:'food',name:'Food',bag:'frame',l:1,kg:1.8,cat:'Food',packed:false},
- {id:'snacks',name:'Snacks',bag:'top',l:.4,kg:.5,cat:'Food',packed:true},
- {id:'electronics',name:'Elektronik',bag:'top',l:.3,kg:.35,cat:'Werkzeug',packed:true},
- {id:'docs',name:'Dokumente',bag:'top',l:.1,kg:.1,cat:'Dokumente',packed:false},
- {id:'tent',name:'Zelt',bag:'bar',l:2.5,kg:1.6,cat:'Schlafen',packed:true},
- {id:'mat',name:'Isomatte',bag:'bar',l:.5,kg:.5,cat:'Schlafen',packed:true},
- {id:'stove',name:'Kocher',bag:'bar',l:1.1,kg:.45,cat:'Küche',packed:true},
- {id:'dishes',name:'Essgeschirr',bag:'bar',l:.8,kg:.35,cat:'Küche',packed:true},
- {id:'spares',name:'Ersatzteile',bag:'fork',l:1,kg:.6,cat:'Werkzeug',packed:true},
- {id:'rain',name:'Regenjacke',bag:'fork',l:.9,kg:.35,cat:'Kleidung',packed:true},
- {id:'fuel',name:'Fuel',bag:'fork',l:.7,kg:.4,cat:'Küche',packed:true},
- {id:'sandals',name:'Sandalen',bag:'fork',l:1.8,kg:.75,cat:'Kleidung',packed:false}
+ {id:'sleep',name:'Schlafsack',bag:null,l:5,kg:.9,cat:'Schlafen',packed:false},
+ {id:'down',name:'Daunenjacke',bag:null,l:2.5,kg:.4,cat:'Kleidung',packed:false},
+ {id:'under',name:'Unterwäsche',bag:null,l:.5,kg:.3,cat:'Kleidung',packed:false},
+ {id:'clothes',name:'Kleidung',bag:null,l:4,kg:1.2,cat:'Kleidung',packed:false},
+ {id:'water',name:'Wasser',bag:null,l:2,kg:2,cat:'Food',packed:false},
+ {id:'tools',name:'Werkzeug',bag:null,l:1.4,kg:1.2,cat:'Werkzeug',packed:false},
+ {id:'power',name:'Powerbank',bag:null,l:.4,kg:.45,cat:'Werkzeug',packed:false},
+ {id:'food',name:'Food',bag:null,l:1,kg:1.8,cat:'Food',packed:false},
+ {id:'snacks',name:'Snacks',bag:null,l:.4,kg:.5,cat:'Food',packed:false},
+ {id:'electronics',name:'Elektronik',bag:null,l:.3,kg:.35,cat:'Werkzeug',packed:false},
+ {id:'docs',name:'Dokumente',bag:null,l:.1,kg:.1,cat:'Dokumente',packed:false},
+ {id:'tent',name:'Zelt',bag:null,l:2.5,kg:1.6,cat:'Schlafen',packed:false},
+ {id:'mat',name:'Isomatte',bag:null,l:.5,kg:.5,cat:'Schlafen',packed:false},
+ {id:'stove',name:'Kocher',bag:null,l:1.1,kg:.45,cat:'Küche',packed:false},
+ {id:'dishes',name:'Essgeschirr',bag:null,l:.8,kg:.35,cat:'Küche',packed:false},
+ {id:'spares',name:'Ersatzteile',bag:null,l:1,kg:.6,cat:'Werkzeug',packed:false},
+ {id:'rain',name:'Regenjacke',bag:null,l:.9,kg:.35,cat:'Kleidung',packed:false},
+ {id:'fuel',name:'Fuel',bag:null,l:.7,kg:.4,cat:'Küche',packed:false},
+ {id:'sandals',name:'Sandalen',bag:null,l:1.8,kg:.75,cat:'Kleidung',packed:false}
 ];
 let packItems=packInitialItems.map(x=>({...x}));
 let selectedPackItem=null;
-let selectedBag='saddle';
+let selectedBag=null;
 
 function bagStats(id){
  const items=packItems.filter(x=>x.bag===id),l=items.reduce((s,x)=>s+x.l,0),kg=items.reduce((s,x)=>s+x.kg,0);
@@ -1372,8 +1578,10 @@ function movePackItem(itemId,targetBag){
  if(target.l+item.l>packBags[targetBag].cap){packToast(`${packBags[targetBag].name}: zu wenig Platz`);return}
  const from=item.bag;if(from===targetBag){selectedPackItem=null;renderPackPrototype();return}
  item.bag=targetBag;selectedPackItem=null;selectedBag=targetBag;
- packToast(`${item.name}: ${packBags[from].name} → ${packBags[targetBag].name}`);
+ const fromName=from&&packBags[from]?packBags[from].name:'nicht verteilt';
+ packToast(`${item.name}: ${fromName} → ${packBags[targetBag].name}`);
  renderPackPrototype();
+renderStagePrototype();
 }
 function selectBag(id){
  if(selectedPackItem){movePackItem(selectedPackItem,id);return}
@@ -1387,12 +1595,23 @@ function togglePacked(id){
  const item=packItems.find(x=>x.id===id);if(!item)return;
  item.packed=!item.packed;renderPackPrototype();
 }
+function bagIconSVG(id){
+ const common='fill="#566348" stroke="#2e3a2f" stroke-width="1.5"';
+ const svg={
+  saddle:`<svg viewBox="0 0 48 30"><path ${common} d="M42 8C31 4 17 4 6 10l5 13c10-3 22-3 31-1z"/><path d="M12 8l-3-4M35 7l3-4" stroke="#2e3a2f" stroke-width="2"/></svg>`,
+  frame:`<svg viewBox="0 0 48 30"><path ${common} d="M8 5h31L25 26H14z"/></svg>`,
+  top:`<svg viewBox="0 0 48 30"><rect ${common} x="7" y="8" width="34" height="14" rx="6"/></svg>`,
+  bar:`<svg viewBox="0 0 48 30"><path ${common} d="M7 8c12-5 22-5 34 1l-3 14c-10-3-19-3-28 0z"/><path d="M11 7V3M37 8V4" stroke="#2e3a2f" stroke-width="2"/></svg>`,
+  fork:`<svg viewBox="0 0 48 30"><rect ${common} x="12" y="4" width="10" height="22" rx="4"/><rect ${common} x="27" y="4" width="10" height="22" rx="4"/></svg>`
+ };
+ return svg[id]||'';
+}
 function renderBagOverview(){
  const box=document.getElementById('bagOverview');if(!box)return;
  box.innerHTML=Object.entries(packBags).map(([id,b])=>{
    const s=bagStats(id),active=selectedBag===id,empty=!s.items.length;
    return `<div class="bag-pill ${active?'active':''} ${empty?'empty':''} ${selectedPackItem?'drop-target':''}" data-bag="${id}" draggable="false">
-     <div class="ring" style="--p:${Math.min(100,s.pct)}%"></div><strong>${b.name}</strong><span>${s.pct}% · ${s.l.toFixed(1).replace('.0','')} / ${b.cap} L</span>
+     <div class="bag-icon">${bagIconSVG(id)}</div><div class="ring" style="--p:${Math.min(100,s.pct)}%"></div><strong>${b.name}</strong><span>${s.pct}% · ${s.l.toFixed(1).replace('.0','')} / ${b.cap} L</span>
    </div>`;
  }).join('');
  box.querySelectorAll('.bag-pill').forEach(el=>{
@@ -1403,6 +1622,8 @@ function renderBagOverview(){
  });
 }
 function renderBikeBags(){
+ const activeCount=Object.keys(packBags).filter(id=>bagStats(id).items.length).length;
+ document.getElementById('bikeEmptyState')?.classList.toggle('hidden',activeCount>0);
  Object.keys(packBags).forEach(id=>{
    const node=document.getElementById('bikeBag-'+id);if(!node)return;
    const empty=!bagStats(id).items.length;
@@ -1414,17 +1635,20 @@ function renderBikeBags(){
 }
 function renderPackOrg(){
  const box=document.getElementById('packOrgRows');if(!box)return;
- box.innerHTML=Object.entries(packBags).map(([id,b])=>{
+ const unassigned=packItems.filter(x=>!x.bag);
+ const unassignedRow=unassigned.length?`<div class="org-row unassigned-row"><b>Noch nicht verteilt<div class="pack-mini-note">${unassigned.length} Teile</div></b><div class="chips">${unassigned.map(item=>`<span class="pack-item-wrap ${selectedPackItem===item.id?'selected':''}"><button class="pack-item" draggable="true" data-item="${item.id}">${item.name}</button><button class="item-check ${item.packed?'packed':''}" data-check="${item.id}">${item.packed?'✓':'○'}</button></span>`).join('')}</div><span></span></div>`:'';
+ const bagRows=Object.entries(packBags).map(([id,b])=>{
    const s=bagStats(id);
    const chips=s.items.length?s.items.map(item=>`<span class="pack-item-wrap ${selectedPackItem===item.id?'selected':''}">
       <button class="pack-item" draggable="true" data-item="${item.id}">${item.name}</button>
       <button class="item-check ${item.packed?'packed':''}" data-check="${item.id}" title="eingepackt">${item.packed?'✓':'○'}</button>
-    </span>`).join(''):'<span class="muted" style="font-size:11px">leer – am Bike ausgeblendet</span>';
+    </span>`).join(''):'<span class="muted" style="font-size:11px">leer</span>';
    return `<div class="org-row" data-orgbag="${id}"><b>${b.name}<div class="pack-mini-note">${s.pct}% · ${s.l.toFixed(1).replace('.0','')} L</div></b><div class="chips">${chips}</div>${s.pct>90?'<span class="status-ok" style="background:#f0ddd5;color:#7b4738">sehr voll</span>':''}</div>`;
  }).join('');
+ box.innerHTML=unassignedRow+bagRows;
  box.querySelectorAll('.pack-item').forEach(el=>{
    el.addEventListener('click',()=>selectPackItem(el.dataset.item));
-   el.addEventListener('dragstart',e=>{selectedPackItem=el.dataset.item;e.dataTransfer.setData('text/plain',el.dataset.item);e.dataTransfer.effectAllowed='move';renderPackPrototype()});
+   el.addEventListener('dragstart',e=>{selectedPackItem=el.dataset.item;e.dataTransfer.setData('text/plain',el.dataset.item);e.dataTransfer.effectAllowed='move'});
  });
  box.querySelectorAll('.item-check').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();togglePacked(el.dataset.check)}));
 }
@@ -1446,44 +1670,61 @@ function renderChecklist(){
  }));
 }
 function renderBalance(){
- const total=packTotalKg();
+ const total=packTotalKg(),assigned=packItems.filter(x=>x.bag),assignedKg=assigned.reduce((s,x)=>s+x.kg,0);
  let front=0,rear=0,center=0;
- packItems.forEach(x=>{const z=packBags[x.bag].zone;if(z==='front')front+=x.kg;else if(z==='rear')rear+=x.kg;else center+=x.kg});
- const frontEq=front+center/2,rearEq=rear+center/2,frontPct=Math.round(frontEq/(frontEq+rearEq)*100),rearPct=100-frontPct;
- document.getElementById('packWeight').textContent=total.toFixed(1).replace('.',',')+' kg';
+ assigned.forEach(x=>{const z=packBags[x.bag]?.zone;if(z==='front')front+=x.kg;else if(z==='rear')rear+=x.kg;else if(z==='center')center+=x.kg});
+ document.getElementById('packWeight').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg`;
+ const active=Object.keys(packBags).filter(id=>bagStats(id).items.length).length;
+ if(!assigned.length){
+   document.getElementById('frontBalance').textContent='–';document.getElementById('rearBalance').textContent='–';
+   document.getElementById('balanceBar').style.gridTemplateColumns='1fr 1fr';
+   const status=document.getElementById('balanceStatus');status.textContent='noch nicht verteilt';status.style.background='#e8e4d9';status.style.color='#656961';
+   document.getElementById('packMeta').textContent=`${total.toFixed(1).replace('.',',')} kg Ausrüstung · 0 aktive Taschen · Auto-Packen bereit`;
+   return;
+ }
+ const frontEq=front+center/2,rearEq=rear+center/2,sum=frontEq+rearEq;
+ const frontPct=sum?Math.round(frontEq/sum*100):50,rearPct=100-frontPct;
  document.getElementById('frontBalance').textContent=`${frontPct}% vorne`;document.getElementById('rearBalance').textContent=`${rearPct}% hinten`;
  document.getElementById('balanceBar').style.gridTemplateColumns=`${frontPct}fr ${rearPct}fr`;
  const diff=Math.abs(frontPct-50),status=document.getElementById('balanceStatus');
  status.textContent=diff<=7?'gut ausbalanciert':frontPct>50?'etwas frontlastig':'etwas hecklastig';
  status.style.background=diff<=7?'#e1e6d7':'#efe2d9';status.style.color=diff<=7?'#52613f':'#774936';
- const active=Object.keys(packBags).filter(id=>bagStats(id).items.length).length;
- document.getElementById('packMeta').textContent=`${total.toFixed(1).replace('.',',')} kg · ${active} aktive Taschen · Balance ${frontPct} / ${rearPct}`;
+ document.getElementById('packMeta').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg verteilt · ${active} aktive Taschen · Balance ${frontPct} / ${rearPct}`;
 }
 function renderPackHint(){
  const hint=document.getElementById('packInteraction');if(!hint)return;
+ const assigned=packItems.filter(x=>x.bag).length;
  if(selectedPackItem){
    const item=packItems.find(x=>x.id===selectedPackItem);
    hint.innerHTML=`<b>${item.name} ausgewählt.</b> Jetzt Zieltasche am Bike oder in der Taschenleiste wählen.`;
  }else if(selectedBag){
    const s=bagStats(selectedBag);
-   hint.innerHTML=`<b>${packBags[selectedBag].name}</b> · ${s.pct}% gefüllt · ${s.items.length} Gegenstände. Gegenstand antippen, um ihn umzupacken.`;
+   hint.innerHTML=`<b>${packBags[selectedBag].name}</b> · ${s.pct}% gefüllt · ${s.items.length} Gegenstände.`;
+ }else if(!assigned){
+   hint.innerHTML='<b>Leerer Zustand.</b> Auto-Packen verteilt die Ausrüstung auf vier Taschen. Du kannst danach jedes Teil manuell verschieben.';
+ }else{
+   hint.innerHTML='<b>Packplan aktiv.</b> Gegenstand antippen und anschließend eine andere Tasche wählen.';
  }
 }
 function renderPackPrototype(){
  renderBagOverview();renderBikeBags();renderPackOrg();renderChecklist();renderBalance();renderPackHint();
 }
 function autoPackPrototype(){
- // Demonstrate consolidation: move the small top-tube items into frame/saddle, then hide the empty bag on the bike.
- const moves={snacks:'saddle',electronics:'frame',docs:'frame',sandals:'saddle'};
- Object.entries(moves).forEach(([itemId,target])=>{const item=packItems.find(x=>x.id===itemId);if(item)item.bag=target});
+ const plan={
+   sleep:'saddle',down:'saddle',under:'saddle',clothes:'saddle',snacks:'saddle',sandals:'saddle',
+   water:'frame',tools:'frame',power:'frame',food:'frame',electronics:'frame',docs:'frame',
+   tent:'bar',mat:'bar',stove:'bar',dishes:'bar',
+   spares:'fork',rain:'fork',fuel:'fork'
+ };
+ packItems.forEach(item=>item.bag=plan[item.id]||null);
  selectedPackItem=null;selectedBag='frame';
- document.getElementById('consolidationBadge').textContent='4 Taschen · konsolidiert';
- packToast('Vorschlag angewendet: Oberrohrtasche kann entfallen');
+ document.getElementById('consolidationBadge').textContent='4 Taschen · Auto-Pack';
+ packToast('Auto-Packen angewendet: Oberrohrtasche bleibt frei');
  renderPackPrototype();
 }
 function resetPackPrototype(){
- packItems=packInitialItems.map(x=>({...x}));selectedPackItem=null;selectedBag='saddle';
- document.getElementById('consolidationBadge').textContent='interaktiv';packToast('Packplan zurückgesetzt');renderPackPrototype();
+ packItems=packInitialItems.map(x=>({...x,bag:null,packed:false}));selectedPackItem=null;selectedBag=null;
+ document.getElementById('consolidationBadge').textContent='leer';packToast('Bike geleert');renderPackPrototype();
 }
 document.getElementById('autoPack').addEventListener('click',autoPackPrototype);
 document.getElementById('resetPack').addEventListener('click',resetPackPrototype);
