@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Web Prototype V13</title>
+<title>ROAM · Web Prototype V13.1 · Approved UI</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"/>
 <style>
@@ -294,10 +294,10 @@ body.map-open{overflow:hidden!important}
 .roam-map-tip:before{border-top-color:#cfc7b9!important}
 .roam-place-label{background:rgba(250,247,239,.88)!important;border:0!important;box-shadow:none!important;color:#313831!important;font-weight:800!important;font-size:10px!important;padding:3px 5px!important}
 .roam-place-label:before{display:none!important}
-.roam-tip-inner{padding:10px 12px;min-width:155px}
-.roam-tip-inner b{display:block;font-size:15px;margin-bottom:2px}
-.roam-tip-inner small{display:block;color:#6f746d;font-size:10px;margin-bottom:6px}
-.roam-tip-meta{display:flex;gap:8px;align-items:center;font-size:10px}
+.roam-tip-inner{padding:6px 8px;min-width:110px;opacity:.92}
+.roam-tip-inner b{display:block;font-size:11px;margin-bottom:1px;font-weight:750}
+.roam-tip-inner small{display:block;color:#6f746d;font-size:9px;margin-bottom:3px}
+.roam-tip-meta{display:flex;gap:5px;align-items:center;font-size:9px}
 .profile-card{padding:16px 18px 14px;background:rgba(250,247,239,.9)}
 .profile-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .profile-head h3{margin-bottom:3px}
@@ -459,6 +459,36 @@ body.map-open{overflow:hidden!important}
 @media(max-width:1100px){.dash-grid,.dash-lower{grid-template-columns:1fr}.dash-stage-strip{grid-template-columns:1fr 1fr}.pack-v13-fillgrid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:720px){.dash-empty{grid-template-columns:1fr}.dash-empty-actions{flex-direction:column}.dash-kpis{grid-template-columns:1fr 1fr}.dash-stage-strip{grid-template-columns:1fr}.dash-ready-grid{grid-template-columns:1fr}.dash-rider{grid-template-columns:1fr}.v13-target-row{grid-template-columns:26px 1fr!important}.v13-target-inputs{grid-column:2;grid-template-columns:1fr}.pack-v13-fillgrid{grid-template-columns:1fr 1fr}.stay-plan-main{grid-template-columns:1fr}.stay-plan-actions{min-width:0}.stay-flow{flex-wrap:wrap}}
 
+
+/* ===== Approved Overview + Pack refinements ===== */
+.dash-route-preview{height:230px;position:relative;border:1px solid var(--line);border-radius:12px;background:#e3e7da;overflow:hidden}
+#dashMap{width:100%;height:100%;background:#e3e7da;pointer-events:none}
+#dashMap .leaflet-control-attribution{display:none}
+#dashMap .leaflet-tooltip{background:rgba(250,247,239,.94);border:0;box-shadow:none;color:var(--forest);font-size:9px;font-weight:800;padding:3px 6px;border-radius:999px}
+#dashMap .leaflet-tooltip:before{display:none}
+.dash-route-details{display:grid;grid-template-columns:1.4fr .6fr;gap:12px;margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
+.dash-mini-profile h4,.dash-mini-terrain h4{font-size:11px;margin:0 0 6px;color:var(--forest)}
+.dash-mini-profile svg{width:100%;height:92px;display:block;background:#faf7ef;border-radius:9px}
+.dash-mini-terrain{padding-left:10px;border-left:1px solid var(--line)}
+.dash-terrain-bar{display:flex;height:8px;border-radius:999px;overflow:hidden;background:#e3ddd1;margin:7px 0 8px}
+.dash-terrain-list{display:grid;gap:4px;font-size:9px;color:#5d655d}
+.dash-terrain-list span{display:flex;align-items:center;gap:6px;justify-content:space-between}
+.dash-terrain-list i{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:2px}
+.dash-stage-strip{margin-top:11px}
+
+.pack-v13-bike{background:#f3eee4!important;border-color:#ded5c7!important;padding:8px!important}
+.pack-v13-bike svg{max-height:350px}
+.pack-v13-bike .bike-wheel-rim{stroke:#786f62;fill:none}.pack-v13-bike .bike-tire{stroke:#4c514b;fill:none}.pack-v13-bike .bike-spoke{stroke:#c8c0b3}.pack-v13-bike .bike-frame-approved{stroke:#e7e2d8;fill:none}.pack-v13-bike .bike-dark{stroke:#4b524d;fill:none}
+.pack-v13-bike .bag-callout{stroke:#a7654b;stroke-width:1.4;fill:none}.pack-v13-bike .bag-anchor{fill:#fffdf8;stroke:#a7654b;stroke-width:2}
+.pack-v13-fillcard.full{border-color:#bd6b52;background:#fbefea}.pack-v13-fillcard.full strong,.pack-v13-fillcard.full small{color:#934c39}.pack-v13-fillcard.full .bar i{background:#b65f48!important}
+.pack-v13-advice{display:grid;gap:7px;margin-top:9px}
+.pack-advice-row{display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#f7f3eb;font-size:9px}
+.pack-advice-row.warn{background:#fbebe5;border-color:#e3c4b8}.pack-advice-row.ok{background:#eef2e7;border-color:#dce4d3}
+.pack-advice-icon{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:#fffdf8;color:var(--forest)}
+.pack-advice-row.warn .pack-advice-icon{background:var(--rust);color:white}.pack-advice-row b{display:block;font-size:10px;margin-bottom:2px}.pack-advice-row span{color:var(--muted)}
+.pack-advice-row button{border:1px solid var(--line);background:#fffdf8;border-radius:8px;padding:7px 9px;font-size:9px;font-weight:800;color:var(--forest)}
+@media(max-width:760px){.dash-route-details{grid-template-columns:1fr}.dash-mini-terrain{padding-left:0;border-left:0;border-top:1px solid var(--line);padding-top:8px}}
+
 </style>
 </head>
 <body>
@@ -501,7 +531,11 @@ body.map-open{overflow:hidden!important}
       <div class="dash-kpis">
         <div><b id="dashKm">–</b><span>Strecke</span></div><div><b id="dashHm">–</b><span>Aufstieg</span></div><div><b id="dashDays">–</b><span>Etappen</span></div><div><b id="dashTerrain">Mixed</b><span>Untergrund</span></div>
       </div>
-      <div class="dash-route-preview"><svg viewBox="0 0 780 190" preserveAspectRatio="none"><g stroke="#d9d7c9" stroke-width="1" opacity=".65"><path d="M0 145 Q90 105 170 132 T340 92 T520 112 T790 55" fill="none"/><path d="M0 105 Q80 70 165 96 T330 65 T520 82 T790 30" fill="none"/></g><polyline id="dashRouteLine" points="30,150 140,136 245,108 350,120 460,82 570,95 740,42" fill="none" stroke="#40523f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle id="dashRouteStart" cx="30" cy="150" r="7" fill="#40523f" stroke="#fff" stroke-width="4"/><circle id="dashRouteEnd" cx="740" cy="42" r="7" fill="#a2573c" stroke="#fff" stroke-width="4"/></svg></div>
+      <div class="dash-route-preview"><div id="dashMap" aria-label="Routenvorschau der aktuellen Reise"></div></div>
+      <div class="dash-route-details">
+        <div class="dash-mini-profile"><h4>Höhenprofil</h4><svg id="dashElevationSvg" viewBox="0 0 620 100" preserveAspectRatio="none" aria-label="Höhenprofil der aktuellen Reise"><g stroke="#ddd7ca" stroke-width="1"><line x1="16" x2="604" y1="22" y2="22"/><line x1="16" x2="604" y1="51" y2="51"/><line x1="16" x2="604" y1="80" y2="80"/></g><path id="dashElevArea" d="M16,82 L604,82 L604,88 L16,88 Z" fill="#9ca38d" opacity=".68"/><path id="dashElevLine" d="M16,82 L604,82" fill="none" stroke="#40523f" stroke-width="2"/></svg></div>
+        <div class="dash-mini-terrain"><h4>Untergrund</h4><div class="dash-terrain-bar" id="dashTerrainBar"></div><div class="dash-terrain-list" id="dashTerrainList"><span>Terrain wird geladen …</span></div></div>
+      </div>
       <div class="dash-stage-strip" id="dashStageStrip"></div>
     </section>
 
@@ -643,6 +677,7 @@ body.map-open{overflow:hidden!important}
             <g stroke="#ded7cb" stroke-width="1"><line x1="55" x2="970" y1="40" y2="40"/><line x1="55" x2="970" y1="85" y2="85"/><line x1="55" x2="970" y1="130" y2="130"/><line x1="55" x2="970" y1="175" y2="175"/></g>
             <path id="profileArea" d="" fill="#9da392" opacity=".74"/>
             <path id="profileStroke" d="" fill="none" stroke="#556244" stroke-width="2"/>
+            <text id="elevNoData" x="512" y="112" text-anchor="middle" font-size="14" font-family="Inter, sans-serif" fill="#777b74">Höhendaten werden geladen …</text>
             <g id="profileTerrainBars"></g>
             <line id="profileLine" x1="516" x2="516" y1="22" y2="191" stroke="#a2573c" stroke-width="2" stroke-dasharray="6 5"/>
             <circle id="profileMarker" cx="516" cy="118" r="7" fill="#f8f5ed" stroke="#a2573c" stroke-width="4"/>
@@ -736,29 +771,32 @@ body.map-open{overflow:hidden!important}
       <div class="pack-v12-head"><div class="pack-v12-num">3</div><div><h2>Was kommt wo hin?</h2><p>Verteile deine Ausrüstung auf die Taschen. Ziehe bzw. wähle Gegenstände direkt um oder nutze den Auto-Pack Vorschlag.</p></div><span class="badge" style="margin-left:auto">Gravel · 40 mm</span></div>
       <div class="pack-v12-best"><div><h3>Auto-Pack Vorschlag</h3><p>Erstellt zunächst eine bewertete Variante. Erst „Vorschlag anwenden“ übernimmt die neue Verteilung.</p><div class="pack-v12-score" id="packBestScore"><span>noch kein Vorschlag</span></div></div><button class="btn" id="packBestBtn" type="button">Vorschlag erstellen</button></div>
       <div class="pack-v12-bike pack-v13-bike">
-        <svg viewBox="0 0 760 360" aria-label="Einfaches Gravelbike mit Bikepacking-Taschen">
-          <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="190" cy="250" r="92" stroke="#f7f4ec" stroke-width="10"/><circle cx="586" cy="250" r="92" stroke="#f7f4ec" stroke-width="10"/>
-            <circle cx="190" cy="250" r="74" stroke="#eee8da" stroke-width="1.5"/><circle cx="586" cy="250" r="74" stroke="#eee8da" stroke-width="1.5"/>
-            <g stroke="#ede6d7" stroke-width="1" opacity=".65"><path d="M190 176V324M116 250H264M138 198L242 302M138 302L242 198"/><path d="M586 176V324M512 250H660M534 198L638 302M534 302L638 198"/></g>
-            <path d="M190 250 L320 108 L414 250 L190 250 M320 108 L500 120 L414 250 M500 120 L586 250" stroke="#fbf8ef" stroke-width="10"/>
-            <path d="M320 108 L278 78 M278 78 L235 78" stroke="#fbf8ef" stroke-width="7"/><path d="M497 120 L531 86 L570 91 M531 86 L548 68" stroke="#fbf8ef" stroke-width="7"/><path d="M320 108 L414 250" stroke="#fbf8ef" stroke-width="9"/><path d="M414 250 L586 250" stroke="#fbf8ef" stroke-width="7"/><circle cx="414" cy="250" r="18" stroke="#fbf8ef" stroke-width="5"/>
+        <svg viewBox="0 0 760 360" aria-label="Gravelbike mit klar gekennzeichneten Bikepacking-Taschen">
+          <g stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="190" cy="250" r="91" class="bike-tire" stroke-width="8"/><circle cx="586" cy="250" r="91" class="bike-tire" stroke-width="8"/>
+            <circle cx="190" cy="250" r="79" class="bike-wheel-rim" stroke-width="2"/><circle cx="586" cy="250" r="79" class="bike-wheel-rim" stroke-width="2"/>
+            <g class="bike-spoke" stroke-width="1" opacity=".75"><path d="M190 171V329M111 250H269M134 194L246 306M134 306L246 194M586 171V329M507 250H665M530 194L642 306M530 306L642 194"/></g>
+            <path d="M190 250 L320 108 L414 250 L190 250 M320 108 L500 120 L414 250 M500 120 L586 250" class="bike-frame-approved" stroke-width="12"/>
+            <path d="M320 108 L278 78 M278 78 L234 78 M499 120 L531 86 L570 91 M531 86 L549 67" class="bike-dark" stroke-width="7"/>
+            <path d="M414 250 L586 250" class="bike-frame-approved" stroke-width="8"/><circle cx="414" cy="250" r="19" class="bike-dark" stroke-width="4"/><path d="M414 250l31 19m-31-19-28 17" class="bike-dark" stroke-width="4"/>
+            <path d="M190 250L414 250" stroke="#c7c0b5" stroke-width="2"/>
           </g>
-          <g id="packBike-saddle"><path d="M278 86 Q235 73 180 96 L197 146 Q245 136 293 118 Z" fill="#53664c" stroke="#f6efe2" stroke-width="3"/><path d="M195 143 L272 88M218 138 L246 84" stroke="#efe4d4" stroke-width="2"/></g>
-          <g id="packBike-top"><rect x="350" y="101" width="92" height="28" rx="10" fill="#b86b49" stroke="#f6efe2" stroke-width="3"/></g>
-          <g id="packBike-frame"><path d="M323 135 L484 135 L414 239 L275 239 Z" fill="#bf7b4a" stroke="#f6efe2" stroke-width="3"/></g>
-          <g id="packBike-bar"><path d="M532 91 Q575 75 624 95 L611 148 Q566 145 520 120 Z" fill="#c57440" stroke="#f6efe2" stroke-width="3"/><path d="M548 84 Q559 125 571 145" stroke="#334c3d" stroke-width="12" fill="none"/></g>
-          <g id="packBike-fork"><rect x="543" y="166" width="37" height="90" rx="15" fill="#607057" stroke="#f6efe2" stroke-width="3"/></g>
+          <g id="packBike-saddle"><path d="M282 87 Q240 72 183 94 L196 148 Q244 140 296 118 Z" fill="#50634a" stroke="#f6efe2" stroke-width="3"/><path d="M194 145L274 88M219 138L246 83" stroke="#e8ddca" stroke-width="2"/></g>
+          <g id="packBike-top"><rect x="351" y="101" width="90" height="28" rx="11" fill="#b46243" stroke="#f6efe2" stroke-width="3"/></g>
+          <g id="packBike-frame"><path d="M323 135 L484 135 L414 239 L276 239 Z" fill="#b96f42" stroke="#f6efe2" stroke-width="3"/></g>
+          <g id="packBike-bar"><path d="M529 91 Q577 74 626 96 L612 149 Q565 146 520 121 Z" fill="#c47440" stroke="#f6efe2" stroke-width="3"/><path d="M548 84 Q560 126 572 146" stroke="#334b3d" stroke-width="12" fill="none"/></g>
+          <g id="packBike-fork"><rect x="542" y="165" width="38" height="91" rx="15" fill="#5a6c52" stroke="#f6efe2" stroke-width="3"/><rect x="590" y="167" width="26" height="82" rx="12" fill="#5a6c52" opacity=".55" stroke="#f6efe2" stroke-width="2"/></g>
           <g pointer-events="none">
-            <line x1="104" y1="117" x2="197" y2="116" stroke="#b57e65"/><circle cx="197" cy="116" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"/><text x="24" y="104" class="pack-v12-bikelabel">Satteltasche</text><text x="24" y="119" class="pack-v12-bikesub" id="packBikeLabel-saddle">–</text>
-            <line x1="392" y1="75" x2="395" y2="113" stroke="#b57e65"/><circle cx="395" cy="113" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"/><text x="355" y="48" class="pack-v12-bikelabel">Oberrohr</text><text x="355" y="63" class="pack-v12-bikesub" id="packBikeLabel-top">–</text>
-            <line x1="673" y1="118" x2="586" y2="115" stroke="#b57e65"/><circle cx="586" cy="115" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"/><text x="633" y="104" class="pack-v12-bikelabel">Lenkertasche</text><text x="633" y="119" class="pack-v12-bikesub" id="packBikeLabel-bar">–</text>
-            <line x1="662" y1="211" x2="561" y2="213" stroke="#b57e65"/><circle cx="561" cy="213" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"/><text x="625" y="197" class="pack-v12-bikelabel">Gabeltaschen</text><text x="625" y="212" class="pack-v12-bikesub" id="packBikeLabel-fork">–</text>
-            <line x1="420" y1="285" x2="420" y2="202" stroke="#b57e65"/><circle cx="420" cy="202" r="5" fill="#fffdf8" stroke="#b57e65" stroke-width="2"/><text x="377" y="304" class="pack-v12-bikelabel">Rahmentasche</text><text x="377" y="319" class="pack-v12-bikesub" id="packBikeLabel-frame">–</text>
+            <path class="bag-callout" d="M92 115h105"/><circle class="bag-anchor" cx="197" cy="115" r="5"/><text x="20" y="101" class="pack-v12-bikelabel">Satteltasche</text><text x="20" y="117" class="pack-v12-bikesub" id="packBikeLabel-saddle">–</text>
+            <path class="bag-callout" d="M394 72v45"/><circle class="bag-anchor" cx="394" cy="117" r="5"/><text x="353" y="46" class="pack-v12-bikelabel">Oberrohr</text><text x="353" y="62" class="pack-v12-bikesub" id="packBikeLabel-top">–</text>
+            <path class="bag-callout" d="M672 114h-88"/><circle class="bag-anchor" cx="584" cy="114" r="5"/><text x="628" y="100" class="pack-v12-bikelabel">Lenkertasche</text><text x="628" y="116" class="pack-v12-bikesub" id="packBikeLabel-bar">–</text>
+            <path class="bag-callout" d="M668 219h-90"/><circle class="bag-anchor" cx="578" cy="219" r="5"/><text x="621" y="203" class="pack-v12-bikelabel">Gabeltaschen</text><text x="621" y="219" class="pack-v12-bikesub" id="packBikeLabel-fork">–</text>
+            <path class="bag-callout" d="M415 292v-78"/><circle class="bag-anchor" cx="415" cy="214" r="5"/><text x="368" y="311" class="pack-v12-bikelabel">Rahmentasche</text><text x="368" y="327" class="pack-v12-bikesub" id="packBikeLabel-frame">–</text>
           </g>
         </svg>
       </div>
       <div class="pack-v13-fill-title">Taschenfüllstand</div><div class="pack-v13-fillgrid" id="packFillGrid"></div>
+      <div class="pack-v13-advice" id="packBagAdvice"></div>
       <div class="pack-v13-unassigned"><b>Nicht zugewiesene Gegenstände</b><div id="packUnassigned"></div></div>
     </section>
 
@@ -791,7 +829,7 @@ body.map-open{overflow:hidden!important}
   </div>
 </section>
 </main>
-<div class="prototype-pill">ROAM V13 · interaktiver Web-Prototyp</div>
+<div class="prototype-pill">ROAM V13 · bestätigtes UI</div>
 </div>
 
 <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
@@ -805,9 +843,9 @@ function showScreen(name){
     b.classList.toggle('active',routeActive||b.dataset.screen===name);
   });
   window.scrollTo({top:0,behavior:'smooth'});
-  if(name==='home')renderOverviewDashboard();
+  if(name==='home'){renderOverviewDashboard();setTimeout(()=>dashMap?.invalidateSize(),80)}
   if(name==='plan')renderHomePlanner();
-  if(name==='stages')renderStagePrototype();
+  if(name==='stages'){renderStagePrototype();resolveWebStageNames();}
   if(name==='pack')renderPackPrototype();
   if(name==='route')setTimeout(()=>{
     initRouteMap();
@@ -817,13 +855,37 @@ function showScreen(name){
 document.querySelectorAll('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.go)));
 document.getElementById('dashImportGpx')?.addEventListener('click',()=>{showScreen('plan');setTimeout(()=>document.getElementById('planGpxInput')?.click(),120)});
-document.querySelectorAll('[data-route-tab]').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('[data-route-tab]').forEach(x=>x.classList.toggle('active',x===b));
-  const tab=b.dataset.routeTab;
+function setRouteSubview(tab='overview'){
+  document.querySelectorAll('[data-route-tab]').forEach(x=>x.classList.toggle('active',x.dataset.routeTab===tab));
   if(tab==='stages'){showScreen('stages');return}
-  const target=tab==='height'?document.getElementById('routeHeightPanel'):tab==='terrain'?document.getElementById('routeTerrainPanel'):tab==='waypoints'?document.getElementById('routeWaypointsPanel'):document.getElementById(tab==='map'?'mapWrap':'routeOverviewPanel');
-  target?.scrollIntoView({behavior:'smooth',block:'start'});
-}));
+  const layout=document.querySelector('#screen-route .route-layout');
+  const map=document.getElementById('mapWrap'),height=document.getElementById('routeHeightPanel');
+  const terrain=document.getElementById('routeTerrainPanel'),point=document.getElementById('routeWaypointsPanel');
+  const sideCards=[...document.querySelectorAll('#screen-route .side > .card')];
+  if(map)map.style.display=''; if(height)height.style.display='';
+  sideCards.forEach(x=>x.style.display='');
+  if(layout)layout.style.gridTemplateColumns='';
+  if(tab==='map'){ if(height)height.style.display='none'; }
+  if(tab==='height'){
+    if(map)map.style.display='none';
+    sideCards.forEach(x=>x.style.display='none');
+    if(layout)layout.style.gridTemplateColumns='1fr';
+  }
+  if(tab==='terrain'){
+    if(height)height.style.display='none';
+    sideCards.forEach(x=>x.style.display=x===terrain?'':'none');
+  }
+  if(tab==='waypoints'){
+    if(height)height.style.display='none';
+    sideCards.forEach((x,i)=>x.style.display=(x===point||i>=2)?'':'none');
+  }
+  requestAnimationFrame(()=>{
+    if(currentMapMode==='3d')roam3DMap?.resize(); else roamMap?.invalidateSize();
+    if(tab!=='height'&&routeGeo.length>1)fitRoute();
+    if(tab==='height')renderExactElevation();
+  });
+}
+document.querySelectorAll('[data-route-tab]').forEach(b=>b.addEventListener('click',()=>setRouteSubview(b.dataset.routeTab)));
 
 const API='https://adventure-bike-os-api.onrender.com';
 
@@ -979,18 +1041,49 @@ function storedRouteCandidate(){
 async function enrichRouteElevation(rows){
  if(rows.length<2)return rows;
  const good=rows.filter(x=>Number.isFinite(x.z)).length;
- if(good>=Math.min(rows.length,Math.max(2,Math.floor(rows.length*.7))))return rows;
+ if(good>=Math.min(rows.length,Math.max(2,Math.floor(rows.length*.85))))return rows;
+ const n=rows.length,maxSamples=Math.min(240,n);
+ const indices=[];
+ for(let j=0;j<maxSamples;j++){const idx=Math.round(j*(n-1)/Math.max(1,maxSamples-1));if(indices.at(-1)!==idx)indices.push(idx)}
  try{
    const r=await fetch(API+'/api/elevation',{
      method:'POST',headers:{'Content-Type':'application/json'},
-     body:JSON.stringify({coordinates:rows.map(x=>[x.lon,x.lat])})
+     body:JSON.stringify({coordinates:indices.map(i=>[rows[i].lon,rows[i].lat])})
    });
    const data=await r.json();
-   const enriched=normalizeAdventureCoords(data?.coordinates);
-   if(r.ok&&data?.ok&&enriched.length===rows.length)return enriched;
+   let sampled=normalizeAdventureCoords(data?.coordinates);
+   let zs=[];
+   if(r.ok&&data?.ok&&sampled.length===indices.length)zs=sampled.map(x=>Number(x.z));
+   else if(r.ok&&Array.isArray(data?.elevations)&&data.elevations.length===indices.length)zs=data.elevations.map(Number);
+   if(zs.filter(Number.isFinite).length>=Math.max(2,Math.floor(indices.length*.7))){
+     const out=rows.map(x=>({...x}));
+     for(let k=0;k<indices.length;k++)if(Number.isFinite(zs[k]))out[indices[k]].z=zs[k];
+     for(let k=0;k<indices.length-1;k++){
+       const a=indices[k],b=indices[k+1],za=Number(out[a].z),zb=Number(out[b].z);
+       if(!Number.isFinite(za)||!Number.isFinite(zb)||b<=a)continue;
+       for(let i=a+1;i<b;i++){const t=(i-a)/(b-a);out[i].z=za+(zb-za)*t}
+     }
+     let last=null;for(let i=0;i<n;i++){if(Number.isFinite(out[i].z))last=out[i].z;else if(Number.isFinite(last))out[i].z=last}
+     last=null;for(let i=n-1;i>=0;i--){if(Number.isFinite(out[i].z))last=out[i].z;else if(Number.isFinite(last))out[i].z=last}
+     return out;
+   }
  }catch(e){}
  return rows;
 }
+function persistEnrichedStoredRoute(rows,stages){
+ try{
+   const saved=readSavedRoute();if(!saved||!Array.isArray(rows)||rows.length<2)return {stages:stages||[],metrics:saved?.metrics||null};
+   const m=webRouteMetrics(rows);
+   const fixed=(Array.isArray(stages)?stages:[]).map(st=>{
+     const a=Math.max(0,Math.min(rows.length-1,Number(st.s)||0)),b=Math.max(a,Math.min(rows.length-1,Number(st.e)||rows.length-1));
+     return {...st,s:a,e:b,km:(m.dist[b]||0)-(m.dist[a]||0),hm:(m.gain[b]||0)-(m.gain[a]||0)};
+   });
+   saved.coords=rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]);saved.metrics=m;if(fixed.length)saved.stages=fixed;
+   localStorage.setItem('abo-mobile-route',JSON.stringify(saved));
+   return {stages:fixed.length?fixed:(stages||[]),metrics:m};
+ }catch(e){return {stages:stages||[],metrics:null}}
+}
+
 async function apiRouteCandidate(){
  const r=await fetch(API+'/api/route-plan',{
    method:'POST',
@@ -1051,7 +1144,8 @@ async function loadExactRouteGeometry(){
  const stored=storedRouteCandidate();
  if(stored){
    const rows=await enrichRouteElevation(stored.rows);
-   applyRouteRows(rows,stored.named,'stored',stored.start,stored.dest,stored.stages);
+   const refreshed=persistEnrichedStoredRoute(rows,stored.stages);
+   applyRouteRows(rows,stored.named,'stored',stored.start,stored.dest,refreshed.stages);
    return;
  }
  try{
@@ -1105,7 +1199,7 @@ async function loadExactTerrain(){
  renderTerrainUI();renderExactElevation();
  if(roamMap){drawRouteOnMap();updateLinked(.5,'terrain')}
  if(roam3DReady)update3DSources();
- renderStagePrototype();
+ renderStagePrototype();renderOverviewDashboard();
 }
 
 function routePointProgress(x){
@@ -1148,8 +1242,12 @@ function elevYForValue(z){
  return 175-((z-s.min)/span)*125;
 }
 function renderExactElevation(){
- const area=document.getElementById('profileArea'),stroke=document.getElementById('profileStroke');
+ const area=document.getElementById('profileArea'),stroke=document.getElementById('profileStroke'),noData=document.getElementById('elevNoData');
  if(!area||!stroke||routeGeo.length<2)return;
+ const stats=elevationStats();
+ if(!stats){
+   area.setAttribute('d','');stroke.setAttribute('d','');if(noData){noData.style.display='';noData.textContent='Höhendaten werden geladen …'}
+ }else if(noData)noData.style.display='none';
  const sampleCount=Math.min(240,routeGeo.length);
  const pts=[];
  for(let j=0;j<sampleCount;j++){
@@ -1158,8 +1256,7 @@ function renderExactElevation(){
    pts.push([x,y]);
  }
  const line=pts.map(([x,y],i)=>`${i?'L':'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
- stroke.setAttribute('d',line);
- area.setAttribute('d',line+` L970,180 L55,180 Z`);
+ if(stats){stroke.setAttribute('d',line);area.setAttribute('d',line+` L970,180 L55,180 Z`)}
 
  const bars=document.getElementById('profileTerrainBars');
  if(bars){
@@ -1444,6 +1541,7 @@ async function init3DMap(){
    return;
  }
 
+ roam3DMap.scrollZoom.disable();
  roam3DMap.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
 
  roam3DMap.on('load',()=>{
@@ -1527,9 +1625,10 @@ function initRouteMap(){
  if(roamMap||!document.getElementById('routeMapLeaflet')||typeof L==='undefined')return;
  const isTouch=window.matchMedia('(hover:none), (pointer:coarse)').matches;
  roamMap=L.map('routeMapLeaflet',{
-   zoomControl:true,scrollWheelZoom:!isTouch,touchZoom:true,doubleClickZoom:true,dragging:true,
+   zoomControl:true,scrollWheelZoom:false,touchZoom:true,doubleClickZoom:true,dragging:true,
    boxZoom:!isTouch,keyboard:!isTouch,zoomSnap:.25,zoomDelta:.5,attributionControl:true
  });
+ roamMap.scrollWheelZoom.disable();
  esriLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{
    maxZoom:19,attribution:'Tiles © Esri · Map data contributors'
  });
@@ -1718,15 +1817,32 @@ document.getElementById('elevationSvg').addEventListener('click',e=>updateLinked
 
 function readSavedRoute(){try{return JSON.parse(localStorage.getItem('abo-mobile-route')||'null')}catch(e){return null}}
 function daysUntil(dateStr){if(!dateStr)return null;const d=parseDateOnly(dateStr);if(!d)return null;const now=new Date();const today=new Date(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()));return Math.ceil((d-today)/86400000)}
-function drawDashboardRoute(saved){const el=document.getElementById('dashRouteLine'),sd=document.getElementById('dashRouteStart'),ed=document.getElementById('dashRouteEnd');if(!el||!saved?.coords?.length)return;const rows=normalizeAdventureCoords(saved.coords);if(rows.length<2)return;const lats=rows.map(x=>x.lat),lons=rows.map(x=>x.lon),minLat=Math.min(...lats),maxLat=Math.max(...lats),minLon=Math.min(...lons),maxLon=Math.max(...lons),dx=Math.max(.0001,maxLon-minLon),dy=Math.max(.0001,maxLat-minLat),pts=[];for(let j=0;j<Math.min(100,rows.length);j++){const r=rows[Math.round(j*(rows.length-1)/(Math.min(100,rows.length)-1))];pts.push([30+(r.lon-minLon)/dx*710,160-(r.lat-minLat)/dy*125])}el.setAttribute('points',pts.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' '));sd.setAttribute('cx',pts[0][0]);sd.setAttribute('cy',pts[0][1]);ed.setAttribute('cx',pts.at(-1)[0]);ed.setAttribute('cy',pts.at(-1)[1])}
+let dashMap=null,dashRouteLayer=null,dashStartMarker=null,dashEndMarker=null;
+function drawDashboardElevation(saved){
+ const rows=normalizeAdventureCoords(saved?.coords||[]);const area=document.getElementById('dashElevArea'),line=document.getElementById('dashElevLine');if(!area||!line||rows.length<2)return;
+ let vals=rows.map((r,i)=>Number.isFinite(Number(r.z))?Number(r.z):(routeElev.length===rows.length&&Number.isFinite(routeElev[i])?routeElev[i]:NaN));
+ const finite=vals.filter(Number.isFinite);if(finite.length<2){area.setAttribute('d','M16,82 L604,82 L604,88 L16,88 Z');line.setAttribute('d','M16,82 L604,82');return}
+ const min=Math.min(...finite),max=Math.max(...finite),span=Math.max(120,max-min),pts=[],count=Math.min(180,rows.length);
+ for(let j=0;j<count;j++){const idx=Math.round(j*(rows.length-1)/(count-1));let z=vals[idx];if(!Number.isFinite(z)){for(let d=1;d<rows.length;d++){if(idx-d>=0&&Number.isFinite(vals[idx-d])){z=vals[idx-d];break}if(idx+d<rows.length&&Number.isFinite(vals[idx+d])){z=vals[idx+d];break}}}const x=16+j/(count-1)*588,y=83-((z-min)/span)*64;pts.push([x,y])}
+ const d=pts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');line.setAttribute('d',d);area.setAttribute('d',d+' L604,88 L16,88 Z');
+}
+function renderDashboardTerrain(){const bar=document.getElementById('dashTerrainBar'),list=document.getElementById('dashTerrainList');if(!bar||!list)return;const classes=['paved','fine','gravel','rough','unknown'];if(routeTerrain.status!=='ready'){bar.innerHTML='<span style="width:100%;background:#d8d4c9"></span>';list.innerHTML='<span>Terrain wird geladen …</span>';return}const t=terrainSummary();bar.innerHTML=classes.map(c=>`<span style="width:${Math.max(0,Number(t[c])||0)}%;background:${terrainStyle(c).color}"></span>`).join('');list.innerHTML=classes.filter(c=>(t[c]||0)>=1).map(c=>`<span><b><i style="background:${terrainStyle(c).color}"></i>${terrainStyle(c).short}</b><strong>${Math.round(t[c]||0)}%</strong></span>`).join('')}
+function drawDashboardRoute(saved){
+ const rows=normalizeAdventureCoords(saved?.coords||[]);if(rows.length<2)return;const host=document.getElementById('dashMap');if(!host||typeof L==='undefined')return;
+ if(!dashMap){dashMap=L.map(host,{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false,touchZoom:false,zoomSnap:.25});L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:18}).addTo(dashMap)}
+ if(dashRouteLayer)dashRouteLayer.remove();if(dashStartMarker)dashStartMarker.remove();if(dashEndMarker)dashEndMarker.remove();
+ const ll=rows.map(r=>[r.lat,r.lon]);dashRouteLayer=L.polyline(ll,{color:'#2e3a2f',weight:5,opacity:.96,interactive:false,lineCap:'round',lineJoin:'round'}).addTo(dashMap);
+ const start=saved.start||'Start',dest=saved.dest||'Ziel';dashStartMarker=L.circleMarker(ll[0],{radius:7,color:'#fffdf8',weight:3,fillColor:'#40523f',fillOpacity:1,interactive:false}).addTo(dashMap).bindTooltip(start,{permanent:true,direction:'right',offset:[8,0],className:'dash-map-label'});dashEndMarker=L.circleMarker(ll.at(-1),{radius:7,color:'#fffdf8',weight:3,fillColor:'#b76547',fillOpacity:1,interactive:false}).addTo(dashMap).bindTooltip(dest,{permanent:true,direction:'right',offset:[8,0],className:'dash-map-label'});
+ dashMap.fitBounds(dashRouteLayer.getBounds(),{padding:[24,24],animate:false,maxZoom:8});setTimeout(()=>dashMap?.invalidateSize(),30);drawDashboardElevation(saved);renderDashboardTerrain();
+}
 function dashboardPackState(){let arr=null;try{arr=JSON.parse(localStorage.getItem(PACK_STATE_KEY)||'null')}catch(e){};const source=Array.isArray(arr)?arr:packInitialItems;const lodging=readPackLodgingMode();const hidden=new Set(lodging==='hotel'?['sleep','tent','mat']:[]);const needed=source.filter(x=>x.needed!==false&&!hidden.has(x.id)),have=needed.filter(x=>x.have!==false);return {needed:needed.length,have:have.length,pct:needed.length?Math.round(have.length/needed.length*100):100}}
 function renderOverviewDashboard(){
  const saved=readSavedRoute(),no=document.getElementById('dashNoTrip'),trip=document.getElementById('dashTrip'),lower=document.getElementById('dashLower');if(!no||!trip)return;
  if(!saved?.coords?.length){no.hidden=false;trip.hidden=true;lower.hidden=true;document.getElementById('dashTitle').textContent='Deine nächste Tour';document.getElementById('dashMeta').textContent='Noch keine Reise aktiv.';document.getElementById('dashDeparture').textContent='Planung starten';document.getElementById('dashPrimaryAction').textContent='Neue Reise planen';document.getElementById('dashPrimaryAction').dataset.go='plan';return}
- no.hidden=true;trip.hidden=false;lower.hidden=false;
+ no.hidden=false;trip.hidden=false;lower.hidden=false;
  const m=saved.metrics||{},stages=Array.isArray(saved.stages)?saved.stages:[],start=saved.start||'Start',dest=saved.dest||'Ziel',dates=saved.tripDates||{},du=daysUntil(dates.startDate);
  document.getElementById('dashTitle').textContent=`${start} → ${dest}`;document.getElementById('dashRouteTitle').textContent=`${start} → ${dest}`;document.getElementById('dashMeta').textContent=[dates.startDate&&dates.endDate?`${dates.startDate} – ${dates.endDate}`:'Termin offen',`${Math.round(Number(m.totalDist)||0)} km`,`${Math.round(Number(m.totalGain)||0).toLocaleString('de-DE')} HM`,`${stages.length} ${stages.length===1?'Tag':'Tage'}`].join(' · ');document.getElementById('dashDeparture').textContent=du==null?'Termin offen':du>0?`Abfahrt in ${du} Tagen`:du===0?'Abfahrt heute':'Reise gestartet';document.getElementById('dashPrimaryAction').textContent='Reise bearbeiten';document.getElementById('dashPrimaryAction').dataset.go='plan';
- document.getElementById('dashKm').textContent=`${Math.round(Number(m.totalDist)||0)} km`;document.getElementById('dashHm').textContent=`${Math.round(Number(m.totalGain)||0).toLocaleString('de-DE')} HM`;document.getElementById('dashDays').textContent=stages.length||'–';document.getElementById('dashTerrain').textContent=routeTerrain.status==='ready'?'Mixed':'Mixed';drawDashboardRoute(saved);
+ document.getElementById('dashKm').textContent=`${Math.round(Number(m.totalDist)||0)} km`;document.getElementById('dashHm').textContent=`${Math.round(Number(m.totalGain)||0).toLocaleString('de-DE')} HM`;document.getElementById('dashDays').textContent=stages.length||'–';const dts=terrainSummary(),dom=Object.entries(dts).sort((a,b)=>b[1]-a[1])[0]?.[0];document.getElementById('dashTerrain').textContent=routeTerrain.status==='ready'?(dom==='gravel'?'Gravel':dom==='rough'?'Trail':dom==='paved'?'Straße / Mixed':dom==='fine'?'Fein / Mixed':'Mixed'):'Mixed';drawDashboardRoute(saved);
  let names=null;try{names=JSON.parse(localStorage.getItem('abo-mobile-stage-names')||'null')}catch(e){};document.getElementById('dashStageStrip').innerHTML=stages.slice(0,4).map((x,i)=>`<div class="dash-stage-chip"><b>Tag ${i+1} · ${Array.isArray(names)?(names[i+1]||'Ziel'):'Ziel'}</b><span>${Math.round(x.km||0)} km · ${Math.round(x.hm||0).toLocaleString('de-DE')} HM</span></div>`).join('');
  document.getElementById('dashStages').innerHTML=stages.slice(0,6).map((x,i)=>`<div class="dash-stage-row"><i>${i+1}</i><div><b>${Array.isArray(names)?(names[i]||start):start} → ${Array.isArray(names)?(names[i+1]||dest):dest}</b><small>${Math.round(x.km||0)} km · ${Math.round(x.hm||0).toLocaleString('de-DE')} HM</small></div><span>Tag ${i+1}</span></div>`).join('');
  let lod={};try{lod=JSON.parse(localStorage.getItem('abo-mobile-lodging-selected')||'{}')||{}}catch(e){};const nights=Math.max(0,stages.length-1),lodCount=Array.from({length:nights},(_,i)=>lod[i]).filter(Boolean).length,pack=dashboardPackState(),routePct=100,stagesPct=stages.length?100:0,lodgePct=nights?Math.round(lodCount/nights*100):100,checkPct=du!=null&&du<=3?60:40;const ready=Math.round((routePct+stagesPct+lodgePct+pack.pct+checkPct)/5),open=[lodgePct<100,pack.pct<100,checkPct<100].filter(Boolean).length;
@@ -1851,7 +1967,7 @@ function drawHomePreview(saved){
 function cleanPlaceName(raw){return String(raw||'').split(',')[0].replace(/\s+municipality$/i,'').replace(/\s+\([^)]*\)$/,'').trim()}
 async function reversePlaceAtWeb(row){try{const r=await fetch(API+'/api/reverse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lat:Number(row.lat),lon:Number(row.lon),zoom:12})});const d=await r.json();if(r.ok){const n=cleanPlaceName(d.name||d.display_name||'');if(n)return n}}catch(e){}return ''}
 function stageNamesNeedRepairWeb(names,stages){return !Array.isArray(names)||names.length!==stages.length+1||names.slice(1,-1).some(x=>{const v=String(x||'').toLowerCase();return !v||v.startsWith('etappenziel')||v.includes('wird ermittelt')})}
-async function resolveWebStageNames(){const saved=readSavedRoute();if(!saved?.stages?.length||!saved?.coords?.length)return;let names=null;try{names=JSON.parse(localStorage.getItem('abo-mobile-stage-names')||'null')}catch(e){};if(!stageNamesNeedRepairWeb(names,saved.stages))return;const rows=normalizeAdventureCoords(saved.coords),out=[saved.start||'Start'],dest=saved.dest||'Ziel';for(let i=0;i<saved.stages.length-1;i++){const st=saved.stages[i],span=Math.max(1,(st.e||0)-(st.s||0)),offs=[0,-.03,.03,-.07,.07,-.12,.12];let found='';for(const off of offs){const idx=Math.max(st.s||0,Math.min(rows.length-1,(st.e||0)+Math.round(span*off))),candidate=await reversePlaceAtWeb(rows[idx]);if(candidate&&candidate!==out[out.length-1]&&candidate!==dest){found=candidate;break}}out.push(found||`Tag ${i+1} Ziel`)}out.push(dest);localStorage.setItem('abo-mobile-stage-names',JSON.stringify(out));renderHomePlanner();renderOverviewDashboard();renderStagePrototype()}
+async function resolveWebStageNames(){const saved=readSavedRoute();if(!saved?.stages?.length||!saved?.coords?.length)return;let names=null;try{names=JSON.parse(localStorage.getItem('abo-mobile-stage-names')||'null')}catch(e){};if(!stageNamesNeedRepairWeb(names,saved.stages))return;const rows=normalizeAdventureCoords(saved.coords),out=[saved.start||'Start'],dest=saved.dest||'Ziel';for(let i=0;i<saved.stages.length-1;i++){const st=saved.stages[i],span=Math.max(1,(st.e||0)-(st.s||0)),offs=[0,-.02,.02,-.05,.05,-.09,.09,-.14,.14];let found='';for(let pass=0;pass<2&&!found;pass++){for(const off of offs){const idx=Math.max(st.s||0,Math.min(rows.length-1,(st.e||0)+Math.round(span*off))),candidate=await reversePlaceAtWeb(rows[idx]);if(candidate&&candidate!==out[out.length-1]&&candidate!==dest){found=candidate;break}}if(!found)await new Promise(r=>setTimeout(r,350))}out.push(found||`Etappenort ${i+1}`)}out.push(dest);localStorage.setItem('abo-mobile-stage-names',JSON.stringify(out));renderHomePlanner();renderOverviewDashboard();renderStagePrototype()}
 function renderHomeStages(saved){
  const wrap=document.getElementById('homeStageRough');if(!wrap)return;
  const stages=Array.isArray(saved?.stages)?saved.stages:[];let names=null;try{names=JSON.parse(localStorage.getItem('abo-mobile-stage-names')||'null')}catch(e){}
@@ -1948,7 +2064,7 @@ function readStagePrototypeData(){
      const terrain=routeTerrain.status==='ready'?routeTerrain.stages?.[i]:null;
      return {
        day:`Tag ${i+1}`,from,to,
-       km:Number(st.km)||0,hm:Number(st.hm)||0,wx:'–',
+       km:Number(routeStages?.[i]?.km ?? st.km)||0,hm:Number(routeStages?.[i]?.hm ?? st.hm)||0,wx:'–',
        gravel:terrain?Math.round(Number(terrain.gravel)||0):null,
        lodging:lodgings?.[i]||null,
        last:i===saved.stages.length-1
@@ -1981,7 +2097,7 @@ function renderStagePrototype(){
 function showStagePrototype(i,rerender=true){selectedStagePrototype=Math.max(0,Math.min(stageData.length-1,i));if(rerender)document.querySelectorAll('#stageListItems .stage-item').forEach((x,j)=>x.classList.toggle('active',j===selectedStagePrototype));const d=stageData[selectedStagePrototype],l=webLodging.selected[selectedStagePrototype]||d.lodging;document.getElementById('stageDay').textContent=d.day;document.getElementById('stageName').textContent=`${d.from} → ${d.to}`;document.getElementById('stageKm').textContent=`${d.km.toFixed(0)} km`;document.getElementById('stageHm').textContent=`${Math.round(d.hm).toLocaleString('de-DE')} m`;const mg=maxStageGradient(selectedStagePrototype);document.getElementById('stageWx').textContent=mg==null?'–':`Max. ${Math.round(mg)}%`;document.getElementById('stageSurface').textContent=d.gravel==null?'–':`${d.gravel}%`;document.getElementById('stagePrev').disabled=selectedStagePrototype===0;document.getElementById('stageNext').disabled=selectedStagePrototype===stageData.length-1;
  const rider=readRiderProfileForm(),ratio=Math.max(d.km/Math.max(1,rider.km),d.hm/Math.max(1,rider.hm)),fitEl=document.getElementById('stageRiderFit');if(ratio<=1.15){fitEl.className='';fitEl.innerHTML=`<b>Im gewohnten Bereich.</b> ${d.km.toFixed(0)} km / ${Math.round(d.hm)} HM gegenüber ${rider.km} km / ${rider.hm} HM gewohnt.`}else if(ratio<=1.45){fitEl.className='fit-warn';fitEl.innerHTML=`<b>Anspruchsvoller als gewohnt.</b> Diese Etappe liegt rund ${Math.round((ratio-1)*100)}% über deinem normalen Tagesniveau.`}else{fitEl.className='fit-hard';fitEl.innerHTML='<b>Deutlich über deinem gewohnten Niveau.</b> Etappenteilung prüfen – Distanz oder Höhenmeter liegen erheblich über deinem Fahrerprofil.'}
  const w=stageWeatherValues(selectedStagePrototype);document.getElementById('stageWeatherStrip').innerHTML=weatherCell('Start',w?.start,'⛅')+weatherCell('Hochpunkt',w?.high,'☀')+weatherCell('Ziel',w?.target,'☁')+weatherCell('Abend',w?.evening,'◐');const t=routeTerrain.status==='ready'?routeTerrain.stages?.[selectedStagePrototype]:null;document.getElementById('stageTerrainLegend').innerHTML=t?['paved','fine','gravel','rough','unknown'].map(c=>`<span class="legend-item"><i class="route-dot" style="background:${terrainStyle(c).color}"></i>${terrainStyle(c).short} ${Math.round(Number(t[c])||0)}%</span>`).join(''):'<span class="legend-item">Terrain wird geladen …</span>';
- const box=document.getElementById('stageOvernightCard');if(d.last&&!l){box.innerHTML='<div class="stay-plan-head"><div><div class="eyebrow">Reiseziel</div><h3>Wien / Ziel erreicht</h3></div></div><div class="lodging-search-status">Keine Zwischenübernachtung mehr nötig. Eine Unterkunft am Ziel kann optional vorgemerkt werden.</div>';return}
+ const box=document.getElementById('stageOvernightCard');if(d.last&&!l){const finalDest=readSavedRoute()?.dest||d.to||'Ziel';box.innerHTML=`<div class="stay-plan-head"><div><div class="eyebrow">Reiseziel</div><h3>${finalDest} / Ziel erreicht</h3></div></div><div class="lodging-search-status">Keine Zwischenübernachtung mehr nötig. Eine Unterkunft am Ziel kann optional vorgemerkt werden.</div>`;return}
  if(l){box.innerHTML=`<div class="stay-plan-head"><div><div class="eyebrow">Übernachtung in ${d.to}</div><h3>${l.name}</h3></div><span class="badge">${l.status==='booked'?'reserviert':'vorgemerkt'}</span></div><div class="lodging-selected"><h4>${lodgingTypeName(l.type)}${l.distance!=null?` · ${l.distance.toFixed(1)} km vom Etappenziel`:''}</h4><div class="lodging-status-line"><button class="btn primary" type="button" onclick="toggleWebLodgingBooked(${selectedStagePrototype})">${l.status==='booked'?'Reservierung zurücksetzen':'Als reserviert markieren'}</button><button class="btn" type="button" onclick="clearWebLodging(${selectedStagePrototype})">ändern</button></div></div>`;return}
  const status=webLodging.status[selectedStagePrototype],rows=webLodging.results[selectedStagePrototype]||[];box.innerHTML=`<div class="stay-plan-head"><div><div class="eyebrow">Übernachtung in ${d.to}</div><h3>Unterkunft planen</h3></div><span class="badge warn">noch offen</span></div><div class="stay-plan-main"><div class="stay-plan-copy"><span class="stay-card-icon">⌂</span><div><b>Hotel, Pension, Camping oder gemischte Unterkunft wählen</b><div class="stay-meta">Die Auswahl wird gespeichert und im Reise-Check übernommen.</div></div></div><div class="stay-plan-actions"><button class="btn primary" type="button" onclick="loadWebLodgingForStage(${selectedStagePrototype})">Unterkunft wählen</button><button class="btn" type="button" onclick="loadWebLodgingForStage(${selectedStagePrototype})">Optionen ansehen</button></div></div><div class="stay-flow"><div class="stay-step"><i>1</i><div><b>Suchen</b><small>Unterkünfte finden</small></div></div><span>›</span><div class="stay-step"><i>2</i><div><b>Vormerken</b><small>Favorit speichern</small></div></div><span>›</span><div class="stay-step"><i>3</i><div><b>Bestätigen</b><small>Reservierung markieren</small></div></div></div>${status==='loading'?'<div class="lodging-search-status">Unterkünfte werden gesucht …</div>':status==='error'?'<div class="lodging-search-status">Unterkünfte konnten gerade nicht geladen werden. Bitte erneut versuchen.</div>':''}${rows.length?`<div class="lodging-results">${rows.map(x=>`<div class="lodging-result"><div><h4>${x.name}</h4><small>${lodgingTypeName(x.type)} · ${x.distance.toFixed(1)} km vom Etappenziel${x.stars?` · ${x.stars}★`:''}</small></div><div class="lodging-result-actions"><button class="btn" type="button" onclick="selectWebLodging(${selectedStagePrototype},'${x.id}')">vormerken</button></div></div>`).join('')}</div>`:''}`
 }
@@ -2017,7 +2133,11 @@ function visiblePackCategories(){const mode=document.getElementById('packLodging
 function renderPackNeeds(){applyLodgingPackRules();const box=document.getElementById('packNeedList');if(!box)return;box.innerHTML=visiblePackCategories().map(c=>{const arr=c.items.map(id=>packItems.find(x=>x.id===id)).filter(Boolean).filter(x=>x.needed||x.cat!=='sleep'),needed=arr.filter(x=>x.needed).length;if(!arr.length)return '';return `<div class="pack-v12-category"><div class="pack-v12-cathead"><b>${c.name}</b><span>${needed}/${arr.length}</span></div>${arr.map(i=>`<div class="pack-v12-needrow"><button class="pack-v12-check ${i.needed?'':'off'}" data-need="${i.id}" type="button">✓</button><span>${i.name}</span><span class="mini-badge">${i.needed?'':'optional'}</span></div>`).join('')}</div>`}).join('');box.querySelectorAll('[data-need]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.need);i.needed=!i.needed;if(!i.needed)i.bag='';packProposal=null;packPersist();renderPackPrototype()})}
 function bagOptions(selected){return `<option value="">nicht zugewiesen</option>`+Object.entries(packBags).map(([id,b])=>`<option value="${id}" ${selected===id?'selected':''}>${b.name}</option>`).join('')}
 function renderPackHave(){applyLodgingPackRules();const box=document.getElementById('packHaveList');if(!box)return;const q=(document.getElementById('packSearch')?.value||'').toLowerCase(),filter=document.getElementById('packCategoryFilter')?.value||'all';box.innerHTML=visiblePackCategories().filter(c=>filter==='all'||c.id===filter).map(c=>{const arr=c.items.map(id=>packItems.find(x=>x.id===id)).filter(Boolean).filter(i=>i.needed&&(!q||i.name.toLowerCase().includes(q)));if(!arr.length)return '';return `<div class="pack-v13-group"><div class="pack-v13-grouphead"><b>${c.name}</b><span>${arr.filter(x=>x.have).length}/${arr.length}</span></div>${arr.map(i=>`<div class="pack-v12-item"><button class="pack-v12-check ${i.have?'':'off'}" data-have="${i.id}" type="button">✓</button><div class="thumb">${itemIcon(i.id,i.cat)}</div><div><b>${i.name}</b><small>${i.kg.toFixed(2).replace('.',',')} kg · ${formatLiters(i.l)} L${i.have?'':' · fehlt'}</small></div><select class="pack-v12-bagselect" data-bagitem="${i.id}" ${i.have?'':'disabled'}>${bagOptions(i.bag)}</select><span class="menu-dots">⋮</span></div>`).join('')}</div>`}).join('')||'<div class="muted" style="font-size:11px;padding:12px">Keine Gegenstände im Filter.</div>';box.querySelectorAll('[data-have]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.have);i.have=!i.have;if(!i.have)i.bag='';packProposal=null;packPersist();renderPackPrototype()});box.querySelectorAll('[data-bagitem]').forEach(el=>el.onchange=()=>{const i=packItems.find(x=>x.id===el.dataset.bagitem);if(!i)return;if(el.value){const st=bagStats(el.value);if(st.l+i.l>st.cap+1e-6){packToast(`${packBags[el.value].name}: zu wenig Platz`);renderPackPrototype();return}}i.bag=el.value;packProposal=null;packPersist();renderPackPrototype()})}
-function renderPackFillGrid(){const box=document.getElementById('packFillGrid');if(!box)return;box.innerHTML=Object.entries(packBags).map(([id,b])=>{const st=bagStats(id);return `<div class="pack-v13-fillcard ${st.over?'pack-v12-over':''}"><div class="bag-svg">${bagIconSvg(id)}</div><b>${b.name}</b><strong>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</strong><div class="bar"><i style="width:${Math.min(100,st.pct)}%"></i></div><small>${st.pct}%${st.over?' · überfüllt':''}</small></div>`}).join('');const ua=relevantPackItems().filter(x=>!x.bag),u=document.getElementById('packUnassigned');u.innerHTML=ua.length?`<div class="pack-v13-unassigned-list">${ua.map(x=>`<span>${x.name}</span>`).join('')}</div>`:'<div class="muted" style="font-size:9px;margin-top:5px">Alle benötigten Gegenstände sind einer Tasche zugewiesen.</div>'}
+function renderPackFillGrid(){const box=document.getElementById('packFillGrid');if(!box)return;box.innerHTML=Object.entries(packBags).map(([id,b])=>{const st=bagStats(id),full=st.pct>=100;return `<div class="pack-v13-fillcard ${st.over?'pack-v12-over':''} ${full?'full':''}"><div class="bag-svg">${bagIconSvg(id)}</div><b>${b.name}</b><strong>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</strong><div class="bar"><i style="width:${Math.min(100,st.pct)}%"></i></div><small>${st.pct}%${st.over?' · überfüllt':full?' · voll':''}</small></div>`}).join('');const ua=relevantPackItems().filter(x=>!x.bag),u=document.getElementById('packUnassigned');u.innerHTML=ua.length?`<div class="pack-v13-unassigned-list">${ua.map(x=>`<span>${x.name}</span>`).join('')}</div>`:'<div class="muted" style="font-size:9px;margin-top:5px">Alle benötigten Gegenstände sind einer Tasche zugewiesen.</div>'}
+function packAlternative(item,current){for(const id of preferredBags(item)){if(id===current)continue;const st=bagStats(id);if(st.l+item.l<=st.cap+1e-6)return id}return ''}
+function movePackItemDirect(itemId,bagId){const item=packItems.find(x=>x.id===itemId);if(!item||!bagId)return;const st=bagStats(bagId);if(st.l+item.l>st.cap+1e-6){packToast(`${packBags[bagId].name}: zu wenig Platz`);return}item.bag=bagId;packProposal=null;packPersist();renderPackPrototype();renderOverviewDashboard();packToast(`${item.name} → ${packBags[bagId].name}`)}
+function renderPackAdvice(){const box=document.getElementById('packBagAdvice');if(!box)return;const rows=[];for(const [id,b] of Object.entries(packBags)){const st=bagStats(id);if(st.pct<100)continue;const candidates=st.items.slice().sort((a,b)=>a.access==='high'?-1:b.access==='high'?1:b.l-a.l);let suggestion=null;for(const item of candidates){const alt=packAlternative(item,id);if(alt){suggestion={item,alt};break}}if(suggestion){rows.push(`<div class="pack-advice-row warn"><div class="pack-advice-icon">!</div><div><b>${b.name} ${st.over?'überfüllt':'voll'}</b><span>${suggestion.item.name} besser in ${packBags[suggestion.alt].name} verschieben.</span></div><button type="button" data-pack-move="${suggestion.item.id}" data-pack-target="${suggestion.alt}">Jetzt verschieben</button></div>`)}else rows.push(`<div class="pack-advice-row warn"><div class="pack-advice-icon">!</div><div><b>${b.name} ${st.over?'überfüllt':'voll'}</b><span>Keine freie Alternative mit genügend Volumen. Tasche vergrößern oder Gegenstand weglassen.</span></div><span></span></div>`)}
+ const bal=packBalance();if(!rows.length)rows.push(`<div class="pack-advice-row ok"><div class="pack-advice-icon">✓</div><div><b>Kapazitäten passen</b><span>Keine Tasche ist voll oder überfüllt. Balance ${bal.front}% vorne · ${bal.rear}% hinten.</span></div><span></span></div>`);box.innerHTML=rows.join('');box.querySelectorAll('[data-pack-move]').forEach(btn=>btn.onclick=()=>movePackItemDirect(btn.dataset.packMove,btn.dataset.packTarget))}
 function renderPackBike(){Object.keys(packBags).forEach(id=>{const st=bagStats(id),g=document.getElementById(`packBike-${id}`),lab=document.getElementById(`packBikeLabel-${id}`);if(g){g.classList.toggle('pack-v12-empty',!st.items.length);g.classList.toggle('pack-v12-over',st.over)}if(lab)lab.textContent=`${formatLiters(st.l)} / ${formatLiters(st.cap)} L · ${st.pct}%`})}
 function renderPackSummary(){const assigned=assignedPackItems(),total=packTotalKg(),assignedKg=assigned.reduce((s,x)=>s+x.kg,0),bal=packBalance(),active=Object.keys(packBags).filter(k=>bagStats(k).items.length).length,cov=relevantPackItems().length?Math.round(assigned.length/relevantPackItems().length*100):0;document.getElementById('packWeight').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg`;document.getElementById('frontBalance').textContent=`${bal.front}% vorne`;document.getElementById('rearBalance').textContent=`${bal.rear}% hinten`;document.getElementById('balanceBar').style.gridTemplateColumns=`${bal.front}fr ${bal.rear}fr`;document.getElementById('packStatBags').textContent=active;document.getElementById('packStatItems').textContent=assigned.length;document.getElementById('packStatCoverage').textContent=`${cov}%`;document.getElementById('packMeta').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg verteilt · ${active} aktive Taschen · Balance ${bal.front} / ${bal.rear}`;document.getElementById('packBagSummary').innerHTML=Object.entries(packBags).map(([id,b])=>{const st=bagStats(id);return `<div class="pack-v12-bagrow"><i class="bag-dot" style="background:${b.color}"></i><b>${b.name}</b><span>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</span><span class="mini-badge">${st.items.length}</span></div>`}).join('')}
 function renderPackProgress(){const box=document.getElementById('packProgress');let needed=0,have=0;box.innerHTML=visiblePackCategories().map(c=>{const arr=c.items.map(id=>packItems.find(x=>x.id===id)).filter(x=>x?.needed),h=arr.filter(x=>x.have).length;if(!arr.length)return '';needed+=arr.length;have+=h;const pct=Math.round(h/arr.length*100);return `<div class="pack-v12-progrow"><div class="pack-v12-proghead"><span>${c.name}</span><span>${h}/${arr.length} · ${pct}%</span></div><div class="pack-v12-progbar"><i style="width:${pct}%"></i></div></div>`}).join('');document.getElementById('packListTitle').textContent=`${have} / ${needed}`;const open=needed-have,b=document.getElementById('packOpenBadge');b.textContent=open?`${open} offen`:'komplett';b.classList.toggle('warn',open>0);const tip=document.getElementById('packTip'),mode=document.getElementById('packLodgingMode')?.value||readPackLodgingMode();tip.innerHTML=mode==='hotel'?'<b>Tipp</b>Bei Hotel-Übernachtungen kannst du Zelt, Schlafsack und Isomatte zu Hause lassen. Das spart Gewicht und Volumen.':'<b>Tipp</b>Schwere Gegenstände möglichst mittig und tief verstauen. Häufig benötigte Dinge griffbereit einpacken.'}
@@ -2028,7 +2148,7 @@ function buildPackProposal(){const items=packItems.map(x=>({...x})),used=Object.
 function createAutoPackProposal(){packProposal=buildPackProposal();renderBestPack();packToast(packProposal.unassigned.length?`${packProposal.unassigned.length} Teil(e) passen noch nicht in die vorhandenen Taschen`:'Auto-Pack Vorschlag erstellt – prüfen und anwenden')}
 function applyAutoPackProposal(){if(!packProposal){packToast('Bitte zuerst einen Auto-Pack Vorschlag erstellen');return}const map=new Map(packProposal.items.map(x=>[x.id,x.bag]));packItems.forEach(x=>{if(map.has(x.id))x.bag=map.get(x.id)});packProposal=null;packPersist();renderPackPrototype();renderOverviewDashboard();packToast('Vorschlag angewendet')}
 function resetPackPrototype(){packItems.forEach(x=>x.bag='');packProposal=null;packPersist();renderPackPrototype();renderOverviewDashboard();packToast('Bike geleert · Bedarf und Bestand bleiben erhalten')}
-function renderPackPrototype(){applyLodgingPackRules();renderPackNeeds();renderPackHave();renderPackFillGrid();renderPackBike();renderPackSummary();renderPackProgress();renderBestPack()}
+function renderPackPrototype(){applyLodgingPackRules();renderPackNeeds();renderPackHave();renderPackFillGrid();renderPackAdvice();renderPackBike();renderPackSummary();renderPackProgress();renderBestPack()}
 document.getElementById('packSearch')?.addEventListener('input',renderPackHave);document.getElementById('packCategoryFilter')?.addEventListener('change',renderPackHave);document.getElementById('packLodgingMode')?.addEventListener('change',e=>{e.currentTarget.dataset.touched='1';try{const p=JSON.parse(localStorage.getItem('abo-mobile-lodging-prefs')||'{}');p.type=e.currentTarget.value;localStorage.setItem('abo-mobile-lodging-prefs',JSON.stringify(p))}catch(_){localStorage.setItem('abo-mobile-lodging-prefs',JSON.stringify({type:e.currentTarget.value}))}packProposal=null;renderPackPrototype();renderOverviewDashboard()});document.getElementById('autoPack')?.addEventListener('click',createAutoPackProposal);document.getElementById('packBestBtn')?.addEventListener('click',createAutoPackProposal);document.getElementById('packModeBtn')?.addEventListener('click',applyAutoPackProposal);document.getElementById('resetPack')?.addEventListener('click',resetPackPrototype);
 (function initPackFilter(){const el=document.getElementById('packCategoryFilter');if(el){packCategoryDefs.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;el.appendChild(o)})}syncPackLodgingUI()})();renderPackPrototype();renderOverviewDashboard();
 
