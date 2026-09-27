@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.2 Stability</title>
+<title>ROAM · Beta · V15.3 Stability</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -605,6 +605,22 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 .v15-lang-wrap{position:relative}.v15-lang-btn{height:40px;min-width:72px;padding:0 11px;border:1px solid var(--line);background:#faf7ef;border-radius:999px;color:var(--forest);font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px}.v15-lang-menu{position:absolute;right:0;top:47px;z-index:1200;display:none;width:180px;padding:7px;background:#fffdf8;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 36px rgba(45,40,32,.14)}.v15-lang-menu.open{display:grid}.v15-lang-menu button{border:0;background:transparent;display:grid;grid-template-columns:24px 34px 1fr;align-items:center;text-align:left;padding:9px;border-radius:8px;color:var(--forest)}.v15-lang-menu button:hover,.v15-lang-menu button.active{background:#edf0e7}.v15-lang-menu span{color:var(--muted);font-size:11px}
 .v15-bike-tools{display:flex;align-items:center;gap:10px;justify-content:space-between}.v15-bike-tools .muted{font-size:10px}.v15-bag-picker{position:absolute;inset:0;z-index:15;pointer-events:none}.v15-bag-picker button{position:absolute;opacity:0;transform:scale(.78) translateY(8px);transition:opacity .22s ease,transform .25s ease;border:1px solid rgba(46,58,47,.20);background:rgba(250,247,239,.97);color:var(--forest);border-radius:999px;padding:8px 11px;font-size:10px;font-weight:800;box-shadow:0 7px 20px rgba(48,43,35,.10);pointer-events:none}.v15-bag-picker.open button{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}.v15-bag-picker button:nth-child(1){left:4%;top:18%}.v15-bag-picker button:nth-child(2){left:37%;bottom:8%}.v15-bag-picker button:nth-child(3){left:45%;top:6%}.v15-bag-picker button:nth-child(4){right:4%;top:13%}.v15-bag-picker button:nth-child(5){right:4%;bottom:13%}.v15-bag-picker.open button:nth-child(1){transition-delay:.02s}.v15-bag-picker.open button:nth-child(2){transition-delay:.05s}.v15-bag-picker.open button:nth-child(3){transition-delay:.08s}.v15-bag-picker.open button:nth-child(4){transition-delay:.11s}.v15-bag-picker.open button:nth-child(5){transition-delay:.14s}
 @media(max-width:900px){.v15-welcome-hero{background:linear-gradient(180deg,rgba(250,247,239,.08),#faf7ef 65%),var(--hero) center 12px/78% auto no-repeat!important;padding-top:215px}.v15-wayfinder{display:none}.v15-lang-btn{min-width:58px}.v15-bike-tools{align-items:flex-start;flex-direction:column}}
+
+/* ===== ROAM V15.3 regression repair ===== */
+.v152-hero-bike,.v15-wayfinder{display:none!important}
+.v15-welcome-hero{min-height:282px!important;overflow:hidden!important;background:linear-gradient(90deg,#faf7ef 0%,#faf7ef 47%,rgba(250,247,239,.98) 55%,rgba(250,247,239,.76) 64%,rgba(250,247,239,.08) 84%),var(--hero) right 30px center/44% auto no-repeat!important}
+.v15-welcome-hero:before{display:none!important}.v15-welcome-copy{max-width:54%!important;z-index:3}.v15-ready-badge{right:24px!important;top:20px!important;z-index:4}
+#bagPickerToggle,#bagPicker{display:none!important}.v15-bike-hotspot,.v15-bike-callout{display:none!important}
+.v15-bike-tools{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:12px!important;padding:0 0 8px}.v15-bike-tools .muted{max-width:68%;text-align:right}
+.v153-bike-mode{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(47,71,52,.16);background:#eef1e8;color:#2f4734;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:850;white-space:nowrap}.v153-bike-mode.preview{background:#f2e5dd;color:#8b4f39;border-color:#dfc1b2}
+.v15-bike-image-wrap{min-height:300px!important;background:#f8f5ed!important;padding:6px 8px 0}.v153-pack-bike{min-height:0!important;max-height:340px!important;margin:auto}.v153-pack-bike [data-bike-layer].v152-hidden,.v153-pack-bike [data-bike-layer].v153-hidden{display:none!important;opacity:0!important}
+.pack-v12-best #packBestBtn{display:none!important}.pack-v12-best{grid-template-columns:1fr!important}.pack-v12-best.v153-preview{border-color:#d8b6a6;background:#f6ebe4}.pack-v12-best.v153-preview h3:after{content:" · VORSCHAU";font-size:9px;letter-spacing:.08em;color:#a2573c;margin-left:6px}
+.pack-v12-item.v153-preview-item{background:#fbf2ec;border-color:#dfc3b5}.pack-v12-bagselect.v153-preview-select{border-color:#bd7656;background:#fffaf6}
+.pack-v13-unassigned{margin-top:10px}.pack-v13-unassigned-list{display:flex;flex-wrap:wrap;gap:5px}.pack-v13-unassigned-list span{font-size:8px;padding:4px 6px;border-radius:999px;background:#f1eee5;color:#697067}
+#packModeBtn:disabled{opacity:.48;cursor:not-allowed}.v153-preview-banner{padding:8px 10px;border-radius:9px;background:#f4e7df;color:#7d4d3b;font-size:10px;font-weight:750;margin:7px 0 0}
+@media(max-width:1100px){.v15-welcome-hero{background:linear-gradient(90deg,#faf7ef 0%,#faf7ef 50%,rgba(250,247,239,.98) 58%,rgba(250,247,239,.40) 76%),var(--hero) right 20px center/42% auto no-repeat!important}.v15-welcome-copy{max-width:57%!important}}
+@media(max-width:900px){.v15-welcome-hero{min-height:420px!important;padding:230px 24px 28px!important;background:linear-gradient(180deg,rgba(250,247,239,.05) 0%,rgba(250,247,239,.10) 43%,#faf7ef 59%,#faf7ef 100%),var(--hero) center 12px/62% auto no-repeat!important}.v15-welcome-copy{max-width:100%!important}.v15-ready-badge{top:18px!important;right:18px!important}.v15-bike-tools{align-items:flex-start!important;flex-direction:column!important}.v15-bike-tools .muted{max-width:none;text-align:left}}
+@media(max-width:600px){.v15-welcome-hero{padding-top:190px!important;background-size:82% auto!important}.v15-welcome-copy h1{font-size:38px!important}}
 </style></head>
 <body>
 <div class="app">
@@ -646,22 +662,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
        <p>Plane, packe und bereite deine Bikepacking-Reise – alles an einem Ort.</p>
        <div class="v15-welcome-actions"><button class="btn rust" type="button" data-new-trip>+ Neue Reise planen</button><button class="btn" id="dashImportGpx">GPX importieren</button><button class="btn" id="dashOpenSaved">Gespeicherte Reise öffnen</button></div>
      </div>
-     <div class="v15-wayfinder" aria-hidden="true"><i></i><span>ROUTE →</span><b>TRAIL →</b></div>
-     <div class="v152-hero-bike" aria-hidden="true">
-       <svg viewBox="0 0 260 130" role="img">
-        <g fill="none" stroke="#2f4734" stroke-linecap="round" stroke-linejoin="round">
-         <circle cx="62" cy="91" r="34" stroke-width="5" opacity=".92"/><circle cx="199" cy="91" r="34" stroke-width="5" opacity=".92"/>
-         <path d="M62 91 105 48 139 91 62 91Zm43-43 49 7 45 36M139 91l15-36M105 48 94 35M88 34h22M199 91l-14-47M180 43h18l9 8" stroke-width="6"/>
-         <path d="M139 91 177 91" stroke-width="3"/><circle cx="139" cy="91" r="8" stroke-width="3"/>
-        </g>
-        <path d="M105 53 149 59 137 85 82 85Z" fill="#b85c42" opacity=".94"/>
-        <path d="M49 49q30-12 51-2l-10 20H58Z" fill="#52664c" opacity=".96"/>
-        <rect x="110" y="38" width="35" height="13" rx="6" fill="#b85c42"/>
-        <path d="M181 48q20-6 33 4v20q-17 5-29-1Z" fill="#b87345"/>
-        <circle cx="161" cy="78" r="6" fill="#f7f2e9" stroke="#2f4734" stroke-width="3"/>
-        <circle cx="174" cy="78" r="6" fill="#f7f2e9" stroke="#2f4734" stroke-width="3"/>
-       </svg>
-     </div><span class="v15-ready-badge">● ROAM bereit</span>
+     <span class="v15-ready-badge">● ROAM bereit</span>
    </div>
    <div class="v15-feature-grid">
      <div class="v15-feature"><i>⌁</i><div><b>Route & Etappen</b><span>Berechne deine Route, sieh Höhenprofil und Terrain und erhalte sinnvolle Etappenvorschläge.</span></div></div>
@@ -929,23 +930,39 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
      <div class="pack-v12-head"><div class="pack-v12-num">3</div><div><h2>Was kommt wo hin?</h2><p>Verteile deine Ausrüstung auf die Taschen. Ziehe bzw. wähle Gegenstände direkt um oder nutze den Auto-Pack Vorschlag.</p></div><span class="badge" style="margin-left:auto">Gravel · 40 mm</span></div>
      <div class="pack-v12-best"><div><h3>Auto-Pack Vorschlag</h3><p>Erstellt zunächst eine bewertete Variante. Erst „Vorschlag anwenden“ übernimmt die neue Verteilung.</p><div class="pack-v12-score" id="packBestScore"><span>noch kein Vorschlag</span></div></div><button class="btn" id="packBestBtn" type="button">Vorschlag erstellen</button></div>
      <div class="v15-bike-stage" id="packBikeStage">
-       <div class="v15-bike-tools"><button class="btn" type="button" id="bagPickerToggle">＋ Taschen am Bike wählen</button><span class="muted">Tasche auswählen → Position prüfen → Inhalt öffnen</span></div>
+       <div class="v15-bike-tools"><span class="v153-bike-mode" id="packBikeModeLabel">Aktuelle Verteilung</span><span class="muted" id="packBikeHelp">Die Grafik zeigt nur tatsächlich verwendete Positionen. Änderungen erfolgen direkt in der Gegenstandsliste.</span><button class="btn" type="button" id="bagPickerToggle" hidden aria-hidden="true">Taschen wählen</button></div>
        <div class="v15-bike-image-wrap"><div class="v15-bag-picker" id="bagPicker" aria-hidden="true"><button type="button" data-picker-bag="saddle">Satteltasche</button><button type="button" data-picker-bag="frame">Rahmentasche</button><button type="button" data-picker-bag="top">Oberrohr</button><button type="button" data-picker-bag="bar">Lenkertasche</button><button type="button" data-picker-bag="fork">Gabeltaschen</button><button type="button" data-picker-bag="bottle">Flaschenhalter</button></div>
-         <svg class="v15-bike-photo v152-pack-bike" viewBox="0 0 760 430" role="img" aria-label="Gravelbike; nur tatsächlich verwendete Taschen werden eingeblendet">
+         <svg class="v15-bike-photo v152-pack-bike v153-pack-bike" viewBox="0 0 760 430" role="img" aria-label="Gravelbike; nur tatsächlich verwendete Taschen und Flaschenhalter werden eingeblendet">
   <rect width="760" height="430" fill="#f8f5ed"/>
-  <g class="v152-bike-base" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="190" cy="300" r="104" stroke="#555b55" stroke-width="14"/><circle cx="572" cy="300" r="104" stroke="#555b55" stroke-width="14"/>
-    <circle cx="190" cy="300" r="94" stroke="#b4aa99" stroke-width="2"/><circle cx="572" cy="300" r="94" stroke="#b4aa99" stroke-width="2"/>
-    <path d="M190 300 306 164 392 300 190 300Zm116-136 135 20 131 116M392 300l49-116M306 164l-30-45M255 118h65M572 300l-39-151M520 146h48l27 22" stroke="#e8e2d8" stroke-width="18"/>
-    <path d="M190 300 306 164 392 300 190 300Zm116-136 135 20 131 116M392 300l49-116M306 164l-30-45M255 118h65M572 300l-39-151M520 146h48l27 22" stroke="#405044" stroke-width="6"/>
-    <path d="M392 300h102" stroke="#405044" stroke-width="5"/><circle cx="392" cy="300" r="22" stroke="#405044" stroke-width="5"/>
+  <g class="v153-bike-base" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="180" cy="302" r="103" stroke="#505750" stroke-width="13"/>
+    <circle cx="580" cy="302" r="103" stroke="#505750" stroke-width="13"/>
+    <circle cx="180" cy="302" r="94" stroke="#b9af9f" stroke-width="2"/>
+    <circle cx="580" cy="302" r="94" stroke="#b9af9f" stroke-width="2"/>
+    <g stroke="#d6cec1" stroke-width="1.2" opacity=".72">
+      <path d="M180 208v188M86 302h188M114 236l132 132M114 368l132-132"/>
+      <path d="M580 208v188M486 302h188M514 236l132 132M514 368l132-132"/>
+    </g>
+    <!-- frame -->
+    <path d="M180 302 309 145 375 302 180 302M309 145 493 151 375 302M493 151 522 195 580 302M375 302 522 195" stroke="#efe8dc" stroke-width="19"/>
+    <path d="M180 302 309 145 375 302 180 302M309 145 493 151 375 302M493 151 522 195 580 302M375 302 522 195" stroke="#3f5044" stroke-width="6"/>
+    <!-- seat post / saddle -->
+    <path d="M309 145 292 111" stroke="#3f5044" stroke-width="6"/><path d="M262 108h66" stroke="#3f5044" stroke-width="10"/>
+    <!-- fork / cockpit -->
+    <path d="M493 151 507 117 536 102" stroke="#3f5044" stroke-width="6"/>
+    <path d="M532 101h38q19 0 18 18 0 20-18 27" stroke="#3f5044" stroke-width="7"/>
+    <path d="M548 114h39" stroke="#3f5044" stroke-width="5"/>
+    <!-- crank / drivetrain -->
+    <circle cx="375" cy="302" r="22" stroke="#3f5044" stroke-width="5"/><circle cx="375" cy="302" r="6" fill="#3f5044" stroke="none"/>
+    <path d="M375 302 412 318M375 302 341 283M180 302 375 302" stroke="#3f5044" stroke-width="4"/>
+    <circle cx="180" cy="302" r="12" stroke="#3f5044" stroke-width="3"/><circle cx="580" cy="302" r="13" stroke="#8a9387" stroke-width="3"/>
   </g>
-  <g id="packBike-saddle" data-bike-layer="saddle"><path d="M170 142q54-26 115-10l-15 53H190q-17-10-20-43Z" fill="#53664c" stroke="#f0e8dd" stroke-width="4"/><path d="M199 137 244 179M224 130l-11 53" stroke="#d8cfbf" stroke-width="3" fill="none"/></g>
-  <g id="packBike-frame" data-bike-layer="frame"><path d="M303 181 432 194 388 285 247 285Z" fill="#bf7b4a" stroke="#f0e8dd" stroke-width="4"/></g>
-  <g id="packBike-top" data-bike-layer="top"><rect x="318" y="151" width="112" height="28" rx="14" fill="#b86b49" stroke="#f0e8dd" stroke-width="4"/></g>
-  <g id="packBike-bar" data-bike-layer="bar"><path d="M524 155q61-18 101 8v66q-54 19-88-5Z" fill="#c57440" stroke="#f0e8dd" stroke-width="4"/><path d="M553 154q8 35 8 74M596 158q-5 34 1 66" stroke="#405044" stroke-width="8" fill="none"/></g>
-  <g id="packBike-fork" data-bike-layer="fork"><rect x="500" y="224" width="34" height="90" rx="15" fill="#607057" stroke="#f0e8dd" stroke-width="4"/><rect x="545" y="228" width="32" height="86" rx="15" fill="#607057" opacity=".82" stroke="#f0e8dd" stroke-width="4"/></g>
-  <g id="packBike-bottle" data-bike-layer="bottle"><path d="M411 222h22v12l8 12v57h-38v-57l8-12Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M456 235h22v12l8 12v55h-38v-55l8-12Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M406 263h35M451 277h35" stroke="#b85c42" stroke-width="5"/></g>
+  <g id="packBike-saddle" data-bike-layer="saddle"><path d="M166 135q61-26 122-8l-18 58H189q-18-11-23-50Z" fill="#53664c" stroke="#f0e8dd" stroke-width="4"/><path d="M192 136 244 178M220 128l-12 55" stroke="#d8cfbf" stroke-width="3" fill="none"/></g>
+  <g id="packBike-frame" data-bike-layer="frame"><path d="M319 162 479 166 389 279 344 279Z" fill="#bf7b4a" stroke="#f0e8dd" stroke-width="4"/></g>
+  <g id="packBike-top" data-bike-layer="top"><rect x="352" y="130" width="105" height="27" rx="13" fill="#b86b49" stroke="#f0e8dd" stroke-width="4"/></g>
+  <g id="packBike-bar" data-bike-layer="bar"><path d="M523 119q65-19 112 8v64q-58 18-100-5Z" fill="#c57440" stroke="#f0e8dd" stroke-width="4"/><path d="M552 119q8 33 8 68M604 123q-6 31 0 62" stroke="#405044" stroke-width="7" fill="none"/></g>
+  <g id="packBike-fork" data-bike-layer="fork"><rect x="515" y="205" width="31" height="83" rx="14" fill="#607057" stroke="#f0e8dd" stroke-width="4"/><rect x="550" y="214" width="29" height="78" rx="14" fill="#607057" opacity=".86" stroke="#f0e8dd" stroke-width="4"/></g>
+  <g id="packBike-bottle" data-bike-layer="bottle"><path d="M397 208h21v12l7 11v58h-35v-58l7-11Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M444 219h21v12l7 11v55h-35v-55l7-11Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M393 253h30M440 264h30" stroke="#b85c42" stroke-width="4"/></g>
 </svg>
          <button class="v15-bike-hotspot saddle" data-pack-bag="saddle" aria-label="Satteltasche anzeigen"></button>
          <button class="v15-bike-hotspot top" data-pack-bag="top" aria-label="Oberrohrtasche anzeigen"></button>
@@ -1013,7 +1030,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.2</div>
+<div class="prototype-pill">ROAM · Beta · V15.3</div>
 </div>
 
 <script>
@@ -2702,6 +2719,142 @@ for(const id of ['routeExportBtn','checkExportBtn']){const b=document.getElement
 
 // Make sure current persisted state immediately reflects the fixed rules.
 applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!w152.bag||w152.bag==='fork'))w152.bag='bottle';packPersist();renderPackPrototype();renderOverviewDashboard();translateTextNodes(document.body,roamLanguage);
+</script>
+
+<script id="roam-v153-patch">
+// ===== ROAM V15.3 regression repair =====
+const ROAM_V153_LANG=(localStorage.getItem(typeof ROAM_LANG_KEY!=='undefined'?ROAM_LANG_KEY:'roam-language-v1')||'de').toLowerCase();
+try{if(typeof roamLanguageObserver!=='undefined')roamLanguageObserver.disconnect()}catch(e){}
+try{if(typeof translateTextNodes==='function')translateTextNodes(document.body,'de')}catch(e){}
+
+const ROAM_V153_TRANSLATIONS={
+ 'GPX vorbereitet':['GPX ready','GPX listo'],
+ 'Bereiche bereit':['areas ready','áreas listas'],
+ 'alles bereit':['all ready','todo listo'],
+ 'Wetterdaten für alle Etappen vorhanden.':['Weather data is available for all stages.','Hay datos meteorológicos para todas las etapas.'],
+ 'Prognose für die aktuellen Etappen öffnen und prüfen.':['Open and review the forecast for the current stages.','Abre y revisa la previsión de las etapas actuales.'],
+ 'Alle Zwischenübernachtungen sind geplant.':['All overnight stops are planned.','Todos los alojamientos intermedios están planificados.'],
+ 'Packliste ist vollständig.':['Packing list is complete.','La lista de equipaje está completa.'],
+ 'Wetterdaten vorhanden – vor Abfahrt nochmals prüfen.':['Weather data available — check again before departure.','Datos meteorológicos disponibles; vuelve a comprobarlos antes de salir.'],
+ 'Wetter für diese Reise noch nicht vollständig geladen.':['Weather for this trip is not fully loaded yet.','El tiempo de este viaje aún no se ha cargado por completo.'],
+ 'Reise prüfen':['review trip','revisar el viaje'],
+ 'Wetter prüfen':['check weather','comprobar el tiempo'],
+ 'Übernachtungen vervollständigen':['finish lodging','completar alojamientos'],
+ 'Packliste vervollständigen':['finish packing','completar equipaje'],
+ 'Bereit für die Abfahrt':['ready to depart','listo para salir'],
+ 'nicht zugewiesen':['unassigned','sin asignar'],
+ 'optional':['optional','opcional'],
+ 'fehlt':['missing','falta'],
+ 'komplett':['complete','completo'],
+ 'Vorschlag bereit':['Preview ready','Vista previa lista'],
+ 'Auto-Pack Vorschau':['Auto-Pack preview','Vista previa Auto-Pack'],
+ 'Aktuelle Verteilung':['Current distribution','Distribución actual'],
+ 'Vorschau anwenden →':['Apply preview →','Aplicar vista previa →'],
+ 'Vorschau neu berechnen':['Recalculate preview','Recalcular vista previa'],
+ 'Die Grafik zeigt nur tatsächlich verwendete Positionen. Änderungen erfolgen direkt in der Gegenstandsliste.':['The graphic shows only positions actually in use. Change assignments directly in the item list.','El gráfico muestra solo las posiciones realmente utilizadas. Cambia las asignaciones directamente en la lista de objetos.'],
+ 'Alle benötigten Gegenstände sind einer Position zugewiesen.':['All required items are assigned to a position.','Todos los objetos necesarios están asignados a una posición.'],
+ 'Vorschau – noch nicht übernommen':['Preview — not applied yet','Vista previa — aún no aplicada'],
+ 'Aktuelle Verteilung aktiv':['Current distribution active','Distribución actual activa'],
+ 'Auto-Pack berechnen':['Calculate Auto-Pack','Calcular Auto-Pack'],
+ 'Vorschau erstellt – Verteilung prüfen und anschließend anwenden.':['Preview created — review the distribution and then apply it.','Vista previa creada: revisa la distribución y después aplícala.'],
+ '2× Flaschenhalter':['2× bottle cages','2× portabidones']
+};
+function roamV153Exact(source,lang){
+ if(lang==='de')return source;
+ try{const b=roamTranslations?.[lang]?.[source];if(b)return b}catch(e){}
+ try{const v=ROAM_V152_TRANSLATIONS?.[source];if(v)return lang==='en'?v[0]:v[1]}catch(e){}
+ const v=ROAM_V153_TRANSLATIONS[source];if(v)return lang==='en'?v[0]:v[1];
+ return null;
+}
+function roamV153Pattern(t,lang){
+ if(lang==='de')return t;const es=lang==='es';let m;
+ if((m=t.match(/^Abfahrt in (\d+) Tagen$/))){const n=Number(m[1]);return es?`Salida en ${n} ${n===1?'día':'días'}`:`Departure in ${n} ${n===1?'day':'days'}`}
+ if(t==='Abfahrt heute')return es?'Salida hoy':'Departure today';if(t==='Reise läuft')return es?'Viaje en curso':'Trip underway';
+ if((m=t.match(/^GPX vorbereitet · (\d+) km · (\d+) Etappen$/))){return es?`GPX listo · ${m[1]} km · ${m[2]} ${m[2]==='1'?'etapa':'etapas'}`:`GPX ready · ${m[1]} km · ${m[2]} ${m[2]==='1'?'stage':'stages'}`}
+ if((m=t.match(/^(\d+) \/ 4 Bereiche bereit$/)))return es?`${m[1]} / 4 áreas listas`:`${m[1]} / 4 areas ready`;
+ if((m=t.match(/^(\d+) offen$/)))return es?`${m[1]} pendientes`:`${m[1]} open`;
+ if((m=t.match(/^(\d+) Nacht ist noch offen\.$/)))return es?`${m[1]} noche sigue pendiente.`:`${m[1]} night is still open.`;
+ if((m=t.match(/^(\d+) Nächte sind noch offen\.$/)))return es?`${m[1]} noches siguen pendientes.`:`${m[1]} nights are still open.`;
+ if((m=t.match(/^(\d+) empfohlene Position fehlt noch\.$/)))return es?`Falta ${m[1]} posición recomendada.`:`${m[1]} recommended position is still missing.`;
+ if((m=t.match(/^(\d+) empfohlene Gegenstände fehlen noch\.$/)))return es?`Faltan ${m[1]} objetos recomendados.`:`${m[1]} recommended items are still missing.`;
+ if((m=t.match(/^(\d+)\/(\d+) benötigte Gegenstände vorhanden\.$/)))return es?`${m[1]}/${m[2]} objetos necesarios disponibles.`:`${m[1]}/${m[2]} required items available.`;
+ if((m=t.match(/^Jetzt sinnvoll: (.+)$/))){const inner=roamV153Exact(m[1],lang)||m[1];return es?`Recomendado ahora: ${inner}`:`Recommended now: ${inner}`}
+ if((m=t.match(/^(\d+) aktive Taschen$/)))return es?`${m[1]} bolsas activas`:`${m[1]} active bags`;
+ if((m=t.match(/^(\d+) Taschen$/)))return es?`${m[1]} bolsas`:`${m[1]} bags`;
+ if((m=t.match(/^(\d+) Gegenstände$/)))return es?`${m[1]} objetos`:`${m[1]} items`;
+ if((m=t.match(/^(\d+)% verteilt$/)))return es?`${m[1]}% distribuido`:`${m[1]}% assigned`;
+ if((m=t.match(/^Tag (\d+)(.*)$/)))return es?`Día ${m[1]}${m[2]}`:`Day ${m[1]}${m[2]}`;
+ if((m=t.match(/^Nacht (\d+)(.*)$/)))return es?`Noche ${m[1]}${m[2]}`:`Night ${m[1]}${m[2]}`;
+ if((m=t.match(/^([\d,.]+) kg verteilt · (\d+) aktive Taschen · Balance (\d+) \/ (\d+)$/)))return es?`${m[1]} kg distribuidos · ${m[2]} bolsas activas · balance ${m[3]} / ${m[4]}`:`${m[1]} kg assigned · ${m[2]} active bags · balance ${m[3]} / ${m[4]}`;
+ return null;
+}
+function roamV153Translate(source,lang){return roamV153Exact(source,lang)||roamV153Pattern(source,lang)||source}
+const roamV153TextState=new WeakMap(),roamV153AttrState=new WeakMap();
+translateTextNodes=function(root=document.body,lang=(localStorage.getItem(ROAM_LANG_KEY)||'de')){
+ roamLanguage=['de','en','es'].includes(lang)?lang:'de';
+ const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const p=n.parentElement,t=n.nodeValue?.trim();return t&&p&&!['SCRIPT','STYLE','TEXTAREA'].includes(p.tagName)&&p.id!=='langCode'?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT}}),nodes=[];while(w.nextNode())nodes.push(w.currentNode);
+ for(const n of nodes){const current=n.nodeValue,trim=current.trim();let s=roamV153TextState.get(n);if(!s)s={source:current,last:current};else if(current!==s.last){s.source=current;s.last=current}const src=s.source,srcTrim=src.trim(),translated=roamV153Translate(srcTrim,roamLanguage),next=roamLanguage==='de'?src:src.replace(srcTrim,translated);if(current!==next)n.nodeValue=next;s.last=next;roamV153TextState.set(n,s)}
+ root.querySelectorAll?.('[placeholder],[title],[aria-label]').forEach(el=>{let rec=roamV153AttrState.get(el)||{};for(const attr of ['placeholder','title','aria-label']){const cur=el.getAttribute(attr);if(cur==null)continue;const prev=rec[attr];if(!prev||cur!==prev.last)rec[attr]={source:cur,last:cur};const r=rec[attr],next=roamLanguage==='de'?r.source:roamV153Translate(r.source,roamLanguage);if(cur!==next)el.setAttribute(attr,next);r.last=next}roamV153AttrState.set(el,rec)});
+ document.documentElement.lang=roamLanguage;const code=document.getElementById('langCode');if(code)code.textContent=roamLanguage.toUpperCase();document.querySelectorAll('#langMenu [data-lang]').forEach(b=>b.classList.toggle('active',b.dataset.lang===roamLanguage));localStorage.setItem(ROAM_LANG_KEY,roamLanguage)
+};
+scheduleRoamTranslation=function(){clearTimeout(scheduleRoamTranslation._t);scheduleRoamTranslation._t=setTimeout(()=>translateTextNodes(document.body,roamLanguage),20)};
+const roamLanguageObserverV153=new MutationObserver(ms=>{if(ms.some(m=>m.type==='childList'||m.type==='characterData'||m.type==='attributes'))scheduleRoamTranslation()});roamLanguageObserverV153.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label']});
+
+// Simple, consistent pack UI: when a proposal exists, every visual element shows that proposal.
+packBags.bottle.name='2× Flaschenhalter';
+// Keep Auto-Pack compact: opening an additional bag is expensive. This prevents tiny loads
+// from spawning unnecessary fork/bar/etc. bags while preserving capacity/access constraints.
+buildPackProposal=function(){
+ const items=packItems.map(x=>({...x})),used=Object.fromEntries(Object.keys(packBags).map(k=>[k,0])),unassigned=[],ordered=relevantPackItems(items).sort((a,b)=>b.kg-a.kg||b.l-a.l);ordered.forEach(i=>i.bag='');
+ for(const item of ordered){
+  let best='',score=1e9;
+  for(const id of Object.keys(packBags)){
+   const after=used[id]+item.l,cap=bagCapacity(id);if(after>cap+1e-6)continue;
+   // Bottle cages are reserved for water/drinks. Do not place generic gear there.
+   if(id==='bottle'&&item.id!=='water'&&!/wasser|water|bidon|flasche/i.test(item.name||''))continue;
+   let pref=preferredBags(item).indexOf(id);if(pref<0)pref=9;
+   let sc=pref*12;
+   if(!used[id])sc+=55;
+   if(item.kg>=1&&packBags[id].zone!=='center')sc+=18;
+   if(item.access==='high'&&!['top','bar'].includes(id))sc+=12;
+   sc+=(after/cap)*3;
+   if(item.preferredBag===id)sc-=22;
+   if(sc<score){score=sc;best=id}
+  }
+  if(best){item.bag=best;used[best]+=item.l}else unassigned.push(item)
+ }
+ return {items,unassigned};
+};
+const customBagV153=document.getElementById('customItemBag');
+if(customBagV153)customBagV153.innerHTML='<option value="">Auto-Pack entscheiden lassen</option>'+Object.entries(packBags).map(([id,b])=>`<option value="${id}">${b.name}</option>`).join('');
+function packDisplayItemsV153(){return packProposal?.items||packItems}
+function packDisplayStatsV153(id){return bagStats(id,packDisplayItemsV153())}
+function proposalItemV153(id){return packProposal?.items?.find(x=>x.id===id)||null}
+function refreshProposalUnassignedV153(){if(packProposal)packProposal.unassigned=packProposal.items.filter(x=>x.needed&&x.have&&!x.bag)}
+
+renderPackHave=function(){
+ applyLodgingPackRules();const box=document.getElementById('packHaveList');if(!box)return;const q=(document.getElementById('packSearch')?.value||'').toLowerCase(),filter=document.getElementById('packCategoryFilter')?.value||'all',items=packDisplayItemsV153(),preview=!!packProposal;
+ box.innerHTML=visiblePackCategories().filter(c=>filter==='all'||c.id===filter).map(c=>{const arr=items.filter(x=>x.cat===c.id&&x.needed&&(!q||x.name.toLowerCase().includes(q)));if(!arr.length)return '';return `<div class="pack-v13-group"><div class="pack-v13-grouphead"><b>${c.name}</b><span>${arr.filter(x=>x.have).length}/${arr.length}</span></div>${arr.map(i=>`<div class="pack-v12-item ${preview?'v153-preview-item':''}"><button class="pack-v12-check ${i.have?'':'off'}" data-have="${i.id}" type="button">✓</button><div class="thumb">${itemIcon(i.id,i.cat)}</div><div><b>${i.name}</b><small>${Number(i.kg||0).toFixed(2).replace('.',',')} kg · ${formatLiters(i.l)} L${i.have?'':' · fehlt'}${i.note?` · ${i.note}`:''}</small></div><select class="pack-v12-bagselect ${preview?'v153-preview-select':''}" data-bagitem="${i.id}" ${i.have?'':'disabled'}>${bagOptions(i.bag)}</select>${i.custom?`<button class="v152-custom-delete" data-delete-custom="${i.id}" type="button" title="Eigenen Gegenstand löschen">×</button>`:'<span class="menu-dots">⋮</span>'}</div>`).join('')}</div>`}).join('')||'<div class="muted" style="font-size:11px;padding:12px">Keine Gegenstände im Filter.</div>';
+ box.querySelectorAll('[data-have]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.have);if(!i)return;i.have=!i.have;if(!i.have)i.bag='';packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()});
+ box.querySelectorAll('[data-bagitem]').forEach(el=>el.onchange=()=>{const target=preview?proposalItemV153(el.dataset.bagitem):packItems.find(x=>x.id===el.dataset.bagitem);if(!target)return;if(el.value){const st=bagStats(el.value,preview?packProposal.items:packItems),existing=target.bag===el.value?target.l:0;if(st.l-existing+target.l>st.cap+1e-6){packToast(`${packBags[el.value].name}: zu wenig Platz`);renderPackPrototype();return}}target.bag=el.value;if(preview){refreshProposalUnassignedV153();renderPackPrototype()}else{invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()}});
+ box.querySelectorAll('[data-delete-custom]').forEach(btn=>btn.onclick=()=>{const i=packItems.findIndex(x=>x.id===btn.dataset.deleteCustom&&x.custom);if(i<0)return;const name=packItems[i].name;packItems.splice(i,1);packProposal=null;packPersist();renderPackPrototype();renderOverviewDashboard();packToast(`${name} entfernt`)})
+};
+renderPackFillGrid=function(){const box=document.getElementById('packFillGrid');if(!box)return;const items=packDisplayItemsV153(),active=Object.entries(packBags).filter(([id])=>bagStats(id,items).items.length>0);box.innerHTML=active.map(([id,b])=>{const st=bagStats(id,items),full=st.pct>=100;return `<div class="pack-v13-fillcard ${st.over?'pack-v12-over':''} ${full?'full':''}" data-bag-id="${id}"><div class="bag-svg">${bagIconSvg(id)}</div><b>${b.name}</b><strong>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</strong><div class="bar"><i style="width:${Math.min(100,st.pct)}%"></i></div><small>${st.pct}%${st.over?' · überfüllt':full?' · voll':''}</small></div>`}).join('');const ua=items.filter(x=>x.needed&&x.have&&!x.bag),u=document.getElementById('packUnassigned');if(u)u.innerHTML=ua.length?`<div class="pack-v13-unassigned-list">${ua.map(x=>`<span>${x.name}</span>`).join('')}</div>`:'<div class="muted" style="font-size:9px;margin-top:5px">Alle benötigten Gegenstände sind einer Position zugewiesen.</div>';bindPackBagClicksV15();scheduleRoamTranslation()};
+renderPackBike=function(){const items=packDisplayItemsV153();Object.keys(packBags).forEach(id=>{const st=bagStats(id,items),layer=document.getElementById(`packBike-${id}`),visible=st.items.length>0;if(layer){layer.classList.toggle('v153-hidden',!visible);layer.classList.toggle('v152-hidden',!visible)}const lab=document.getElementById(`packBikeLabel-${id}`);if(lab)lab.textContent=`${formatLiters(st.l)} / ${formatLiters(st.cap)} L · ${st.pct}%`});const mode=document.getElementById('packBikeModeLabel');if(mode){mode.textContent=packProposal?'Auto-Pack Vorschau':'Aktuelle Verteilung';mode.classList.toggle('preview',!!packProposal)}scheduleRoamTranslation()};
+renderPackSummary=function(){const items=packDisplayItemsV153(),assigned=relevantPackItems(items).filter(x=>x.bag),total=relevantPackItems(items).reduce((s,x)=>s+x.kg,0),assignedKg=assigned.reduce((s,x)=>s+x.kg,0),bal=packBalance(items),active=Object.keys(packBags).filter(k=>bagStats(k,items).items.length).length,cov=relevantPackItems(items).length?Math.round(assigned.length/relevantPackItems(items).length*100):0;const pw=document.getElementById('packWeight');if(pw)pw.textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg`;const fb=document.getElementById('frontBalance'),rb=document.getElementById('rearBalance'),bb=document.getElementById('balanceBar');if(fb)fb.textContent=`${bal.front}% vorne`;if(rb)rb.textContent=`${bal.rear}% hinten`;if(bb)bb.style.gridTemplateColumns=`${bal.front}fr ${bal.rear}fr`;document.getElementById('packStatBags').textContent=active;document.getElementById('packStatItems').textContent=assigned.length;document.getElementById('packStatCoverage').textContent=`${cov}%`;document.getElementById('packMeta').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg verteilt · ${active} aktive Taschen · Balance ${bal.front} / ${bal.rear}`;scheduleRoamTranslation()};
+renderPackAdvice=function(){const box=document.getElementById('packBagAdvice');if(!box)return;const items=packDisplayItemsV153(),rows=[];for(const [id,b] of Object.entries(packBags)){const st=bagStats(id,items);if(st.pct<100)continue;let suggestion=null;for(const item of st.items.slice().sort((a,b)=>b.l-a.l)){for(const alt of preferredBags(item)){if(alt===id)continue;const ast=bagStats(alt,items);if(ast.l+item.l<=ast.cap+1e-6){suggestion={item,alt};break}}if(suggestion)break}if(suggestion)rows.push(`<div class="pack-advice-row warn"><div class="pack-advice-icon">!</div><div><b>${b.name} ${st.over?'überfüllt':'voll'}</b><span>${suggestion.item.name} besser in ${packBags[suggestion.alt].name} verschieben.</span></div><span></span></div>`)}const bal=packBalance(items);if(!rows.length)rows.push(`<div class="pack-advice-row ok"><div class="pack-advice-icon">✓</div><div><b>Kapazitäten passen</b><span>Keine verwendete Tasche ist überfüllt. Balance ${bal.front}% vorne · ${bal.rear}% hinten.</span></div><span></span></div>`);box.innerHTML=rows.join('');scheduleRoamTranslation()};
+renderPackBagDetailV15=function(id){const el=document.getElementById('packBagDetail');if(!el)return;if(!id){el.hidden=true;return}selectedPackBagV15=id;const items=packDisplayItemsV153(),st=bagStats(id,items);if(!st.items.length){el.hidden=true;return}el.hidden=false;const b=packBags[id],nodes=st.items.slice(0,8).map((item,j)=>{const a=(Math.PI*2*j/Math.max(1,Math.min(st.items.length,8)))-Math.PI/2,x=50+42*Math.cos(a),y=50+39*Math.sin(a);return `<span class="v15-bag-item" style="left:${x}%;top:${y}%">${itemIcon(item.id,item.cat)}<span>${item.name}</span></span>`}).join('');el.innerHTML=`<div class="v15-bag-detail-head"><div><div class="eyebrow">Tascheninhalt</div><h3>${b.name}</h3><div class="muted">${formatLiters(st.l)} / ${formatLiters(st.cap)} L · ${st.pct}% · ${st.kg.toFixed(1).replace('.',',')} kg</div></div><button class="icon-btn" type="button" id="closeBagDetailV15">×</button></div><div class="v15-bag-orbit"><div class="v15-bag-center">${bagIconSvg(id)}</div>${nodes}</div>`;document.getElementById('closeBagDetailV15')?.addEventListener('click',()=>{selectedPackBagV15='';el.hidden=true});scheduleRoamTranslation()};
+createAutoPackProposal=function(){packProposal=buildPackProposal();refreshProposalUnassignedV153();invalidateAppliedPack();renderPackPrototype();renderOverviewDashboard();packToast(packProposal.unassigned.length?`${packProposal.unassigned.length} Teil(e) passen noch nicht in die vorhandenen Taschen`:'Vorschau erstellt – Verteilung prüfen und anschließend anwenden.')};
+applyAutoPackProposal=function(){if(!packProposal){packToast('Bitte zuerst Auto-Pack berechnen');return}const map=new Map(packProposal.items.map(x=>[x.id,x.bag]));packItems.forEach(x=>{if(map.has(x.id))x.bag=map.get(x.id)});packProposal=null;localStorage.setItem('roam-pack-last-auto-v14','1');packPersist();renderPackPrototype();renderOverviewDashboard();packToast('Auto-Pack angewendet ✓')};
+renderBestPack=function(){const box=document.getElementById('packBestScore'),apply=document.getElementById('packModeBtn'),create=document.getElementById('autoPack'),card=box?.closest('.pack-v12-best'),last=localStorage.getItem('roam-pack-last-auto-v14')==='1';if(!box||!apply)return;card?.classList.toggle('v153-preview',!!packProposal);if(packProposal){const m=proposalStats(packProposal.items,packProposal.unassigned);box.innerHTML=`<span class="score-status">Auto-Pack Vorschau</span><span class="score-kpi"><b>${m.active}</b><small>Taschen</small></span><span class="score-kpi"><b>${formatLiters(m.reserve)} L</b><small>Reserve</small></span><span class="score-kpi"><b>${m.bal.front}/${m.bal.rear}</b><small>Balance</small></span><span class="score-note ${m.unassigned?'warn':''}">${m.unassigned?`${m.unassigned} Gegenstand/Gegenstände ohne passenden Platz.`:'Vorschau – noch nicht übernommen'}</span>`;apply.disabled=false;apply.textContent='Vorschau anwenden →';apply.classList.add('pack-v13-apply-ready');if(create)create.textContent='✦ Vorschau neu berechnen';setPackFlowState('proposal')}else{apply.disabled=true;apply.classList.remove('pack-v13-apply-ready');if(last){box.innerHTML='<span class="score-status">Aktuelle Verteilung aktiv</span><span class="score-note">Auto-Pack ist angewendet. Für eine neue Verteilung erneut berechnen.</span>';apply.textContent='Angewendet ✓';if(create)create.textContent='✦ Vorschlag neu berechnen';setPackFlowState('applied')}else{box.innerHTML='<span class="score-note">Noch keine Auto-Pack Verteilung berechnet.</span>';apply.textContent='Vorschau anwenden →';if(create)create.textContent='✦ Auto-Pack berechnen';setPackFlowState('idle')}}scheduleRoamTranslation()};
+
+// More stable 3D flyover: exact route marker, spatially smoothed camera, speed-aware follow smoothing.
+flyPointGeoJSON=function(){return {type:'Feature',properties:{},geometry:{type:'Point',coordinates:routeLngLat(flyVisualProgress)}}};
+flyTick=function(ts){if(!flyPlaying)return;if(!flyLastTs)flyLastTs=ts;const dt=Math.max(0,Math.min(45,ts-flyLastTs));flyLastTs=ts;flyProgress=Math.min(1,flyProgress+(dt/baseFlyDurationMs())*flySpeed);const tau=flySpeed>=4?170:flySpeed>=2?220:300,alpha=1-Math.exp(-dt/tau);flyVisualProgress+=(flyProgress-flyVisualProgress)*alpha;if(flyProgress-flyVisualProgress>0.012)flyVisualProgress=flyProgress-0.012;updateFlyCamera(false);if(flyProgress>=1&&Math.abs(flyProgress-flyVisualProgress)<.001){flyVisualProgress=1;updateFlyCamera(false);setFlyPlaying(false);return}flyRAF=requestAnimationFrame(flyTick)};
+updateFlyCamera=function(force=false){if(!roam3DReady||!roam3DMap||routeGeo.length<2)return;update3DSources();const slider=document.getElementById('flySlider'),kmEl=document.getElementById('flyKm');if(slider)slider.value=String(Math.round(flyProgress*1000));if(kmEl)kmEl.textContent=`${Math.round(flyVisualProgress*routeDistanceKm)} km`;updateLinked(flyVisualProgress,'flyover');if(!flyFollow&&!force)return;const camWindow=flySpeed>=4?4.8:flySpeed>=2?3.8:3.0,center=smoothFlyLngLat(flyVisualProgress,camWindow),look=Math.max(.006,(flySpeed>=4?18:13)/Math.max(1,routeDistanceKm)),behind=smoothFlyLngLat(Math.max(0,flyVisualProgress-look*.55),camWindow),ahead=smoothFlyLngLat(Math.min(1,flyVisualProgress+look),camWindow+1.2),bearing=bearingBetween(behind,ahead),targetZoom=routeDistanceKm>300?12.2:12.55,targetPitch=54,now=performance.now(),dt=Math.max(1,Math.min(50,now-(updateFlyCamera._last||now-16)));updateFlyCamera._last=now;const a=force?1:1-Math.exp(-dt/(flySpeed>=4?240:320));if(!flyCameraState||force)flyCameraState={center:[...center],bearing,zoom:targetZoom,pitch:targetPitch};else{flyCameraState.center[0]+=(center[0]-flyCameraState.center[0])*a;flyCameraState.center[1]+=(center[1]-flyCameraState.center[1])*a;flyCameraState.bearing=smoothAngle(flyCameraState.bearing,bearing,a*.62);flyCameraState.zoom+=(targetZoom-flyCameraState.zoom)*a*.35;flyCameraState.pitch+=(targetPitch-flyCameraState.pitch)*a*.35}roam3DMap.jumpTo({center:flyCameraState.center,zoom:flyCameraState.zoom,pitch:flyCameraState.pitch,bearing:flyCameraState.bearing});const st=document.getElementById('flyStatus');if(st)st.textContent=flyFollow?'Ruhige Kameraführung':'Freie Kamera'};
+
+// Re-render full pack state once with repaired preview rules and robust translation.
+renderPackPrototype();renderOverviewDashboard();translateTextNodes(document.body,['de','en','es'].includes(ROAM_V153_LANG)?ROAM_V153_LANG:'de');
 </script>
 </body>
 </html>
