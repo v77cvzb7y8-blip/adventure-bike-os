@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.3 Stability</title>
+<title>ROAM · Beta · V15.4 Stability</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -606,21 +606,58 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 .v15-bike-tools{display:flex;align-items:center;gap:10px;justify-content:space-between}.v15-bike-tools .muted{font-size:10px}.v15-bag-picker{position:absolute;inset:0;z-index:15;pointer-events:none}.v15-bag-picker button{position:absolute;opacity:0;transform:scale(.78) translateY(8px);transition:opacity .22s ease,transform .25s ease;border:1px solid rgba(46,58,47,.20);background:rgba(250,247,239,.97);color:var(--forest);border-radius:999px;padding:8px 11px;font-size:10px;font-weight:800;box-shadow:0 7px 20px rgba(48,43,35,.10);pointer-events:none}.v15-bag-picker.open button{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}.v15-bag-picker button:nth-child(1){left:4%;top:18%}.v15-bag-picker button:nth-child(2){left:37%;bottom:8%}.v15-bag-picker button:nth-child(3){left:45%;top:6%}.v15-bag-picker button:nth-child(4){right:4%;top:13%}.v15-bag-picker button:nth-child(5){right:4%;bottom:13%}.v15-bag-picker.open button:nth-child(1){transition-delay:.02s}.v15-bag-picker.open button:nth-child(2){transition-delay:.05s}.v15-bag-picker.open button:nth-child(3){transition-delay:.08s}.v15-bag-picker.open button:nth-child(4){transition-delay:.11s}.v15-bag-picker.open button:nth-child(5){transition-delay:.14s}
 @media(max-width:900px){.v15-welcome-hero{background:linear-gradient(180deg,rgba(250,247,239,.08),#faf7ef 65%),var(--hero) center 12px/78% auto no-repeat!important;padding-top:215px}.v15-wayfinder{display:none}.v15-lang-btn{min-width:58px}.v15-bike-tools{align-items:flex-start;flex-direction:column}}
 
-/* ===== ROAM V15.3 regression repair ===== */
+/* ===== ROAM V15.4 conservative stability repair ===== */
 .v152-hero-bike,.v15-wayfinder{display:none!important}
-.v15-welcome-hero{min-height:282px!important;overflow:hidden!important;background:linear-gradient(90deg,#faf7ef 0%,#faf7ef 47%,rgba(250,247,239,.98) 55%,rgba(250,247,239,.76) 64%,rgba(250,247,239,.08) 84%),var(--hero) right 30px center/44% auto no-repeat!important}
-.v15-welcome-hero:before{display:none!important}.v15-welcome-copy{max-width:54%!important;z-index:3}.v15-ready-badge{right:24px!important;top:20px!important;z-index:4}
-#bagPickerToggle,#bagPicker{display:none!important}.v15-bike-hotspot,.v15-bike-callout{display:none!important}
-.v15-bike-tools{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:12px!important;padding:0 0 8px}.v15-bike-tools .muted{max-width:68%;text-align:right}
-.v153-bike-mode{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(47,71,52,.16);background:#eef1e8;color:#2f4734;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:850;white-space:nowrap}.v153-bike-mode.preview{background:#f2e5dd;color:#8b4f39;border-color:#dfc1b2}
-.v15-bike-image-wrap{min-height:300px!important;background:#f8f5ed!important;padding:6px 8px 0}.v153-pack-bike{min-height:0!important;max-height:340px!important;margin:auto}.v153-pack-bike [data-bike-layer].v152-hidden,.v153-pack-bike [data-bike-layer].v153-hidden{display:none!important;opacity:0!important}
-.pack-v12-best #packBestBtn{display:none!important}.pack-v12-best{grid-template-columns:1fr!important}.pack-v12-best.v153-preview{border-color:#d8b6a6;background:#f6ebe4}.pack-v12-best.v153-preview h3:after{content:" · VORSCHAU";font-size:9px;letter-spacing:.08em;color:#a2573c;margin-left:6px}
-.pack-v12-item.v153-preview-item{background:#fbf2ec;border-color:#dfc3b5}.pack-v12-bagselect.v153-preview-select{border-color:#bd7656;background:#fffaf6}
-.pack-v13-unassigned{margin-top:10px}.pack-v13-unassigned-list{display:flex;flex-wrap:wrap;gap:5px}.pack-v13-unassigned-list span{font-size:8px;padding:4px 6px;border-radius:999px;background:#f1eee5;color:#697067}
-#packModeBtn:disabled{opacity:.48;cursor:not-allowed}.v153-preview-banner{padding:8px 10px;border-radius:9px;background:#f4e7df;color:#7d4d3b;font-size:10px;font-weight:750;margin:7px 0 0}
-@media(max-width:1100px){.v15-welcome-hero{background:linear-gradient(90deg,#faf7ef 0%,#faf7ef 50%,rgba(250,247,239,.98) 58%,rgba(250,247,239,.40) 76%),var(--hero) right 20px center/42% auto no-repeat!important}.v15-welcome-copy{max-width:57%!important}}
-@media(max-width:900px){.v15-welcome-hero{min-height:420px!important;padding:230px 24px 28px!important;background:linear-gradient(180deg,rgba(250,247,239,.05) 0%,rgba(250,247,239,.10) 43%,#faf7ef 59%,#faf7ef 100%),var(--hero) center 12px/62% auto no-repeat!important}.v15-welcome-copy{max-width:100%!important}.v15-ready-badge{top:18px!important;right:18px!important}.v15-bike-tools{align-items:flex-start!important;flex-direction:column!important}.v15-bike-tools .muted{max-width:none;text-align:left}}
-@media(max-width:600px){.v15-welcome-hero{padding-top:190px!important;background-size:82% auto!important}.v15-welcome-copy h1{font-size:38px!important}}
+.v15-welcome-hero{
+  min-height:286px!important;overflow:hidden!important;
+  background:
+    linear-gradient(90deg,#faf7ef 0%,#faf7ef 49%,rgba(250,247,239,.98) 56%,rgba(250,247,239,.58) 70%,rgba(250,247,239,.04) 92%),
+    var(--hero) right 28px center/44% auto no-repeat!important;
+}
+.v15-welcome-hero:before{display:none!important}
+.v15-welcome-copy{max-width:54%!important;position:relative;z-index:3}
+.v15-ready-badge{right:24px!important;top:20px!important;z-index:4}
+@media(max-width:1100px){
+ .v15-welcome-hero{background:linear-gradient(90deg,#faf7ef 0%,#faf7ef 52%,rgba(250,247,239,.96) 61%,rgba(250,247,239,.32) 82%),var(--hero) right 16px center/40% auto no-repeat!important}
+ .v15-welcome-copy{max-width:59%!important}
+}
+@media(max-width:900px){
+ .v15-welcome-hero{min-height:430px!important;padding:235px 24px 28px!important;background:linear-gradient(180deg,rgba(250,247,239,.02) 0%,rgba(250,247,239,.08) 45%,#faf7ef 60%,#faf7ef 100%),var(--hero) center 14px/60% auto no-repeat!important}
+ .v15-welcome-copy{max-width:100%!important}
+ .v15-ready-badge{right:18px!important;top:18px!important}
+}
+@media(max-width:600px){
+ .v15-welcome-hero{padding-top:192px!important;background-size:82% auto!important}
+}
+
+/* Pack view: deliberately schematic, uncluttered, only active positions */
+#bagPickerToggle,#bagPicker,.v15-bike-hotspot,.v15-bike-callout{display:none!important}
+.v15-bike-tools{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:0 0 8px}
+.v15-bike-tools .muted{font-size:10px!important;max-width:70%;text-align:right}
+.v154-pack-mode{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(47,71,52,.16);background:#eef1e8;color:#2f4734;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:850;white-space:nowrap}
+.v154-pack-mode.preview{background:#f3e7df;color:#8a533e;border-color:#dcc1b4}
+.v15-bike-image-wrap{min-height:300px!important;background:#f8f5ed!important;padding:8px!important;overflow:hidden!important}
+.v152-pack-bike{display:block!important;width:100%!important;height:auto!important;max-height:330px!important;margin:0 auto!important}
+.v152-pack-bike [data-bike-layer].v154-hidden{display:none!important;opacity:0!important}
+.pack-v13-fillgrid{grid-template-columns:repeat(auto-fit,minmax(104px,1fr))!important}
+.pack-v13-fillcard{min-width:0!important}
+.v154-pack-empty-note{padding:18px;text-align:center;color:var(--muted);font-size:11px}
+.v154-preview-item{background:#fbf2ec!important;border-color:#dfc3b5!important}
+.v154-preview-select{border-color:#bd7656!important;background:#fffaf6!important}
+@media(max-width:900px){
+ .v15-bike-tools{align-items:flex-start!important;flex-direction:column!important}
+ .v15-bike-tools .muted{max-width:none;text-align:left}
+}
+
+/* Stage elevation profile */
+.v154-stage-elev-card{position:relative;overflow:hidden}
+.v154-stage-elev-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.v154-stage-elev-head strong{display:block;font-size:12px;color:var(--forest);margin-top:3px}
+.v154-stage-elev-head>span{font-size:10px;color:var(--muted);white-space:nowrap}
+#stageElevSvg{display:block;width:100%;height:180px;background:linear-gradient(180deg,#f8f5ed,#f2efe6);border-radius:10px;border:1px solid rgba(47,71,52,.08)}
+.v154-stage-elev-axis{display:flex;justify-content:space-between;color:var(--muted);font-size:9px;margin-top:5px}
+.v154-stage-elev-empty{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);background:rgba(250,247,239,.92);padding:8px 10px;border-radius:8px}
+
 </style></head>
 <body>
 <div class="app">
@@ -662,7 +699,22 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
        <p>Plane, packe und bereite deine Bikepacking-Reise – alles an einem Ort.</p>
        <div class="v15-welcome-actions"><button class="btn rust" type="button" data-new-trip>+ Neue Reise planen</button><button class="btn" id="dashImportGpx">GPX importieren</button><button class="btn" id="dashOpenSaved">Gespeicherte Reise öffnen</button></div>
      </div>
-     <span class="v15-ready-badge">● ROAM bereit</span>
+     <div class="v15-wayfinder" aria-hidden="true"><i></i><span>ROUTE →</span><b>TRAIL →</b></div>
+     <div class="v152-hero-bike" aria-hidden="true">
+       <svg viewBox="0 0 260 130" role="img">
+        <g fill="none" stroke="#2f4734" stroke-linecap="round" stroke-linejoin="round">
+         <circle cx="62" cy="91" r="34" stroke-width="5" opacity=".92"/><circle cx="199" cy="91" r="34" stroke-width="5" opacity=".92"/>
+         <path d="M62 91 105 48 139 91 62 91Zm43-43 49 7 45 36M139 91l15-36M105 48 94 35M88 34h22M199 91l-14-47M180 43h18l9 8" stroke-width="6"/>
+         <path d="M139 91 177 91" stroke-width="3"/><circle cx="139" cy="91" r="8" stroke-width="3"/>
+        </g>
+        <path d="M105 53 149 59 137 85 82 85Z" fill="#b85c42" opacity=".94"/>
+        <path d="M49 49q30-12 51-2l-10 20H58Z" fill="#52664c" opacity=".96"/>
+        <rect x="110" y="38" width="35" height="13" rx="6" fill="#b85c42"/>
+        <path d="M181 48q20-6 33 4v20q-17 5-29-1Z" fill="#b87345"/>
+        <circle cx="161" cy="78" r="6" fill="#f7f2e9" stroke="#2f4734" stroke-width="3"/>
+        <circle cx="174" cy="78" r="6" fill="#f7f2e9" stroke="#2f4734" stroke-width="3"/>
+       </svg>
+     </div><span class="v15-ready-badge">● ROAM bereit</span>
    </div>
    <div class="v15-feature-grid">
      <div class="v15-feature"><i>⌁</i><div><b>Route & Etappen</b><span>Berechne deine Route, sieh Höhenprofil und Terrain und erhalte sinnvolle Etappenvorschläge.</span></div></div>
@@ -895,6 +947,16 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
        <div class="stage-stat"><b id="stageKm">–</b><span>Distanz</span></div><div class="stage-stat"><b id="stageHm">–</b><span>Anstieg</span></div><div class="stage-stat"><b id="stageWx">–</b><span>Max. Steigung</span></div><div class="stage-stat"><b id="stageSurface">–</b><span>Gravel</span></div>
      </div>
      <div id="stageRiderFit">Fahrerprofil wird mit dieser Etappe abgeglichen …</div>
+     <div class="card stage-inner-card v154-stage-elev-card">
+       <div class="v154-stage-elev-head"><div><div class="eyebrow">Höhenprofil der Etappe</div><strong id="stageElevSummary">–</strong></div><span id="stageElevRange">–</span></div>
+       <svg id="stageElevSvg" viewBox="0 0 760 180" preserveAspectRatio="none" role="img" aria-label="Höhenprofil der ausgewählten Etappe">
+         <defs><linearGradient id="stageElevFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6b7f56" stop-opacity=".36"/><stop offset="100%" stop-color="#6b7f56" stop-opacity=".04"/></linearGradient></defs>
+         <path id="stageElevArea" fill="url(#stageElevFill)" d=""></path>
+         <path id="stageElevLine" fill="none" stroke="#2f4734" stroke-width="3" vector-effect="non-scaling-stroke" d=""></path>
+       </svg>
+       <div class="v154-stage-elev-axis"><span id="stageElevStartLabel">0 km</span><span id="stageElevEndLabel">– km</span></div>
+       <div id="stageElevEmpty" class="muted v154-stage-elev-empty" hidden>Höhendaten werden geladen …</div>
+     </div>
      <div class="card stage-inner-card">
        <div class="eyebrow">Wetter entlang der Etappe</div>
        <div class="weather-row" id="stageWeatherStrip" style="margin-top:10px"><div class="weather-day"><small>Start</small><div class="icon">⛅</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Hochpunkt</small><div class="icon">☀</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Ziel</small><div class="icon">☁</div><b>–</b><small>routengenau</small></div><div class="weather-day"><small>Abend</small><div class="icon">◐</div><b>–</b><small>routengenau</small></div></div>
@@ -930,39 +992,23 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
      <div class="pack-v12-head"><div class="pack-v12-num">3</div><div><h2>Was kommt wo hin?</h2><p>Verteile deine Ausrüstung auf die Taschen. Ziehe bzw. wähle Gegenstände direkt um oder nutze den Auto-Pack Vorschlag.</p></div><span class="badge" style="margin-left:auto">Gravel · 40 mm</span></div>
      <div class="pack-v12-best"><div><h3>Auto-Pack Vorschlag</h3><p>Erstellt zunächst eine bewertete Variante. Erst „Vorschlag anwenden“ übernimmt die neue Verteilung.</p><div class="pack-v12-score" id="packBestScore"><span>noch kein Vorschlag</span></div></div><button class="btn" id="packBestBtn" type="button">Vorschlag erstellen</button></div>
      <div class="v15-bike-stage" id="packBikeStage">
-       <div class="v15-bike-tools"><span class="v153-bike-mode" id="packBikeModeLabel">Aktuelle Verteilung</span><span class="muted" id="packBikeHelp">Die Grafik zeigt nur tatsächlich verwendete Positionen. Änderungen erfolgen direkt in der Gegenstandsliste.</span><button class="btn" type="button" id="bagPickerToggle" hidden aria-hidden="true">Taschen wählen</button></div>
+       <div class="v15-bike-tools"><button class="btn" type="button" id="bagPickerToggle">＋ Taschen am Bike wählen</button><span class="muted">Tasche auswählen → Position prüfen → Inhalt öffnen</span></div>
        <div class="v15-bike-image-wrap"><div class="v15-bag-picker" id="bagPicker" aria-hidden="true"><button type="button" data-picker-bag="saddle">Satteltasche</button><button type="button" data-picker-bag="frame">Rahmentasche</button><button type="button" data-picker-bag="top">Oberrohr</button><button type="button" data-picker-bag="bar">Lenkertasche</button><button type="button" data-picker-bag="fork">Gabeltaschen</button><button type="button" data-picker-bag="bottle">Flaschenhalter</button></div>
-         <svg class="v15-bike-photo v152-pack-bike v153-pack-bike" viewBox="0 0 760 430" role="img" aria-label="Gravelbike; nur tatsächlich verwendete Taschen und Flaschenhalter werden eingeblendet">
+         <svg class="v15-bike-photo v152-pack-bike" viewBox="0 0 760 430" role="img" aria-label="Gravelbike; nur tatsächlich verwendete Taschen werden eingeblendet">
   <rect width="760" height="430" fill="#f8f5ed"/>
-  <g class="v153-bike-base" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="180" cy="302" r="103" stroke="#505750" stroke-width="13"/>
-    <circle cx="580" cy="302" r="103" stroke="#505750" stroke-width="13"/>
-    <circle cx="180" cy="302" r="94" stroke="#b9af9f" stroke-width="2"/>
-    <circle cx="580" cy="302" r="94" stroke="#b9af9f" stroke-width="2"/>
-    <g stroke="#d6cec1" stroke-width="1.2" opacity=".72">
-      <path d="M180 208v188M86 302h188M114 236l132 132M114 368l132-132"/>
-      <path d="M580 208v188M486 302h188M514 236l132 132M514 368l132-132"/>
-    </g>
-    <!-- frame -->
-    <path d="M180 302 309 145 375 302 180 302M309 145 493 151 375 302M493 151 522 195 580 302M375 302 522 195" stroke="#efe8dc" stroke-width="19"/>
-    <path d="M180 302 309 145 375 302 180 302M309 145 493 151 375 302M493 151 522 195 580 302M375 302 522 195" stroke="#3f5044" stroke-width="6"/>
-    <!-- seat post / saddle -->
-    <path d="M309 145 292 111" stroke="#3f5044" stroke-width="6"/><path d="M262 108h66" stroke="#3f5044" stroke-width="10"/>
-    <!-- fork / cockpit -->
-    <path d="M493 151 507 117 536 102" stroke="#3f5044" stroke-width="6"/>
-    <path d="M532 101h38q19 0 18 18 0 20-18 27" stroke="#3f5044" stroke-width="7"/>
-    <path d="M548 114h39" stroke="#3f5044" stroke-width="5"/>
-    <!-- crank / drivetrain -->
-    <circle cx="375" cy="302" r="22" stroke="#3f5044" stroke-width="5"/><circle cx="375" cy="302" r="6" fill="#3f5044" stroke="none"/>
-    <path d="M375 302 412 318M375 302 341 283M180 302 375 302" stroke="#3f5044" stroke-width="4"/>
-    <circle cx="180" cy="302" r="12" stroke="#3f5044" stroke-width="3"/><circle cx="580" cy="302" r="13" stroke="#8a9387" stroke-width="3"/>
+  <g class="v152-bike-base" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="190" cy="300" r="104" stroke="#555b55" stroke-width="14"/><circle cx="572" cy="300" r="104" stroke="#555b55" stroke-width="14"/>
+    <circle cx="190" cy="300" r="94" stroke="#b4aa99" stroke-width="2"/><circle cx="572" cy="300" r="94" stroke="#b4aa99" stroke-width="2"/>
+    <path d="M190 300 306 164 392 300 190 300Zm116-136 135 20 131 116M392 300l49-116M306 164l-30-45M255 118h65M572 300l-39-151M520 146h48l27 22" stroke="#e8e2d8" stroke-width="18"/>
+    <path d="M190 300 306 164 392 300 190 300Zm116-136 135 20 131 116M392 300l49-116M306 164l-30-45M255 118h65M572 300l-39-151M520 146h48l27 22" stroke="#405044" stroke-width="6"/>
+    <path d="M392 300h102" stroke="#405044" stroke-width="5"/><circle cx="392" cy="300" r="22" stroke="#405044" stroke-width="5"/>
   </g>
-  <g id="packBike-saddle" data-bike-layer="saddle"><path d="M166 135q61-26 122-8l-18 58H189q-18-11-23-50Z" fill="#53664c" stroke="#f0e8dd" stroke-width="4"/><path d="M192 136 244 178M220 128l-12 55" stroke="#d8cfbf" stroke-width="3" fill="none"/></g>
-  <g id="packBike-frame" data-bike-layer="frame"><path d="M319 162 479 166 389 279 344 279Z" fill="#bf7b4a" stroke="#f0e8dd" stroke-width="4"/></g>
-  <g id="packBike-top" data-bike-layer="top"><rect x="352" y="130" width="105" height="27" rx="13" fill="#b86b49" stroke="#f0e8dd" stroke-width="4"/></g>
-  <g id="packBike-bar" data-bike-layer="bar"><path d="M523 119q65-19 112 8v64q-58 18-100-5Z" fill="#c57440" stroke="#f0e8dd" stroke-width="4"/><path d="M552 119q8 33 8 68M604 123q-6 31 0 62" stroke="#405044" stroke-width="7" fill="none"/></g>
-  <g id="packBike-fork" data-bike-layer="fork"><rect x="515" y="205" width="31" height="83" rx="14" fill="#607057" stroke="#f0e8dd" stroke-width="4"/><rect x="550" y="214" width="29" height="78" rx="14" fill="#607057" opacity=".86" stroke="#f0e8dd" stroke-width="4"/></g>
-  <g id="packBike-bottle" data-bike-layer="bottle"><path d="M397 208h21v12l7 11v58h-35v-58l7-11Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M444 219h21v12l7 11v55h-35v-55l7-11Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M393 253h30M440 264h30" stroke="#b85c42" stroke-width="4"/></g>
+  <g id="packBike-saddle" data-bike-layer="saddle"><path d="M170 142q54-26 115-10l-15 53H190q-17-10-20-43Z" fill="#53664c" stroke="#f0e8dd" stroke-width="4"/><path d="M199 137 244 179M224 130l-11 53" stroke="#d8cfbf" stroke-width="3" fill="none"/></g>
+  <g id="packBike-frame" data-bike-layer="frame"><path d="M303 181 432 194 388 285 247 285Z" fill="#bf7b4a" stroke="#f0e8dd" stroke-width="4"/></g>
+  <g id="packBike-top" data-bike-layer="top"><rect x="318" y="151" width="112" height="28" rx="14" fill="#b86b49" stroke="#f0e8dd" stroke-width="4"/></g>
+  <g id="packBike-bar" data-bike-layer="bar"><path d="M524 155q61-18 101 8v66q-54 19-88-5Z" fill="#c57440" stroke="#f0e8dd" stroke-width="4"/><path d="M553 154q8 35 8 74M596 158q-5 34 1 66" stroke="#405044" stroke-width="8" fill="none"/></g>
+  <g id="packBike-fork" data-bike-layer="fork"><rect x="500" y="224" width="34" height="90" rx="15" fill="#607057" stroke="#f0e8dd" stroke-width="4"/><rect x="545" y="228" width="32" height="86" rx="15" fill="#607057" opacity=".82" stroke="#f0e8dd" stroke-width="4"/></g>
+  <g id="packBike-bottle" data-bike-layer="bottle"><path d="M411 222h22v12l8 12v57h-38v-57l8-12Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M456 235h22v12l8 12v55h-38v-55l8-12Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M406 263h35M451 277h35" stroke="#b85c42" stroke-width="5"/></g>
 </svg>
          <button class="v15-bike-hotspot saddle" data-pack-bag="saddle" aria-label="Satteltasche anzeigen"></button>
          <button class="v15-bike-hotspot top" data-pack-bag="top" aria-label="Oberrohrtasche anzeigen"></button>
@@ -1030,7 +1076,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.3</div>
+<div class="prototype-pill">ROAM · Beta · V15.4</div>
 </div>
 
 <script>
@@ -2721,141 +2767,401 @@ for(const id of ['routeExportBtn','checkExportBtn']){const b=document.getElement
 applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!w152.bag||w152.bag==='fork'))w152.bag='bottle';packPersist();renderPackPrototype();renderOverviewDashboard();translateTextNodes(document.body,roamLanguage);
 </script>
 
-<script id="roam-v153-patch">
-// ===== ROAM V15.3 regression repair =====
-const ROAM_V153_LANG=(localStorage.getItem(typeof ROAM_LANG_KEY!=='undefined'?ROAM_LANG_KEY:'roam-language-v1')||'de').toLowerCase();
-try{if(typeof roamLanguageObserver!=='undefined')roamLanguageObserver.disconnect()}catch(e){}
-try{if(typeof translateTextNodes==='function')translateTextNodes(document.body,'de')}catch(e){}
+<script id="roam-v154-patch">
+(() => {
+  const VERSION='15.4';
 
-const ROAM_V153_TRANSLATIONS={
- 'GPX vorbereitet':['GPX ready','GPX listo'],
- 'Bereiche bereit':['areas ready','áreas listas'],
- 'alles bereit':['all ready','todo listo'],
- 'Wetterdaten für alle Etappen vorhanden.':['Weather data is available for all stages.','Hay datos meteorológicos para todas las etapas.'],
- 'Prognose für die aktuellen Etappen öffnen und prüfen.':['Open and review the forecast for the current stages.','Abre y revisa la previsión de las etapas actuales.'],
- 'Alle Zwischenübernachtungen sind geplant.':['All overnight stops are planned.','Todos los alojamientos intermedios están planificados.'],
- 'Packliste ist vollständig.':['Packing list is complete.','La lista de equipaje está completa.'],
- 'Wetterdaten vorhanden – vor Abfahrt nochmals prüfen.':['Weather data available — check again before departure.','Datos meteorológicos disponibles; vuelve a comprobarlos antes de salir.'],
- 'Wetter für diese Reise noch nicht vollständig geladen.':['Weather for this trip is not fully loaded yet.','El tiempo de este viaje aún no se ha cargado por completo.'],
- 'Reise prüfen':['review trip','revisar el viaje'],
- 'Wetter prüfen':['check weather','comprobar el tiempo'],
- 'Übernachtungen vervollständigen':['finish lodging','completar alojamientos'],
- 'Packliste vervollständigen':['finish packing','completar equipaje'],
- 'Bereit für die Abfahrt':['ready to depart','listo para salir'],
- 'nicht zugewiesen':['unassigned','sin asignar'],
- 'optional':['optional','opcional'],
- 'fehlt':['missing','falta'],
- 'komplett':['complete','completo'],
- 'Vorschlag bereit':['Preview ready','Vista previa lista'],
- 'Auto-Pack Vorschau':['Auto-Pack preview','Vista previa Auto-Pack'],
- 'Aktuelle Verteilung':['Current distribution','Distribución actual'],
- 'Vorschau anwenden →':['Apply preview →','Aplicar vista previa →'],
- 'Vorschau neu berechnen':['Recalculate preview','Recalcular vista previa'],
- 'Die Grafik zeigt nur tatsächlich verwendete Positionen. Änderungen erfolgen direkt in der Gegenstandsliste.':['The graphic shows only positions actually in use. Change assignments directly in the item list.','El gráfico muestra solo las posiciones realmente utilizadas. Cambia las asignaciones directamente en la lista de objetos.'],
- 'Alle benötigten Gegenstände sind einer Position zugewiesen.':['All required items are assigned to a position.','Todos los objetos necesarios están asignados a una posición.'],
- 'Vorschau – noch nicht übernommen':['Preview — not applied yet','Vista previa — aún no aplicada'],
- 'Aktuelle Verteilung aktiv':['Current distribution active','Distribución actual activa'],
- 'Auto-Pack berechnen':['Calculate Auto-Pack','Calcular Auto-Pack'],
- 'Vorschau erstellt – Verteilung prüfen und anschließend anwenden.':['Preview created — review the distribution and then apply it.','Vista previa creada: revisa la distribución y después aplícala.'],
- '2× Flaschenhalter':['2× bottle cages','2× portabidones']
-};
-function roamV153Exact(source,lang){
- if(lang==='de')return source;
- try{const b=roamTranslations?.[lang]?.[source];if(b)return b}catch(e){}
- try{const v=ROAM_V152_TRANSLATIONS?.[source];if(v)return lang==='en'?v[0]:v[1]}catch(e){}
- const v=ROAM_V153_TRANSLATIONS[source];if(v)return lang==='en'?v[0]:v[1];
- return null;
-}
-function roamV153Pattern(t,lang){
- if(lang==='de')return t;const es=lang==='es';let m;
- if((m=t.match(/^Abfahrt in (\d+) Tagen$/))){const n=Number(m[1]);return es?`Salida en ${n} ${n===1?'día':'días'}`:`Departure in ${n} ${n===1?'day':'days'}`}
- if(t==='Abfahrt heute')return es?'Salida hoy':'Departure today';if(t==='Reise läuft')return es?'Viaje en curso':'Trip underway';
- if((m=t.match(/^GPX vorbereitet · (\d+) km · (\d+) Etappen$/))){return es?`GPX listo · ${m[1]} km · ${m[2]} ${m[2]==='1'?'etapa':'etapas'}`:`GPX ready · ${m[1]} km · ${m[2]} ${m[2]==='1'?'stage':'stages'}`}
- if((m=t.match(/^(\d+) \/ 4 Bereiche bereit$/)))return es?`${m[1]} / 4 áreas listas`:`${m[1]} / 4 areas ready`;
- if((m=t.match(/^(\d+) offen$/)))return es?`${m[1]} pendientes`:`${m[1]} open`;
- if((m=t.match(/^(\d+) Nacht ist noch offen\.$/)))return es?`${m[1]} noche sigue pendiente.`:`${m[1]} night is still open.`;
- if((m=t.match(/^(\d+) Nächte sind noch offen\.$/)))return es?`${m[1]} noches siguen pendientes.`:`${m[1]} nights are still open.`;
- if((m=t.match(/^(\d+) empfohlene Position fehlt noch\.$/)))return es?`Falta ${m[1]} posición recomendada.`:`${m[1]} recommended position is still missing.`;
- if((m=t.match(/^(\d+) empfohlene Gegenstände fehlen noch\.$/)))return es?`Faltan ${m[1]} objetos recomendados.`:`${m[1]} recommended items are still missing.`;
- if((m=t.match(/^(\d+)\/(\d+) benötigte Gegenstände vorhanden\.$/)))return es?`${m[1]}/${m[2]} objetos necesarios disponibles.`:`${m[1]}/${m[2]} required items available.`;
- if((m=t.match(/^Jetzt sinnvoll: (.+)$/))){const inner=roamV153Exact(m[1],lang)||m[1];return es?`Recomendado ahora: ${inner}`:`Recommended now: ${inner}`}
- if((m=t.match(/^(\d+) aktive Taschen$/)))return es?`${m[1]} bolsas activas`:`${m[1]} active bags`;
- if((m=t.match(/^(\d+) Taschen$/)))return es?`${m[1]} bolsas`:`${m[1]} bags`;
- if((m=t.match(/^(\d+) Gegenstände$/)))return es?`${m[1]} objetos`:`${m[1]} items`;
- if((m=t.match(/^(\d+)% verteilt$/)))return es?`${m[1]}% distribuido`:`${m[1]}% assigned`;
- if((m=t.match(/^Tag (\d+)(.*)$/)))return es?`Día ${m[1]}${m[2]}`:`Day ${m[1]}${m[2]}`;
- if((m=t.match(/^Nacht (\d+)(.*)$/)))return es?`Noche ${m[1]}${m[2]}`:`Night ${m[1]}${m[2]}`;
- if((m=t.match(/^([\d,.]+) kg verteilt · (\d+) aktive Taschen · Balance (\d+) \/ (\d+)$/)))return es?`${m[1]} kg distribuidos · ${m[2]} bolsas activas · balance ${m[3]} / ${m[4]}`:`${m[1]} kg assigned · ${m[2]} active bags · balance ${m[3]} / ${m[4]}`;
- return null;
-}
-function roamV153Translate(source,lang){return roamV153Exact(source,lang)||roamV153Pattern(source,lang)||source}
-const roamV153TextState=new WeakMap(),roamV153AttrState=new WeakMap();
-translateTextNodes=function(root=document.body,lang=(localStorage.getItem(ROAM_LANG_KEY)||'de')){
- roamLanguage=['de','en','es'].includes(lang)?lang:'de';
- const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const p=n.parentElement,t=n.nodeValue?.trim();return t&&p&&!['SCRIPT','STYLE','TEXTAREA'].includes(p.tagName)&&p.id!=='langCode'?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT}}),nodes=[];while(w.nextNode())nodes.push(w.currentNode);
- for(const n of nodes){const current=n.nodeValue,trim=current.trim();let s=roamV153TextState.get(n);if(!s)s={source:current,last:current};else if(current!==s.last){s.source=current;s.last=current}const src=s.source,srcTrim=src.trim(),translated=roamV153Translate(srcTrim,roamLanguage),next=roamLanguage==='de'?src:src.replace(srcTrim,translated);if(current!==next)n.nodeValue=next;s.last=next;roamV153TextState.set(n,s)}
- root.querySelectorAll?.('[placeholder],[title],[aria-label]').forEach(el=>{let rec=roamV153AttrState.get(el)||{};for(const attr of ['placeholder','title','aria-label']){const cur=el.getAttribute(attr);if(cur==null)continue;const prev=rec[attr];if(!prev||cur!==prev.last)rec[attr]={source:cur,last:cur};const r=rec[attr],next=roamLanguage==='de'?r.source:roamV153Translate(r.source,roamLanguage);if(cur!==next)el.setAttribute(attr,next);r.last=next}roamV153AttrState.set(el,rec)});
- document.documentElement.lang=roamLanguage;const code=document.getElementById('langCode');if(code)code.textContent=roamLanguage.toUpperCase();document.querySelectorAll('#langMenu [data-lang]').forEach(b=>b.classList.toggle('active',b.dataset.lang===roamLanguage));localStorage.setItem(ROAM_LANG_KEY,roamLanguage)
-};
-scheduleRoamTranslation=function(){clearTimeout(scheduleRoamTranslation._t);scheduleRoamTranslation._t=setTimeout(()=>translateTextNodes(document.body,roamLanguage),20)};
-const roamLanguageObserverV153=new MutationObserver(ms=>{if(ms.some(m=>m.type==='childList'||m.type==='characterData'||m.type==='attributes'))scheduleRoamTranslation()});roamLanguageObserverV153.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label']});
+  // ---------- HERO ----------
+  // One hero artwork only: the embedded approved bike illustration as background.
+  // Old overlay bike/wayfinder remain hidden via CSS to prevent double rendering.
 
-// Simple, consistent pack UI: when a proposal exists, every visual element shows that proposal.
-packBags.bottle.name='2× Flaschenhalter';
-// Keep Auto-Pack compact: opening an additional bag is expensive. This prevents tiny loads
-// from spawning unnecessary fork/bar/etc. bags while preserving capacity/access constraints.
-buildPackProposal=function(){
- const items=packItems.map(x=>({...x})),used=Object.fromEntries(Object.keys(packBags).map(k=>[k,0])),unassigned=[],ordered=relevantPackItems(items).sort((a,b)=>b.kg-a.kg||b.l-a.l);ordered.forEach(i=>i.bag='');
- for(const item of ordered){
-  let best='',score=1e9;
-  for(const id of Object.keys(packBags)){
-   const after=used[id]+item.l,cap=bagCapacity(id);if(after>cap+1e-6)continue;
-   // Bottle cages are reserved for water/drinks. Do not place generic gear there.
-   if(id==='bottle'&&item.id!=='water'&&!/wasser|water|bidon|flasche/i.test(item.name||''))continue;
-   let pref=preferredBags(item).indexOf(id);if(pref<0)pref=9;
-   let sc=pref*12;
-   if(!used[id])sc+=55;
-   if(item.kg>=1&&packBags[id].zone!=='center')sc+=18;
-   if(item.access==='high'&&!['top','bar'].includes(id))sc+=12;
-   sc+=(after/cap)*3;
-   if(item.preferredBag===id)sc-=22;
-   if(sc<score){score=sc;best=id}
+  // ---------- PACKING ----------
+  if(!packBags.bottle) packBags.bottle={name:'Flaschenhalter',sizes:[2],size:2,zone:'center',qty:1,color:'#6b7f56'};
+  packBags.bottle.name='2× Flaschenhalter';
+
+  const packTools=document.querySelector('.v15-bike-tools');
+  if(packTools){
+    packTools.innerHTML='<span class="v154-pack-mode" id="packBikeModeV154">Aktuelle Verteilung</span><span class="muted">Die Grafik zeigt nur tatsächlich verwendete Packpositionen. Zuweisung direkt in der Gegenstandsliste ändern.</span>';
   }
-  if(best){item.bag=best;used[best]+=item.l}else unassigned.push(item)
- }
- return {items,unassigned};
-};
-const customBagV153=document.getElementById('customItemBag');
-if(customBagV153)customBagV153.innerHTML='<option value="">Auto-Pack entscheiden lassen</option>'+Object.entries(packBags).map(([id,b])=>`<option value="${id}">${b.name}</option>`).join('');
-function packDisplayItemsV153(){return packProposal?.items||packItems}
-function packDisplayStatsV153(id){return bagStats(id,packDisplayItemsV153())}
-function proposalItemV153(id){return packProposal?.items?.find(x=>x.id===id)||null}
-function refreshProposalUnassignedV153(){if(packProposal)packProposal.unassigned=packProposal.items.filter(x=>x.needed&&x.have&&!x.bag)}
 
-renderPackHave=function(){
- applyLodgingPackRules();const box=document.getElementById('packHaveList');if(!box)return;const q=(document.getElementById('packSearch')?.value||'').toLowerCase(),filter=document.getElementById('packCategoryFilter')?.value||'all',items=packDisplayItemsV153(),preview=!!packProposal;
- box.innerHTML=visiblePackCategories().filter(c=>filter==='all'||c.id===filter).map(c=>{const arr=items.filter(x=>x.cat===c.id&&x.needed&&(!q||x.name.toLowerCase().includes(q)));if(!arr.length)return '';return `<div class="pack-v13-group"><div class="pack-v13-grouphead"><b>${c.name}</b><span>${arr.filter(x=>x.have).length}/${arr.length}</span></div>${arr.map(i=>`<div class="pack-v12-item ${preview?'v153-preview-item':''}"><button class="pack-v12-check ${i.have?'':'off'}" data-have="${i.id}" type="button">✓</button><div class="thumb">${itemIcon(i.id,i.cat)}</div><div><b>${i.name}</b><small>${Number(i.kg||0).toFixed(2).replace('.',',')} kg · ${formatLiters(i.l)} L${i.have?'':' · fehlt'}${i.note?` · ${i.note}`:''}</small></div><select class="pack-v12-bagselect ${preview?'v153-preview-select':''}" data-bagitem="${i.id}" ${i.have?'':'disabled'}>${bagOptions(i.bag)}</select>${i.custom?`<button class="v152-custom-delete" data-delete-custom="${i.id}" type="button" title="Eigenen Gegenstand löschen">×</button>`:'<span class="menu-dots">⋮</span>'}</div>`).join('')}</div>`}).join('')||'<div class="muted" style="font-size:11px;padding:12px">Keine Gegenstände im Filter.</div>';
- box.querySelectorAll('[data-have]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.have);if(!i)return;i.have=!i.have;if(!i.have)i.bag='';packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()});
- box.querySelectorAll('[data-bagitem]').forEach(el=>el.onchange=()=>{const target=preview?proposalItemV153(el.dataset.bagitem):packItems.find(x=>x.id===el.dataset.bagitem);if(!target)return;if(el.value){const st=bagStats(el.value,preview?packProposal.items:packItems),existing=target.bag===el.value?target.l:0;if(st.l-existing+target.l>st.cap+1e-6){packToast(`${packBags[el.value].name}: zu wenig Platz`);renderPackPrototype();return}}target.bag=el.value;if(preview){refreshProposalUnassignedV153();renderPackPrototype()}else{invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()}});
- box.querySelectorAll('[data-delete-custom]').forEach(btn=>btn.onclick=()=>{const i=packItems.findIndex(x=>x.id===btn.dataset.deleteCustom&&x.custom);if(i<0)return;const name=packItems[i].name;packItems.splice(i,1);packProposal=null;packPersist();renderPackPrototype();renderOverviewDashboard();packToast(`${name} entfernt`)})
-};
-renderPackFillGrid=function(){const box=document.getElementById('packFillGrid');if(!box)return;const items=packDisplayItemsV153(),active=Object.entries(packBags).filter(([id])=>bagStats(id,items).items.length>0);box.innerHTML=active.map(([id,b])=>{const st=bagStats(id,items),full=st.pct>=100;return `<div class="pack-v13-fillcard ${st.over?'pack-v12-over':''} ${full?'full':''}" data-bag-id="${id}"><div class="bag-svg">${bagIconSvg(id)}</div><b>${b.name}</b><strong>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</strong><div class="bar"><i style="width:${Math.min(100,st.pct)}%"></i></div><small>${st.pct}%${st.over?' · überfüllt':full?' · voll':''}</small></div>`}).join('');const ua=items.filter(x=>x.needed&&x.have&&!x.bag),u=document.getElementById('packUnassigned');if(u)u.innerHTML=ua.length?`<div class="pack-v13-unassigned-list">${ua.map(x=>`<span>${x.name}</span>`).join('')}</div>`:'<div class="muted" style="font-size:9px;margin-top:5px">Alle benötigten Gegenstände sind einer Position zugewiesen.</div>';bindPackBagClicksV15();scheduleRoamTranslation()};
-renderPackBike=function(){const items=packDisplayItemsV153();Object.keys(packBags).forEach(id=>{const st=bagStats(id,items),layer=document.getElementById(`packBike-${id}`),visible=st.items.length>0;if(layer){layer.classList.toggle('v153-hidden',!visible);layer.classList.toggle('v152-hidden',!visible)}const lab=document.getElementById(`packBikeLabel-${id}`);if(lab)lab.textContent=`${formatLiters(st.l)} / ${formatLiters(st.cap)} L · ${st.pct}%`});const mode=document.getElementById('packBikeModeLabel');if(mode){mode.textContent=packProposal?'Auto-Pack Vorschau':'Aktuelle Verteilung';mode.classList.toggle('preview',!!packProposal)}scheduleRoamTranslation()};
-renderPackSummary=function(){const items=packDisplayItemsV153(),assigned=relevantPackItems(items).filter(x=>x.bag),total=relevantPackItems(items).reduce((s,x)=>s+x.kg,0),assignedKg=assigned.reduce((s,x)=>s+x.kg,0),bal=packBalance(items),active=Object.keys(packBags).filter(k=>bagStats(k,items).items.length).length,cov=relevantPackItems(items).length?Math.round(assigned.length/relevantPackItems(items).length*100):0;const pw=document.getElementById('packWeight');if(pw)pw.textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg`;const fb=document.getElementById('frontBalance'),rb=document.getElementById('rearBalance'),bb=document.getElementById('balanceBar');if(fb)fb.textContent=`${bal.front}% vorne`;if(rb)rb.textContent=`${bal.rear}% hinten`;if(bb)bb.style.gridTemplateColumns=`${bal.front}fr ${bal.rear}fr`;document.getElementById('packStatBags').textContent=active;document.getElementById('packStatItems').textContent=assigned.length;document.getElementById('packStatCoverage').textContent=`${cov}%`;document.getElementById('packMeta').textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg verteilt · ${active} aktive Taschen · Balance ${bal.front} / ${bal.rear}`;scheduleRoamTranslation()};
-renderPackAdvice=function(){const box=document.getElementById('packBagAdvice');if(!box)return;const items=packDisplayItemsV153(),rows=[];for(const [id,b] of Object.entries(packBags)){const st=bagStats(id,items);if(st.pct<100)continue;let suggestion=null;for(const item of st.items.slice().sort((a,b)=>b.l-a.l)){for(const alt of preferredBags(item)){if(alt===id)continue;const ast=bagStats(alt,items);if(ast.l+item.l<=ast.cap+1e-6){suggestion={item,alt};break}}if(suggestion)break}if(suggestion)rows.push(`<div class="pack-advice-row warn"><div class="pack-advice-icon">!</div><div><b>${b.name} ${st.over?'überfüllt':'voll'}</b><span>${suggestion.item.name} besser in ${packBags[suggestion.alt].name} verschieben.</span></div><span></span></div>`)}const bal=packBalance(items);if(!rows.length)rows.push(`<div class="pack-advice-row ok"><div class="pack-advice-icon">✓</div><div><b>Kapazitäten passen</b><span>Keine verwendete Tasche ist überfüllt. Balance ${bal.front}% vorne · ${bal.rear}% hinten.</span></div><span></span></div>`);box.innerHTML=rows.join('');scheduleRoamTranslation()};
-renderPackBagDetailV15=function(id){const el=document.getElementById('packBagDetail');if(!el)return;if(!id){el.hidden=true;return}selectedPackBagV15=id;const items=packDisplayItemsV153(),st=bagStats(id,items);if(!st.items.length){el.hidden=true;return}el.hidden=false;const b=packBags[id],nodes=st.items.slice(0,8).map((item,j)=>{const a=(Math.PI*2*j/Math.max(1,Math.min(st.items.length,8)))-Math.PI/2,x=50+42*Math.cos(a),y=50+39*Math.sin(a);return `<span class="v15-bag-item" style="left:${x}%;top:${y}%">${itemIcon(item.id,item.cat)}<span>${item.name}</span></span>`}).join('');el.innerHTML=`<div class="v15-bag-detail-head"><div><div class="eyebrow">Tascheninhalt</div><h3>${b.name}</h3><div class="muted">${formatLiters(st.l)} / ${formatLiters(st.cap)} L · ${st.pct}% · ${st.kg.toFixed(1).replace('.',',')} kg</div></div><button class="icon-btn" type="button" id="closeBagDetailV15">×</button></div><div class="v15-bag-orbit"><div class="v15-bag-center">${bagIconSvg(id)}</div>${nodes}</div>`;document.getElementById('closeBagDetailV15')?.addEventListener('click',()=>{selectedPackBagV15='';el.hidden=true});scheduleRoamTranslation()};
-createAutoPackProposal=function(){packProposal=buildPackProposal();refreshProposalUnassignedV153();invalidateAppliedPack();renderPackPrototype();renderOverviewDashboard();packToast(packProposal.unassigned.length?`${packProposal.unassigned.length} Teil(e) passen noch nicht in die vorhandenen Taschen`:'Vorschau erstellt – Verteilung prüfen und anschließend anwenden.')};
-applyAutoPackProposal=function(){if(!packProposal){packToast('Bitte zuerst Auto-Pack berechnen');return}const map=new Map(packProposal.items.map(x=>[x.id,x.bag]));packItems.forEach(x=>{if(map.has(x.id))x.bag=map.get(x.id)});packProposal=null;localStorage.setItem('roam-pack-last-auto-v14','1');packPersist();renderPackPrototype();renderOverviewDashboard();packToast('Auto-Pack angewendet ✓')};
-renderBestPack=function(){const box=document.getElementById('packBestScore'),apply=document.getElementById('packModeBtn'),create=document.getElementById('autoPack'),card=box?.closest('.pack-v12-best'),last=localStorage.getItem('roam-pack-last-auto-v14')==='1';if(!box||!apply)return;card?.classList.toggle('v153-preview',!!packProposal);if(packProposal){const m=proposalStats(packProposal.items,packProposal.unassigned);box.innerHTML=`<span class="score-status">Auto-Pack Vorschau</span><span class="score-kpi"><b>${m.active}</b><small>Taschen</small></span><span class="score-kpi"><b>${formatLiters(m.reserve)} L</b><small>Reserve</small></span><span class="score-kpi"><b>${m.bal.front}/${m.bal.rear}</b><small>Balance</small></span><span class="score-note ${m.unassigned?'warn':''}">${m.unassigned?`${m.unassigned} Gegenstand/Gegenstände ohne passenden Platz.`:'Vorschau – noch nicht übernommen'}</span>`;apply.disabled=false;apply.textContent='Vorschau anwenden →';apply.classList.add('pack-v13-apply-ready');if(create)create.textContent='✦ Vorschau neu berechnen';setPackFlowState('proposal')}else{apply.disabled=true;apply.classList.remove('pack-v13-apply-ready');if(last){box.innerHTML='<span class="score-status">Aktuelle Verteilung aktiv</span><span class="score-note">Auto-Pack ist angewendet. Für eine neue Verteilung erneut berechnen.</span>';apply.textContent='Angewendet ✓';if(create)create.textContent='✦ Vorschlag neu berechnen';setPackFlowState('applied')}else{box.innerHTML='<span class="score-note">Noch keine Auto-Pack Verteilung berechnet.</span>';apply.textContent='Vorschau anwenden →';if(create)create.textContent='✦ Auto-Pack berechnen';setPackFlowState('idle')}}scheduleRoamTranslation()};
+  function v154PackDisplayItems(){ return packProposal?.items || packItems; }
+  function v154BagStats(id,items=v154PackDisplayItems()){ return bagStats(id,items); }
+  function v154ProposalItem(id){ return packProposal?.items?.find(x=>x.id===id) || null; }
+  function v154RefreshProposalUnassigned(){ if(packProposal) packProposal.unassigned=packProposal.items.filter(x=>x.needed&&x.have&&!x.bag); }
 
-// More stable 3D flyover: exact route marker, spatially smoothed camera, speed-aware follow smoothing.
-flyPointGeoJSON=function(){return {type:'Feature',properties:{},geometry:{type:'Point',coordinates:routeLngLat(flyVisualProgress)}}};
-flyTick=function(ts){if(!flyPlaying)return;if(!flyLastTs)flyLastTs=ts;const dt=Math.max(0,Math.min(45,ts-flyLastTs));flyLastTs=ts;flyProgress=Math.min(1,flyProgress+(dt/baseFlyDurationMs())*flySpeed);const tau=flySpeed>=4?170:flySpeed>=2?220:300,alpha=1-Math.exp(-dt/tau);flyVisualProgress+=(flyProgress-flyVisualProgress)*alpha;if(flyProgress-flyVisualProgress>0.012)flyVisualProgress=flyProgress-0.012;updateFlyCamera(false);if(flyProgress>=1&&Math.abs(flyProgress-flyVisualProgress)<.001){flyVisualProgress=1;updateFlyCamera(false);setFlyPlaying(false);return}flyRAF=requestAnimationFrame(flyTick)};
-updateFlyCamera=function(force=false){if(!roam3DReady||!roam3DMap||routeGeo.length<2)return;update3DSources();const slider=document.getElementById('flySlider'),kmEl=document.getElementById('flyKm');if(slider)slider.value=String(Math.round(flyProgress*1000));if(kmEl)kmEl.textContent=`${Math.round(flyVisualProgress*routeDistanceKm)} km`;updateLinked(flyVisualProgress,'flyover');if(!flyFollow&&!force)return;const camWindow=flySpeed>=4?4.8:flySpeed>=2?3.8:3.0,center=smoothFlyLngLat(flyVisualProgress,camWindow),look=Math.max(.006,(flySpeed>=4?18:13)/Math.max(1,routeDistanceKm)),behind=smoothFlyLngLat(Math.max(0,flyVisualProgress-look*.55),camWindow),ahead=smoothFlyLngLat(Math.min(1,flyVisualProgress+look),camWindow+1.2),bearing=bearingBetween(behind,ahead),targetZoom=routeDistanceKm>300?12.2:12.55,targetPitch=54,now=performance.now(),dt=Math.max(1,Math.min(50,now-(updateFlyCamera._last||now-16)));updateFlyCamera._last=now;const a=force?1:1-Math.exp(-dt/(flySpeed>=4?240:320));if(!flyCameraState||force)flyCameraState={center:[...center],bearing,zoom:targetZoom,pitch:targetPitch};else{flyCameraState.center[0]+=(center[0]-flyCameraState.center[0])*a;flyCameraState.center[1]+=(center[1]-flyCameraState.center[1])*a;flyCameraState.bearing=smoothAngle(flyCameraState.bearing,bearing,a*.62);flyCameraState.zoom+=(targetZoom-flyCameraState.zoom)*a*.35;flyCameraState.pitch+=(targetPitch-flyCameraState.pitch)*a*.35}roam3DMap.jumpTo({center:flyCameraState.center,zoom:flyCameraState.zoom,pitch:flyCameraState.pitch,bearing:flyCameraState.bearing});const st=document.getElementById('flyStatus');if(st)st.textContent=flyFollow?'Ruhige Kameraführung':'Freie Kamera'};
+  applyLodgingPackRules=function(){
+    syncPackLodgingUI();
+    const mode=document.getElementById('packLodgingMode')?.value||readPackLodgingMode();
+    const byId=id=>packItems.find(i=>i.id===id);
+    ['sleep','tent','mat','stove','dishes','fuel'].forEach(id=>{
+      const x=byId(id); if(!x) return;
+      if(mode==='hotel'){ x.needed=false; x.bag=''; }
+      else if(mode==='camping'){
+        if(['sleep','tent','mat','stove'].includes(id)) x.needed=true;
+      } else if(mode==='mixed'){
+        if(['sleep','tent','mat','stove','dishes','fuel'].includes(id) && !x.needOverride) x.needed=false;
+      }
+    });
+    const water=byId('water');
+    if(water && water.needed && (!water.bag || water.bag==='fork')) water.bag='bottle';
+    const note=document.getElementById('packLodgingNote');
+    if(note){
+      note.innerHTML=mode==='hotel'
+        ?'ⓘ <b>Hotel / Pension:</b> Zelt, Schlafsack, Isomatte, Kocher, Essgeschirr und Fuel werden standardmäßig nicht vorgeschlagen.'
+        :mode==='camping'
+          ?'ⓘ <b>Camping:</b> Schlafsystem und Kocher gehören zur empfohlenen Grundausstattung.'
+          :'ⓘ <b>Gemischt:</b> Camping-Ausrüstung bleibt optional und kann bei Bedarf aktiviert werden.';
+    }
+  };
 
-// Re-render full pack state once with repaired preview rules and robust translation.
-renderPackPrototype();renderOverviewDashboard();translateTextNodes(document.body,['de','en','es'].includes(ROAM_V153_LANG)?ROAM_V153_LANG:'de');
+  const oldPreferred=preferredBags;
+  preferredBags=function(item){
+    if(item?.id==='water'||/^(wasser|water)$/i.test(item?.name||'')) return ['bottle','frame','fork','bar','saddle','top'];
+    let base=oldPreferred(item);
+    if(item?.preferredBag&&packBags[item.preferredBag]) base=[item.preferredBag,...base.filter(x=>x!==item.preferredBag)];
+    return base;
+  };
+
+  buildPackProposal=function(){
+    const items=packItems.map(x=>({...x})),used=Object.fromEntries(Object.keys(packBags).map(k=>[k,0])),unassigned=[];
+    const ordered=relevantPackItems(items).sort((a,b)=>b.kg-a.kg||b.l-a.l); ordered.forEach(i=>i.bag='');
+    for(const item of ordered){
+      let best='',score=1e9;
+      for(const id of Object.keys(packBags)){
+        if(id==='bottle' && item.id!=='water' && !/wasser|water|bidon|flasche/i.test(item.name||'')) continue;
+        const after=used[id]+item.l,cap=bagCapacity(id); if(after>cap+1e-6) continue;
+        let pref=preferredBags(item).indexOf(id); if(pref<0) pref=9;
+        let sc=pref*12;
+        if(!used[id]) sc+=36; // fewer active bags unless useful
+        if(item.id==='water'&&id==='bottle') sc-=120;
+        if(item.kg>=1&&packBags[id].zone!=='center') sc+=18;
+        if(item.access==='high'&&!['top','bar','bottle'].includes(id)) sc+=12;
+        if(item.preferredBag===id) sc-=24;
+        sc+=(after/cap)*3;
+        if(sc<score){score=sc;best=id}
+      }
+      if(best){item.bag=best;used[best]+=item.l}else unassigned.push(item);
+    }
+    return {items,unassigned};
+  };
+
+  renderPackHave=function(){
+    applyLodgingPackRules();
+    const box=document.getElementById('packHaveList'); if(!box)return;
+    const q=(document.getElementById('packSearch')?.value||'').toLowerCase(),filter=document.getElementById('packCategoryFilter')?.value||'all';
+    const items=v154PackDisplayItems(),preview=!!packProposal;
+    box.innerHTML=visiblePackCategories().filter(c=>filter==='all'||c.id===filter).map(c=>{
+      const arr=items.filter(x=>x.cat===c.id&&x.needed&&(!q||x.name.toLowerCase().includes(q)));
+      if(!arr.length)return '';
+      return `<div class="pack-v13-group"><div class="pack-v13-grouphead"><b>${c.name}</b><span>${arr.filter(x=>x.have).length}/${arr.length}</span></div>${
+        arr.map(i=>`<div class="pack-v12-item ${preview?'v154-preview-item':''}">
+          <button class="pack-v12-check ${i.have?'':'off'}" data-have="${i.id}" type="button">✓</button>
+          <div class="thumb">${itemIcon(i.id,i.cat)}</div>
+          <div><b>${i.name}</b><small>${Number(i.kg||0).toFixed(2).replace('.',',')} kg · ${formatLiters(i.l)} L${i.note?` · ${i.note}`:''}</small></div>
+          <select class="pack-v12-bagselect ${preview?'v154-preview-select':''}" data-bagitem="${i.id}" ${i.have?'':'disabled'}>${bagOptions(i.bag)}</select>
+          ${i.custom?`<button class="v152-custom-delete" data-delete-custom="${i.id}" type="button" title="Eigenen Gegenstand löschen">×</button>`:'<span class="menu-dots">⋮</span>'}
+        </div>`).join('')
+      }</div>`;
+    }).join('')||'<div class="muted" style="font-size:11px;padding:12px">Keine Gegenstände im Filter.</div>';
+
+    box.querySelectorAll('[data-have]').forEach(b=>b.onclick=()=>{
+      const base=packItems.find(x=>x.id===b.dataset.have); if(!base)return;
+      base.have=!base.have; if(!base.have)base.bag='';
+      packProposal=null; invalidateAppliedPack(); packPersist(); renderPackPrototype(); renderOverviewDashboard();
+    });
+    box.querySelectorAll('[data-bagitem]').forEach(el=>el.onchange=()=>{
+      const target=preview?v154ProposalItem(el.dataset.bagitem):packItems.find(x=>x.id===el.dataset.bagitem); if(!target)return;
+      if(el.value){
+        const itemsForStats=preview?packProposal.items:packItems,st=bagStats(el.value,itemsForStats),existing=target.bag===el.value?target.l:0;
+        if(st.l-existing+target.l>st.cap+1e-6){packToast(`${packBags[el.value].name}: zu wenig Platz`);renderPackPrototype();return}
+      }
+      target.bag=el.value;
+      if(preview){v154RefreshProposalUnassigned();renderPackPrototype()}
+      else{invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()}
+    });
+    box.querySelectorAll('[data-delete-custom]').forEach(btn=>btn.onclick=()=>{
+      const idx=packItems.findIndex(x=>x.id===btn.dataset.deleteCustom&&x.custom); if(idx<0)return;
+      const name=packItems[idx].name; packItems.splice(idx,1); packProposal=null; packPersist(); renderPackPrototype(); renderOverviewDashboard(); packToast(`${name} entfernt`);
+    });
+  };
+
+  renderPackFillGrid=function(){
+    const box=document.getElementById('packFillGrid');if(!box)return;
+    const items=v154PackDisplayItems(),active=Object.entries(packBags).filter(([id])=>bagStats(id,items).items.length>0);
+    box.innerHTML=active.length?active.map(([id,b])=>{
+      const st=bagStats(id,items),full=st.pct>=100;
+      return `<div class="pack-v13-fillcard ${st.over?'pack-v12-over':''} ${full?'full':''}" data-bag-id="${id}">
+        <div class="bag-svg">${bagIconSvg(id)}</div><b>${b.name}</b>
+        <strong>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</strong>
+        <div class="bar"><i style="width:${Math.min(100,st.pct)}%"></i></div>
+        <small>${st.pct}%${st.over?' · überfüllt':full?' · voll':''}</small></div>`;
+    }).join(''):'<div class="v154-pack-empty-note">Noch keine Packposition belegt.</div>';
+    const u=document.getElementById('packUnassigned'),ua=items.filter(x=>x.needed&&x.have&&!x.bag);
+    if(u)u.innerHTML=ua.length?`<div class="pack-v13-unassigned-list">${ua.map(x=>`<span>${x.name}</span>`).join('')}</div>`:'<div class="muted" style="font-size:9px;margin-top:5px">Alle benötigten Gegenstände sind einer Position zugewiesen.</div>';
+  };
+
+  renderPackBike=function(){
+    const items=v154PackDisplayItems();
+    Object.keys(packBags).forEach(id=>{
+      const st=bagStats(id,items),layer=document.getElementById(`packBike-${id}`),visible=st.items.length>0;
+      if(layer)layer.classList.toggle('v154-hidden',!visible);
+    });
+    const mode=document.getElementById('packBikeModeV154');
+    if(mode){mode.textContent=packProposal?'Auto-Pack Vorschau':'Aktuelle Verteilung';mode.classList.toggle('preview',!!packProposal)}
+  };
+
+  renderPackSummary=function(){
+    const items=v154PackDisplayItems(),rel=relevantPackItems(items),assigned=rel.filter(x=>x.bag),total=rel.reduce((a,x)=>a+x.kg,0),assignedKg=assigned.reduce((a,x)=>a+x.kg,0),bal=packBalance(items),active=Object.keys(packBags).filter(k=>bagStats(k,items).items.length).length,cov=rel.length?Math.round(assigned.length/rel.length*100):0;
+    const pw=document.getElementById('packWeight');if(pw)pw.textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg`;
+    const fb=document.getElementById('frontBalance'),rb=document.getElementById('rearBalance'),bb=document.getElementById('balanceBar');
+    if(fb)fb.textContent=`${bal.front}% vorne`;if(rb)rb.textContent=`${bal.rear}% hinten`;if(bb)bb.style.gridTemplateColumns=`${bal.front}fr ${bal.rear}fr`;
+    const sb=document.getElementById('packStatBags'),si=document.getElementById('packStatItems'),sc=document.getElementById('packStatCoverage');
+    if(sb)sb.textContent=active;if(si)si.textContent=assigned.length;if(sc)sc.textContent=`${cov}%`;
+    const meta=document.getElementById('packMeta');if(meta)meta.textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg verteilt · ${active} aktive Taschen · Balance ${bal.front} / ${bal.rear}`;
+  };
+
+  renderBestPack=function(){
+    const box=document.getElementById('packBestScore'),apply=document.getElementById('packModeBtn'),create=document.getElementById('autoPack'),small=document.getElementById('packBestBtn');
+    if(!box||!apply)return;
+    if(packProposal){
+      const m=proposalStats(packProposal.items,packProposal.unassigned);
+      box.innerHTML=`<span class="score-status">Vorschau bereit</span><span class="score-kpi"><b>${m.active}</b><small>Taschen</small></span><span class="score-kpi"><b>${formatLiters(m.reserve)} L</b><small>Reserve</small></span><span class="score-kpi"><b>${m.bal.front}/${m.bal.rear}</b><small>Balance</small></span><span class="score-note ${m.unassigned?'warn':''}">${m.unassigned?`${m.unassigned} Gegenstand/Gegenstände ohne passenden Platz.`:'Zuweisungen in der Liste prüfen und anschließend anwenden.'}</span>`;
+      apply.disabled=false;apply.textContent='Vorschlag anwenden →';if(create)create.textContent='✦ Vorschlag neu berechnen';if(small)small.textContent='Neu berechnen';setPackFlowState('proposal');
+    }else{
+      const applied=localStorage.getItem('roam-pack-last-auto-v14')==='1';
+      apply.disabled=true;
+      if(applied){box.innerHTML='<span class="score-status">Auto-Pack angewendet</span><span class="score-note">Aktuelle Verteilung ist aktiv.</span>';apply.textContent='Angewendet ✓';if(create)create.textContent='✦ Vorschlag neu berechnen';setPackFlowState('applied')}
+      else{box.innerHTML='<span class="score-note">Noch kein Vorschlag erstellt.</span>';apply.textContent='Vorschlag anwenden →';if(create)create.textContent='✦ Auto-Pack Vorschlag erstellen';setPackFlowState('idle')}
+    }
+  };
+
+  createAutoPackProposal=function(){
+    applyLodgingPackRules();packProposal=buildPackProposal();v154RefreshProposalUnassigned();invalidateAppliedPack();renderPackPrototype();renderOverviewDashboard();
+    packToast(packProposal.unassigned.length?`${packProposal.unassigned.length} Teil(e) passen noch nicht in die vorhandenen Taschen`:'Auto-Pack Vorschau erstellt – Zuweisungen prüfen.');
+  };
+  applyAutoPackProposal=function(){
+    if(!packProposal){packToast('Bitte zuerst einen Auto-Pack Vorschlag erstellen');return}
+    const map=new Map(packProposal.items.map(x=>[x.id,x.bag]));packItems.forEach(x=>{if(map.has(x.id))x.bag=map.get(x.id)});
+    packProposal=null;localStorage.setItem('roam-pack-last-auto-v14','1');packPersist();renderPackPrototype();renderOverviewDashboard();packToast('Auto-Pack angewendet ✓');
+  };
+
+  // ---------- ELEVATION / STAGES ----------
+  function v154ElevationUseful(rows){
+    const z=rows.map(x=>Number(x.z)).filter(Number.isFinite);
+    if(z.length<Math.min(2,Math.floor(rows.length*.5)))return false;
+    return (Math.max(...z)-Math.min(...z)>5)||Math.max(...z)>30;
+  }
+
+  enrichRouteElevation=async function(rows){
+    if(rows.length<2)return rows;
+    if(v154ElevationUseful(rows))return rows;
+    const n=rows.length,maxSamples=Math.min(220,n),indices=[];
+    for(let j=0;j<maxSamples;j++){const idx=Math.round(j*(n-1)/Math.max(1,maxSamples-1));if(indices.at(-1)!==idx)indices.push(idx)}
+    const out=rows.map(x=>({...x})),batches=[];for(let off=0;off<indices.length;off+=60)batches.push(indices.slice(off,off+60));
+    const fetchTimeout=typeof fetchWithTimeoutV15==='function'?fetchWithTimeoutV15:(url,opts={},ms=9000)=>{const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);return fetch(url,{...opts,signal:c.signal}).finally(()=>clearTimeout(t))};
+    const results=await Promise.allSettled(batches.map(async batch=>{
+      const lat=batch.map(i=>rows[i].lat.toFixed(6)).join(','),lon=batch.map(i=>rows[i].lon.toFixed(6)).join(',');
+      const r=await fetchTimeout(`https://api.open-meteo.com/v1/elevation?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}`,{},9000);
+      if(!r.ok)throw new Error(`Elevation ${r.status}`);
+      const d=await r.json(),e=Array.isArray(d?.elevation)?d.elevation.map(Number):[];
+      if(e.length!==batch.length)throw new Error('Elevation unvollständig');
+      return {batch,e};
+    }));
+    let valid=0;for(const res of results){if(res.status!=='fulfilled')continue;res.value.batch.forEach((idx,k)=>{const z=res.value.e[k];if(Number.isFinite(z)){out[idx].z=z;valid++}})}
+    if(valid<Math.max(2,Math.floor(indices.length*.45)))return rows;
+    const known=indices.filter(i=>Number.isFinite(Number(out[i].z)));
+    for(let k=0;k<known.length-1;k++){const a=known[k],b=known[k+1],za=Number(out[a].z),zb=Number(out[b].z);for(let i=a+1;i<b;i++){const t=(i-a)/(b-a);out[i].z=za+(zb-za)*t}}
+    let last=null;for(let i=0;i<n;i++){if(Number.isFinite(Number(out[i].z)))last=Number(out[i].z);else if(Number.isFinite(last))out[i].z=last}
+    last=null;for(let i=n-1;i>=0;i--){if(Number.isFinite(Number(out[i].z)))last=Number(out[i].z);else if(Number.isFinite(last))out[i].z=last}
+    return out;
+  };
+
+  function v154ExactStageMetrics(i){
+    const saved=readActiveRoute();if(!saved?.coords?.length||!saved?.stages?.[i])return {km:0,hm:0,rows:[]};
+    const rows=normalizeAdventureCoords(saved.coords),st=saved.stages[i],a=Math.max(0,Math.min(rows.length-2,Number(st.s)||0)),b=Math.max(a+1,Math.min(rows.length-1,Number(st.e)||rows.length-1));
+    let km=0,hm=0;
+    for(let k=a+1;k<=b;k++){km+=geoDistKm([rows[k-1].lat,rows[k-1].lon],[rows[k].lat,rows[k].lon]);const z0=Number(rows[k-1].z),z1=Number(rows[k].z);if(Number.isFinite(z0)&&Number.isFinite(z1)&&z1>z0)hm+=z1-z0}
+    return {km,hm,rows:rows.slice(a,b+1),s:a,e:b};
+  }
+
+  readStagePrototypeData=function(){
+    const saved=readActiveRoute();if(!saved?.stages?.length)return [];
+    let lodgings={};try{lodgings=JSON.parse(sessionStorage.getItem('abo-mobile-lodging-selected')||'{}')||{}}catch(e){}
+    const names=readStageNamesFor(saved),start=saved.start||'Start',dest=saved.dest||'Ziel';
+    return saved.stages.map((st,i)=>{
+      const m=v154ExactStageMetrics(i),generic='Etappenort wird ermittelt …',from=Array.isArray(names)?(names[i]||start):(i===0?start:generic),to=i===saved.stages.length-1?dest:(Array.isArray(names)?(names[i+1]||generic):generic),terrain=routeTerrain.status==='ready'?routeTerrain.stages?.[i]:null;
+      return {day:`Tag ${i+1}`,from,to,km:m.km,hm:m.hm,wx:'–',gravel:terrain?Math.round(Number(terrain.gravel)||0):null,lodging:lodgings?.[i]||null,last:i===saved.stages.length-1};
+    });
+  };
+
+  function v154RenderStageElevation(i){
+    const line=document.getElementById('stageElevLine'),area=document.getElementById('stageElevArea'),empty=document.getElementById('stageElevEmpty'),summary=document.getElementById('stageElevSummary'),range=document.getElementById('stageElevRange'),end=document.getElementById('stageElevEndLabel');
+    if(!line||!area)return;
+    const m=v154ExactStageMetrics(i),rows=m.rows,z=rows.map(r=>Number(r.z)),valid=z.filter(Number.isFinite);
+    if(end)end.textContent=`${Math.round(m.km)} km`;
+    if(valid.length<2 || Math.max(...valid)-Math.min(...valid)<1){
+      line.setAttribute('d','');area.setAttribute('d','');if(empty)empty.hidden=false;if(summary)summary.textContent=`${Math.round(m.km)} km · Höhendaten werden ergänzt`;if(range)range.textContent='–';return;
+    }
+    if(empty)empty.hidden=true;
+    const min=Math.min(...valid),max=Math.max(...valid),span=Math.max(1,max-min),W=760,H=180,pad=12;
+    let cum=[0];for(let k=1;k<rows.length;k++)cum.push(cum[k-1]+geoDistKm([rows[k-1].lat,rows[k-1].lon],[rows[k].lat,rows[k].lon]));const total=cum.at(-1)||1;
+    const pts=rows.map((r,k)=>{const x=pad+(cum[k]/total)*(W-2*pad),zz=Number.isFinite(Number(r.z))?Number(r.z):min,y=H-pad-((zz-min)/span)*(H-2*pad);return [x,y]});
+    const d='M'+pts.map(p=>p.map(v=>v.toFixed(1)).join(' ')).join(' L');
+    const da=d+` L ${pts.at(-1)[0].toFixed(1)} ${H-pad} L ${pts[0][0].toFixed(1)} ${H-pad} Z`;
+    line.setAttribute('d',d);area.setAttribute('d',da);
+    if(summary)summary.textContent=`${Math.round(m.km)} km · ${Math.round(m.hm).toLocaleString('de-DE')} HM`;
+    if(range)range.textContent=`${Math.round(min)}–${Math.round(max)} m`;
+  }
+
+  const originalShowStage=showStagePrototype;
+  showStagePrototype=function(i,rerender=true){originalShowStage(i,rerender);v154RenderStageElevation(selectedStagePrototype);scheduleRoamTranslation?.()};
+
+  let v154RepairBusy=false,v154RepairDone=false;
+  async function v154RepairStageElevation(){
+    if(v154RepairBusy||v154RepairDone)return;
+    const saved=readActiveRoute();if(!saved?.coords?.length||!saved?.stages?.length)return;
+    const rows=normalizeAdventureCoords(saved.coords),allHm=(saved.stages||[]).map(x=>Number(x.hm)||0),needs=!v154ElevationUseful(rows)||allHm.every(x=>x<1);
+    if(!needs){v154RepairDone=true;return}
+    v154RepairBusy=true;
+    const empty=document.getElementById('stageElevEmpty');if(empty){empty.hidden=false;empty.textContent='Höhendaten werden ergänzt …'}
+    try{
+      const enriched=await enrichRouteElevation(rows);
+      if(!v154ElevationUseful(enriched))return;
+      const m=webRouteMetrics(enriched),rider=readRiderProfileForm(),count=Math.max(1,saved.stages.length),recalc=buildWebStages(enriched,m,count,rider.km,rider.hm);
+      const next={...saved,coords:enriched.map(x=>[x.lon,x.lat,x.z]),metrics:m,stages:recalc};
+      writeSessionRoute(next);routeGeo=enriched.map(x=>[x.lat,x.lon]);routeElev=enriched.map(x=>Number(x.z));rebuildRouteMeasures();routeStages=normalizedRouteStages(recalc);
+      const names=[next.start,...recalc.slice(0,-1).map(()=> 'Etappenort wird ermittelt …'),next.dest];writeStageNamesFor(next,names);
+      renderStagePrototype();renderOverviewDashboard();resolveWebStageNames?.();v154RepairDone=true;
+    }catch(e){console.warn('V15.4 elevation repair',e)}
+    finally{v154RepairBusy=false}
+  }
+
+  const oldShowScreenV154=showScreen;
+  showScreen=function(name){oldShowScreenV154(name);if(name==='stages')setTimeout(()=>v154RepairStageElevation(),60)};
+
+  // ---------- 3D FLYOVER ----------
+  flyPointGeoJSON=function(){return {type:'Feature',properties:{},geometry:{type:'Point',coordinates:routeLngLat(flyVisualProgress)}}};
+  flyTick=function(ts){
+    if(!flyPlaying)return;
+    if(!flyLastTs)flyLastTs=ts;
+    const dt=Math.max(0,Math.min(34,ts-flyLastTs));flyLastTs=ts;
+    flyProgress=Math.min(1,flyProgress+(dt/baseFlyDurationMs())*flySpeed);
+    const tau=flySpeed>=4?210:flySpeed>=2?260:340,alpha=1-Math.exp(-dt/tau);
+    flyVisualProgress+=(flyProgress-flyVisualProgress)*alpha;
+    updateFlyCamera(false);
+    if(flyProgress>=1&&Math.abs(1-flyVisualProgress)<.001){flyVisualProgress=1;updateFlyCamera(false);setFlyPlaying(false);return}
+    flyRAF=requestAnimationFrame(flyTick);
+  };
+  updateFlyCamera=function(force=false){
+    if(!roam3DReady||!roam3DMap||routeGeo.length<2)return;
+    update3DSources();
+    const slider=document.getElementById('flySlider'),kmEl=document.getElementById('flyKm');
+    if(slider)slider.value=String(Math.round(flyProgress*1000));if(kmEl)kmEl.textContent=`${Math.round(flyVisualProgress*routeDistanceKm)} km`;updateLinked(flyVisualProgress,'flyover');if(!flyFollow&&!force)return;
+    const windowKm=flySpeed>=4?5.2:flySpeed>=2?4.0:3.0,center=smoothFlyLngLat(flyVisualProgress,windowKm),look=Math.max(.006,(flySpeed>=4?20:14)/Math.max(1,routeDistanceKm)),behind=smoothFlyLngLat(Math.max(0,flyVisualProgress-look*.55),windowKm),ahead=smoothFlyLngLat(Math.min(1,flyVisualProgress+look),windowKm+1.2),bearing=bearingBetween(behind,ahead),targetZoom=routeDistanceKm>300?12.15:12.5,targetPitch=53,now=performance.now(),dt=Math.max(1,Math.min(40,now-(updateFlyCamera._v154Last||now-16)));updateFlyCamera._v154Last=now;
+    const a=force?1:1-Math.exp(-dt/(flySpeed>=4?300:390));
+    if(!flyCameraState||force)flyCameraState={center:[...center],bearing,zoom:targetZoom,pitch:targetPitch};else{flyCameraState.center[0]+=(center[0]-flyCameraState.center[0])*a;flyCameraState.center[1]+=(center[1]-flyCameraState.center[1])*a;flyCameraState.bearing=smoothAngle(flyCameraState.bearing,bearing,a*.48);flyCameraState.zoom+=(targetZoom-flyCameraState.zoom)*a*.30;flyCameraState.pitch+=(targetPitch-flyCameraState.pitch)*a*.30}
+    roam3DMap.jumpTo({center:flyCameraState.center,zoom:flyCameraState.zoom,pitch:flyCameraState.pitch,bearing:flyCameraState.bearing});
+    const st=document.getElementById('flyStatus');if(st)st.textContent=flyFollow?'Ruhige Kameraführung':'Freie Kamera';
+  };
+
+  // ---------- LANGUAGE ----------
+  try{if(typeof roamLanguageObserver!=='undefined')roamLanguageObserver.disconnect()}catch(e){}
+  const savedLang=(localStorage.getItem(typeof ROAM_LANG_KEY!=='undefined'?ROAM_LANG_KEY:'roam-language-v1')||'de').toLowerCase();
+  try{if(typeof translateTextNodes==='function')translateTextNodes(document.body,'de')}catch(e){}
+
+  const extra={
+    'Reise-Check':['Trip Check','Chequeo'],
+    'Abfahrt heute':['Departure today','Salida hoy'],
+    'Reise läuft':['Trip in progress','Viaje en curso'],
+    'Abfahrts-Assistent':['Departure assistant','Asistente de salida'],
+    'Reise-Status':['Trip status','Estado del viaje'],
+    'Navigation':['Navigation','Navegación'],
+    'Wetter':['Weather','Tiempo'],
+    'Wetter aktualisieren':['Update weather','Actualizar tiempo'],
+    'Wetter öffnen':['Open weather','Abrir tiempo'],
+    'Unterkünfte prüfen':['Review lodging','Revisar alojamientos'],
+    'Unterkünfte öffnen':['Open lodging','Abrir alojamientos'],
+    'Packen abschließen':['Finish packing','Completar equipaje'],
+    'Route und GPX sind bereit.':['Route and GPX are ready.','La ruta y el GPX están listos.'],
+    'Route öffnen':['Open route','Abrir ruta'],
+    'GPX vorbereitet':['GPX ready','GPX listo'],
+    'Wetter für diese Reise noch nicht vollständig geladen.':['Weather for this trip is not fully loaded yet.','El tiempo de este viaje aún no se ha cargado por completo.'],
+    'Wetter bleibt bis zur Abfahrt dynamisch und sollte erneut geprüft werden.':['Weather remains dynamic until departure and should be checked again.','El tiempo puede cambiar hasta la salida y debe volver a comprobarse.'],
+    'Höhenprofil der Etappe':['Stage elevation profile','Perfil de elevación de la etapa'],
+    'Höhendaten werden geladen …':['Loading elevation data …','Cargando datos de elevación …'],
+    'Höhendaten werden ergänzt …':['Adding elevation data …','Añadiendo datos de elevación …'],
+    'Aktuelle Verteilung':['Current distribution','Distribución actual'],
+    'Auto-Pack Vorschau':['Auto-Pack preview','Vista previa Auto-Pack'],
+    'Die Grafik zeigt nur tatsächlich verwendete Packpositionen. Zuweisung direkt in der Gegenstandsliste ändern.':['The diagram shows only pack positions actually in use. Change assignments directly in the item list.','El esquema muestra solo las posiciones de equipaje realmente utilizadas. Cambia las asignaciones directamente en la lista.'],
+    'Vorschau bereit':['Preview ready','Vista previa lista'],
+    'Zuweisungen in der Liste prüfen und anschließend anwenden.':['Review assignments in the list, then apply them.','Revisa las asignaciones en la lista y después aplícalas.'],
+    'Noch keine Packposition belegt.':['No pack position is used yet.','Aún no se utiliza ninguna posición de equipaje.'],
+    'Alle benötigten Gegenstände sind einer Position zugewiesen.':['All required items are assigned to a position.','Todos los objetos necesarios están asignados a una posición.'],
+    '2× Flaschenhalter':['2× bottle cages','2× portabidones'],
+    'nicht zugewiesen':['unassigned','sin asignar'],
+    'noch offen':['still open','pendiente'],
+    'reserviert':['booked','reservado'],
+    'vorgemerkt':['saved','guardado']
+  };
+  if(typeof ROAM_V152_TRANSLATIONS==='object')Object.assign(ROAM_V152_TRANSLATIONS,extra);
+
+  function v154Exact(t,lang){
+    const arr=ROAM_V152_TRANSLATIONS?.[t]||extra[t];if(!arr)return null;return lang==='en'?arr[0]:lang==='es'?arr[1]:t;
+  }
+  function v154Pattern(t,lang){
+    if(lang==='de')return t;const es=lang==='es';let m;
+    if((m=t.match(/^Abfahrt in (\d+) Tagen$/)))return es?`Salida en ${m[1]} días`:`Departure in ${m[1]} days`;
+    if((m=t.match(/^(\d+) \/ 4 Bereiche bereit$/)))return es?`${m[1]} / 4 áreas listas`:`${m[1]} / 4 areas ready`;
+    if((m=t.match(/^(\d+) Bereiche? offen$/)))return es?`${m[1]} áreas pendientes`:`${m[1]} areas open`;
+    if((m=t.match(/^(\d+) offen$/)))return es?`${m[1]} pendientes`:`${m[1]} open`;
+    if((m=t.match(/^(\d+) Nacht ist noch offen\.$/)))return es?`${m[1]} noche sigue pendiente.`:`${m[1]} night is still open.`;
+    if((m=t.match(/^(\d+) Nächte sind noch offen\.$/)))return es?`${m[1]} noches siguen pendientes.`:`${m[1]} nights are still open.`;
+    if((m=t.match(/^(\d+)\/(\d+) benötigte Gegenstände vorhanden\.$/)))return es?`${m[1]}/${m[2]} objetos necesarios disponibles.`:`${m[1]}/${m[2]} required items available.`;
+    if((m=t.match(/^GPX vorbereitet · (\d+) km · (\d+) Etappen$/)))return es?`GPX listo · ${m[1]} km · ${m[2]} etapas`:`GPX ready · ${m[1]} km · ${m[2]} stages`;
+    if((m=t.match(/^Jetzt sinnvoll: (.+)$/))){const inner=v154Exact(m[1],lang)||m[1];return es?`Recomendado ahora: ${inner}`:`Recommended now: ${inner}`}
+    if((m=t.match(/^Tag (\d+)(.*)$/)))return es?`Día ${m[1]}${m[2]}`:`Day ${m[1]}${m[2]}`;
+    if((m=t.match(/^Nacht (\d+)(.*)$/)))return es?`Noche ${m[1]}${m[2]}`:`Night ${m[1]}${m[2]}`;
+    if((m=t.match(/^(\d+) aktive Taschen$/)))return es?`${m[1]} bolsas activas`:`${m[1]} active bags`;
+    if((m=t.match(/^(\d+) Gegenstände$/)))return es?`${m[1]} objetos`:`${m[1]} items`;
+    if((m=t.match(/^(\d+)% verteilt$/)))return es?`${m[1]}% distribuido`:`${m[1]}% assigned`;
+    return t;
+  }
+  const textState=new WeakMap(),attrState=new WeakMap();
+  translateTextNodes=function(root=document.body,lang=(localStorage.getItem(ROAM_LANG_KEY)||'de')){
+    roamLanguage=['de','en','es'].includes(lang)?lang:'de';
+    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const p=n.parentElement,t=n.nodeValue?.trim();return t&&p&&!['SCRIPT','STYLE','TEXTAREA'].includes(p.tagName)&&p.id!=='langCode'?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT}}),nodes=[];while(w.nextNode())nodes.push(w.currentNode);
+    nodes.forEach(n=>{
+      const cur=n.nodeValue;let rec=textState.get(n);
+      if(!rec)rec={source:cur,last:cur};else if(cur!==rec.last)rec={source:cur,last:cur};
+      const trim=rec.source.trim(),translated=v154Exact(trim,roamLanguage)||v154Pattern(trim,roamLanguage),next=roamLanguage==='de'?rec.source:rec.source.replace(trim,translated);
+      if(cur!==next)n.nodeValue=next;rec.last=next;textState.set(n,rec);
+    });
+    root.querySelectorAll?.('[placeholder],[title],[aria-label]').forEach(el=>{
+      let rec=attrState.get(el)||{};
+      for(const attr of ['placeholder','title','aria-label']){
+        const cur=el.getAttribute(attr);if(cur==null)continue;
+        if(!rec[attr]||cur!==rec[attr].last)rec[attr]={source:cur,last:cur};
+        const r=rec[attr],tr=v154Exact(r.source,roamLanguage)||v154Pattern(r.source,roamLanguage),next=roamLanguage==='de'?r.source:tr;
+        if(cur!==next)el.setAttribute(attr,next);r.last=next;
+      }
+      attrState.set(el,rec);
+    });
+    document.documentElement.lang=roamLanguage;const code=document.getElementById('langCode');if(code)code.textContent=roamLanguage.toUpperCase();document.querySelectorAll('#langMenu [data-lang]').forEach(b=>b.classList.toggle('active',b.dataset.lang===roamLanguage));localStorage.setItem(ROAM_LANG_KEY,roamLanguage);
+  };
+  scheduleRoamTranslation=function(){clearTimeout(scheduleRoamTranslation._v154);scheduleRoamTranslation._v154=setTimeout(()=>translateTextNodes(document.body,roamLanguage),30)};
+  const obs=new MutationObserver(ms=>{if(ms.some(m=>m.type==='childList'||m.type==='characterData'||m.type==='attributes'))scheduleRoamTranslation()});
+  obs.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['placeholder','title','aria-label']});
+
+  // Navigation copy for external devices
+  ['routeExportBtn','checkExportBtn'].forEach(id=>{const b=document.getElementById(id);if(b)b.textContent='GPX exportieren / Garmin'});
+
+  // Initial migration / render
+  applyLodgingPackRules();
+  const water=packItems.find(x=>x.id==='water');if(water&&(!water.bag||water.bag==='fork'))water.bag='bottle';
+  packPersist();renderPackPrototype();renderOverviewDashboard();translateTextNodes(document.body,['de','en','es'].includes(savedLang)?savedLang:'de');
+})();
 </script>
+
 </body>
 </html>
 
