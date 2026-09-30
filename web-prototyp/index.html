@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.5 Language & Stage Clarity</title>
+<title>ROAM · Beta · V15.6 Mobile & Language Stability</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -676,7 +676,43 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 }
 @media(max-width:480px){.dash-stage-strip{grid-template-columns:1fr!important}}
 
-</style></head>
+</style>
+<style id="roam-v156-style">
+/* ===== ROAM V15.6 mobile + language stability ===== */
+.stage-page,.stage-page>.card,#screen-stages .stage-detail,#screen-stages .stage-list,
+#screen-pack .pack-v12-grid,#screen-pack .pack-v12-card,#screen-pack .pack-v12-assign,#screen-pack .v15-bike-stage{min-width:0}
+.stage-item b,.dash-stage-row b,#screen-stages .stage-detail h2{overflow-wrap:anywhere;word-break:normal}
+@media(max-width:600px){
+ #screen-stages .route-title-row,#screen-pack .route-title-row{display:block!important}
+ #screen-stages .stage-detail{padding:14px!important}
+ #screen-stages .stage-detail-top{flex-direction:column!important;align-items:stretch!important}
+ #screen-stages .stage-nav{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;width:100%!important;gap:7px!important}
+ #screen-stages .stage-nav #stageEditBtn{grid-column:1/-1}
+ #screen-stages .stage-nav .btn{width:100%;min-width:0;padding:10px 8px;white-space:normal;line-height:1.2}
+ #screen-stages .stage-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #screen-stages .stage-item{padding:11px;overflow:hidden}
+ #screen-stages .v155-stage-metrics{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+ #screen-stages .v155-stage-metric{width:100%;min-width:0;justify-content:space-between;padding:6px 7px}
+ #screen-stages .v155-stage-surface{grid-column:1/-1;width:max-content;max-width:100%}
+ #screen-stages .v154-stage-elev-head{flex-wrap:wrap}
+ #screen-stages #stageElevRange{white-space:normal}
+ #screen-pack .route-title-row>.btn-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;width:100%;gap:7px;margin-top:12px}
+ #screen-pack .route-title-row>.btn-row .btn{width:100%;min-width:0;white-space:normal;line-height:1.2;padding:10px 8px}
+ #screen-pack #packModeBtn{grid-column:1/-1}
+ #screen-pack .v14-pack-statusline{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;padding-bottom:3px}
+ #screen-pack .pack-v12-search{grid-template-columns:1fr!important}
+ #screen-pack .pack-v12-item{grid-template-columns:20px 30px minmax(0,1fr) 24px!important;gap:6px}
+ #screen-pack .pack-v12-bagselect{grid-column:2/5;max-width:none!important;width:100%}
+ #screen-pack .pack-v12-item .menu-dots,#screen-pack .v152-custom-delete{grid-column:4;grid-row:1}
+ #screen-pack .pack-v12-best{display:block!important}
+ #screen-pack .pack-v12-best>.btn{width:100%;margin-top:8px}
+ #screen-pack .pack-v13-fillgrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #screen-pack .v15-bike-image-wrap{min-width:0;min-height:0!important}
+ #screen-pack .v152-pack-bike{max-width:100%;height:auto!important}
+}
+@media(max-width:390px){#screen-pack .pack-v13-fillgrid{grid-template-columns:1fr!important}}
+</style>
+</head>
 <body>
 <div class="app">
 <header class="topbar">
@@ -1094,7 +1130,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.5</div>
+<div class="prototype-pill">ROAM · Beta · V15.6</div>
 </div>
 
 <script>
@@ -2521,13 +2557,13 @@ const item=packItems.find(x=>x.id===itemId);if(!item||!bagId)return;const st=bag
 function renderPackAdvice(){
 const box=document.getElementById('packBagAdvice');if(!box)return;const rows=[];
 for(const [id,b] of Object.entries(packBags)){
-  const st=bagStats(id);if(st.pct<100)continue;
+  const st=bagStats(id);if(!st.over)continue;
   const candidates=st.items.slice().sort((a,b)=>a.access==='high'?-1:b.access==='high'?1:b.l-a.l);let suggestion=null;
   for(const item of candidates){const alt=packAlternative(item,id);if(alt){suggestion={item,alt};break}}
   if(suggestion)rows.push(`<div class="pack-advice-row warn"><div class="pack-advice-icon">!</div><div><b>${b.name} ${st.over?'überfüllt':'voll'}</b><span>${suggestion.item.name} besser in ${packBags[suggestion.alt].name} verschieben.</span></div><button type="button" data-pack-move="${suggestion.item.id}" data-pack-target="${suggestion.alt}">Jetzt verschieben</button></div>`);
   else rows.push(`<div class="pack-advice-row warn"><div class="pack-advice-icon">!</div><div><b>${b.name} ${st.over?'überfüllt':'voll'}</b><span>Keine freie Alternative mit genügend Volumen. Packliste prüfen oder einen weniger wichtigen Gegenstand weglassen.</span></div><span></span></div>`);
 }
-const bal=packBalance();if(!rows.length)rows.push(`<div class="pack-advice-row ok"><div class="pack-advice-icon">✓</div><div><b>Kapazitäten passen</b><span>Keine Tasche ist voll oder überfüllt. Balance ${bal.front}% vorne · ${bal.rear}% hinten.</span></div><span></span></div>`);
+const bal=packBalance();if(!rows.length)rows.push(`<div class="pack-advice-row ok"><div class="pack-advice-icon">✓</div><div><b>Kapazitäten passen</b><span>Keine Tasche ist überfüllt. Voll belegte Taschen sind in Ordnung. Balance ${bal.front}% vorne · ${bal.rear}% hinten.</span></div><span></span></div>`);
 box.innerHTML=rows.join('');box.querySelectorAll('[data-pack-move]').forEach(btn=>btn.onclick=()=>movePackItemDirect(btn.dataset.packMove,btn.dataset.packTarget));
 }
 function renderPackBike(){
@@ -3135,7 +3171,72 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     'Im gewohnten Bereich.':['Within your usual range.','Dentro de tu rango habitual.'],
     'Anspruchsvoller als gewohnt.':['More demanding than usual.','Más exigente de lo habitual.'],
     'Deutlich über deinem gewohnten Niveau.':['Well above your usual level.','Muy por encima de tu nivel habitual.'],
-    'Etappenteilung prüfen – Distanz oder Höhenmeter liegen erheblich über deinem Fahrerprofil.':['Review the stage split — distance or elevation gain is well above your rider profile.','Revisa la división de etapas: la distancia o el desnivel están muy por encima de tu perfil.']
+    'Etappenteilung prüfen – Distanz oder Höhenmeter liegen erheblich über deinem Fahrerprofil.':['Review the stage split — distance or elevation gain is well above your rider profile.','Revisa la división de etapas: la distancia o el desnivel están muy por encima de tu perfil.'],
+    'Aktuelle Reise':['Current trip','Viaje actual'],
+    'Reise bearbeiten':['Edit trip','Editar viaje'],
+    'Gespeicherte Reise laden':['Load saved trip','Cargar viaje guardado'],
+    'Höhenprofil':['Elevation profile','Perfil de elevación'],
+    'Packen':['Packing','Equipaje'],
+    'Übernachtungen':['Overnight stays','Alojamientos'],
+    'Termin offen':['Date open','Fecha pendiente'],
+    'Reise gestartet':['Trip started','Viaje iniciado'],
+    'alles bereit':['all ready','todo listo'],
+    'fertig':['ready','listo'],
+    'Reise-Check öffnen':['Open Trip Check','Abrir chequeo'],
+    'Letzte Punkte vor der Abfahrt prüfen.':['Review the final items before departure.','Revisa los últimos puntos antes de la salida.'],
+    'Übernachtungen planen':['Plan overnight stays','Planificar alojamientos'],
+    'Packliste vervollständigen':['Complete packing list','Completar lista de equipaje'],
+    'Auto-Pack angewendet':['Auto-Pack applied','Auto-Pack aplicado'],
+    'Aktuelle Verteilung ist aktiv.':['Current distribution is active.','La distribución actual está activa.'],
+    'Aktuelle Verteilung ist aktiv. Für Änderungen neu berechnen.':['Current distribution is active. Recalculate to make changes.','La distribución actual está activa. Recalcula para hacer cambios.'],
+    'Vorschlag neu berechnen':['Recalculate suggestion','Recalcular propuesta'],
+    'Neu berechnen':['Recalculate','Recalcular'],
+    'Angewendet ✓':['Applied ✓','Aplicado ✓'],
+    'Noch kein Vorschlag erstellt.':['No suggestion created yet.','Aún no se ha creado ninguna propuesta.'],
+    'Vorschlag anwenden →':['Apply suggestion →','Aplicar propuesta →'],
+    'Auto-Pack Vorschlag erstellen':['Create Auto-Pack suggestion','Crear propuesta Auto-Pack'],
+    'Neuen Auto-Pack Vorschlag erstellen':['Create new Auto-Pack suggestion','Crear nueva propuesta Auto-Pack'],
+    'Vorschlag erstellen':['Create suggestion','Crear propuesta'],
+    'Taschen':['Bags','Bolsas'],
+    'Reserve':['Reserve','Reserva'],
+    'Balance':['Balance','Equilibrio'],
+    'Kapazitäten passen':['Capacities fit','Las capacidades encajan'],
+    'Keine Tasche ist überfüllt. Voll belegte Taschen sind in Ordnung.':['No bag is over capacity. Fully used bags are fine.','Ninguna bolsa supera su capacidad. Las bolsas completamente llenas están bien.'],
+    'Jetzt verschieben':['Move now','Mover ahora'],
+    'Sehr passend':['Very suitable','Muy adecuado'],
+    'Die Etappen liegen überwiegend in deinem gewohnten Tagesbereich.':['The stages are mostly within your usual daily range.','Las etapas están mayormente dentro de tu rango diario habitual.'],
+    'Leicht fordernd':['Slightly demanding','Algo exigente'],
+    'Einzelne Etappen liegen etwas über deinem normalen Tagesniveau.':['Some stages are slightly above your usual daily level.','Algunas etapas están ligeramente por encima de tu nivel diario habitual.'],
+    'Anspruchsvoll':['Demanding','Exigente'],
+    'Mehrere Etappen liegen deutlich über deinem normalen Tagesniveau.':['Several stages are well above your usual daily level.','Varias etapas están claramente por encima de tu nivel diario habitual.'],
+    'Terrain wird geladen …':['Loading terrain …','Cargando terreno …'],
+    'Routengeometrie wird geladen …':['Loading route geometry …','Cargando geometría de ruta …'],
+    '3D wird vorbereitet …':['Preparing 3D …','Preparando 3D …'],
+    'Analyse wird geladen …':['Loading analysis …','Cargando análisis …'],
+    'Reiseziel':['Trip destination','Destino del viaje'],
+    'Keine Zwischenübernachtung mehr nötig. Eine Unterkunft am Ziel kann optional vorgemerkt werden.':['No intermediate overnight stay is needed. You can optionally save lodging at the destination.','Ya no se necesita un alojamiento intermedio. Puedes guardar opcionalmente un alojamiento en el destino.'],
+    'Unterkunft planen':['Plan lodging','Planificar alojamiento'],
+    'Hotel, Pension, Camping oder gemischte Unterkunft wählen':['Choose hotel, guesthouse, camping or mixed lodging','Elige hotel, pensión, camping o alojamiento mixto'],
+    'Die Auswahl wird gespeichert und im Reise-Check übernommen.':['The selection is saved and carried into Trip Check.','La selección se guarda y se incorpora al chequeo del viaje.'],
+    'Unterkunft wählen':['Choose lodging','Elegir alojamiento'],
+    'Optionen ansehen':['View options','Ver opciones'],
+    'Suchen':['Search','Buscar'],
+    'Unterkünfte finden':['Find lodging','Buscar alojamientos'],
+    'Vormerken':['Save','Guardar'],
+    'Favorit speichern':['Save favorite','Guardar favorito'],
+    'Bestätigen':['Confirm','Confirmar'],
+    'Reservierung markieren':['Mark reservation','Marcar reserva'],
+    'Unterkünfte werden gesucht …':['Searching for lodging …','Buscando alojamientos …'],
+    'Unterkünfte konnten gerade nicht geladen werden. Bitte erneut versuchen.':['Lodging could not be loaded right now. Please try again.','No se pudieron cargar los alojamientos. Inténtalo de nuevo.'],
+    'Reservierung zurücksetzen':['Reset reservation','Restablecer reserva'],
+    'Als reserviert markieren':['Mark as booked','Marcar como reservado'],
+    'ändern':['change','cambiar'],
+    'vormerken':['save','guardar'],
+    'Wetter entlang der Etappe':['Weather along the stage','Tiempo a lo largo de la etapa'],
+    'Untergrund':['Surface','Superficie'],
+    'Vorbereitung':['Preparation','Preparación'],
+    'Reisevorbereitung':['Trip preparation','Preparación del viaje'],
+    'Was noch offen ist':['What is still open','Lo que queda pendiente']
   };
   if(typeof ROAM_V152_TRANSLATIONS==='object')Object.assign(ROAM_V152_TRANSLATIONS,extra);
 
@@ -3170,6 +3271,19 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     if((m=t.match(/^Distanz (\d+) km · Höhendaten werden ergänzt …$/)))return es?`Distancia ${m[1]} km · Añadiendo datos de elevación …`:`Distance ${m[1]} km · Adding elevation data …`;
     if((m=t.match(/^(\d+) km \/ (\d+) HM gegenüber (\d+) km \/ (\d+) HM gewohnt\.$/)))return es?`${m[1]} km / ${m[2]} m↑ frente a tus ${m[3]} km / ${m[4]} m↑ habituales.`:`${m[1]} km / ${m[2]} m↑ compared with your usual ${m[3]} km / ${m[4]} m↑.`;
     if((m=t.match(/^Diese Etappe liegt rund (\d+)% über deinem normalen Tagesniveau\.$/)))return es?`Esta etapa está aproximadamente un ${m[1]}% por encima de tu nivel diario habitual.`:`This stage is about ${m[1]}% above your usual daily level.`;
+    if((m=t.match(/^(\d+) Nacht\/Nächte sind noch offen\.$/)))return es?`${m[1]} alojamientos siguen pendientes.`:`${m[1]} overnight stays are still open.`;
+    if((m=t.match(/^(\d+) benötigte Gegenstände fehlen noch\.$/)))return es?`Aún faltan ${m[1]} objetos necesarios.`:`${m[1]} required items are still missing.`;
+    if((m=t.match(/^(\d+)% vollständig$/)))return es?`${m[1]}% completo`:`${m[1]}% complete`;
+    if((m=t.match(/^(\d+)% bereit$/)))return es?`${m[1]}% listo`:`${m[1]}% ready`;
+    if((m=t.match(/^(\d+)\/(\d+) geplant$/)))return es?`${m[1]}/${m[2]} planificados`:`${m[1]}/${m[2]} planned`;
+    if((m=t.match(/^Übernachtung in (.+)$/)))return es?`Alojamiento en ${m[1]}`:`Overnight stay in ${m[1]}`;
+    if((m=t.match(/^(.+) \/ Ziel erreicht$/)))return es?`${m[1]} / destino alcanzado`:`${m[1]} / destination reached`;
+    if((m=t.match(/^([\d.,]+) km vom Etappenziel$/)))return es?`${m[1]} km del final de etapa`:`${m[1]} km from the stage finish`;
+    if((m=t.match(/^(\d+)% vorne$/)))return es?`${m[1]}% delante`:`${m[1]}% front`;
+    if((m=t.match(/^(\d+)% hinten$/)))return es?`${m[1]}% detrás`:`${m[1]}% rear`;
+    if((m=t.match(/^([\d.,]+) \/ ([\d.,]+) kg verteilt · (\d+) aktive Taschen · Balance (\d+) \/ (\d+)$/)))return es?`${m[1]} / ${m[2]} kg distribuidos · ${m[3]} bolsas activas · Equilibrio ${m[4]} / ${m[5]}`:`${m[1]} / ${m[2]} kg assigned · ${m[3]} active bags · Balance ${m[4]} / ${m[5]}`;
+    if((m=t.match(/^(\d+) Gegenstand\/Gegenstände ohne passenden Platz\.$/)))return es?`${m[1]} objeto(s) sin espacio adecuado.`:`${m[1]} item(s) without a suitable position.`;
+    if((m=t.match(/^Keine Tasche ist überfüllt\. Voll belegte Taschen sind in Ordnung\. Balance (\d+)% vorne · (\d+)% hinten\.$/)))return es?`Ninguna bolsa supera su capacidad. Las bolsas completamente llenas están bien. Equilibrio ${m[1]}% delante · ${m[2]}% detrás.`:`No bag is over capacity. Fully used bags are fine. Balance ${m[1]}% front · ${m[2]}% rear.`;
     return t;
   }
   const textState=new WeakMap(),attrState=new WeakMap();
