@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.4 Stability</title>
+<title>ROAM · Beta · V15.5 Language & Stage Clarity</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -658,6 +658,24 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 .v154-stage-elev-axis{display:flex;justify-content:space-between;color:var(--muted);font-size:9px;margin-top:5px}
 .v154-stage-elev-empty{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);background:rgba(250,247,239,.92);padding:8px 10px;border-radius:8px}
 
+/* ===== ROAM V15.5 language + stage clarity ===== */
+.v155-stage-metrics{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.v155-stage-metrics.compact{margin-top:6px}
+.v155-stage-metric{display:inline-flex;align-items:baseline;gap:5px;min-width:0;padding:5px 8px;border:1px solid rgba(47,71,52,.12);border-radius:999px;background:#eef1e8;color:var(--forest);line-height:1}
+.v155-stage-metric.hm{background:#f3e7df;border-color:#dfc8bc;color:#754b3a}
+.v155-stage-label{font-size:8px;font-weight:850;letter-spacing:.06em;text-transform:uppercase;opacity:.72;white-space:nowrap}
+.v155-stage-metric strong{font-size:11px;font-weight:900;white-space:nowrap}
+.v155-stage-surface{display:inline-flex;align-items:center;padding:5px 7px;border-radius:999px;background:#f2efe6;color:var(--muted);font-size:9px;font-weight:800}
+.dash-stage-chip .v155-stage-metrics{margin-top:8px}
+.dash-stage-row .v155-stage-metrics{margin-top:4px}
+.stage-item .v155-stage-metrics{padding-right:2px}
+#stageElevSummary{font-size:12px!important;font-weight:850!important}
+@media(max-width:760px){
+ .dash-stage-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .v155-stage-metric{padding:5px 7px}
+}
+@media(max-width:480px){.dash-stage-strip{grid-template-columns:1fr!important}}
+
 </style></head>
 <body>
 <div class="app">
@@ -1076,7 +1094,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.4</div>
+<div class="prototype-pill">ROAM · Beta · V15.5</div>
 </div>
 
 <script>
@@ -2138,8 +2156,8 @@ no.hidden=true;trip.hidden=false;lower.hidden=false;
 const m=saved.metrics||{},stages=Array.isArray(saved.stages)?saved.stages:[],start=saved.start||'Start',dest=saved.dest||'Ziel',dates=saved.tripDates||{},du=daysUntil(dates.startDate);
 document.getElementById('dashTitle').textContent=`${start} → ${dest}`;document.getElementById('dashRouteTitle').textContent=`${start} → ${dest}`;document.getElementById('dashMeta').textContent=[dates.startDate&&dates.endDate?`${dates.startDate} – ${dates.endDate}`:'Termin offen',`${Math.round(Number(m.totalDist)||0)} km`,`${Math.round(Number(m.totalGain)||0).toLocaleString('de-DE')} HM`,`${stages.length} ${stages.length===1?'Tag':'Tage'}`].join(' · ');document.getElementById('dashDeparture').textContent=du==null?'Termin offen':du>0?`Abfahrt in ${du} Tagen`:du===0?'Abfahrt heute':'Reise gestartet';document.getElementById('dashPrimaryAction').textContent='Reise bearbeiten';document.getElementById('dashPrimaryAction').dataset.go='plan';
 document.getElementById('dashKm').textContent=`${Math.round(Number(m.totalDist)||0)} km`;document.getElementById('dashHm').textContent=`${Math.round(Number(m.totalGain)||0).toLocaleString('de-DE')} HM`;document.getElementById('dashDays').textContent=stages.length||'–';const dts=terrainSummary(),dom=Object.entries(dts).sort((a,b)=>b[1]-a[1])[0]?.[0];document.getElementById('dashTerrain').textContent=routeTerrain.status==='ready'?(dom==='gravel'?'Gravel':dom==='rough'?'Trail':dom==='paved'?'Straße / Mixed':dom==='fine'?'Fein / Mixed':'Mixed'):'Mixed';drawDashboardRoute(saved);
-const names=readStageNamesFor(saved);document.getElementById('dashStageStrip').innerHTML=stages.slice(0,4).map((x,i)=>`<div class="dash-stage-chip"><b>Tag ${i+1} · ${Array.isArray(names)?(names[i+1]||'Etappenort wird ermittelt …'):'Etappenort wird ermittelt …'}</b><span>${Math.round(x.km||0)} km · ${Math.round(x.hm||0).toLocaleString('de-DE')} HM</span></div>`).join('');
-document.getElementById('dashStages').innerHTML=stages.slice(0,6).map((x,i)=>`<div class="dash-stage-row"><i>${i+1}</i><div><b>${Array.isArray(names)?(names[i]||start):start} → ${Array.isArray(names)?(names[i+1]||dest):dest}</b><small>${Math.round(x.km||0)} km · ${Math.round(x.hm||0).toLocaleString('de-DE')} HM</small></div><span>Tag ${i+1}</span></div>`).join('');
+const names=readStageNamesFor(saved);document.getElementById('dashStageStrip').innerHTML=stages.slice(0,4).map((x,i)=>`<div class="dash-stage-chip"><b>Tag ${i+1} · ${Array.isArray(names)?(names[i+1]||'Etappenort wird ermittelt …'):'Etappenort wird ermittelt …'}</b><div class="v155-stage-metrics"><span class="v155-stage-metric"><span class="v155-stage-label">Distanz</span><strong>${Math.round(x.km||0)} km</strong></span><span class="v155-stage-metric hm"><span class="v155-stage-label">Anstieg</span><strong>${Math.round(x.hm||0).toLocaleString('de-DE')} HM</strong></span></div></div>`).join('');
+document.getElementById('dashStages').innerHTML=stages.slice(0,6).map((x,i)=>`<div class="dash-stage-row"><i>${i+1}</i><div><b>${Array.isArray(names)?(names[i]||start):start} → ${Array.isArray(names)?(names[i+1]||dest):dest}</b><div class="v155-stage-metrics compact"><span class="v155-stage-metric"><span class="v155-stage-label">Distanz</span><strong>${Math.round(x.km||0)} km</strong></span><span class="v155-stage-metric hm"><span class="v155-stage-label">Anstieg</span><strong>${Math.round(x.hm||0).toLocaleString('de-DE')} HM</strong></span></div></div><span>Tag ${i+1}</span></div>`).join('');
 let lod={};try{lod=JSON.parse(sessionStorage.getItem('abo-mobile-lodging-selected')||'{}')||{}}catch(e){};const nights=Math.max(0,stages.length-1),lodCount=Array.from({length:nights},(_,i)=>lod[i]).filter(Boolean).length,pack=dashboardPackState(),routePct=100,stagesPct=stages.length?100:0,lodgePct=nights?Math.round(lodCount/nights*100):100,checkPct=du!=null&&du<=3?60:40;const ready=Math.round((routePct+stagesPct+lodgePct+pack.pct+checkPct)/5),open=[lodgePct<100,pack.pct<100,checkPct<100].filter(Boolean).length;
 document.getElementById('dashReadyPct').textContent=`${ready}%`;document.getElementById('dashReadyBar').style.width=`${ready}%`;document.getElementById('dashOpenCount').textContent=open?`${open} Bereiche offen`:'alles bereit';document.getElementById('dashReadyGrid').innerHTML=`<div class="dash-ready-item"><span class="dash-ready-icon">⌁</span><div><b>Route</b><small>fertig</small></div></div><div class="dash-ready-item"><span class="dash-ready-icon">⚑</span><div><b>Etappen</b><small>${stages.length} geplant</small></div></div><div class="dash-ready-item"><span class="dash-ready-icon">⌂</span><div><b>Übernachtungen</b><small>${lodCount}/${nights||0} gewählt</small></div></div><div class="dash-ready-item"><span class="dash-ready-icon">▣</span><div><b>Packen</b><small>${pack.have}/${pack.needed} vorhanden</small></div></div>`;
 let next={title:'Reise-Check öffnen',text:'Letzte Punkte vor der Abfahrt prüfen.',screen:'check'};if(lodgePct<100)next={title:'Übernachtungen planen',text:`${nights-lodCount} Nacht/Nächte sind noch offen.`,screen:'stages'};else if(pack.pct<100)next={title:'Packliste vervollständigen',text:`${pack.needed-pack.have} benötigte Gegenstände fehlen noch.`,screen:'pack'};document.getElementById('dashNextTitle').textContent=next.title;document.getElementById('dashNextText').textContent=next.text;document.getElementById('dashNextBtn').onclick=()=>showScreen(next.screen);
@@ -2412,11 +2430,11 @@ restoreWebLodging();stageData=readStagePrototypeData().map((d,i)=>({...d,lodging
 const list=document.getElementById('stageListItems'),summary=document.getElementById('overnightSummary');if(!list||!summary)return;
 document.getElementById('stagePageTitle').textContent=stageData.length?`${stageData.length} ${stageData.length===1?'Tag':'Tage'}`:'Noch keine Etappen';
 if(!stageData.length){list.innerHTML='<div class="muted" style="padding:12px">Plane zuerst eine Route. Danach erscheinen hier die realen Etappenorte.</div>';summary.innerHTML='';return}
-list.innerHTML=stageData.map((d,i)=>`<div class="stage-item ${i===selectedStagePrototype?'active':''}" data-stage="${i}"><b>${d.day} · ${d.from} → ${d.to}</b><small>${d.km.toFixed(0)} km · ${Math.round(d.hm).toLocaleString('de-DE')} HM${d.gravel!=null?` · ${d.gravel}% Gravel`:''}</small></div>`).join('');
+list.innerHTML=stageData.map((d,i)=>`<div class="stage-item ${i===selectedStagePrototype?'active':''}" data-stage="${i}"><b>${d.day} · ${d.from} → ${d.to}</b><div class="v155-stage-metrics compact"><span class="v155-stage-metric"><span class="v155-stage-label">Distanz</span><strong>${d.km.toFixed(0)} km</strong></span><span class="v155-stage-metric hm"><span class="v155-stage-label">Anstieg</span><strong>${Math.round(d.hm).toLocaleString('de-DE')} HM</strong></span>${d.gravel!=null?`<span class="v155-stage-surface">${d.gravel}% Gravel</span>`:''}</div></div>`).join('');
 const nights=stageData.slice(0,-1);summary.innerHTML=nights.length?nights.map((d,i)=>{const l=d.lodging,status=l?(l.status==='booked'?'reserviert':'vorgemerkt'):'noch offen';return `<div class="night-row" data-night="${i}"><span class="night-icon">${l?(isCampingLodging(l)?'⛺':'⌂'):'○'}</span><div><b>Nacht ${i+1} · ${d.to}</b><small>${l?l.name:'Noch keine Unterkunft ausgewählt'}</small></div><span class="night-status">${status}<small class="night-action">${l?'ansehen':'wählen'} ›</small></span></div>`}).join(''):'<div class="muted" style="font-size:11px">Keine Zwischenübernachtung erforderlich.</div>';
 list.querySelectorAll('.stage-item').forEach(el=>el.onclick=()=>showStagePrototype(+el.dataset.stage));summary.querySelectorAll('[data-night]').forEach(el=>el.onclick=()=>{selectedStagePrototype=+el.dataset.night;showStagePrototype(selectedStagePrototype);setTimeout(()=>document.querySelector('.v13-stay-card')?.scrollIntoView({behavior:'smooth',block:'center'}),80)});selectedStagePrototype=Math.min(selectedStagePrototype,stageData.length-1);showStagePrototype(selectedStagePrototype,false)
 }
-function showStagePrototype(i,rerender=true){if(!stageData.length)return;selectedStagePrototype=Math.max(0,Math.min(stageData.length-1,i));if(rerender)document.querySelectorAll('#stageListItems .stage-item').forEach((x,j)=>x.classList.toggle('active',j===selectedStagePrototype));const d=stageData[selectedStagePrototype],l=webLodging.selected[selectedStagePrototype]||d.lodging;document.getElementById('stageDay').textContent=d.day;document.getElementById('stageName').textContent=`${d.from} → ${d.to}`;document.getElementById('stageKm').textContent=`${d.km.toFixed(0)} km`;document.getElementById('stageHm').textContent=`${Math.round(d.hm).toLocaleString('de-DE')} m`;const mg=maxStageGradient(selectedStagePrototype);document.getElementById('stageWx').textContent=mg==null?'–':`Max. ${Math.round(mg)}%`;document.getElementById('stageSurface').textContent=d.gravel==null?'–':`${d.gravel}%`;document.getElementById('stagePrev').disabled=selectedStagePrototype===0;document.getElementById('stageNext').disabled=selectedStagePrototype===stageData.length-1;
+function showStagePrototype(i,rerender=true){if(!stageData.length)return;selectedStagePrototype=Math.max(0,Math.min(stageData.length-1,i));if(rerender)document.querySelectorAll('#stageListItems .stage-item').forEach((x,j)=>x.classList.toggle('active',j===selectedStagePrototype));const d=stageData[selectedStagePrototype],l=webLodging.selected[selectedStagePrototype]||d.lodging;document.getElementById('stageDay').textContent=d.day;document.getElementById('stageName').textContent=`${d.from} → ${d.to}`;document.getElementById('stageKm').textContent=`${d.km.toFixed(0)} km`;document.getElementById('stageHm').textContent=`${Math.round(d.hm).toLocaleString('de-DE')} HM`;const mg=maxStageGradient(selectedStagePrototype);document.getElementById('stageWx').textContent=mg==null?'–':`Max. ${Math.round(mg)}%`;document.getElementById('stageSurface').textContent=d.gravel==null?'–':`${d.gravel}%`;document.getElementById('stagePrev').disabled=selectedStagePrototype===0;document.getElementById('stageNext').disabled=selectedStagePrototype===stageData.length-1;
 const rider=readRiderProfileForm(),ratio=Math.max(d.km/Math.max(1,rider.km),d.hm/Math.max(1,rider.hm)),fitEl=document.getElementById('stageRiderFit');if(ratio<=1.15){fitEl.className='';fitEl.innerHTML=`<b>Im gewohnten Bereich.</b> ${d.km.toFixed(0)} km / ${Math.round(d.hm)} HM gegenüber ${rider.km} km / ${rider.hm} HM gewohnt.`}else if(ratio<=1.45){fitEl.className='fit-warn';fitEl.innerHTML=`<b>Anspruchsvoller als gewohnt.</b> Diese Etappe liegt rund ${Math.round((ratio-1)*100)}% über deinem normalen Tagesniveau.`}else{fitEl.className='fit-hard';fitEl.innerHTML='<b>Deutlich über deinem gewohnten Niveau.</b> Etappenteilung prüfen – Distanz oder Höhenmeter liegen erheblich über deinem Fahrerprofil.'}
 const w=stageWeatherValues(selectedStagePrototype);document.getElementById('stageWeatherStrip').innerHTML=weatherCell('Start',w?.start,'⛅')+weatherCell('Hochpunkt',w?.high,'☀')+weatherCell('Ziel',w?.target,'☁')+weatherCell('Abend',w?.evening,'◐');const t=routeTerrain.status==='ready'?routeTerrain.stages?.[selectedStagePrototype]:null;document.getElementById('stageTerrainLegend').innerHTML=t?['paved','fine','gravel','rough','unknown'].map(c=>`<span class="legend-item"><i class="route-dot" style="background:${terrainStyle(c).color}"></i>${terrainStyle(c).short} ${Math.round(Number(t[c])||0)}%</span>`).join(''):'<span class="legend-item">Terrain wird geladen …</span>';
 const box=document.getElementById('stageOvernightCard');if(d.last&&!l){const finalDest=readSavedRoute()?.dest||d.to||'Ziel';box.innerHTML=`<div class="stay-plan-head"><div><div class="eyebrow">Reiseziel</div><h3>${finalDest} / Ziel erreicht</h3></div></div><div class="lodging-search-status">Keine Zwischenübernachtung mehr nötig. Eine Unterkunft am Ziel kann optional vorgemerkt werden.</div>`;return}
@@ -2768,6 +2786,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
 </script>
 
 <script id="roam-v154-patch">
+// V15.5 extends this proven V15.4 stability layer with stage clarity + language fixes.
 (() => {
   const VERSION='15.4';
 
@@ -3000,7 +3019,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     const m=v154ExactStageMetrics(i),rows=m.rows,z=rows.map(r=>Number(r.z)),valid=z.filter(Number.isFinite);
     if(end)end.textContent=`${Math.round(m.km)} km`;
     if(valid.length<2 || Math.max(...valid)-Math.min(...valid)<1){
-      line.setAttribute('d','');area.setAttribute('d','');if(empty)empty.hidden=false;if(summary)summary.textContent=`${Math.round(m.km)} km · Höhendaten werden ergänzt`;if(range)range.textContent='–';return;
+      line.setAttribute('d','');area.setAttribute('d','');if(empty)empty.hidden=false;if(summary)summary.textContent=`Distanz ${Math.round(m.km)} km · Höhendaten werden ergänzt …`;if(range)range.textContent='–';return;
     }
     if(empty)empty.hidden=true;
     const min=Math.min(...valid),max=Math.max(...valid),span=Math.max(1,max-min),W=760,H=180,pad=12;
@@ -3009,7 +3028,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     const d='M'+pts.map(p=>p.map(v=>v.toFixed(1)).join(' ')).join(' L');
     const da=d+` L ${pts.at(-1)[0].toFixed(1)} ${H-pad} L ${pts[0][0].toFixed(1)} ${H-pad} Z`;
     line.setAttribute('d',d);area.setAttribute('d',da);
-    if(summary)summary.textContent=`${Math.round(m.km)} km · ${Math.round(m.hm).toLocaleString('de-DE')} HM`;
+    if(summary)summary.textContent=`Distanz ${Math.round(m.km)} km · Anstieg ${Math.round(m.hm).toLocaleString('de-DE')} HM`;
     if(range)range.textContent=`${Math.round(min)}–${Math.round(max)} m`;
   }
 
@@ -3101,7 +3120,22 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     'nicht zugewiesen':['unassigned','sin asignar'],
     'noch offen':['still open','pendiente'],
     'reserviert':['booked','reservado'],
-    'vorgemerkt':['saved','guardado']
+    'vorgemerkt':['saved','guardado'],
+    'Distanz':['Distance','Distancia'],
+    'Anstieg':['Ascent','Ascenso'],
+    'Max. Steigung':['Max. gradient','Pendiente máx.'],
+    'Gravel':['Gravel','Grava'],
+    'Etappenort wird ermittelt …':['Stage location is being resolved …','Calculando el lugar de la etapa …'],
+    'Noch keine Etappen':['No stages yet','Aún no hay etapas'],
+    'Plane zuerst eine Route. Danach erscheinen hier die realen Etappenorte.':['Plan a route first. The actual stage locations will then appear here.','Primero planifica una ruta. Después aparecerán aquí los lugares reales de las etapas.'],
+    'Noch keine Unterkunft ausgewählt':['No accommodation selected yet','Aún no se ha seleccionado alojamiento'],
+    'Keine Zwischenübernachtung erforderlich.':['No overnight stop is required.','No se requiere alojamiento intermedio.'],
+    'ansehen':['view','ver'],
+    'wählen':['choose','elegir'],
+    'Im gewohnten Bereich.':['Within your usual range.','Dentro de tu rango habitual.'],
+    'Anspruchsvoller als gewohnt.':['More demanding than usual.','Más exigente de lo habitual.'],
+    'Deutlich über deinem gewohnten Niveau.':['Well above your usual level.','Muy por encima de tu nivel habitual.'],
+    'Etappenteilung prüfen – Distanz oder Höhenmeter liegen erheblich über deinem Fahrerprofil.':['Review the stage split — distance or elevation gain is well above your rider profile.','Revisa la división de etapas: la distancia o el desnivel están muy por encima de tu perfil.']
   };
   if(typeof ROAM_V152_TRANSLATIONS==='object')Object.assign(ROAM_V152_TRANSLATIONS,extra);
 
@@ -3124,6 +3158,18 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     if((m=t.match(/^(\d+) aktive Taschen$/)))return es?`${m[1]} bolsas activas`:`${m[1]} active bags`;
     if((m=t.match(/^(\d+) Gegenstände$/)))return es?`${m[1]} objetos`:`${m[1]} items`;
     if((m=t.match(/^(\d+)% verteilt$/)))return es?`${m[1]}% distribuido`:`${m[1]}% assigned`;
+    if((m=t.match(/^(\d+) Tage$/)))return es?`${m[1]} días`:`${m[1]} days`;
+    if((m=t.match(/^1 Tag$/)))return es?'1 día':'1 day';
+    if((m=t.match(/^([\d.,]+) HM$/)))return `${m[1]} m↑`;
+    if((m=t.match(/^Max\. ([\d.,]+)%$/)))return es?`Máx. ${m[1]}%`:`Max. ${m[1]}%`;
+    if((m=t.match(/^(\d+) geplant$/)))return es?`${m[1]} planificadas`:`${m[1]} planned`;
+    if((m=t.match(/^(\d+)\/(\d+) gewählt$/)))return es?`${m[1]}/${m[2]} seleccionadas`:`${m[1]}/${m[2]} selected`;
+    if((m=t.match(/^(\d+)\/(\d+) vorhanden$/)))return es?`${m[1]}/${m[2]} disponibles`:`${m[1]}/${m[2]} available`;
+    if((m=t.match(/^(\d+)% Gravel$/)))return es?`${m[1]}% Grava`:`${m[1]}% Gravel`;
+    if((m=t.match(/^Distanz (\d+) km · Anstieg ([\d.,]+) HM$/)))return es?`Distancia ${m[1]} km · Ascenso ${m[2]} m↑`:`Distance ${m[1]} km · Ascent ${m[2]} m↑`;
+    if((m=t.match(/^Distanz (\d+) km · Höhendaten werden ergänzt …$/)))return es?`Distancia ${m[1]} km · Añadiendo datos de elevación …`:`Distance ${m[1]} km · Adding elevation data …`;
+    if((m=t.match(/^(\d+) km \/ (\d+) HM gegenüber (\d+) km \/ (\d+) HM gewohnt\.$/)))return es?`${m[1]} km / ${m[2]} m↑ frente a tus ${m[3]} km / ${m[4]} m↑ habituales.`:`${m[1]} km / ${m[2]} m↑ compared with your usual ${m[3]} km / ${m[4]} m↑.`;
+    if((m=t.match(/^Diese Etappe liegt rund (\d+)% über deinem normalen Tagesniveau\.$/)))return es?`Esta etapa está aproximadamente un ${m[1]}% por encima de tu nivel diario habitual.`:`This stage is about ${m[1]}% above your usual daily level.`;
     return t;
   }
   const textState=new WeakMap(),attrState=new WeakMap();
