@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.8.4 Reference Pack Lock</title>
+<title>ROAM · Beta · V15.8.5 Pack Master Layout</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -758,522 +758,68 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 @media(max-width:420px){.v158-bag-dock{grid-template-columns:1fr}.v158-pack-overview>div{padding:9px}.v158-pack-overview b{font-size:15px}.v158-bag-detail-kpis{grid-template-columns:1fr}.v158-bag-detail-actions{flex-direction:column}.v158-bag-detail-actions button{width:100%}}
 </style>
 
-<style id="roam-v1581-style">
-/* ===== ROAM V15.8.1 Compact Pack Layout ===== */
-#screen-pack{--v1581-card:#fffdf8;--v1581-soft:#f6f2e9;--v1581-tan:#b9683f}
-#screen-pack .route-title-row{align-items:flex-start!important;margin-bottom:4px!important}
-#screen-pack .route-title-row h1{margin-bottom:2px}
-#screen-pack .v14-pack-statusline{margin:5px 0 8px!important;padding:6px 9px!important;font-size:9px!important}
-#screen-pack .v158-pack-overview{gap:7px;margin:8px 0 10px!important}
-#screen-pack .v158-pack-overview>div{padding:8px 10px!important;min-height:54px}
-#screen-pack .v158-pack-overview .v158-kpi-icon{width:28px;height:28px;flex-basis:28px}
-#screen-pack .v158-pack-overview b{font-size:15px!important}
-
-/* Desktop: bike + inspector first, need/have next to each other, summaries in compact rail. */
-#screen-pack .pack-v13-grid{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(235px,.48fr)!important;
-  grid-template-areas:"bike bike side" "needs have side"!important;
-  gap:10px!important;align-items:start
-}
-#screen-pack .v158-pack-bike-card{grid-area:bike;padding:12px!important}
-#screen-pack .v158-pack-needs{grid-area:needs;padding:12px!important}
-#screen-pack .v158-pack-have{grid-area:have;padding:12px!important}
-#screen-pack .v158-pack-side{grid-area:side;position:sticky;top:72px;display:grid;gap:8px}
-#screen-pack .v158-pack-side>.card{padding:12px!important}
-#screen-pack .pack-v12-head{gap:9px!important;margin-bottom:8px!important}
-#screen-pack .pack-v12-head h2{font-size:17px!important;margin-bottom:2px!important}
-#screen-pack .pack-v12-head p{font-size:9px!important;line-height:1.35!important}
-#screen-pack .pack-v12-num{width:28px!important;height:28px!important;flex:0 0 28px!important;font-size:12px!important}
-
-/* Compact bag setup cards. */
-#screen-pack .v158-bag-section{padding:9px!important;margin-bottom:8px!important}
-#screen-pack .v158-section-title{margin-bottom:6px!important}
-#screen-pack .v158-section-title h3{font-size:14px!important}
-#screen-pack .v158-bag-dock{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px!important}
-#screen-pack .v158-bag-card{padding:6px!important;grid-template-columns:36px minmax(0,1fr) auto!important;gap:5px!important;border-radius:9px!important}
-#screen-pack .v158-bag-icon{width:36px;height:29px}
-#screen-pack .v158-bag-icon svg{width:35px;height:25px}
-#screen-pack .v158-bag-main b{font-size:9px!important}
-#screen-pack .v158-bag-main small{font-size:7px!important}
-#screen-pack .v158-bag-main strong{font-size:8px!important}
-#screen-pack .v158-bag-actions select{height:23px!important;max-width:64px!important;font-size:7px!important}
-#screen-pack .v158-bag-toggle{padding:4px 5px!important;font-size:7px!important}
-
-/* Auto-pack becomes a compact horizontal control. */
-#screen-pack .v158-pack-bike-card .pack-v12-best{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:center!important;padding:8px 9px!important;margin:7px 0!important}
-#screen-pack .v158-pack-bike-card .pack-v12-best h3{font-size:12px!important;margin:0 0 2px!important}
-#screen-pack .v158-pack-bike-card .pack-v12-best p{font-size:8px!important;margin:0 0 4px!important}
-#screen-pack .v158-pack-bike-card .pack-v12-best>.btn{width:auto!important;margin:0!important;white-space:nowrap}
-#screen-pack .pack-v12-score{min-height:0!important}
-
-/* Bike + open bag inspector side-by-side. */
-#screen-pack .v15-bike-stage{display:grid!important;grid-template-columns:minmax(0,1.5fr) minmax(245px,.62fr);gap:9px;align-items:stretch}
-#screen-pack .v15-bike-tools{grid-column:1/-1;margin:0!important;padding:5px 0 6px!important}
-#screen-pack .v15-bike-image-wrap{grid-column:1;min-height:0!important;height:330px!important;padding:4px!important}
-#screen-pack .v152-pack-bike{height:100%!important;max-height:330px!important;width:100%!important}
-#screen-pack .v15-bag-detail{grid-column:2;align-self:stretch;min-height:330px!important;border:1px solid var(--line)!important;border-radius:12px!important;background:var(--v1581-card)!important}
-#screen-pack .v158-bag-detail-head{grid-template-columns:52px minmax(0,1fr) auto!important;padding:9px!important;gap:8px!important}
-#screen-pack .v158-bag-detail-icon{width:52px;height:40px}
-#screen-pack .v158-bag-detail-icon svg{width:44px;height:29px}
-#screen-pack .v158-bag-detail-head h3{font-size:15px!important}
-#screen-pack .v158-bag-detail-head p{font-size:8px!important}
-#screen-pack .v158-bag-detail-kpis{padding:8px 9px 0!important;gap:5px!important}
-#screen-pack .v158-bag-detail-kpis>div{padding:6px!important}
-#screen-pack .v158-bag-detail-items{padding:7px 9px!important;max-height:150px;overflow:auto}
-#screen-pack .v158-bag-detail-row{padding:5px 0!important}
-#screen-pack .v158-bag-detail-guide{font-size:8px!important;padding:4px 9px 6px!important}
-#screen-pack .v158-bag-detail-actions{padding:7px 9px!important}
-
-/* White bike frame with the existing warm bags. */
-#screen-pack .v152-bike-base>path:nth-of-type(1){stroke:#c9c1b5!important;stroke-width:11px!important}
-#screen-pack .v152-bike-base>path:nth-of-type(2){stroke:#fffdf8!important;stroke-width:7px!important}
-#screen-pack .v152-bike-base>path:nth-of-type(3){stroke:#3f4942!important}
-#screen-pack .v152-bike-base>circle:nth-of-type(1),#screen-pack .v152-bike-base>circle:nth-of-type(2){stroke:#4a514b!important}
-#screen-pack #packBike-saddle path:first-child{fill:#a85c37!important}
-#screen-pack #packBike-frame path:first-child{fill:#b9653d!important}
-#screen-pack #packBike-top rect{fill:#b96c43!important}
-#screen-pack #packBike-bar path:first-child{fill:#b9653d!important}
-#screen-pack #packBike-fork rect{fill:#b76b42!important}
-#screen-pack .v15-bike-callout{background:rgba(255,253,248,.96)!important;color:var(--forest)!important;box-shadow:0 4px 14px rgba(42,45,39,.09)!important}
-
-/* Keep the page short: long inventories scroll inside their cards on desktop. */
-#screen-pack .v158-pack-needs #packNeedList,#screen-pack .v158-pack-have #packHaveList{max-height:455px;overflow:auto;overscroll-behavior:contain;padding-right:3px;scrollbar-width:thin}
-#screen-pack .pack-v12-category{margin-bottom:7px!important}
-#screen-pack .pack-v12-cathead{padding:6px 0!important}
-#screen-pack .v158-pack-needs .pack-v12-needrow{padding:4px 0!important}
-#screen-pack .v158-pack-have .pack-v12-item{padding:6px!important;margin-bottom:4px!important}
-#screen-pack .v158-item-tabs{padding-bottom:4px!important}
-#screen-pack .v158-item-tabs button{padding:5px 8px!important;font-size:8px!important}
-#screen-pack .pack-v12-search{gap:6px!important;margin-bottom:6px!important}
-#screen-pack .v152-add-item{margin:3px 0 7px!important;padding:7px 9px!important}
-#screen-pack .pack-v13-fill-title{margin-top:9px!important}
-#screen-pack .pack-v13-fillgrid{gap:5px!important}
-#screen-pack .pack-v13-fillcard{padding:7px!important}
-#screen-pack .pack-v13-advice,#screen-pack .pack-v13-unassigned{margin-top:7px!important}
-
-/* Tablet: keep inspector next to bike where possible, lists stack afterwards. */
-@media(max-width:1180px){
- #screen-pack .pack-v13-grid{grid-template-columns:minmax(0,1.45fr) minmax(240px,.58fr)!important;grid-template-areas:"bike side" "needs side" "have side"!important}
- #screen-pack .v158-bag-dock{grid-template-columns:repeat(2,minmax(0,1fr))}
- #screen-pack .v15-bike-stage{grid-template-columns:1fr!important}
- #screen-pack .v15-bike-image-wrap,#screen-pack .v15-bag-detail{grid-column:1!important}
- #screen-pack .v15-bike-image-wrap{height:315px!important}
- #screen-pack .v15-bag-detail{min-height:0!important}
-}
-@media(max-width:900px){
- #screen-pack .pack-v13-grid{grid-template-columns:1fr!important;grid-template-areas:"bike" "needs" "have" "side"!important}
- #screen-pack .v158-pack-side{position:static!important}
- #screen-pack .v158-pack-overview{grid-template-columns:repeat(2,minmax(0,1fr))!important}
- #screen-pack .v158-pack-needs #packNeedList,#screen-pack .v158-pack-have #packHaveList{max-height:none;overflow:visible}
- #screen-pack .v158-bag-dock{grid-template-columns:repeat(2,minmax(0,1fr))!important}
- #screen-pack .v15-bike-image-wrap{height:auto!important}
- #screen-pack .v152-pack-bike{height:auto!important;max-height:330px!important}
-}
-@media(max-width:520px){
- #screen-pack .v158-bag-dock{grid-template-columns:1fr!important}
- #screen-pack .v158-pack-bike-card .pack-v12-best{grid-template-columns:1fr!important}
- #screen-pack .v158-pack-bike-card .pack-v12-best>.btn{width:100%!important}
-}
-</style>\n
-<style id="roam-v1582-stable-pack">
-/* ===== ROAM V15.8.2 Stable Pack Workspace =====
-   One authoritative layout layer for Packen. Earlier experimental pack CSS
-   remains for compatibility, but this final layer owns geometry and breakpoints. */
-#screen-pack{
-  --pack-gap:12px;
-  --pack-card:#fffdf8;
-  --pack-soft:#f5f1e7;
-  --pack-olive:#465844;
-  --pack-rust:#c35f38;
-}
-#screen-pack .route-title-row{margin-bottom:6px!important}
-#screen-pack .v158-pack-overview{
-  display:grid!important;
-  grid-template-columns:repeat(4,minmax(0,1fr))!important;
-  gap:10px!important;
-  margin:8px 0 12px!important
-}
-#screen-pack .v158-pack-overview>div{min-height:60px!important;padding:9px 11px!important}
-
-/* Desktop/tablet landscape: fixed visual hierarchy, matching the approved mockup. */
-#screen-pack .pack-v13-grid{
-  display:grid!important;
-  grid-template-columns:minmax(0,1fr) 280px!important;
-  grid-template-areas:
-    "bike side"
-    "needs side"
-    "have side"!important;
-  gap:var(--pack-gap)!important;
-  align-items:start!important
-}
-#screen-pack .v158-pack-bike-card{grid-area:bike!important;padding:14px!important;min-width:0}
-#screen-pack .v158-pack-needs{grid-area:needs!important;padding:13px!important;min-width:0}
-#screen-pack .v158-pack-have{grid-area:have!important;padding:13px!important;min-width:0}
-#screen-pack .v158-pack-side{
-  grid-area:side!important;
-  position:sticky!important;
-  top:88px!important;
-  display:grid!important;
-  grid-template-columns:1fr!important;
-  gap:10px!important;
-  min-width:0
-}
-#screen-pack .v158-pack-side>.card{padding:14px!important}
-
-/* Bike workspace: bike remains the hero; inspector stays visible beside it. */
-#screen-pack .v15-bike-stage{
-  display:grid!important;
-  grid-template-columns:minmax(0,1.55fr) minmax(250px,.62fr)!important;
-  gap:10px!important;
-  align-items:stretch!important
-}
-#screen-pack .v15-bike-tools{
-  grid-column:1/-1!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:space-between!important;
-  gap:10px!important;
-  min-height:30px!important;
-  padding:2px 0 5px!important
-}
-#screen-pack .v15-bike-image-wrap{
-  grid-column:1!important;
-  height:350px!important;
-  min-height:350px!important;
-  padding:6px!important;
-  overflow:hidden!important;
-  border-radius:14px!important;
-  background:#eee8dc!important
-}
-#screen-pack .v152-pack-bike{
-  width:100%!important;
-  height:100%!important;
-  max-height:none!important;
-  display:block!important;
-  background:#eee8dc!important
-}
-#screen-pack .v152-pack-bike>rect:first-child{fill:#eee8dc!important}
-#screen-pack .v15-bag-detail{
-  grid-column:2!important;
-  min-height:350px!important;
-  max-height:350px!important;
-  overflow:auto!important;
-  border:1px solid var(--line)!important;
-  border-radius:14px!important;
-  background:var(--pack-card)!important
-}
-
-/* Callouts are compact and never dominate the bike. */
-#screen-pack .v15-bike-callout{
-  max-width:128px!important;
-  padding:6px 8px!important;
-  border-radius:9px!important;
-  box-shadow:0 5px 14px rgba(45,40,34,.08)!important
-}
-#screen-pack .v15-bike-callout b{font-size:9px!important}
-#screen-pack .v15-bike-callout span{font-size:7px!important}
-
-/* Mounted bags: one stable horizontal control strip instead of repeated large cards. */
-#screen-pack .v158-bag-section{padding:9px 10px!important;margin-bottom:9px!important}
-#screen-pack .v158-bag-dock{
-  display:grid!important;
-  grid-template-columns:repeat(6,minmax(0,1fr))!important;
-  gap:6px!important
-}
-#screen-pack .v158-bag-card{
-  min-height:70px!important;
-  display:grid!important;
-  grid-template-columns:30px minmax(0,1fr)!important;
-  grid-template-rows:auto auto!important;
-  gap:4px 6px!important;
-  padding:7px!important
-}
-#screen-pack .v158-bag-icon{width:30px!important;height:25px!important}
-#screen-pack .v158-bag-icon svg{width:29px!important;height:22px!important}
-#screen-pack .v158-bag-actions{grid-column:1/-1!important;display:flex!important;gap:4px!important}
-#screen-pack .v158-bag-actions select{min-width:0!important;max-width:none!important;flex:1!important}
-#screen-pack .v158-bag-toggle{white-space:nowrap!important}
-
-/* Remove redundant second fill-card wall; bag state is already visible in dock + bike + inspector. */
-#screen-pack .pack-v13-fill-title,
-#screen-pack #packFillGrid{display:none!important}
-#screen-pack .pack-v13-advice{margin-top:7px!important}
-#screen-pack .pack-v13-unassigned{margin-top:7px!important}
-
-/* Needs/have are compact work lists, not endless page-length sections. */
-#screen-pack .v158-pack-needs .pack-v12-needs,
-#screen-pack .v158-pack-have #packHaveList{
-  max-height:440px!important;
-  overflow:auto!important;
-  padding-right:4px!important;
-  scrollbar-gutter:stable
-}
-#screen-pack .v158-pack-needs .pack-v12-cat{margin-bottom:7px!important}
-#screen-pack .v158-pack-needs .pack-v12-item,
-#screen-pack .v158-pack-have .pack-v12-item{min-height:38px!important;padding:6px 7px!important}
-#screen-pack .v158-pack-needs .pack-v12-head,
-#screen-pack .v158-pack-have .pack-v12-head{position:sticky;top:0;background:var(--pack-card);z-index:2;padding-bottom:5px}
-
-/* Medium landscape (iPad-class CSS widths): KEEP the approved composition. */
-@media (min-width:861px) and (max-width:1180px){
-  #screen-pack .pack-v13-grid{
-    grid-template-columns:minmax(0,1fr) 238px!important;
-    grid-template-areas:"bike side" "needs side" "have side"!important
-  }
-  #screen-pack .v15-bike-stage{
-    grid-template-columns:minmax(0,1.35fr) minmax(220px,.7fr)!important
-  }
-  #screen-pack .v15-bike-image-wrap,
-  #screen-pack .v15-bag-detail{height:315px!important;min-height:315px!important;max-height:315px!important}
-  #screen-pack .v158-bag-dock{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-  #screen-pack .v158-pack-overview{grid-template-columns:repeat(4,minmax(0,1fr))!important}
-}
-
-/* Mobile/tablet portrait: intentional single-column flow, no accidental breakpoint collapse. */
-@media (max-width:860px){
-  #screen-pack .v158-pack-overview{grid-template-columns:1fr 1fr!important}
-  #screen-pack .pack-v13-grid{
-    grid-template-columns:minmax(0,1fr)!important;
-    grid-template-areas:"bike" "side" "needs" "have"!important
-  }
-  #screen-pack .v158-pack-side{position:static!important;grid-template-columns:1fr 1fr!important}
-  #screen-pack .v15-bike-stage{grid-template-columns:1fr!important}
-  #screen-pack .v15-bike-image-wrap{grid-column:1!important;height:310px!important;min-height:310px!important}
-  #screen-pack .v15-bag-detail{grid-column:1!important;min-height:0!important;max-height:330px!important}
-  #screen-pack .v158-bag-dock{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-}
-@media (max-width:620px){
-  #screen-pack .v158-pack-side{grid-template-columns:1fr!important}
-  #screen-pack .v158-bag-dock{grid-template-columns:1fr 1fr!important}
-  #screen-pack .v15-bike-image-wrap{height:270px!important;min-height:270px!important}
-  #screen-pack .v158-pack-needs .pack-v12-needs,
-  #screen-pack .v158-pack-have #packHaveList{max-height:none!important;overflow:visible!important}
-}
-@media (max-width:390px){
-  #screen-pack .v158-bag-dock{grid-template-columns:1fr!important}
-}
-</style>
-
-
-<style id="roam-v1583-pack-visual-lock">
-/* ROAM V15.8.3 — final visual lock for Packen.
-   Geometry only: no planner, packing or persistence logic is changed. */
-#screen-pack{
-  --pack-lock-gap:10px;
-}
-#screen-pack .v158-pack-bike-card{padding:11px!important}
-#screen-pack .pack-v12-head.v158-bike-head{margin-bottom:7px!important}
-#screen-pack .pack-v12-head.v158-bike-head p{margin-top:2px!important;line-height:1.25!important}
-
-/* Setup strip: keep all six positions visible, but make it a control strip rather than a card wall. */
-#screen-pack .v158-bag-section{padding:7px 8px!important;margin-bottom:7px!important}
-#screen-pack .v158-section-title{margin-bottom:5px!important}
-#screen-pack .v158-section-title h3{font-size:11px!important;margin:1px 0!important}
-#screen-pack .v158-section-title .eyebrow,
-#screen-pack .v158-section-title .muted{font-size:7px!important}
-#screen-pack .v158-bag-dock{gap:5px!important}
-#screen-pack .v158-bag-card{
-  min-height:58px!important;
-  grid-template-columns:25px minmax(0,1fr)!important;
-  gap:2px 5px!important;
-  padding:5px 6px!important;
-  border-radius:10px!important
-}
-#screen-pack .v158-bag-icon{width:25px!important;height:21px!important}
-#screen-pack .v158-bag-icon svg{width:24px!important;height:19px!important}
-#screen-pack .v158-bag-card b{font-size:7.5px!important;line-height:1.1!important}
-#screen-pack .v158-bag-card small{font-size:6.5px!important;line-height:1.15!important}
-#screen-pack .v158-bag-actions{gap:3px!important}
-#screen-pack .v158-bag-actions select,
-#screen-pack .v158-bag-toggle{height:24px!important;min-height:24px!important;font-size:6.5px!important;padding-top:2px!important;padding-bottom:2px!important}
-
-/* Auto-pack: one compact command row. */
-#screen-pack .pack-v12-best{
-  min-height:52px!important;
-  padding:8px 10px!important;
-  margin-bottom:7px!important;
-  display:flex!important;
-  align-items:center!important
-}
-#screen-pack .pack-v12-best h3{font-size:11px!important;margin:0 0 2px!important}
-#screen-pack .pack-v12-best p{font-size:7px!important;line-height:1.2!important;margin:0!important}
-#screen-pack .pack-v12-score{margin-top:4px!important}
-#screen-pack .pack-v12-best>.btn{min-width:145px!important;height:38px!important}
-
-/* The bike is the hero, but no longer fills the whole canvas. */
-#screen-pack .v15-bike-tools{
-  min-height:25px!important;
-  padding:0 0 4px!important
-}
-#screen-pack .v15-bike-tools .btn{display:none!important}
-#screen-pack .v15-bike-tools .muted{
-  margin-left:auto!important;
-  font-size:7px!important
-}
-#screen-pack .v15-bike-stage{
-  grid-template-columns:minmax(0,1.7fr) minmax(245px,.66fr)!important;
-  gap:9px!important
-}
-#screen-pack .v15-bike-image-wrap{
-  height:310px!important;
-  min-height:310px!important;
-  padding:10px!important;
-  background:#e9e1d1!important
-}
-#screen-pack .v152-pack-bike{
-  background:#e9e1d1!important
-}
-#screen-pack .v152-pack-bike>rect:first-child{fill:#e9e1d1!important}
-
-/* Keep the white frame crisp against the sand canvas. */
-#screen-pack .v152-bike-base path[stroke="#fffdf8"]{
-  stroke:#fffdf8!important;
-  filter:drop-shadow(0 1px 0 rgba(45,55,47,.20))
-}
-
-/* Labels: small annotations, never cards that compete with the bike. */
-#screen-pack .v15-bike-callout{
-  max-width:102px!important;
-  min-width:0!important;
-  padding:4px 6px!important;
-  border-radius:7px!important;
-  border-color:rgba(85,98,68,.18)!important;
-  box-shadow:0 3px 9px rgba(45,40,34,.07)!important;
-  opacity:.96!important
-}
-#screen-pack .v15-bike-callout b{font-size:7.5px!important;line-height:1.05!important}
-#screen-pack .v15-bike-callout span{font-size:6px!important;line-height:1.05!important;margin-top:1px!important}
-
-/* Inspector: denser content, several items visible at once on iPad landscape. */
-#screen-pack .v15-bag-detail{
-  min-height:310px!important;
-  max-height:310px!important
-}
-#screen-pack .v15-bag-detail>div{padding-left:10px!important;padding-right:10px!important}
-#screen-pack .v15-bag-detail h3{font-size:13px!important}
-#screen-pack .v15-bag-detail .pack-v12-statgrid{gap:5px!important}
-#screen-pack .v15-bag-detail .pack-v12-stat{padding:6px!important;min-height:48px!important}
-#screen-pack .v15-bag-detail .pack-v12-stat b{font-size:12px!important}
-#screen-pack .v15-bag-detail .v158-bag-item,
-#screen-pack .v15-bag-detail .pack-v12-item{
-  min-height:44px!important;
-  padding:6px!important;
-  margin-bottom:5px!important
-}
-#screen-pack .v15-bag-detail select{height:30px!important;min-height:30px!important;font-size:7px!important}
-
-/* Healthy state uses one slim footer. Empty "unassigned" is hidden by the lock script below. */
-#screen-pack .pack-v13-advice{margin-top:7px!important}
-#screen-pack .pack-v13-advice>*{
-  min-height:38px!important;
-  padding:7px 10px!important
-}
-#screen-pack .pack-v13-unassigned{
-  margin-top:6px!important;
-  padding:7px 10px!important
-}
-#screen-pack .pack-v13-unassigned.v1583-empty{display:none!important}
-
-/* Summary is supportive, not visually stronger than the workspace. */
-#screen-pack .v158-pack-side{gap:8px!important}
-#screen-pack .v158-pack-side>.card{padding:11px!important}
-#screen-pack .pack-v12-summary h3{font-size:12px!important}
-#screen-pack .pack-v12-weight{font-size:25px!important;line-height:1!important;margin:7px 0!important}
-#screen-pack .pack-v12-statgrid{gap:6px!important}
-#screen-pack .pack-v12-stat{padding:8px 4px!important;min-height:58px!important}
-#screen-pack .pack-v12-tip{padding:9px!important;margin-top:8px!important;font-size:7px!important}
-
-/* The approved iPad landscape is a first-class breakpoint and stays locked. */
-@media (min-width:861px) and (max-width:1180px){
-  #screen-pack .pack-v13-grid{
-    grid-template-columns:minmax(0,1fr) 232px!important;
-    gap:10px!important
-  }
-  #screen-pack .v158-pack-bike-card{padding:10px!important}
-  #screen-pack .v158-bag-dock{grid-template-columns:repeat(6,minmax(0,1fr))!important}
-  #screen-pack .v158-bag-card{
-    grid-template-columns:20px minmax(0,1fr)!important;
-    padding:4px!important
-  }
-  #screen-pack .v158-bag-icon{width:20px!important}
-  #screen-pack .v158-bag-icon svg{width:19px!important}
-  #screen-pack .v158-bag-actions{grid-column:1/-1!important}
-  #screen-pack .v15-bike-stage{
-    grid-template-columns:minmax(0,1.55fr) minmax(225px,.72fr)!important
-  }
-  #screen-pack .v15-bike-image-wrap{
-    height:292px!important;
-    min-height:292px!important
-  }
-  #screen-pack .v15-bag-detail{
-    height:292px!important;
-    min-height:292px!important;
-    max-height:292px!important
-  }
-  #screen-pack .v15-bike-callout{
-    transform:scale(.90)!important;
-    transform-origin:center!important
-  }
-}
-
-/* Preserve the already-stable portrait/mobile behavior. */
-@media (max-width:860px){
-  #screen-pack .v15-bike-tools .btn{display:inline-flex!important}
-  #screen-pack .v15-bike-image-wrap{height:300px!important;min-height:300px!important}
-  #screen-pack .v15-bag-detail{min-height:0!important;max-height:320px!important}
-  #screen-pack .v158-bag-dock{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-}
-@media (max-width:620px){
-  #screen-pack .v158-bag-dock{grid-template-columns:1fr 1fr!important}
-  #screen-pack .v15-bike-image-wrap{height:265px!important;min-height:265px!important}
-}
-</style>
-
-<style id="roam-v1584-reference-lock">
-/* V15.8.4 — reference screenshot is the single desktop design contract. */
-#screen-pack .v158-pack-overview,#screen-pack .v158-bag-section,#screen-pack .pack-v12-best,#screen-pack .v15-bike-tools,#screen-pack .v15-bag-detail,#screen-pack .pack-v13-unassigned{display:none!important}
-#screen-pack .route-title-row{margin-bottom:8px!important;align-items:end!important}
-#screen-pack .route-title-row h1{font-size:34px!important;line-height:.95!important}
-#screen-pack .v14-pack-statusline{position:absolute;right:24px;margin-top:-51px!important;width:auto!important;background:transparent!important;border:0!important;padding:0!important}
-#screen-pack .pack-v13-grid{display:grid!important;grid-template-columns:minmax(225px,.72fr) minmax(300px,.92fr) minmax(470px,1.55fr) minmax(235px,.72fr)!important;grid-template-areas:"needs have bike side"!important;gap:10px!important;align-items:start!important;margin-top:8px!important}
-#screen-pack .v158-pack-needs{grid-area:needs!important}.v158-pack-have{grid-area:have!important}.v158-pack-bike-card{grid-area:bike!important}.v158-pack-side{grid-area:side!important}
-#screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{padding:12px!important;height:760px!important;overflow:hidden!important}
-#screen-pack .v158-pack-side{position:static!important;display:grid!important;gap:9px!important}
-#screen-pack .v158-pack-side>.card{padding:12px!important}
-#screen-pack .pack-v12-head{min-height:58px!important;margin-bottom:8px!important;align-items:flex-start!important}
-#screen-pack .pack-v12-head h2{font-size:19px!important;margin:1px 0 2px!important;line-height:1.05!important}
-#screen-pack .pack-v12-head p{font-size:8px!important;line-height:1.25!important}
-#screen-pack .pack-v12-num{width:34px!important;height:34px!important;font-size:18px!important;flex:0 0 34px!important}
-#screen-pack .v158-bike-num{font-size:0!important}#screen-pack .v158-bike-num:after{content:"3";font-size:18px!important}
-#screen-pack .v158-bike-head h2{font-size:0!important}#screen-pack .v158-bike-head h2:after{content:"Was kommt wo hin?";font-size:19px!important}
-#screen-pack .v158-bike-head p{font-size:0!important}#screen-pack .v158-bike-head p:after{content:"Verteile deine Ausrüstung auf die Taschen. Ziehe Gegenstände direkt aus der Liste oder nutze den Auto-Pack Vorschlag.";font-size:8px!important}
-#screen-pack .v158-bike-head .badge{font-size:8px!important;padding:7px 11px!important}
-#screen-pack .v158-pack-needs #packNeedList,#screen-pack .v158-pack-have #packHaveList{max-height:590px!important;overflow:auto!important;padding-right:3px!important}
-#screen-pack .v158-pack-needs .pack-v12-cat,#screen-pack .v158-pack-have .pack-v12-cat{margin-bottom:7px!important;padding:8px!important}
-#screen-pack .v158-pack-needs .pack-v12-item,#screen-pack .v158-pack-have .pack-v12-item{min-height:35px!important;padding:4px 5px!important;margin-bottom:3px!important}
-#screen-pack .pack-v13-label{font-size:8px!important;margin-bottom:6px!important}.v12-control{height:34px!important;min-height:34px!important;font-size:9px!important}
-#screen-pack .pack-v12-search{gap:5px!important;margin-bottom:5px!important}#screen-pack .pack-v12-search input,#screen-pack .pack-v12-search select{height:31px!important;font-size:8px!important}
-#screen-pack .v158-item-tabs{gap:3px!important;margin:3px 0 5px!important}.v158-item-tabs button{font-size:6.5px!important;padding:5px 6px!important}.v152-add-item{height:30px!important;font-size:8px!important;margin-bottom:5px!important}
-#screen-pack .v15-bike-stage{display:block!important}.v15-bike-image-wrap{height:430px!important;min-height:430px!important;padding:0!important;background:#f3efe5!important;border:0!important;overflow:hidden!important}.v152-pack-bike{width:100%!important;height:100%!important;background:#f3efe5!important}
-#screen-pack .v15-bike-callout{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;max-width:120px!important;text-align:center!important;pointer-events:auto!important}
-#screen-pack .v15-bike-callout b{font-size:9px!important;color:#1f2d25!important}.v15-bike-callout span{font-size:7px!important;color:#596158!important}
-#screen-pack .v15-bike-callout:after{content:"";position:absolute;width:1px;height:42px;background:#a9573d;left:50%;top:100%;transform-origin:top}
-#screen-pack .v15-bike-callout.saddle{left:6%!important;top:7%!important}.v15-bike-callout.saddle:after{transform:rotate(-38deg);height:58px!important}
-#screen-pack .v15-bike-callout.top{left:42%!important;top:6%!important}.v15-bike-callout.top:after{height:54px!important}
-#screen-pack .v15-bike-callout.bar{right:2%!important;top:7%!important}.v15-bike-callout.bar:after{transform:rotate(32deg);height:56px!important}
-#screen-pack .v15-bike-callout.frame{left:42%!important;top:auto!important;bottom:3%!important}.v15-bike-callout.frame:after{top:auto!important;bottom:100%;height:66px!important}
-#screen-pack .v15-bike-callout.fork{right:0!important;top:auto!important;bottom:4%!important}.v15-bike-callout.fork:after{top:auto!important;bottom:100%;transform:rotate(-35deg);height:58px!important}
-#screen-pack .v15-bike-callout.bottle{display:none!important}
-#screen-pack .pack-v13-fill-title{display:block!important;font-size:16px!important;font-weight:900!important;margin:8px 0 6px!important;color:var(--forest)!important}
+\n
+<style id="roam-v1585-pack-master">
+/* V15.8.5 — ONE Pack layout layer. No later version-specific Pack geometry should override this contract. */
+#screen-pack{--pm-gap:10px;--pm-card:#fffdf8;--pm-soft:#f4efe5;--pm-ink:#203027;--pm-rust:#ad5738}
+#screen-pack .v158-pack-overview,#screen-pack .v158-bag-section,#screen-pack .pack-v12-best,#screen-pack .v15-bike-tools,#screen-pack .v15-bag-detail,#screen-pack .pack-v13-unassigned,#screen-pack .v14-pack-statusline{display:none!important}
+#screen-pack .route-title-row{display:grid!important;grid-template-columns:minmax(280px,1fr) auto!important;gap:18px!important;align-items:end!important;margin:0 0 10px!important}
+#screen-pack .route-title-row h1{font-size:34px!important;line-height:.98!important;margin:0 0 3px!important}
+#screen-pack .route-title-row>.btn-row{display:flex!important;grid-template-columns:none!important;gap:8px!important;width:auto!important;margin:0!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:nowrap!important}
+#screen-pack .route-title-row>.btn-row .btn{width:auto!important;min-width:0!important;white-space:nowrap!important;padding:10px 13px!important;line-height:1.1!important}
+#screen-pack #packModeBtn{grid-column:auto!important}
+#screen-pack .pack-v13-grid{display:grid!important;grid-template-columns:minmax(0,19fr) minmax(0,25fr) minmax(0,39fr) minmax(0,17fr)!important;grid-template-areas:"needs have bike side"!important;gap:var(--pm-gap)!important;align-items:start!important;margin-top:6px!important;width:100%!important;overflow:visible!important}
+#screen-pack .v158-pack-needs{grid-area:needs!important}#screen-pack .v158-pack-have{grid-area:have!important}#screen-pack .v158-pack-bike-card{grid-area:bike!important}#screen-pack .v158-pack-side{grid-area:side!important}
+#screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{padding:11px!important;height:748px!important;min-width:0!important;overflow:hidden!important}
+#screen-pack .v158-pack-side{position:static!important;display:grid!important;grid-template-columns:1fr!important;gap:8px!important;min-width:0!important}
+#screen-pack .v158-pack-side>.card{padding:11px!important;min-width:0!important}
+#screen-pack .pack-v12-head{display:flex!important;gap:8px!important;min-height:58px!important;margin:0 0 7px!important;align-items:flex-start!important;min-width:0!important}
+#screen-pack .pack-v12-head>div:nth-child(2){min-width:0!important}
+#screen-pack .pack-v12-head h2{font-size:18px!important;line-height:1.02!important;margin:1px 0 3px!important;overflow-wrap:normal!important;word-break:normal!important}
+#screen-pack .pack-v12-head p{font-size:8px!important;line-height:1.3!important;margin:0!important}
+#screen-pack .pack-v12-num{width:32px!important;height:32px!important;flex:0 0 32px!important;font-size:16px!important}
+#screen-pack .v158-bike-head .badge{margin-left:auto!important;flex:0 0 auto!important;font-size:7.5px!important;padding:6px 9px!important}
+#screen-pack .pack-v13-label{font-size:8px!important;margin:5px 0!important}#screen-pack .pack-v13-label .v12-control,#screen-pack .v12-control{min-height:32px!important;height:32px!important;font-size:8.5px!important}
+#screen-pack .pack-v13-lodging-note{font-size:7.5px!important;padding:7px 8px!important;margin-top:6px!important;line-height:1.35!important}
+#screen-pack .v158-pack-needs #packNeedList,#screen-pack .v158-pack-have #packHaveList{max-height:584px!important;overflow-y:auto!important;overflow-x:hidden!important;padding-right:2px!important}
+#screen-pack .pack-v13-group,#screen-pack .pack-v12-cat{padding:7px!important;margin-top:6px!important;border-radius:9px!important;min-width:0!important}
+#screen-pack .pack-v13-grouphead b,#screen-pack .pack-v12-cat h3{font-size:10px!important}
+#screen-pack .pack-v12-needrow{display:grid!important;grid-template-columns:18px 24px minmax(0,1fr) auto!important;gap:5px!important;align-items:center!important;padding:4px 0!important;font-size:8.5px!important;min-width:0!important}
+#screen-pack .pack-v12-needrow>*{min-width:0!important}
+#screen-pack .v158-item-tabs{display:flex!important;gap:3px!important;flex-wrap:nowrap!important;margin:2px 0 5px!important;overflow:hidden!important}
+#screen-pack .v158-item-tabs button{font-size:6.3px!important;padding:4px 5px!important;white-space:nowrap!important;min-width:0!important}
+#screen-pack .pack-v12-search{display:grid!important;grid-template-columns:minmax(0,1fr) 104px!important;gap:5px!important;margin-bottom:5px!important}
+#screen-pack .pack-v12-search input,#screen-pack .pack-v12-search select{height:30px!important;min-width:0!important;font-size:7.5px!important}
+#screen-pack .v152-add-item{width:100%!important;height:29px!important;margin:0 0 5px!important;font-size:7.5px!important;padding:4px!important}
+#screen-pack .v158-pack-have .pack-v12-item{display:grid!important;grid-template-columns:18px 28px minmax(0,1fr) 92px 16px!important;gap:5px!important;align-items:center!important;min-height:39px!important;padding:4px 5px!important;margin:0 0 3px!important;min-width:0!important}
+#screen-pack .v158-pack-have .pack-v12-item>*{min-width:0!important}
+#screen-pack .v158-pack-have .pack-v12-item .thumb{width:28px!important;height:28px!important}.v158-pack-have .pack-v12-item .thumb svg{width:17px!important;height:17px!important}
+#screen-pack .v158-pack-have .pack-v12-item .pack-v12-item-main{overflow:hidden!important}#screen-pack .v158-pack-have .pack-v12-item b{font-size:8.5px!important;line-height:1.15!important;white-space:normal!important;word-break:normal!important}#screen-pack .v158-pack-have .pack-v12-item small{font-size:6.7px!important;line-height:1.15!important;white-space:normal!important}
+#screen-pack .v158-pack-have .pack-v12-bagselect{grid-column:4!important;grid-row:1!important;width:92px!important;max-width:92px!important;height:27px!important;font-size:6.8px!important;padding:2px 16px 2px 6px!important}
+#screen-pack .v158-pack-have .menu-dots,#screen-pack .v158-pack-have .v152-custom-delete{grid-column:5!important;grid-row:1!important}
+#screen-pack .pack-v12-best{display:none!important}
+#screen-pack .v15-bike-stage{display:block!important;min-width:0!important}
+#screen-pack .v15-bike-image-wrap{position:relative!important;height:438px!important;min-height:438px!important;padding:0!important;background:#f3efe5!important;border:1px solid #e0d7c8!important;border-radius:12px!important;overflow:hidden!important}
+#screen-pack .v152-pack-bike{display:block!important;width:100%!important;height:100%!important;max-height:none!important;min-height:0!important;background:#f3efe5!important}
+#screen-pack .v15-bike-callout{display:block!important;position:absolute!important;background:rgba(255,253,248,.88)!important;border:0!important;box-shadow:none!important;padding:2px 4px!important;max-width:102px!important;text-align:center!important;z-index:5!important;line-height:1.05!important}
+#screen-pack .v15-bike-callout b{display:block!important;font-size:8px!important;color:var(--pm-ink)!important;white-space:nowrap!important}#screen-pack .v15-bike-callout span{display:block!important;font-size:6.4px!important;color:#5f675f!important;white-space:nowrap!important}
+#screen-pack .v15-bike-callout:after{content:""!important;position:absolute!important;width:1px!important;background:#a9573d!important;left:50%!important;top:100%!important;transform-origin:top!important}
+#screen-pack .v15-bike-callout.saddle{left:5%!important;top:5%!important}.v15-bike-callout.saddle:after{height:52px!important;transform:rotate(-35deg)!important}
+#screen-pack .v15-bike-callout.top{left:42%!important;top:4%!important}.v15-bike-callout.top:after{height:50px!important}
+#screen-pack .v15-bike-callout.bar{right:3%!important;top:5%!important}.v15-bike-callout.bar:after{height:50px!important;transform:rotate(31deg)!important}
+#screen-pack .v15-bike-callout.frame{left:42%!important;top:auto!important;bottom:2%!important}.v15-bike-callout.frame:after{top:auto!important;bottom:100%!important;height:58px!important}
+#screen-pack .v15-bike-callout.fork{right:1%!important;top:auto!important;bottom:3%!important}.v15-bike-callout.fork:after{top:auto!important;bottom:100%!important;height:52px!important;transform:rotate(-31deg)!important}
+#screen-pack .v15-bike-callout.bottle{display:none!important}#screen-pack .v15-bike-hotspot{z-index:4!important}
+#screen-pack .v15-bike-callout.v158-unmounted,#screen-pack .v15-bike-hotspot.v158-unmounted,#screen-pack .v158-bike-unmounted{display:none!important}
+#screen-pack .pack-v13-fill-title{display:block!important;font-size:15px!important;margin:8px 0 5px!important;color:var(--forest)!important}
 #screen-pack #packFillGrid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:5px!important}
-#screen-pack .pack-v13-fillcard{padding:7px!important;min-height:105px!important;border-radius:9px!important}.pack-v13-fillcard b{font-size:7.5px!important}.pack-v13-fillcard small{font-size:6.5px!important}
-#screen-pack .pack-v13-advice{margin-top:7px!important;max-height:115px!important;overflow:auto!important}.pack-v13-advice>*{min-height:42px!important;padding:7px 9px!important;font-size:7px!important}
-#screen-pack .pack-v12-weight{font-size:27px!important}.pack-v12-summary h3{font-size:14px!important}.pack-v12-stat{min-height:64px!important}.pack-v12-stat b{font-size:18px!important}.pack-v12-stat span{font-size:7px!important}
-#screen-pack .pack-v12-tip{font-size:7px!important;line-height:1.3!important}
-@media(max-width:1250px){#screen-pack .pack-v13-grid{grid-template-columns:minmax(205px,.7fr) minmax(275px,.9fr) minmax(430px,1.5fr) minmax(215px,.7fr)!important;gap:7px!important}#screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{height:720px!important}.v15-bike-image-wrap{height:395px!important;min-height:395px!important}}
-@media(max-width:1050px){#screen-pack .pack-v13-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;grid-template-areas:"needs have" "bike bike" "side side"!important}#screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{height:auto!important}.v158-pack-side{grid-template-columns:1fr 1fr!important}.v15-bike-image-wrap{height:430px!important}}
-@media(max-width:700px){#screen-pack .pack-v13-grid{grid-template-columns:1fr!important;grid-template-areas:"needs" "have" "bike" "side"!important}.v158-pack-side{grid-template-columns:1fr!important}.v15-bike-image-wrap{height:300px!important;min-height:300px!important}#screen-pack #packFillGrid{grid-template-columns:repeat(2,1fr)!important}}
+#screen-pack .pack-v13-fillcard{min-width:0!important;min-height:101px!important;padding:6px!important;border-radius:9px!important}#screen-pack .pack-v13-fillcard .bag-svg{height:26px!important}#screen-pack .pack-v13-fillcard .bag-svg svg{max-width:45px!important;height:25px!important}#screen-pack .pack-v13-fillcard b{font-size:7.2px!important;white-space:normal!important}#screen-pack .pack-v13-fillcard strong{font-size:11px!important}#screen-pack .pack-v13-fillcard small{font-size:6.3px!important}
+#screen-pack .pack-v13-advice{margin-top:6px!important;max-height:96px!important;overflow:auto!important}#screen-pack .pack-v13-advice>*{min-height:38px!important;padding:6px 8px!important;font-size:7px!important}
+#screen-pack .pack-v12-summary h3{font-size:12px!important}#screen-pack .pack-v12-weight{font-size:25px!important;white-space:nowrap!important}#screen-pack .pack-v12-stat{min-height:59px!important;padding:7px 4px!important}#screen-pack .pack-v12-stat b{font-size:16px!important}#screen-pack .pack-v12-stat span{font-size:6.5px!important}#screen-pack .pack-v12-tip{font-size:6.8px!important;line-height:1.3!important}
+/* iPad landscape remains the same four-column workspace; only density changes. */
+@media (min-width:901px) and (max-width:1180px){#screen-pack .pack-v13-grid{grid-template-columns:minmax(0,18fr) minmax(0,25fr) minmax(0,40fr) minmax(0,17fr)!important;gap:7px!important}#screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{padding:8px!important;height:700px!important}#screen-pack .pack-v12-head h2{font-size:15px!important}#screen-pack .pack-v12-num{width:27px!important;height:27px!important;flex-basis:27px!important;font-size:13px!important}#screen-pack .v15-bike-image-wrap{height:385px!important;min-height:385px!important}#screen-pack .v158-pack-have .pack-v12-item{grid-template-columns:16px 24px minmax(0,1fr) 76px 14px!important;gap:3px!important}#screen-pack .v158-pack-have .pack-v12-bagselect{width:76px!important;max-width:76px!important}#screen-pack .pack-v12-search{grid-template-columns:minmax(0,1fr) 82px!important}#screen-pack .v158-item-tabs button{font-size:5.8px!important;padding:4px!important}}
+@media(max-width:900px){#screen-pack .route-title-row{grid-template-columns:1fr!important}#screen-pack .route-title-row>.btn-row{justify-content:flex-start!important;flex-wrap:wrap!important}#screen-pack .pack-v13-grid{grid-template-columns:1fr 1fr!important;grid-template-areas:"needs have" "bike bike" "side side"!important}#screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{height:auto!important}.v158-pack-side{grid-template-columns:1fr 1fr!important}#screen-pack .v15-bike-image-wrap{height:420px!important}}
+@media(max-width:620px){#screen-pack .pack-v13-grid{grid-template-columns:1fr!important;grid-template-areas:"needs" "have" "bike" "side"!important}#screen-pack .v158-pack-side{grid-template-columns:1fr!important}#screen-pack .v15-bike-image-wrap{height:300px!important;min-height:300px!important}#screen-pack #packFillGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 </head>
 <body>
@@ -1620,7 +1166,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
    </section>
 
    <section class="card pack-v12-card pack-v12-assign v158-pack-bike-card">
-     <div class="pack-v12-head v158-bike-head"><div class="pack-v12-num v158-bike-num">▣</div><div><h2>Bike & Taschen</h2><p>Montiere zuerst deine Taschen. Tippe danach direkt am Bike oder auf eine Tasche, um Inhalt, Füllstand und Position zu prüfen.</p></div><span class="badge" style="margin-left:auto">Gravel · 40 mm</span></div>
+     <div class="pack-v12-head v158-bike-head"><div class="pack-v12-num v158-bike-num">3</div><div><h2>Was kommt wo hin?</h2><p>Verteile deine Ausrüstung auf die Taschen oder nutze den Auto-Pack Vorschlag.</p></div><span class="badge" style="margin-left:auto">Gravel · 40 mm</span></div>
      <div class="v158-bag-section">
        <div class="v158-section-title"><div><div class="eyebrow">Taschen-Setup</div><h3>Welche Taschen sind am Bike?</h3></div><span class="muted">Hinzufügen, entfernen und Größe wählen</span></div>
        <div class="v158-bag-dock" id="packBagDock"></div>
@@ -1629,7 +1175,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
      <div class="v15-bike-stage" id="packBikeStage">
        <div class="v15-bike-tools"><button class="btn" type="button" id="bagPickerToggle">＋ Taschen am Bike wählen</button><span class="muted">Tasche auswählen → Position prüfen → Inhalt öffnen</span></div>
        <div class="v15-bike-image-wrap"><div class="v15-bag-picker" id="bagPicker" aria-hidden="true"><button type="button" data-picker-bag="saddle">Satteltasche</button><button type="button" data-picker-bag="frame">Rahmentasche</button><button type="button" data-picker-bag="top">Oberrohr</button><button type="button" data-picker-bag="bar">Lenkertasche</button><button type="button" data-picker-bag="fork">Gabeltaschen</button><button type="button" data-picker-bag="bottle">Flaschenhalter</button></div>
-         <svg class="v15-bike-photo v152-pack-bike v1584-reference-bike" viewBox="0 0 820 500" role="img" aria-label="Weißes Gravelbike mit Bikepacking-Taschen">
+         <svg class="v15-bike-photo v152-pack-bike v1584-reference-bike" viewBox="35 72 735 390" role="img" aria-label="Weißes Gravelbike mit Bikepacking-Taschen">
 <defs>
  <filter id="bikeShadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#3d443d" flood-opacity=".16"/></filter>
  <linearGradient id="tireTan" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b89a70"/><stop offset="1" stop-color="#8d7558"/></linearGradient>
@@ -1657,16 +1203,16 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
  <g fill="none" stroke="#c8c3b8" stroke-width="2.2" stroke-linecap="round"><path d="M205 340L332 180L430 340L205 340Z"/><path d="M332 180L493 202L615 340M430 340L493 202"/></g>
  <!-- drivetrain / cockpit -->
  <g fill="none" stroke="#34423b" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="430" cy="340" r="31" stroke-width="8"/><circle cx="430" cy="340" r="17" stroke-width="4"/><path d="M430 340l62 25" stroke-width="7"/><path d="M301 132h67" stroke-width="11"/><path d="M548 155l39-35h46q25 0 29 20q2 17-17 31" stroke-width="10"/><path d="M640 171q20 13 7 35" stroke-width="8"/>
+  <circle cx="430" cy="340" r="31" stroke-width="8"/><circle cx="430" cy="340" r="17" stroke-width="4"/><path d="M430 340l62 25" stroke-width="7"/><path d="M301 132h67" stroke-width="11"/><path d="M548 155l35-31h42q22 0 25 17q2 14-13 24" stroke-width="10"/><path d="M637 165q17 15 4 34" stroke-width="8"/>
  </g>
  <!-- saddle bag -->
- <g id="packBike-saddle" data-bike-layer="saddle"><path d="M243 145q35-26 84-20l41 18l-16 61q-45 13-92-4l-31-25Z" fill="#53664c" stroke="#405044" stroke-width="4"/><path d="M255 151l85 42M281 132l-12 65" stroke="#d9d4c8" stroke-width="3" fill="none"/></g>
+ <g id="packBike-saddle" data-bike-layer="saddle"><path d="M238 148q39-28 91-20l34 16l-14 54q-43 10-88-5l-32-22Z" fill="#53664c" stroke="#405044" stroke-width="4"/><path d="M255 151l85 42M281 132l-12 65" stroke="#d9d4c8" stroke-width="3" fill="none"/></g>
  <!-- frame bag -->
- <g id="packBike-frame" data-bike-layer="frame"><path d="M337 202L478 214L430 316L276 316Z" fill="#b85f3d" stroke="#9c4c32" stroke-width="4"/><path d="M345 216h111" stroke="#e0a07e" stroke-width="3"/></g>
+ <g id="packBike-frame" data-bike-layer="frame"><path d="M340 205L469 216L426 302L292 302Z" fill="#b85f3d" stroke="#9c4c32" stroke-width="4"/><path d="M345 216h111" stroke="#e0a07e" stroke-width="3"/></g>
  <!-- top tube -->
- <g id="packBike-top" data-bike-layer="top"><rect x="366" y="173" width="102" height="29" rx="13" fill="#b85f3d" stroke="#9c4c32" stroke-width="4"/><path d="M381 178h70" stroke="#e0a07e" stroke-width="2"/></g>
+ <g id="packBike-top" data-bike-layer="top"><rect x="372" y="176" width="90" height="25" rx="11" fill="#b85f3d" stroke="#9c4c32" stroke-width="4"/><path d="M381 178h70" stroke="#e0a07e" stroke-width="2"/></g>
  <!-- handlebar roll -->
- <g id="packBike-bar" data-bike-layer="bar"><path d="M543 137q42-24 97-4l28 27l-23 58q-57 15-108-13l-12-41Z" fill="#b85f3d" stroke="#9c4c32" stroke-width="4"/><ellipse cx="622" cy="173" rx="24" ry="37" fill="#c96d45"/><path d="M553 146q10 30 5 62M648 144q-13 33-8 67" stroke="#e2b39b" stroke-width="4" fill="none"/></g>
+ <g id="packBike-bar" data-bike-layer="bar"><path d="M548 143q38-20 83-5l25 21l-19 48q-49 12-91-11l-11-34Z" fill="#b85f3d" stroke="#9c4c32" stroke-width="4"/><ellipse cx="622" cy="173" rx="24" ry="37" fill="#c96d45"/><path d="M553 146q10 30 5 62M648 144q-13 33-8 67" stroke="#e2b39b" stroke-width="4" fill="none"/></g>
  <!-- fork bags -->
  <g id="packBike-fork" data-bike-layer="fork"><g transform="rotate(-15 554 287)"><rect x="535" y="230" width="38" height="118" rx="16" fill="#53664c" stroke="#405044" stroke-width="4"/><path d="M538 266h32M538 311h32" stroke="#a9b39f" stroke-width="3"/></g><g transform="rotate(-12 588 292)" opacity=".95"><rect x="574" y="244" width="31" height="103" rx="14" fill="#53664c" stroke="#405044" stroke-width="4"/></g></g>
  <!-- bottles -->
@@ -1739,7 +1285,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.8.4</div>
+<div class="prototype-pill">ROAM · Beta · V15.8.5</div>
 </div>
 
 <script>
@@ -4168,45 +3714,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
 })();
 </script>\n
 
-<script id="roam-v1582-stability">
-(() => {
-  const screen=document.getElementById('screen-pack');
-  if(screen) screen.dataset.packLayout='stable-v1582';
-  // Keep one bag inspector open whenever Packen is entered.
-  function keepInspector(){
-    if(!screen?.classList.contains('active')) return;
-    const detail=document.getElementById('packBagDetail');
-    if(detail && detail.hidden){
-      document.querySelector('#packBagDock .v158-bag-card.mounted [data-v158-open-bag]')?.click();
-    }
-  }
-  const prevShow=showScreen;
-  showScreen=function(name){prevShow(name); if(name==='pack') setTimeout(keepInspector,40)};
-  keepInspector();
-})();
-</script>
-
-
-<script id="roam-v1583-pack-visual-lock-js">
-(() => {
-  const markEmptyUnassigned=()=>{
-    const box=document.querySelector('#screen-pack .pack-v13-unassigned');
-    const content=document.getElementById('packUnassigned');
-    if(!box||!content)return;
-    const empty=!content.querySelector('.pack-v13-unassigned-list');
-    box.classList.toggle('v1583-empty',empty);
-  };
-  const content=document.getElementById('packUnassigned');
-  if(content){
-    new MutationObserver(markEmptyUnassigned).observe(content,{childList:true,subtree:true,characterData:true});
-    markEmptyUnassigned();
-  }
-  const screen=document.getElementById('screen-pack');
-  if(screen)screen.dataset.packVisualLock='v1583';
-})();
-</script>
-
-<script id="roam-v1584-reference-script">(()=>{const s=document.getElementById('screen-pack');if(s)s.dataset.packDesign='reference-lock-v1584';})();</script>
+<script id="roam-v1585-pack-master-js">(()=>{const s=document.getElementById("screen-pack");if(s){s.dataset.packDesign="master-v1585";s.dataset.packVisualLayers="1"}})();</script>
 </body>
 </html>
 
