@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.8.1 Compact Pack Layout</title>
+<title>ROAM · Beta · V15.8.2 Stable Pack Workspace</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -875,7 +875,187 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
  #screen-pack .v158-pack-bike-card .pack-v12-best{grid-template-columns:1fr!important}
  #screen-pack .v158-pack-bike-card .pack-v12-best>.btn{width:100%!important}
 }
-</style>\n</head>
+</style>\n
+<style id="roam-v1582-stable-pack">
+/* ===== ROAM V15.8.2 Stable Pack Workspace =====
+   One authoritative layout layer for Packen. Earlier experimental pack CSS
+   remains for compatibility, but this final layer owns geometry and breakpoints. */
+#screen-pack{
+  --pack-gap:12px;
+  --pack-card:#fffdf8;
+  --pack-soft:#f5f1e7;
+  --pack-olive:#465844;
+  --pack-rust:#c35f38;
+}
+#screen-pack .route-title-row{margin-bottom:6px!important}
+#screen-pack .v158-pack-overview{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:10px!important;
+  margin:8px 0 12px!important
+}
+#screen-pack .v158-pack-overview>div{min-height:60px!important;padding:9px 11px!important}
+
+/* Desktop/tablet landscape: fixed visual hierarchy, matching the approved mockup. */
+#screen-pack .pack-v13-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 280px!important;
+  grid-template-areas:
+    "bike side"
+    "needs side"
+    "have side"!important;
+  gap:var(--pack-gap)!important;
+  align-items:start!important
+}
+#screen-pack .v158-pack-bike-card{grid-area:bike!important;padding:14px!important;min-width:0}
+#screen-pack .v158-pack-needs{grid-area:needs!important;padding:13px!important;min-width:0}
+#screen-pack .v158-pack-have{grid-area:have!important;padding:13px!important;min-width:0}
+#screen-pack .v158-pack-side{
+  grid-area:side!important;
+  position:sticky!important;
+  top:88px!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:10px!important;
+  min-width:0
+}
+#screen-pack .v158-pack-side>.card{padding:14px!important}
+
+/* Bike workspace: bike remains the hero; inspector stays visible beside it. */
+#screen-pack .v15-bike-stage{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.55fr) minmax(250px,.62fr)!important;
+  gap:10px!important;
+  align-items:stretch!important
+}
+#screen-pack .v15-bike-tools{
+  grid-column:1/-1!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  min-height:30px!important;
+  padding:2px 0 5px!important
+}
+#screen-pack .v15-bike-image-wrap{
+  grid-column:1!important;
+  height:350px!important;
+  min-height:350px!important;
+  padding:6px!important;
+  overflow:hidden!important;
+  border-radius:14px!important;
+  background:#eee8dc!important
+}
+#screen-pack .v152-pack-bike{
+  width:100%!important;
+  height:100%!important;
+  max-height:none!important;
+  display:block!important;
+  background:#eee8dc!important
+}
+#screen-pack .v152-pack-bike>rect:first-child{fill:#eee8dc!important}
+#screen-pack .v15-bag-detail{
+  grid-column:2!important;
+  min-height:350px!important;
+  max-height:350px!important;
+  overflow:auto!important;
+  border:1px solid var(--line)!important;
+  border-radius:14px!important;
+  background:var(--pack-card)!important
+}
+
+/* Callouts are compact and never dominate the bike. */
+#screen-pack .v15-bike-callout{
+  max-width:128px!important;
+  padding:6px 8px!important;
+  border-radius:9px!important;
+  box-shadow:0 5px 14px rgba(45,40,34,.08)!important
+}
+#screen-pack .v15-bike-callout b{font-size:9px!important}
+#screen-pack .v15-bike-callout span{font-size:7px!important}
+
+/* Mounted bags: one stable horizontal control strip instead of repeated large cards. */
+#screen-pack .v158-bag-section{padding:9px 10px!important;margin-bottom:9px!important}
+#screen-pack .v158-bag-dock{
+  display:grid!important;
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  gap:6px!important
+}
+#screen-pack .v158-bag-card{
+  min-height:70px!important;
+  display:grid!important;
+  grid-template-columns:30px minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;
+  gap:4px 6px!important;
+  padding:7px!important
+}
+#screen-pack .v158-bag-icon{width:30px!important;height:25px!important}
+#screen-pack .v158-bag-icon svg{width:29px!important;height:22px!important}
+#screen-pack .v158-bag-actions{grid-column:1/-1!important;display:flex!important;gap:4px!important}
+#screen-pack .v158-bag-actions select{min-width:0!important;max-width:none!important;flex:1!important}
+#screen-pack .v158-bag-toggle{white-space:nowrap!important}
+
+/* Remove redundant second fill-card wall; bag state is already visible in dock + bike + inspector. */
+#screen-pack .pack-v13-fill-title,
+#screen-pack #packFillGrid{display:none!important}
+#screen-pack .pack-v13-advice{margin-top:7px!important}
+#screen-pack .pack-v13-unassigned{margin-top:7px!important}
+
+/* Needs/have are compact work lists, not endless page-length sections. */
+#screen-pack .v158-pack-needs .pack-v12-needs,
+#screen-pack .v158-pack-have #packHaveList{
+  max-height:440px!important;
+  overflow:auto!important;
+  padding-right:4px!important;
+  scrollbar-gutter:stable
+}
+#screen-pack .v158-pack-needs .pack-v12-cat{margin-bottom:7px!important}
+#screen-pack .v158-pack-needs .pack-v12-item,
+#screen-pack .v158-pack-have .pack-v12-item{min-height:38px!important;padding:6px 7px!important}
+#screen-pack .v158-pack-needs .pack-v12-head,
+#screen-pack .v158-pack-have .pack-v12-head{position:sticky;top:0;background:var(--pack-card);z-index:2;padding-bottom:5px}
+
+/* Medium landscape (iPad-class CSS widths): KEEP the approved composition. */
+@media (min-width:861px) and (max-width:1180px){
+  #screen-pack .pack-v13-grid{
+    grid-template-columns:minmax(0,1fr) 238px!important;
+    grid-template-areas:"bike side" "needs side" "have side"!important
+  }
+  #screen-pack .v15-bike-stage{
+    grid-template-columns:minmax(0,1.35fr) minmax(220px,.7fr)!important
+  }
+  #screen-pack .v15-bike-image-wrap,
+  #screen-pack .v15-bag-detail{height:315px!important;min-height:315px!important;max-height:315px!important}
+  #screen-pack .v158-bag-dock{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  #screen-pack .v158-pack-overview{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+
+/* Mobile/tablet portrait: intentional single-column flow, no accidental breakpoint collapse. */
+@media (max-width:860px){
+  #screen-pack .v158-pack-overview{grid-template-columns:1fr 1fr!important}
+  #screen-pack .pack-v13-grid{
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:"bike" "side" "needs" "have"!important
+  }
+  #screen-pack .v158-pack-side{position:static!important;grid-template-columns:1fr 1fr!important}
+  #screen-pack .v15-bike-stage{grid-template-columns:1fr!important}
+  #screen-pack .v15-bike-image-wrap{grid-column:1!important;height:310px!important;min-height:310px!important}
+  #screen-pack .v15-bag-detail{grid-column:1!important;min-height:0!important;max-height:330px!important}
+  #screen-pack .v158-bag-dock{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media (max-width:620px){
+  #screen-pack .v158-pack-side{grid-template-columns:1fr!important}
+  #screen-pack .v158-bag-dock{grid-template-columns:1fr 1fr!important}
+  #screen-pack .v15-bike-image-wrap{height:270px!important;min-height:270px!important}
+  #screen-pack .v158-pack-needs .pack-v12-needs,
+  #screen-pack .v158-pack-have #packHaveList{max-height:none!important;overflow:visible!important}
+}
+@media (max-width:390px){
+  #screen-pack .v158-bag-dock{grid-template-columns:1fr!important}
+}
+</style>
+
+</head>
 <body>
 <div class="app">
 <header class="topbar">
@@ -1234,15 +1414,15 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
   <g class="v152-bike-base" fill="none" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="190" cy="300" r="104" stroke="#555b55" stroke-width="14"/><circle cx="572" cy="300" r="104" stroke="#555b55" stroke-width="14"/>
     <circle cx="190" cy="300" r="94" stroke="#b4aa99" stroke-width="2"/><circle cx="572" cy="300" r="94" stroke="#b4aa99" stroke-width="2"/>
-    <path d="M190 300 306 164 392 300 190 300Zm116-136 135 20 131 116M392 300l49-116M306 164l-30-45M255 118h65M572 300l-39-151M520 146h48l27 22" stroke="#e8e2d8" stroke-width="18"/>
-    <path d="M190 300 306 164 392 300 190 300Zm116-136 135 20 131 116M392 300l49-116M306 164l-30-45M255 118h65M572 300l-39-151M520 146h48l27 22" stroke="#405044" stroke-width="6"/>
+    <path d="M190 300 306 164 392 300 190 300Zm116-136 135 20 131 116M392 300l49-116M306 164l-30-45M255 118h65M572 300l-39-151M520 146h48l27 22" stroke="#3f4741" stroke-width="18"/>
+    <path d="M190 300 306 164 392 300 190 300Zm116-136 135 20 131 116M392 300l49-116M306 164l-30-45M255 118h65M572 300l-39-151M520 146h48l27 22" stroke="#fffdf8" stroke-width="10"/>
     <path d="M392 300h102" stroke="#405044" stroke-width="5"/><circle cx="392" cy="300" r="22" stroke="#405044" stroke-width="5"/>
   </g>
-  <g id="packBike-saddle" data-bike-layer="saddle"><path d="M170 142q54-26 115-10l-15 53H190q-17-10-20-43Z" fill="#53664c" stroke="#f0e8dd" stroke-width="4"/><path d="M199 137 244 179M224 130l-11 53" stroke="#d8cfbf" stroke-width="3" fill="none"/></g>
-  <g id="packBike-frame" data-bike-layer="frame"><path d="M303 181 432 194 388 285 247 285Z" fill="#bf7b4a" stroke="#f0e8dd" stroke-width="4"/></g>
-  <g id="packBike-top" data-bike-layer="top"><rect x="318" y="151" width="112" height="28" rx="14" fill="#b86b49" stroke="#f0e8dd" stroke-width="4"/></g>
-  <g id="packBike-bar" data-bike-layer="bar"><path d="M524 155q61-18 101 8v66q-54 19-88-5Z" fill="#c57440" stroke="#f0e8dd" stroke-width="4"/><path d="M553 154q8 35 8 74M596 158q-5 34 1 66" stroke="#405044" stroke-width="8" fill="none"/></g>
-  <g id="packBike-fork" data-bike-layer="fork"><rect x="500" y="224" width="34" height="90" rx="15" fill="#607057" stroke="#f0e8dd" stroke-width="4"/><rect x="545" y="228" width="32" height="86" rx="15" fill="#607057" opacity=".82" stroke="#f0e8dd" stroke-width="4"/></g>
+  <g id="packBike-saddle" data-bike-layer="saddle"><path d="M170 142q54-26 115-10l-15 53H190q-17-10-20-43Z" fill="#465844" stroke="#c35f38" stroke-width="4"/><path d="M199 137 244 179M224 130l-11 53" stroke="#d8cfbf" stroke-width="3" fill="none"/></g>
+  <g id="packBike-frame" data-bike-layer="frame"><path d="M303 181 432 194 388 285 247 285Z" fill="#465844" stroke="#c35f38" stroke-width="4"/></g>
+  <g id="packBike-top" data-bike-layer="top"><rect x="318" y="151" width="112" height="28" rx="14" fill="#465844" stroke="#c35f38" stroke-width="4"/></g>
+  <g id="packBike-bar" data-bike-layer="bar"><path d="M524 155q61-18 101 8v66q-54 19-88-5Z" fill="#465844" stroke="#c35f38" stroke-width="4"/><path d="M553 154q8 35 8 74M596 158q-5 34 1 66" stroke="#405044" stroke-width="8" fill="none"/></g>
+  <g id="packBike-fork" data-bike-layer="fork"><rect x="500" y="224" width="34" height="90" rx="15" fill="#465844" stroke="#c35f38" stroke-width="4"/><rect x="545" y="228" width="32" height="86" rx="15" fill="#465844" opacity=".9" stroke="#c35f38" stroke-width="4"/></g>
   <g id="packBike-bottle" data-bike-layer="bottle"><path d="M411 222h22v12l8 12v57h-38v-57l8-12Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M456 235h22v12l8 12v55h-38v-55l8-12Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M406 263h35M451 277h35" stroke="#b85c42" stroke-width="5"/></g>
 </svg>
          <button class="v15-bike-hotspot saddle" data-pack-bag="saddle" aria-label="Satteltasche anzeigen"></button>
@@ -1311,7 +1491,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.8.1</div>
+<div class="prototype-pill">ROAM · Beta · V15.8.2</div>
 </div>
 
 <script>
@@ -3739,6 +3919,25 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
   ensureCompactPackInspector();
 })();
 </script>\n
+
+<script id="roam-v1582-stability">
+(() => {
+  const screen=document.getElementById('screen-pack');
+  if(screen) screen.dataset.packLayout='stable-v1582';
+  // Keep one bag inspector open whenever Packen is entered.
+  function keepInspector(){
+    if(!screen?.classList.contains('active')) return;
+    const detail=document.getElementById('packBagDetail');
+    if(detail && detail.hidden){
+      document.querySelector('#packBagDock .v158-bag-card.mounted [data-v158-open-bag]')?.click();
+    }
+  }
+  const prevShow=showScreen;
+  showScreen=function(name){prevShow(name); if(name==='pack') setTimeout(keepInspector,40)};
+  keepInspector();
+})();
+</script>
+
 </body>
 </html>
 
