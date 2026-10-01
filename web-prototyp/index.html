@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.8.2 Stable Pack Workspace</title>
+<title>ROAM · Beta · V15.8.3 Pack Visual Lock</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -1055,6 +1055,181 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 }
 </style>
 
+
+<style id="roam-v1583-pack-visual-lock">
+/* ROAM V15.8.3 — final visual lock for Packen.
+   Geometry only: no planner, packing or persistence logic is changed. */
+#screen-pack{
+  --pack-lock-gap:10px;
+}
+#screen-pack .v158-pack-bike-card{padding:11px!important}
+#screen-pack .pack-v12-head.v158-bike-head{margin-bottom:7px!important}
+#screen-pack .pack-v12-head.v158-bike-head p{margin-top:2px!important;line-height:1.25!important}
+
+/* Setup strip: keep all six positions visible, but make it a control strip rather than a card wall. */
+#screen-pack .v158-bag-section{padding:7px 8px!important;margin-bottom:7px!important}
+#screen-pack .v158-section-title{margin-bottom:5px!important}
+#screen-pack .v158-section-title h3{font-size:11px!important;margin:1px 0!important}
+#screen-pack .v158-section-title .eyebrow,
+#screen-pack .v158-section-title .muted{font-size:7px!important}
+#screen-pack .v158-bag-dock{gap:5px!important}
+#screen-pack .v158-bag-card{
+  min-height:58px!important;
+  grid-template-columns:25px minmax(0,1fr)!important;
+  gap:2px 5px!important;
+  padding:5px 6px!important;
+  border-radius:10px!important
+}
+#screen-pack .v158-bag-icon{width:25px!important;height:21px!important}
+#screen-pack .v158-bag-icon svg{width:24px!important;height:19px!important}
+#screen-pack .v158-bag-card b{font-size:7.5px!important;line-height:1.1!important}
+#screen-pack .v158-bag-card small{font-size:6.5px!important;line-height:1.15!important}
+#screen-pack .v158-bag-actions{gap:3px!important}
+#screen-pack .v158-bag-actions select,
+#screen-pack .v158-bag-toggle{height:24px!important;min-height:24px!important;font-size:6.5px!important;padding-top:2px!important;padding-bottom:2px!important}
+
+/* Auto-pack: one compact command row. */
+#screen-pack .pack-v12-best{
+  min-height:52px!important;
+  padding:8px 10px!important;
+  margin-bottom:7px!important;
+  display:flex!important;
+  align-items:center!important
+}
+#screen-pack .pack-v12-best h3{font-size:11px!important;margin:0 0 2px!important}
+#screen-pack .pack-v12-best p{font-size:7px!important;line-height:1.2!important;margin:0!important}
+#screen-pack .pack-v12-score{margin-top:4px!important}
+#screen-pack .pack-v12-best>.btn{min-width:145px!important;height:38px!important}
+
+/* The bike is the hero, but no longer fills the whole canvas. */
+#screen-pack .v15-bike-tools{
+  min-height:25px!important;
+  padding:0 0 4px!important
+}
+#screen-pack .v15-bike-tools .btn{display:none!important}
+#screen-pack .v15-bike-tools .muted{
+  margin-left:auto!important;
+  font-size:7px!important
+}
+#screen-pack .v15-bike-stage{
+  grid-template-columns:minmax(0,1.7fr) minmax(245px,.66fr)!important;
+  gap:9px!important
+}
+#screen-pack .v15-bike-image-wrap{
+  height:310px!important;
+  min-height:310px!important;
+  padding:10px!important;
+  background:#e9e1d1!important
+}
+#screen-pack .v152-pack-bike{
+  background:#e9e1d1!important
+}
+#screen-pack .v152-pack-bike>rect:first-child{fill:#e9e1d1!important}
+
+/* Keep the white frame crisp against the sand canvas. */
+#screen-pack .v152-bike-base path[stroke="#fffdf8"]{
+  stroke:#fffdf8!important;
+  filter:drop-shadow(0 1px 0 rgba(45,55,47,.20))
+}
+
+/* Labels: small annotations, never cards that compete with the bike. */
+#screen-pack .v15-bike-callout{
+  max-width:102px!important;
+  min-width:0!important;
+  padding:4px 6px!important;
+  border-radius:7px!important;
+  border-color:rgba(85,98,68,.18)!important;
+  box-shadow:0 3px 9px rgba(45,40,34,.07)!important;
+  opacity:.96!important
+}
+#screen-pack .v15-bike-callout b{font-size:7.5px!important;line-height:1.05!important}
+#screen-pack .v15-bike-callout span{font-size:6px!important;line-height:1.05!important;margin-top:1px!important}
+
+/* Inspector: denser content, several items visible at once on iPad landscape. */
+#screen-pack .v15-bag-detail{
+  min-height:310px!important;
+  max-height:310px!important
+}
+#screen-pack .v15-bag-detail>div{padding-left:10px!important;padding-right:10px!important}
+#screen-pack .v15-bag-detail h3{font-size:13px!important}
+#screen-pack .v15-bag-detail .pack-v12-statgrid{gap:5px!important}
+#screen-pack .v15-bag-detail .pack-v12-stat{padding:6px!important;min-height:48px!important}
+#screen-pack .v15-bag-detail .pack-v12-stat b{font-size:12px!important}
+#screen-pack .v15-bag-detail .v158-bag-item,
+#screen-pack .v15-bag-detail .pack-v12-item{
+  min-height:44px!important;
+  padding:6px!important;
+  margin-bottom:5px!important
+}
+#screen-pack .v15-bag-detail select{height:30px!important;min-height:30px!important;font-size:7px!important}
+
+/* Healthy state uses one slim footer. Empty "unassigned" is hidden by the lock script below. */
+#screen-pack .pack-v13-advice{margin-top:7px!important}
+#screen-pack .pack-v13-advice>*{
+  min-height:38px!important;
+  padding:7px 10px!important
+}
+#screen-pack .pack-v13-unassigned{
+  margin-top:6px!important;
+  padding:7px 10px!important
+}
+#screen-pack .pack-v13-unassigned.v1583-empty{display:none!important}
+
+/* Summary is supportive, not visually stronger than the workspace. */
+#screen-pack .v158-pack-side{gap:8px!important}
+#screen-pack .v158-pack-side>.card{padding:11px!important}
+#screen-pack .pack-v12-summary h3{font-size:12px!important}
+#screen-pack .pack-v12-weight{font-size:25px!important;line-height:1!important;margin:7px 0!important}
+#screen-pack .pack-v12-statgrid{gap:6px!important}
+#screen-pack .pack-v12-stat{padding:8px 4px!important;min-height:58px!important}
+#screen-pack .pack-v12-tip{padding:9px!important;margin-top:8px!important;font-size:7px!important}
+
+/* The approved iPad landscape is a first-class breakpoint and stays locked. */
+@media (min-width:861px) and (max-width:1180px){
+  #screen-pack .pack-v13-grid{
+    grid-template-columns:minmax(0,1fr) 232px!important;
+    gap:10px!important
+  }
+  #screen-pack .v158-pack-bike-card{padding:10px!important}
+  #screen-pack .v158-bag-dock{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+  #screen-pack .v158-bag-card{
+    grid-template-columns:20px minmax(0,1fr)!important;
+    padding:4px!important
+  }
+  #screen-pack .v158-bag-icon{width:20px!important}
+  #screen-pack .v158-bag-icon svg{width:19px!important}
+  #screen-pack .v158-bag-actions{grid-column:1/-1!important}
+  #screen-pack .v15-bike-stage{
+    grid-template-columns:minmax(0,1.55fr) minmax(225px,.72fr)!important
+  }
+  #screen-pack .v15-bike-image-wrap{
+    height:292px!important;
+    min-height:292px!important
+  }
+  #screen-pack .v15-bag-detail{
+    height:292px!important;
+    min-height:292px!important;
+    max-height:292px!important
+  }
+  #screen-pack .v15-bike-callout{
+    transform:scale(.90)!important;
+    transform-origin:center!important
+  }
+}
+
+/* Preserve the already-stable portrait/mobile behavior. */
+@media (max-width:860px){
+  #screen-pack .v15-bike-tools .btn{display:inline-flex!important}
+  #screen-pack .v15-bike-image-wrap{height:300px!important;min-height:300px!important}
+  #screen-pack .v15-bag-detail{min-height:0!important;max-height:320px!important}
+  #screen-pack .v158-bag-dock{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media (max-width:620px){
+  #screen-pack .v158-bag-dock{grid-template-columns:1fr 1fr!important}
+  #screen-pack .v15-bike-image-wrap{height:265px!important;min-height:265px!important}
+}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1409,7 +1584,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
      <div class="v15-bike-stage" id="packBikeStage">
        <div class="v15-bike-tools"><button class="btn" type="button" id="bagPickerToggle">＋ Taschen am Bike wählen</button><span class="muted">Tasche auswählen → Position prüfen → Inhalt öffnen</span></div>
        <div class="v15-bike-image-wrap"><div class="v15-bag-picker" id="bagPicker" aria-hidden="true"><button type="button" data-picker-bag="saddle">Satteltasche</button><button type="button" data-picker-bag="frame">Rahmentasche</button><button type="button" data-picker-bag="top">Oberrohr</button><button type="button" data-picker-bag="bar">Lenkertasche</button><button type="button" data-picker-bag="fork">Gabeltaschen</button><button type="button" data-picker-bag="bottle">Flaschenhalter</button></div>
-         <svg class="v15-bike-photo v152-pack-bike" viewBox="0 0 760 430" role="img" aria-label="Gravelbike; nur tatsächlich verwendete Taschen werden eingeblendet">
+         <svg class="v15-bike-photo v152-pack-bike" viewBox="-28 -8 816 456" role="img" aria-label="Gravelbike; nur tatsächlich verwendete Taschen werden eingeblendet">
   <rect width="760" height="430" fill="#f8f5ed"/>
   <g class="v152-bike-base" fill="none" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="190" cy="300" r="104" stroke="#555b55" stroke-width="14"/><circle cx="572" cy="300" r="104" stroke="#555b55" stroke-width="14"/>
@@ -1418,10 +1593,10 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
     <path d="M190 300 306 164 392 300 190 300Zm116-136 135 20 131 116M392 300l49-116M306 164l-30-45M255 118h65M572 300l-39-151M520 146h48l27 22" stroke="#fffdf8" stroke-width="10"/>
     <path d="M392 300h102" stroke="#405044" stroke-width="5"/><circle cx="392" cy="300" r="22" stroke="#405044" stroke-width="5"/>
   </g>
-  <g id="packBike-saddle" data-bike-layer="saddle"><path d="M170 142q54-26 115-10l-15 53H190q-17-10-20-43Z" fill="#465844" stroke="#c35f38" stroke-width="4"/><path d="M199 137 244 179M224 130l-11 53" stroke="#d8cfbf" stroke-width="3" fill="none"/></g>
-  <g id="packBike-frame" data-bike-layer="frame"><path d="M303 181 432 194 388 285 247 285Z" fill="#465844" stroke="#c35f38" stroke-width="4"/></g>
-  <g id="packBike-top" data-bike-layer="top"><rect x="318" y="151" width="112" height="28" rx="14" fill="#465844" stroke="#c35f38" stroke-width="4"/></g>
-  <g id="packBike-bar" data-bike-layer="bar"><path d="M524 155q61-18 101 8v66q-54 19-88-5Z" fill="#465844" stroke="#c35f38" stroke-width="4"/><path d="M553 154q8 35 8 74M596 158q-5 34 1 66" stroke="#405044" stroke-width="8" fill="none"/></g>
+  <g id="packBike-saddle" data-bike-layer="saddle"><path d="M180 145q47-22 99-10l-13 43h-67q-16-8-19-33Z" fill="#465844" stroke="#c35f38" stroke-width="4"/><path d="M199 137 244 179M224 130l-11 53" stroke="#d8cfbf" stroke-width="3" fill="none"/></g>
+  <g id="packBike-frame" data-bike-layer="frame"><path d="M307 184 417 194 382 269 270 269Z" fill="#465844" stroke="#c35f38" stroke-width="4"/></g>
+  <g id="packBike-top" data-bike-layer="top"><rect x="323" y="153" width="96" height="23" rx="11.5" fill="#465844" stroke="#c35f38" stroke-width="4"/></g>
+  <g id="packBike-bar" data-bike-layer="bar"><path d="M531 158q52-15 86 7v55q-45 16-74-4Z" fill="#465844" stroke="#c35f38" stroke-width="4"/><path d="M553 154q8 35 8 74M596 158q-5 34 1 66" stroke="#405044" stroke-width="8" fill="none"/></g>
   <g id="packBike-fork" data-bike-layer="fork"><rect x="500" y="224" width="34" height="90" rx="15" fill="#465844" stroke="#c35f38" stroke-width="4"/><rect x="545" y="228" width="32" height="86" rx="15" fill="#465844" opacity=".9" stroke="#c35f38" stroke-width="4"/></g>
   <g id="packBike-bottle" data-bike-layer="bottle"><path d="M411 222h22v12l8 12v57h-38v-57l8-12Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M456 235h22v12l8 12v55h-38v-55l8-12Z" fill="#eef0e5" stroke="#405044" stroke-width="4"/><path d="M406 263h35M451 277h35" stroke="#b85c42" stroke-width="5"/></g>
 </svg>
@@ -1491,7 +1666,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.8.2</div>
+<div class="prototype-pill">ROAM · Beta · V15.8.3</div>
 </div>
 
 <script>
@@ -3935,6 +4110,26 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
   const prevShow=showScreen;
   showScreen=function(name){prevShow(name); if(name==='pack') setTimeout(keepInspector,40)};
   keepInspector();
+})();
+</script>
+
+
+<script id="roam-v1583-pack-visual-lock-js">
+(() => {
+  const markEmptyUnassigned=()=>{
+    const box=document.querySelector('#screen-pack .pack-v13-unassigned');
+    const content=document.getElementById('packUnassigned');
+    if(!box||!content)return;
+    const empty=!content.querySelector('.pack-v13-unassigned-list');
+    box.classList.toggle('v1583-empty',empty);
+  };
+  const content=document.getElementById('packUnassigned');
+  if(content){
+    new MutationObserver(markEmptyUnassigned).observe(content,{childList:true,subtree:true,characterData:true});
+    markEmptyUnassigned();
+  }
+  const screen=document.getElementById('screen-pack');
+  if(screen)screen.dataset.packVisualLock='v1583';
 })();
 </script>
 
