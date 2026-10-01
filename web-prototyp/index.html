@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.7 Planner & Stage Stability</title>
+<title>ROAM · Beta · V15.8 Pack UX & Visual Clarity</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -719,6 +719,44 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 .v157-plan-hint b{color:var(--forest);white-space:nowrap}.v157-plan-hint span{min-width:0}
 @media(max-width:600px){.v157-plan-hint{margin-left:0;display:block}.v157-plan-hint b{display:block;margin-bottom:2px}}
 </style>
+<style id="roam-v158-style">
+/* ===== ROAM V15.8 Pack UX & Visual Clarity ===== */
+#screen-pack .route-title-row{margin-bottom:8px}
+.v158-pack-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0 14px}
+.v158-pack-overview>div{display:flex;align-items:center;gap:10px;min-width:0;border:1px solid var(--line);background:#fbf8f1;border-radius:12px;padding:10px 12px}
+.v158-pack-overview .v158-kpi-icon{width:31px;height:31px;flex:0 0 31px;border-radius:9px;display:grid;place-items:center;background:#e8ede2;color:var(--forest);font-weight:900}
+.v158-pack-overview p{margin:0;min-width:0}.v158-pack-overview small{display:block;font-size:8px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:850}.v158-pack-overview b{display:block;margin-top:2px;font-size:17px;color:var(--forest);white-space:nowrap}
+#screen-pack .pack-v13-grid{display:grid!important;grid-template-columns:minmax(0,1.65fr) minmax(270px,.58fr)!important;grid-template-areas:"bike side" "needs side" "have side"!important;gap:14px!important;align-items:start}
+.v158-pack-bike-card{grid-area:bike}.v158-pack-needs{grid-area:needs}.v158-pack-have{grid-area:have}.v158-pack-side{grid-area:side;position:sticky;top:82px}
+.v158-pack-bike-card{padding:16px!important}.v158-bike-head{margin-bottom:12px!important}
+.v158-bag-section{border:1px solid rgba(47,71,52,.10);border-radius:13px;background:#f7f4ec;padding:12px;margin-bottom:11px}
+.v158-section-title{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:9px}.v158-section-title h3{margin:2px 0 0;font-size:16px}.v158-section-title>.muted{font-size:9px;text-align:right}
+.v158-bag-dock{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.v158-bag-card{min-width:0;border:1px solid #ddd5c8;background:#fffdf8;border-radius:11px;padding:8px;transition:.16s;display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:7px;align-items:center}
+.v158-bag-card.mounted{border-color:#9fac91;background:#f1f4eb}.v158-bag-card.selected{box-shadow:0 0 0 2px rgba(162,87,60,.18);border-color:#b7795f}.v158-bag-card.unmounted{opacity:.68}
+.v158-bag-icon{width:42px;height:34px;border:0;background:transparent;padding:0;display:grid;place-items:center;cursor:pointer}.v158-bag-icon svg{width:40px;height:28px;display:block}
+.v158-bag-main{min-width:0}.v158-bag-main button{display:block;width:100%;border:0;background:transparent;padding:0;text-align:left;color:var(--ink);cursor:pointer;min-width:0}.v158-bag-main b{display:block;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v158-bag-main small{display:block;font-size:8px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v158-bag-main strong{display:block;font-size:9px;color:var(--forest);margin-top:3px}
+.v158-bag-actions{display:grid;gap:4px;justify-items:end}.v158-bag-actions select{height:25px;max-width:70px;border:1px solid var(--line);border-radius:7px;background:#fff;padding:0 5px;font-size:8px;color:var(--forest)}.v158-bag-toggle{border:0;border-radius:7px;background:#e9eee2;color:var(--forest);font-size:8px;font-weight:850;padding:5px 6px;cursor:pointer;white-space:nowrap}.v158-bag-card.mounted .v158-bag-toggle{background:#f0e4dc;color:#85533e}
+.v158-item-tabs{display:flex;gap:5px;overflow-x:auto;padding:2px 0 5px;scrollbar-width:none}.v158-item-tabs::-webkit-scrollbar{display:none}.v158-item-tabs button{border:1px solid var(--line);background:#faf7ef;color:var(--muted);border-radius:999px;padding:6px 9px;font-size:9px;font-weight:800;white-space:nowrap;cursor:pointer}.v158-item-tabs button.active{background:var(--forest);border-color:var(--forest);color:#fff}
+.v158-pack-have .pack-v12-item{grid-template-columns:20px 34px minmax(0,1fr) minmax(115px,auto) 20px}.v158-pack-have .pack-v12-item .thumb{width:34px;height:34px}.v158-pack-have .pack-v12-item .thumb svg{width:21px;height:21px;stroke-linecap:round;stroke-linejoin:round}
+.v158-item-status{display:inline-flex;align-items:center;border-radius:999px;padding:3px 6px;margin-top:4px;font-size:8px;font-weight:850;background:#eef1e8;color:#50604f}.v158-item-status.missing{background:#f4e5de;color:#8d513b}.v158-item-status.unpacked{background:#f2eee4;color:#7a6c57}.v158-item-status.preview{background:#f5e7df;color:#92543d}
+.v158-pack-needs .pack-v12-needrow{grid-template-columns:20px 25px minmax(0,1fr) auto;padding:6px 0}.v158-need-icon{width:25px;height:25px;border-radius:7px;background:#eef1e8;display:grid;place-items:center}.v158-need-icon svg{width:16px;height:16px;fill:none;stroke:#465648;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#screen-pack .v15-bike-tools{border-bottom:1px solid rgba(47,71,52,.08);padding-bottom:8px!important;margin-bottom:2px}.v154-pack-mode{font-size:9px!important}
+#screen-pack .v15-bike-hotspot{display:block!important;z-index:3}#screen-pack .v15-bike-callout{display:block!important;z-index:4;border:1px solid rgba(47,71,52,.10)!important}.v15-bike-callout.v158-unmounted,.v15-bike-hotspot.v158-unmounted{display:none!important}
+#screen-pack .v15-bike-callout.selected{box-shadow:0 0 0 2px rgba(162,87,60,.26);border-color:#b87960!important}.v158-empty-bag{opacity:.48!important}.v158-bike-unmounted{display:none!important}
+#screen-pack .v15-bike-image-wrap{background:radial-gradient(circle at 50% 53%,#fbf8f1 0,#f6f2e9 66%,#f1ece2 100%)!important;border-color:#ddd5c8!important}
+#screen-pack .v152-pack-bike{max-height:390px!important;transition:.2s}.v152-pack-bike [data-bike-layer]{transition:opacity .18s ease,filter .18s ease}.v152-pack-bike [data-bike-layer].v158-empty-bag{filter:saturate(.65)}
+.v158-pack-bike-card .pack-v12-best{border:1px solid rgba(47,71,52,.10);border-radius:12px;padding:11px;background:#fbf8f1;margin:10px 0}
+.v158-pack-bike-card .pack-v13-fill-title{margin-top:13px}.v158-pack-bike-card .pack-v13-fillgrid{grid-template-columns:repeat(auto-fit,minmax(125px,1fr))!important}
+.v158-pack-bike-card .pack-v13-fillcard{position:relative;background:#fffdf8!important}.v158-pack-bike-card .pack-v13-fillcard.empty{border-style:dashed;opacity:.72}.v158-pack-bike-card .pack-v13-fillcard.selected{box-shadow:0 0 0 2px rgba(162,87,60,.16)}.v158-pack-bike-card .pack-v13-fillcard.full:not(.pack-v12-over){border-color:#9fac91!important;background:#f1f4eb!important}.v158-pack-bike-card .pack-v13-fillcard.full:not(.pack-v12-over) strong,.v158-pack-bike-card .pack-v13-fillcard.full:not(.pack-v12-over) small{color:var(--forest)!important}.v158-pack-bike-card .pack-v13-fillcard.full:not(.pack-v12-over) .bar i{background:var(--olive)!important}.v158-pack-bike-card .pack-v13-fillcard.pack-v12-over{border-color:#bd6b52!important;background:#fbefea!important}.v158-bike-num{font-size:14px!important}
+.v15-bag-detail{min-height:0!important;background:#fbf8f1!important;padding:0!important;overflow:hidden}.v158-bag-detail-head{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:11px;align-items:center;padding:13px;border-bottom:1px solid var(--line)}.v158-bag-detail-icon{width:62px;height:48px;border-radius:11px;background:#eef1e8;display:grid;place-items:center}.v158-bag-detail-icon svg{width:53px;height:34px}.v158-bag-detail-head h3{margin:1px 0 3px;font-size:18px}.v158-bag-detail-head p{margin:0;color:var(--muted);font-size:9px;line-height:1.35}.v158-close{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:#fffdf8;color:var(--forest);cursor:pointer;font-size:17px}
+.v158-bag-detail-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:11px 13px 0}.v158-bag-detail-kpis>div{border:1px solid var(--line);border-radius:9px;background:#fffdf8;padding:8px}.v158-bag-detail-kpis small{display:block;font-size:7px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:850}.v158-bag-detail-kpis b{display:block;margin-top:2px;font-size:13px}.v158-bag-detail-bar{height:7px;margin:9px 13px 3px;border-radius:999px;background:#e3dccf;overflow:hidden}.v158-bag-detail-bar i{display:block;height:100%;background:var(--olive)}.v158-bag-detail-guide{padding:5px 13px 9px;color:var(--muted);font-size:9px}.v158-bag-content{padding:3px 13px 12px}.v158-bag-content-title{display:flex;justify-content:space-between;align-items:center;margin:4px 0 6px}.v158-bag-content-title b{font-size:11px}.v158-bag-content-title span{font-size:8px;color:var(--muted)}
+.v158-bag-item-row{display:grid;grid-template-columns:32px minmax(0,1fr) minmax(120px,auto);gap:8px;align-items:center;border:1px solid var(--line);border-radius:9px;background:#fffdf8;padding:7px;margin-top:5px}.v158-bag-item-icon{width:32px;height:32px;border-radius:8px;background:#eef1e8;display:grid;place-items:center}.v158-bag-item-icon svg{width:18px;height:18px;fill:none;stroke:#465648;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.v158-bag-item-row b{font-size:10px}.v158-bag-item-row small{display:block;font-size:8px;color:var(--muted);margin-top:2px}.v158-bag-item-row select{height:29px;max-width:155px;border:1px solid var(--line);border-radius:8px;background:#f4efe7;padding:0 6px;color:var(--forest);font-size:8px;font-weight:750}.v158-empty-content{padding:18px;border:1px dashed #d2c9ba;border-radius:10px;text-align:center;color:var(--muted);font-size:9px;background:#fffdf8}.v158-bag-detail-actions{display:flex;justify-content:flex-end;gap:7px;padding:0 13px 13px}.v158-bag-detail-actions button{border:1px solid var(--line);border-radius:8px;background:#fffdf8;color:var(--forest);font-size:9px;font-weight:800;padding:7px 9px;cursor:pointer}.v158-bag-detail-actions .remove{color:#88533f;background:#f6e9e2;border-color:#e4cbbb}
+.pack-v13-unassigned{background:#faf7ef}.pack-v13-unassigned-list span{font-size:9px!important}.pack-v13-advice{margin-top:9px}
+@media(max-width:1100px){#screen-pack .pack-v13-grid{grid-template-columns:1fr!important;grid-template-areas:"bike" "needs" "have" "side"!important}.v158-pack-side{position:static!important;display:grid!important;grid-template-columns:1fr 1fr!important}.v158-bag-dock{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){.v158-pack-overview{grid-template-columns:1fr 1fr}.v158-bag-dock{grid-template-columns:1fr 1fr}.v158-pack-side{grid-template-columns:1fr!important}.v158-section-title{align-items:flex-start;flex-direction:column}.v158-section-title>.muted{text-align:left}.v158-bag-card{grid-template-columns:38px minmax(0,1fr) auto}.v158-bag-icon{width:38px}.v158-bag-detail-head{grid-template-columns:50px minmax(0,1fr) auto}.v158-bag-detail-icon{width:50px}.v158-bag-detail-kpis{grid-template-columns:1fr 1fr 1fr}.v158-bag-item-row{grid-template-columns:30px minmax(0,1fr)}.v158-bag-item-row select{grid-column:2;width:100%;max-width:none}.v158-pack-have .pack-v12-item{grid-template-columns:20px 32px minmax(0,1fr) 22px!important}.v158-pack-have .pack-v12-bagselect{grid-column:2/5!important;width:100%!important;max-width:none!important}}
+@media(max-width:420px){.v158-bag-dock{grid-template-columns:1fr}.v158-pack-overview>div{padding:9px}.v158-pack-overview b{font-size:15px}.v158-bag-detail-kpis{grid-template-columns:1fr}.v158-bag-detail-actions{flex-direction:column}.v158-bag-detail-actions button{width:100%}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1035,8 +1073,14 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 
 <section class="screen" id="screen-pack">
  <div class="route-title-row"><div><div class="eyebrow">Bike & Packen</div><h1>Packorganisation</h1><div class="route-meta" id="packMeta">Ausrüstung · Volumen · Gewichtsverteilung</div></div><div class="btn-row"><button class="btn" id="resetPack">Bike leeren</button><button class="btn" id="autoPack">✦ Auto-Pack Vorschlag erstellen</button><button class="btn rust" id="packModeBtn" disabled>Vorschlag anwenden →</button></div></div><div class="v14-pack-statusline" id="packFlowStatus"><span class="active"><i class="dot"></i>1. Vorschlag erstellen</span><span>→</span><span><i class="dot"></i>2. Prüfen</span><span>→</span><span><i class="dot"></i>3. Anwenden</span></div>
+ <div class="v158-pack-overview" id="packQuickStats" aria-label="Pack-Übersicht">
+   <div><span class="v158-kpi-icon">✓</span><p><small>Benötigt</small><b id="v158NeedKpi">–</b></p></div>
+   <div><span class="v158-kpi-icon">○</span><p><small>Fehlt</small><b id="v158MissingKpi">–</b></p></div>
+   <div><span class="v158-kpi-icon">▣</span><p><small>Gepackt</small><b id="v158PackedKpi">–</b></p></div>
+   <div><span class="v158-kpi-icon">⚖</span><p><small>Gewicht</small><b id="v158WeightKpi">–</b></p></div>
+ </div>
  <div class="pack-v12-grid pack-v13-grid" style="margin-top:14px">
-   <section class="card pack-v12-card">
+   <section class="card pack-v12-card v158-pack-needs">
      <div class="pack-v12-head"><div class="pack-v12-num">1</div><div><h2>Was brauche ich?</h2><p>ROAM schlägt nur die Ausrüstung vor, die zu Reiseart und Unterkunft passt.</p></div></div>
      <label class="pack-v13-label">Reisetyp<select class="v12-control" id="packTourType"><option>Bikepacking (mehrtägig)</option><option>Overnighter</option><option>Tagestour</option></select></label>
      <label class="pack-v13-label">Unterkunft<select class="v12-control" id="packLodgingMode"><option value="hotel">Hotel / Pension</option><option value="camping">Camping / Zelt</option><option value="mixed">Gemischt</option></select></label>
@@ -1044,14 +1088,25 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
      <div id="packNeedList"></div>
    </section>
 
-   <section class="card pack-v12-card">
+   <section class="card pack-v12-card v158-pack-have">
      <div class="pack-v12-head"><div class="pack-v12-num">2</div><div><h2>Was habe ich?</h2><p>Markiere vorhandene Teile und weise ihnen direkt eine Tasche zu.</p></div></div>
+     <div class="v158-item-tabs" id="packItemTabs" role="tablist" aria-label="Ausrüstung filtern">
+       <button type="button" class="active" data-v158-item-filter="all">Alle</button>
+       <button type="button" data-v158-item-filter="missing">Fehlt</button>
+       <button type="button" data-v158-item-filter="available">Vorhanden</button>
+       <button type="button" data-v158-item-filter="packed">Gepackt</button>
+       <button type="button" data-v158-item-filter="unpacked">Ohne Tasche</button>
+     </div>
      <div class="pack-v12-search"><input id="packSearch" placeholder="Ausrüstung suchen …"><select id="packCategoryFilter"><option value="all">Alle Kategorien</option></select></div><button class="btn v152-add-item" id="addCustomPackItem" type="button">＋ Eigener Gegenstand</button>
      <div id="packHaveList"></div>
    </section>
 
-   <section class="card pack-v12-card pack-v12-assign">
-     <div class="pack-v12-head"><div class="pack-v12-num">3</div><div><h2>Was kommt wo hin?</h2><p>Verteile deine Ausrüstung auf die Taschen. Ziehe bzw. wähle Gegenstände direkt um oder nutze den Auto-Pack Vorschlag.</p></div><span class="badge" style="margin-left:auto">Gravel · 40 mm</span></div>
+   <section class="card pack-v12-card pack-v12-assign v158-pack-bike-card">
+     <div class="pack-v12-head v158-bike-head"><div class="pack-v12-num v158-bike-num">▣</div><div><h2>Bike & Taschen</h2><p>Montiere zuerst deine Taschen. Tippe danach direkt am Bike oder auf eine Tasche, um Inhalt, Füllstand und Position zu prüfen.</p></div><span class="badge" style="margin-left:auto">Gravel · 40 mm</span></div>
+     <div class="v158-bag-section">
+       <div class="v158-section-title"><div><div class="eyebrow">Taschen-Setup</div><h3>Welche Taschen sind am Bike?</h3></div><span class="muted">Hinzufügen, entfernen und Größe wählen</span></div>
+       <div class="v158-bag-dock" id="packBagDock"></div>
+     </div>
      <div class="pack-v12-best"><div><h3>Auto-Pack Vorschlag</h3><p>Erstellt zunächst eine bewertete Variante. Erst „Vorschlag anwenden“ übernimmt die neue Verteilung.</p><div class="pack-v12-score" id="packBestScore"><span>noch kein Vorschlag</span></div></div><button class="btn" id="packBestBtn" type="button">Vorschlag erstellen</button></div>
      <div class="v15-bike-stage" id="packBikeStage">
        <div class="v15-bike-tools"><button class="btn" type="button" id="bagPickerToggle">＋ Taschen am Bike wählen</button><span class="muted">Tasche auswählen → Position prüfen → Inhalt öffnen</span></div>
@@ -1085,12 +1140,12 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
        </div>
        <div class="v15-bag-detail" id="packBagDetail" hidden></div>
      </div>
-     <div class="pack-v13-fill-title">Taschenfüllstand</div><div class="pack-v13-fillgrid" id="packFillGrid"></div>
+     <div class="pack-v13-fill-title">Füllstand der montierten Taschen</div><div class="pack-v13-fillgrid" id="packFillGrid"></div>
      <div class="pack-v13-advice" id="packBagAdvice"></div>
-     <div class="pack-v13-unassigned"><b>Nicht zugewiesene Gegenstände</b><div id="packUnassigned"></div></div>
+     <div class="pack-v13-unassigned"><b>Noch ohne Tasche</b><div id="packUnassigned"></div></div>
    </section>
 
-   <aside class="pack-v12-side">
+   <aside class="pack-v12-side v158-pack-side">
      <section class="card pack-v12-summary"><h3>Pack-Zusammenfassung</h3><div class="pack-v12-weight" id="packWeight">0,0 / 0,0 kg</div><div class="pack-v12-balance" id="balanceBar"><i></i><i></i></div><div class="pack-v12-balance-label"><span id="frontBalance">–</span><span id="rearBalance">–</span></div><div class="pack-v12-statgrid"><div class="pack-v12-stat"><b id="packStatBags">0</b><span>Taschen</span></div><div class="pack-v12-stat"><b id="packStatItems">0</b><span>Gegenstände</span></div><div class="pack-v12-stat"><b id="packStatCoverage">0%</b><span>verteilt</span></div></div></section>
      <div id="packBagSummary" hidden></div>
      <section class="card pack-v12-summary"><div style="display:flex;justify-content:space-between"><div><div class="eyebrow">Packliste Fortschritt</div><h3 id="packListTitle" style="margin:4px 0">0 / 0</h3></div><span class="badge warn" id="packOpenBadge">offen</span></div><div id="packProgress"></div><div class="pack-v12-tip" id="packTip"><b>Tipp</b>Schwere Gegenstände möglichst mittig und tief verstauen. Häufig benötigte Dinge griffbereit einpacken.</div></section>
@@ -1138,7 +1193,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.7</div>
+<div class="prototype-pill">ROAM · Beta · V15.8</div>
 </div>
 
 <script>
@@ -3368,6 +3423,180 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
   applyLodgingPackRules();
   const water=packItems.find(x=>x.id==='water');if(water&&(!water.bag||water.bag==='fork'))water.bag='bottle';
   packPersist();renderPackPrototype();renderOverviewDashboard();translateTextNodes(document.body,['de','en','es'].includes(savedLang)?savedLang:'de');
+})();
+</script>
+<script id="roam-v158-patch">
+(() => {
+  const VERSION='15.8';
+  const PACK_MOUNTED_KEY='roam-pack-mounted-v158';
+  const bagGuide={
+    saddle:{short:'Kleidung · Schlafsachen',why:'Leicht und voluminös – gut für Dinge, die unterwegs selten gebraucht werden.'},
+    frame:{short:'Werkzeug · Essen · Powerbank',why:'Schwere, kompakte Ausrüstung sitzt hier zentral und fahrstabil.'},
+    top:{short:'Snacks · Geld · Elektronik',why:'Für kleine Dinge, die du während der Fahrt schnell erreichen willst.'},
+    bar:{short:'Jacke · Schlafsack · leichte Teile',why:'Ideal für leichte, voluminöse Ausrüstung an der Front.'},
+    fork:{short:'Drybags · Camping',why:'Zusätzlicher Stauraum an der Gabel – möglichst links und rechts ausgewogen beladen.'},
+    bottle:{short:'Wasser',why:'Wasser bleibt tief, zentral und jederzeit erreichbar.'}
+  };
+
+  // Mounted bags are independent from contents. Migrate old state conservatively: everything remains mounted once.
+  let mountedV158={};
+  try{mountedV158=JSON.parse(localStorage.getItem(PACK_MOUNTED_KEY)||'null')||{}}catch(e){}
+  if(!Object.keys(mountedV158).length){Object.keys(packBags).forEach(id=>mountedV158[id]=true);}
+  Object.keys(packBags).forEach(id=>{if(typeof mountedV158[id]!=='boolean')mountedV158[id]=true});
+  function persistMountedV158(){try{localStorage.setItem(PACK_MOUNTED_KEY,JSON.stringify(mountedV158))}catch(e){}}
+  function isMountedV158(id){return !!mountedV158[id]&&!!packBags[id]}
+  function mountedIdsV158(){return Object.keys(packBags).filter(isMountedV158)}
+  persistMountedV158();
+
+  function setMountedV158(id,on){
+    if(!packBags[id]||isMountedV158(id)===on)return;
+    const assigned=packItems.filter(x=>x.bag===id);
+    if(!on&&assigned.length&&typeof confirm==='function'&&!confirm(`${packBags[id].name} entfernen? ${assigned.length} Gegenstand/Gegenstände werden dadurch wieder ungepackt.`))return;
+    mountedV158[id]=on;
+    if(!on){packItems.forEach(x=>{if(x.bag===id)x.bag=''});if(selectedPackBagV15===id)selectedPackBagV15='';}
+    packProposal=null;invalidateAppliedPack();persistMountedV158();packPersist();renderPackPrototype();renderOverviewDashboard();
+    packToast(on?`${packBags[id].name} am Bike montiert`:`${packBags[id].name} entfernt${assigned.length?` · ${assigned.length} Teil(e) ohne Tasche`:''}`);
+  }
+
+  // Refined, consistent line icons.
+  itemIcon=function(id,cat){
+    const a='viewBox="0 0 24 24" aria-hidden="true"';
+    const p=d=>`<svg ${a}><path d="${d}"/></svg>`;
+    if(id==='sleep')return p('M7 3h8c2 0 3 1 3 3v15H6V7c0-2 1-4 1-4Zm2 4h6M9 10h6M9 13h6M9 16h5');
+    if(id==='tent')return p('M3 20 12 4l9 16H3Zm9-16v16M7 20l5-8 5 8');
+    if(id==='mat')return p('M6 5h10a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h10M6 5v14');
+    if(['shirt','down','rain'].includes(id))return p('M8 4 4 6l2 5 2-1v10h8V10l2 1 2-5-4-2-2 2h-4L8 4Z');
+    if(id==='shorts')return p('M7 4h10l-1 7 2 9h-5l-1-6-1 6H6l2-9-1-7Z');
+    if(id==='under')return p('M6 6h12l-1 5-5 3-5-3-1-5Zm6 8v6');
+    if(id==='socks')return p('M9 3h5v9l4 3-2 4H9c-2 0-3-1-3-3s1-3 3-3V3Z');
+    if(id==='sandals')return p('M5 14c4 0 7 1 10 4l-2 3H6c-2 0-3-1-3-3 0-2 1-4 2-4Zm9-9c2 2 3 5 2 8M10 4c1 3 1 6 0 9');
+    if(id==='water')return p('M9 3h6v3l2 3v12H7V9l2-3V3Zm0 7h8');
+    if(id==='food')return p('M5 5h14l-1 15H6L5 5Zm3 0V3h8v2M8 10h8');
+    if(id==='snacks')return p('M7 3h10l2 5-2 13H7L5 8l2-5Zm-1 5h12');
+    if(id==='stove')return p('M7 11h10l2 8H5l2-8Zm2-3h6M10 5h4M12 2v3');
+    if(id==='dishes')return p('M4 11h16c0 5-3 8-8 8s-8-3-8-8Zm8-7v5M8 6v3M16 6v3');
+    if(id==='fuel')return p('M8 4h8v3l2 3v10H6V10l2-3V4Zm2 3h4');
+    if(id==='tools')return p('M4 5l5 5m2 1 8 8M16 4a4 4 0 0 0-4 5L5 16l3 3 7-7a4 4 0 0 0 5-4l-3 2-3-3 2-3Z');
+    if(id==='spares')return p('M5 12a7 7 0 1 0 14 0 7 7 0 1 0-14 0Zm7-3v6M9 12h6');
+    if(id==='power')return p('M8 3h8v4h2v14H6V7h2V3Zm2 5h4M10 13h4');
+    if(id==='electronics')return p('M8 3h8v18H8V3Zm2 3h4M11 18h2');
+    if(id==='docs')return p('M6 3h9l3 3v15H6V3Zm8 0v4h4M9 11h6M9 15h6');
+    if(id==='money')return p('M3 7h18v11H3V7Zm3 3h12M12 13a2 2 0 1 0 0 4 2 2 0 1 0 0-4Z');
+    if(id==='hygiene')return p('M9 3h6v4l2 3v11H7V10l2-3V3Zm0 10h6M11 3h2');
+    if(cat==='tools')return p('M4 5l5 5m2 1 8 8M15 4l5 5M5 19l6-6');
+    if(cat==='electronics')return p('M13 2 6 13h5l-1 9 8-12h-5V2Z');
+    if(cat==='food')return p('M5 3v7M3 3v4c0 2 4 2 4 0V3M5 10v11M14 3c4 3 4 9 0 11v7');
+    if(cat==='sleep')return p('M5 4h14v16H5V4Zm3 3h8M8 10h8');
+    return `<svg ${a}><circle cx="12" cy="12" r="8"/></svg>`;
+  };
+
+  bagIconSvg=function(id){
+    const c=packBags[id]?.color||'#607057',stroke='#e8dfd1';
+    if(id==='saddle')return `<svg viewBox="0 0 56 34"><path d="M4 11Q22 2 51 9l-6 20H11Q6 28 5 23Z" fill="${c}" stroke="${stroke}" stroke-width="1.6"/><path d="M13 10 38 27M24 7l-4 20" fill="none" stroke="#d9cebd" stroke-width="1.4"/></svg>`;
+    if(id==='frame')return `<svg viewBox="0 0 56 34"><path d="M5 5h46L36 29H7Z" fill="${c}" stroke="${stroke}" stroke-width="1.6"/><path d="M12 9h30" fill="none" stroke="#efe5d8" stroke-width="1.3"/></svg>`;
+    if(id==='top')return `<svg viewBox="0 0 56 34"><rect x="6" y="10" width="44" height="14" rx="7" fill="${c}" stroke="${stroke}" stroke-width="1.6"/><path d="M14 12h26" stroke="#efe5d8" stroke-width="1.2"/></svg>`;
+    if(id==='bar')return `<svg viewBox="0 0 56 34"><path d="M6 9Q28 2 50 9v17Q28 32 6 25Z" fill="${c}" stroke="${stroke}" stroke-width="1.6"/><path d="M18 7q3 10 5 20M37 7q-2 10 0 20" fill="none" stroke="#405044" stroke-width="3"/></svg>`;
+    if(id==='fork')return `<svg viewBox="0 0 56 34"><rect x="9" y="3" width="14" height="28" rx="6" fill="${c}" stroke="${stroke}" stroke-width="1.6"/><rect x="32" y="4" width="13" height="27" rx="6" fill="${c}" opacity=".78" stroke="${stroke}" stroke-width="1.4"/></svg>`;
+    if(id==='bottle')return `<svg viewBox="0 0 56 34"><path d="M14 3h9v5l3 4v18H11V12l3-4V3Z" fill="#f7f8f2" stroke="#52604f" stroke-width="1.8"/><path d="M36 4h8v5l3 4v17H33V13l3-4V4Z" fill="#f7f8f2" stroke="#52604f" stroke-width="1.8"/><path d="M12 18h13M34 20h12" stroke="${c}" stroke-width="2.4"/></svg>`;
+    return `<svg viewBox="0 0 56 34"><rect x="8" y="5" width="40" height="24" rx="8" fill="${c}" stroke="${stroke}" stroke-width="1.6"/></svg>`;
+  };
+
+  // Only mounted bags are valid pack destinations.
+  bagOptions=function(selected){
+    const ids=mountedIdsV158();
+    return `<option value="">nicht zugewiesen</option>`+ids.map(id=>`<option value="${id}" ${selected===id?'selected':''}>${packBags[id].name}</option>`).join('');
+  };
+  packAlternative=function(item,current){for(const id of preferredBags(item)){if(id===current||!isMountedV158(id))continue;const st=bagStats(id);if(st.l+item.l<=st.cap+1e-6)return id}return ''};
+  movePackItemDirect=function(itemId,bagId){
+    const item=packItems.find(x=>x.id===itemId);if(!item||!bagId||!isMountedV158(bagId))return;const st=bagStats(bagId),existing=item.bag===bagId?item.l:0;if(st.l-existing+item.l>st.cap+1e-6){packToast(`${packBags[bagId].name}: zu wenig Platz`);return}item.bag=bagId;packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard();packToast(`${item.name} → ${packBags[bagId].name}`);
+  };
+  buildPackProposal=function(){
+    const items=packItems.map(x=>({...x})),ids=mountedIdsV158(),used=Object.fromEntries(ids.map(k=>[k,0])),unassigned=[];
+    const ordered=relevantPackItems(items).sort((a,b)=>b.kg-a.kg||b.l-a.l);ordered.forEach(i=>i.bag='');
+    for(const item of ordered){let best='',score=1e9;for(const id of ids){if(id==='bottle'&&item.id!=='water'&&!/wasser|water|bidon|flasche/i.test(item.name||''))continue;const cap=bagCapacity(id),after=(used[id]||0)+item.l;if(after>cap+1e-6)continue;let pref=preferredBags(item).indexOf(id);if(pref<0)pref=9;let sc=pref*12;if(!(used[id]||0))sc+=18;if(item.id==='water'&&id==='bottle')sc-=120;if(item.kg>=1&&packBags[id].zone!=='center')sc+=18;if(item.access==='high'&&!['top','bar','bottle'].includes(id))sc+=12;if(item.preferredBag===id)sc-=24;sc+=(after/Math.max(.1,cap))*3;if(sc<score){score=sc;best=id}}if(best){item.bag=best;used[best]=(used[best]||0)+item.l}else unassigned.push(item)}
+    return {items,unassigned};
+  };
+
+  let itemFilterV158='all';
+  function matchesFilterV158(i){if(itemFilterV158==='missing')return !i.have;if(itemFilterV158==='available')return i.have;if(itemFilterV158==='packed')return i.have&&!!i.bag;if(itemFilterV158==='unpacked')return i.have&&!i.bag;return true}
+  function itemStatusV158(i,preview){if(!i.have)return ['Fehlt','missing',''];if(i.bag)return [preview?'Vorschau':'Gepackt',preview?'preview':'',packBags[i.bag]?.name||''];return ['Noch ohne Tasche','unpacked','']}
+
+  renderPackNeeds=function(){
+    applyLodgingPackRules();const box=document.getElementById('packNeedList');if(!box)return;
+    box.innerHTML=visiblePackCategories().map(c=>{const arr=(typeof itemsForCategoryV152==='function'?itemsForCategoryV152(c):c.items.map(id=>packItems.find(x=>x.id===id)).filter(Boolean)).filter(x=>x.needed||x.cat!=='sleep'),needed=arr.filter(x=>x.needed).length;if(!arr.length)return '';return `<div class="pack-v12-category"><div class="pack-v12-cathead"><b>${c.name}</b><span>${needed}/${arr.length}</span></div>${arr.map(i=>`<div class="pack-v12-needrow"><button class="pack-v12-check ${i.needed?'':'off'}" data-need="${i.id}" type="button" aria-label="${i.name}: benötigt">✓</button><span class="v158-need-icon">${itemIcon(i.id,i.cat)}</span><span>${i.name}</span><span class="mini-badge">${i.needed?'benötigt':'optional'}</span></div>`).join('')}</div>`}).join('');
+    box.querySelectorAll('[data-need]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.need);if(!i)return;i.needed=!i.needed;i.needOverride=true;if(!i.needed)i.bag='';packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()});
+  };
+
+  renderPackHave=function(){
+    applyLodgingPackRules();const box=document.getElementById('packHaveList');if(!box)return;const q=(document.getElementById('packSearch')?.value||'').toLowerCase(),filter=document.getElementById('packCategoryFilter')?.value||'all',items=packProposal?.items||packItems,preview=!!packProposal;
+    box.innerHTML=visiblePackCategories().filter(c=>filter==='all'||c.id===filter).map(c=>{const all=items.filter(x=>x.cat===c.id);const arr=all.filter(i=>i.needed&&matchesFilterV158(i)&&(!q||i.name.toLowerCase().includes(q)));if(!arr.length)return '';return `<div class="pack-v13-group"><div class="pack-v13-grouphead"><b>${c.name}</b><span>${arr.filter(x=>x.have).length}/${arr.length}</span></div>${arr.map(i=>{const [status,cls,statusBag]=itemStatusV158(i,preview);return `<div class="pack-v12-item ${preview?'v154-preview-item':''}"><button class="pack-v12-check ${i.have?'':'off'}" data-have="${i.id}" type="button">✓</button><div class="thumb">${itemIcon(i.id,i.cat)}</div><div><b>${i.name}</b><small>${Number(i.kg||0).toFixed(2).replace('.',',')} kg · ${formatLiters(i.l)} L${i.note?` · ${i.note}`:''}</small><span class="v158-item-status ${cls}"><span>${status}</span>${statusBag?`<span> · ${statusBag}</span>`:''}</span></div><select class="pack-v12-bagselect ${preview?'v154-preview-select':''}" data-bagitem="${i.id}" ${i.have?'':'disabled'}>${bagOptions(i.bag)}</select>${i.custom?`<button class="v152-custom-delete" data-delete-custom="${i.id}" type="button" title="Eigenen Gegenstand löschen">×</button>`:'<span class="menu-dots">⋮</span>'}</div>`}).join('')}</div>`}).join('')||'<div class="muted" style="font-size:11px;padding:12px">Keine Gegenstände in dieser Ansicht.</div>';
+    box.querySelectorAll('[data-have]').forEach(b=>b.onclick=()=>{const base=packItems.find(x=>x.id===b.dataset.have);if(!base)return;base.have=!base.have;if(!base.have)base.bag='';packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()});
+    box.querySelectorAll('[data-bagitem]').forEach(el=>el.onchange=()=>{const target=preview?packProposal?.items?.find(x=>x.id===el.dataset.bagitem):packItems.find(x=>x.id===el.dataset.bagitem);if(!target)return;if(el.value&&!isMountedV158(el.value)){renderPackPrototype();return}if(el.value){const src=preview?packProposal.items:packItems,st=bagStats(el.value,src),existing=target.bag===el.value?target.l:0;if(st.l-existing+target.l>st.cap+1e-6){packToast(`${packBags[el.value].name}: zu wenig Platz`);renderPackPrototype();return}}target.bag=el.value;if(preview){if(typeof v154RefreshProposalUnassigned==='function')v154RefreshProposalUnassigned();renderPackPrototype()}else{invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()}});
+    box.querySelectorAll('[data-delete-custom]').forEach(btn=>btn.onclick=()=>{const idx=packItems.findIndex(x=>x.id===btn.dataset.deleteCustom&&x.custom);if(idx<0)return;const name=packItems[idx].name;packItems.splice(idx,1);packProposal=null;packPersist();renderPackPrototype();renderOverviewDashboard();packToast(`${name} entfernt`)});
+  };
+
+  function renderBagDockV158(){
+    const box=document.getElementById('packBagDock');if(!box)return;
+    box.innerHTML=Object.entries(packBags).map(([id,b])=>{const on=isMountedV158(id),st=bagStats(id,packProposal?.items||packItems),g=bagGuide[id]||{short:'Ausrüstung',why:''},sizes=b.sizes||[b.size];return `<div class="v158-bag-card ${on?'mounted':'unmounted'} ${selectedPackBagV15===id?'selected':''}" data-v158-bag-card="${id}"><button class="v158-bag-icon" type="button" data-v158-open-bag="${id}" aria-label="${b.name} öffnen">${bagIconSvg(id)}</button><div class="v158-bag-main"><button type="button" data-v158-open-bag="${id}"><b>${b.name}</b><small>${g.short}</small><strong>${on?(st.items.length?`${st.items.length} <span>Teile</span> · ${formatLiters(st.l)}/${formatLiters(st.cap)} L`:'montiert · leer'):'nicht montiert'}</strong></button></div><div class="v158-bag-actions"><select data-v158-size="${id}" ${on?'':'disabled'} aria-label="Größe ${b.name}">${sizes.map(v=>`<option value="${v}" ${Number(b.size)===Number(v)?'selected':''}>${formatLiters(v*(b.qty||1))} L</option>`).join('')}</select><button type="button" class="v158-bag-toggle" data-v158-toggle-bag="${id}">${on?'Entfernen':'+ Hinzufügen'}</button></div></div>`}).join('');
+    box.querySelectorAll('[data-v158-toggle-bag]').forEach(btn=>btn.onclick=()=>setMountedV158(btn.dataset.v158ToggleBag,!isMountedV158(btn.dataset.v158ToggleBag)));
+    box.querySelectorAll('[data-v158-open-bag]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.v158OpenBag;if(!isMountedV158(id)){setMountedV158(id,true)}selectedPackBagV15=id;renderPackBagDetailV15(id);renderBagDockV158()});
+    box.querySelectorAll('[data-v158-size]').forEach(sel=>sel.onchange=()=>{const id=sel.dataset.v158Size,v=Number(sel.value);if(packBags[id]?.sizes?.includes(v)){packBags[id].size=v;packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard();packToast(`${packBags[id].name}: ${formatLiters(bagCapacity(id))} L`)}});
+  }
+
+  renderPackFillGrid=function(){
+    const box=document.getElementById('packFillGrid');if(!box)return;const items=packProposal?.items||packItems,ids=mountedIdsV158();
+    box.innerHTML=ids.length?ids.map(id=>{const b=packBags[id],st=bagStats(id,items),full=st.pct>=100;return `<div class="pack-v13-fillcard ${st.over?'pack-v12-over':''} ${full?'full':''} ${!st.items.length?'empty':''} ${selectedPackBagV15===id?'selected':''}" data-bag-id="${id}"><div class="bag-svg">${bagIconSvg(id)}</div><b>${b.name}</b><strong>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</strong><div class="bar"><i style="width:${Math.min(100,st.pct)}%"></i></div><small>${st.items.length?`${st.pct}% · ${st.items.length} <span>Teile</span>`:'leer · bereit'}</small></div>`}).join(''):'<div class="v154-pack-empty-note">Noch keine Tasche am Bike montiert.</div>';
+    const u=document.getElementById('packUnassigned'),ua=items.filter(x=>x.needed&&x.have&&!x.bag);if(u)u.innerHTML=ua.length?`<div class="pack-v13-unassigned-list">${ua.map(x=>`<span>${x.name}</span>`).join('')}</div>`:'<div class="muted" style="font-size:9px;margin-top:5px">Alles ist einer montierten Tasche zugewiesen.</div>';
+    bindPackBagClicksV15();
+  };
+
+  function bindBikeV158(){
+    Object.keys(packBags).forEach(id=>{const g=document.getElementById(`packBike-${id}`);if(g){g.style.cursor=isMountedV158(id)?'pointer':'default';g.onclick=isMountedV158(id)?()=>{selectedPackBagV15=id;renderPackBagDetailV15(id);renderBagDockV158()}:null}});
+    document.querySelectorAll('[data-pack-bag]').forEach(x=>{const id=x.dataset.packBag;if(!id)return;x.onclick=()=>{if(isMountedV158(id)){selectedPackBagV15=id;renderPackBagDetailV15(id);renderBagDockV158()}}});
+  }
+  renderPackBike=function(){
+    const items=packProposal?.items||packItems;Object.keys(packBags).forEach(id=>{const mounted=isMountedV158(id),st=bagStats(id,items),layer=document.getElementById(`packBike-${id}`),lab=document.getElementById(`packBikeLabel-${id}`);if(layer){layer.classList.remove('v154-hidden');layer.classList.toggle('v158-bike-unmounted',!mounted);layer.classList.toggle('v158-empty-bag',mounted&&!st.items.length)}document.querySelectorAll(`[data-pack-bag="${id}"]`).forEach(el=>{el.removeAttribute('hidden');el.classList.toggle('v158-unmounted',!mounted);el.classList.toggle('selected',selectedPackBagV15===id)});if(lab)lab.textContent=st.items.length?`${formatLiters(st.l)} / ${formatLiters(st.cap)} L · ${st.pct}%`:`leer · ${formatLiters(st.cap)} L`});
+    const mode=document.getElementById('packBikeModeV154');if(mode){mode.textContent=packProposal?'Auto-Pack Vorschau':'Montierte Taschen';mode.classList.toggle('preview',!!packProposal)}bindBikeV158();
+  };
+
+  renderPackBagDetailV15=function(id){
+    const el=document.getElementById('packBagDetail');if(!el)return;if(!id||!isMountedV158(id)){selectedPackBagV15='';el.hidden=true;return}selectedPackBagV15=id;el.hidden=false;const items=packProposal?.items||packItems,st=bagStats(id,items),b=packBags[id],g=bagGuide[id]||{short:'Ausrüstung',why:''},pct=Math.min(100,st.pct);
+    const rows=st.items.map(i=>{const access=i.access==='high'?'schnell erreichbar':i.access==='low'?'selten benötigt':'normaler Zugriff';return `<div class="v158-bag-item-row"><span class="v158-bag-item-icon">${itemIcon(i.id,i.cat)}</span><div><b>${i.name}</b><small>${Number(i.kg||0).toFixed(2).replace('.',',')} kg · ${formatLiters(i.l)} L · <span>${access}</span></small></div><select data-v158-detail-move="${i.id}">${bagOptions(id)}</select></div>`}).join('');
+    el.innerHTML=`<div class="v158-bag-detail-head"><div class="v158-bag-detail-icon">${bagIconSvg(id)}</div><div><div class="eyebrow">Tascheninhalt</div><h3>${b.name}</h3><p>${g.why}</p></div><button class="v158-close" type="button" id="closeBagDetailV158" aria-label="Tascheninhalt schließen">×</button></div><div class="v158-bag-detail-kpis"><div><small>Volumen</small><b>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</b></div><div><small>Gewicht</small><b>${st.kg.toFixed(1).replace('.',',')} kg</b></div><div><small>Inhalt</small><b>${st.items.length} <span>Teile</span></b></div></div><div class="v158-bag-detail-bar"><i style="width:${pct}%"></i></div><div class="v158-bag-detail-guide">Gut geeignet für: <b>${g.short}</b>${st.over?' · ⚠ Kapazität überschritten':''}</div><div class="v158-bag-content"><div class="v158-bag-content-title"><b>Was ist drin?</b><span>direkt verschiebbar</span></div>${rows||'<div class="v158-empty-content">Diese Tasche ist montiert, aber noch leer. Weise unten einen Gegenstand zu oder nutze Auto-Pack.</div>'}</div><div class="v158-bag-detail-actions"><button type="button" data-v158-scroll-items>Gegenstände anzeigen</button><button type="button" class="remove" data-v158-remove-detail="${id}">Tasche entfernen</button></div>`;
+    document.getElementById('closeBagDetailV158')?.addEventListener('click',()=>{selectedPackBagV15='';el.hidden=true;renderBagDockV158();renderPackBike();renderPackFillGrid()});
+    el.querySelectorAll('[data-v158-detail-move]').forEach(sel=>sel.onchange=()=>{const target=sel.value;if(!target){const base=packItems.find(x=>x.id===sel.dataset.v158DetailMove);if(base){base.bag='';packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()}return}movePackItemDirect(sel.dataset.v158DetailMove,target)});
+    el.querySelector('[data-v158-remove-detail]')?.addEventListener('click',()=>setMountedV158(id,false));
+    el.querySelector('[data-v158-scroll-items]')?.addEventListener('click',()=>document.querySelector('.v158-pack-have')?.scrollIntoView({behavior:'smooth',block:'start'}));
+    document.querySelectorAll('[data-pack-bag]').forEach(x=>x.classList.toggle('selected',x.dataset.packBag===id));document.querySelectorAll('.pack-v13-fillcard').forEach(x=>x.classList.toggle('selected',x.dataset.bagId===id));
+  };
+
+  renderPackSummary=function(){
+    const items=packProposal?.items||packItems,rel=relevantPackItems(items),assigned=rel.filter(x=>x.bag),total=rel.reduce((a,x)=>a+x.kg,0),assignedKg=assigned.reduce((a,x)=>a+x.kg,0),bal=packBalance(items),mounted=mountedIdsV158().length,cov=rel.length?Math.round(assigned.length/rel.length*100):0;const pw=document.getElementById('packWeight');if(pw)pw.textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg`;const fb=document.getElementById('frontBalance'),rb=document.getElementById('rearBalance'),bb=document.getElementById('balanceBar');if(fb)fb.textContent=`${bal.front}% vorne`;if(rb)rb.textContent=`${bal.rear}% hinten`;if(bb)bb.style.gridTemplateColumns=`${bal.front}fr ${bal.rear}fr`;const sb=document.getElementById('packStatBags'),si=document.getElementById('packStatItems'),sc=document.getElementById('packStatCoverage');if(sb)sb.textContent=mounted;if(si)si.textContent=assigned.length;if(sc)sc.textContent=`${cov}%`;const meta=document.getElementById('packMeta');if(meta)meta.textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg verteilt · ${mounted} Taschen montiert · Balance ${bal.front} / ${bal.rear}`;
+  };
+
+  function renderQuickStatsV158(){const items=packProposal?.items||packItems,need=items.filter(x=>x.needed).length,missing=items.filter(x=>x.needed&&!x.have).length,packed=items.filter(x=>x.needed&&x.have&&x.bag).length,total=items.filter(x=>x.needed&&x.have).reduce((s,x)=>s+(Number(x.kg)||0),0);const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('v158NeedKpi',need);set('v158MissingKpi',missing);set('v158PackedKpi',`${packed}/${items.filter(x=>x.needed&&x.have).length}`);set('v158WeightKpi',`${total.toFixed(1).replace('.',',')} kg`)}
+
+  // Add exact translations for the new pack interface. Dynamic values are kept as separate text nodes where practical.
+  if(typeof ROAM_V152_TRANSLATIONS==='object')Object.assign(ROAM_V152_TRANSLATIONS,{
+    'Benötigt':['Required','Necesario'],'Fehlt':['Missing','Falta'],'Gepackt':['Packed','Empacado'],'Gewicht':['Weight','Peso'],'Alle':['All','Todo'],'Vorhanden':['Available','Disponible'],'Ohne Tasche':['No bag','Sin bolsa'],'Bike & Taschen':['Bike & bags','Bici y bolsas'],'Taschen-Setup':['Bag setup','Configuración de bolsas'],'Welche Taschen sind am Bike?':['Which bags are on the bike?','¿Qué bolsas están en la bici?'],'Hinzufügen, entfernen und Größe wählen':['Add, remove and choose size','Añadir, quitar y elegir tamaño'],'Entfernen':['Remove','Quitar'],'+ Hinzufügen':['+ Add','+ Añadir'],'Montierte Taschen':['Mounted bags','Bolsas montadas'],'Füllstand der montierten Taschen':['Mounted bag fill levels','Nivel de las bolsas montadas'],'Noch ohne Tasche':['Not packed yet','Aún sin bolsa'],'Tascheninhalt':['Bag contents','Contenido de la bolsa'],'Volumen':['Volume','Volumen'],'Inhalt':['Contents','Contenido'],'Was ist drin?':['What is inside?','¿Qué hay dentro?'],'direkt verschiebbar':['move directly','mover directamente'],'Gegenstände anzeigen':['Show items','Mostrar objetos'],'Tasche entfernen':['Remove bag','Quitar bolsa'],'Diese Tasche ist montiert, aber noch leer. Weise unten einen Gegenstand zu oder nutze Auto-Pack.':['This bag is mounted but still empty. Assign an item below or use Auto-Pack.','Esta bolsa está montada pero aún vacía. Asigna un objeto abajo o usa Auto-Pack.'],'Alles ist einer montierten Tasche zugewiesen.':['Everything is assigned to a mounted bag.','Todo está asignado a una bolsa montada.'],'Noch keine Tasche am Bike montiert.':['No bag is mounted on the bike yet.','Aún no hay ninguna bolsa montada en la bici.'],'nicht montiert':['not mounted','no montada'],'montiert · leer':['mounted · empty','montada · vacía'],'leer · bereit':['empty · ready','vacía · lista'],'Gut geeignet für:':['Well suited for:','Ideal para:'],'Keine Gegenstände in dieser Ansicht.':['No items in this view.','No hay objetos en esta vista.'],
+    'Inhalte leeren':['Empty contents','Vaciar contenido'],'Vorschau':['Preview','Vista previa'],'Teile':['items','objetos'],'benötigt':['required','necesario'],'schnell erreichbar':['quick access','acceso rápido'],'selten benötigt':['rarely needed','uso poco frecuente'],'normaler Zugriff':['normal access','acceso normal'],'Kapazität überschritten':['over capacity','capacidad superada'],
+    'Montiere zuerst deine Taschen. Tippe danach direkt am Bike oder auf eine Tasche, um Inhalt, Füllstand und Position zu prüfen.':['Mount your bags first. Then tap a bag on the bike or in the list to review contents, fill level and position.','Monta primero las bolsas. Después toca una bolsa en la bici o en la lista para revisar contenido, nivel de llenado y posición.'],
+    'Tasche direkt am Bike antippen → Inhalt öffnen → Gegenstände verschieben':['Tap a bag on the bike → open contents → move items','Toca una bolsa en la bici → abre el contenido → mueve objetos'],
+    'Kleidung · Schlafsachen':['Clothing · sleep gear','Ropa · equipo de dormir'],'Werkzeug · Essen · Powerbank':['Tools · food · power bank','Herramientas · comida · batería externa'],'Snacks · Geld · Elektronik':['Snacks · money · electronics','Snacks · dinero · electrónica'],'Jacke · Schlafsack · leichte Teile':['Jacket · sleeping bag · light gear','Chaqueta · saco de dormir · equipo ligero'],'Drybags · Camping':['Dry bags · camping','Bolsas estancas · camping'],
+    'Leicht und voluminös – gut für Dinge, die unterwegs selten gebraucht werden.':['Light and bulky — good for items you rarely need while riding.','Ligero y voluminoso: ideal para cosas que necesitas poco durante la marcha.'],'Schwere, kompakte Ausrüstung sitzt hier zentral und fahrstabil.':['Heavy, compact gear stays central and stable here.','El equipo pesado y compacto queda aquí centrado y estable.'],'Für kleine Dinge, die du während der Fahrt schnell erreichen willst.':['For small items you want to reach quickly while riding.','Para objetos pequeños que quieres alcanzar rápidamente durante la marcha.'],'Ideal für leichte, voluminöse Ausrüstung an der Front.':['Ideal for light, bulky gear at the front.','Ideal para equipo ligero y voluminoso en la parte delantera.'],'Zusätzlicher Stauraum an der Gabel – möglichst links und rechts ausgewogen beladen.':['Extra fork storage — keep left and right loads balanced.','Espacio extra en la horquilla: reparte la carga entre izquierda y derecha.'],'Wasser bleibt tief, zentral und jederzeit erreichbar.':['Water stays low, central and easy to reach.','El agua queda baja, centrada y siempre accesible.'],
+    'Schlafsack':['Sleeping bag','Saco de dormir'],'Zelt':['Tent','Tienda'],'Isomatte':['Sleeping mat','Esterilla'],'Trikot / Shirt':['Jersey / shirt','Maillot / camiseta'],'Shorts / Hose':['Shorts / trousers','Shorts / pantalón'],'Unterwäsche':['Underwear','Ropa interior'],'Socken':['Socks','Calcetines'],'Regenjacke':['Rain jacket','Chaqueta impermeable'],'Daunenjacke':['Down jacket','Chaqueta de plumas'],'Sandalen':['Sandals','Sandalias'],'Nahrung':['Food','Comida'],'Snacks':['Snacks','Snacks'],'Kocher':['Stove','Hornillo'],'Essgeschirr':['Cookware','Vajilla'],'Fuel':['Fuel','Combustible'],'Werkzeug-Set':['Tool kit','Kit de herramientas'],'Ersatzteile':['Spare parts','Repuestos'],'Powerbank':['Power bank','Batería externa'],'Elektronik':['Electronics','Electrónica'],'Dokumente':['Documents','Documentos'],'Geld / Karte':['Cash / card','Dinero / tarjeta'],'Hygiene-Set':['Toiletries','Kit de higiene']
+  });
+
+  const oldRenderPackPrototypeV158=renderPackPrototype;
+  renderPackPrototype=function(){oldRenderPackPrototypeV158();renderBagDockV158();renderQuickStatsV158();renderPackBike();renderPackFillGrid();if(selectedPackBagV15&&isMountedV158(selectedPackBagV15))renderPackBagDetailV15(selectedPackBagV15);scheduleRoamTranslation?.()};
+
+  document.getElementById('packItemTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-v158-item-filter]');if(!b)return;itemFilterV158=b.dataset.v158ItemFilter;document.querySelectorAll('#packItemTabs [data-v158-item-filter]').forEach(x=>x.classList.toggle('active',x===b));renderPackHave();scheduleRoamTranslation?.()});
+
+  // Existing reset means "empty contents", not remove physical bags. This is less destructive and matches its label.
+  const reset=document.getElementById('resetPack');if(reset)reset.textContent='Inhalte leeren';
+  const packTools=document.querySelector('#screen-pack .v15-bike-tools');if(packTools)packTools.innerHTML='<span class="v154-pack-mode" id="packBikeModeV154">Montierte Taschen</span><span class="muted">Tasche direkt am Bike antippen → Inhalt öffnen → Gegenstände verschieben</span>';
+
+  renderPackPrototype();renderOverviewDashboard();
 })();
 </script>
 
