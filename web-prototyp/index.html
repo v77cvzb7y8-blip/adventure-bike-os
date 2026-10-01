@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.8 Pack UX & Visual Clarity</title>
+<title>ROAM · Beta · V15.8.1 Compact Pack Layout</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -757,7 +757,125 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 @media(max-width:720px){.v158-pack-overview{grid-template-columns:1fr 1fr}.v158-bag-dock{grid-template-columns:1fr 1fr}.v158-pack-side{grid-template-columns:1fr!important}.v158-section-title{align-items:flex-start;flex-direction:column}.v158-section-title>.muted{text-align:left}.v158-bag-card{grid-template-columns:38px minmax(0,1fr) auto}.v158-bag-icon{width:38px}.v158-bag-detail-head{grid-template-columns:50px minmax(0,1fr) auto}.v158-bag-detail-icon{width:50px}.v158-bag-detail-kpis{grid-template-columns:1fr 1fr 1fr}.v158-bag-item-row{grid-template-columns:30px minmax(0,1fr)}.v158-bag-item-row select{grid-column:2;width:100%;max-width:none}.v158-pack-have .pack-v12-item{grid-template-columns:20px 32px minmax(0,1fr) 22px!important}.v158-pack-have .pack-v12-bagselect{grid-column:2/5!important;width:100%!important;max-width:none!important}}
 @media(max-width:420px){.v158-bag-dock{grid-template-columns:1fr}.v158-pack-overview>div{padding:9px}.v158-pack-overview b{font-size:15px}.v158-bag-detail-kpis{grid-template-columns:1fr}.v158-bag-detail-actions{flex-direction:column}.v158-bag-detail-actions button{width:100%}}
 </style>
-</head>
+
+<style id="roam-v1581-style">
+/* ===== ROAM V15.8.1 Compact Pack Layout ===== */
+#screen-pack{--v1581-card:#fffdf8;--v1581-soft:#f6f2e9;--v1581-tan:#b9683f}
+#screen-pack .route-title-row{align-items:flex-start!important;margin-bottom:4px!important}
+#screen-pack .route-title-row h1{margin-bottom:2px}
+#screen-pack .v14-pack-statusline{margin:5px 0 8px!important;padding:6px 9px!important;font-size:9px!important}
+#screen-pack .v158-pack-overview{gap:7px;margin:8px 0 10px!important}
+#screen-pack .v158-pack-overview>div{padding:8px 10px!important;min-height:54px}
+#screen-pack .v158-pack-overview .v158-kpi-icon{width:28px;height:28px;flex-basis:28px}
+#screen-pack .v158-pack-overview b{font-size:15px!important}
+
+/* Desktop: bike + inspector first, need/have next to each other, summaries in compact rail. */
+#screen-pack .pack-v13-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(235px,.48fr)!important;
+  grid-template-areas:"bike bike side" "needs have side"!important;
+  gap:10px!important;align-items:start
+}
+#screen-pack .v158-pack-bike-card{grid-area:bike;padding:12px!important}
+#screen-pack .v158-pack-needs{grid-area:needs;padding:12px!important}
+#screen-pack .v158-pack-have{grid-area:have;padding:12px!important}
+#screen-pack .v158-pack-side{grid-area:side;position:sticky;top:72px;display:grid;gap:8px}
+#screen-pack .v158-pack-side>.card{padding:12px!important}
+#screen-pack .pack-v12-head{gap:9px!important;margin-bottom:8px!important}
+#screen-pack .pack-v12-head h2{font-size:17px!important;margin-bottom:2px!important}
+#screen-pack .pack-v12-head p{font-size:9px!important;line-height:1.35!important}
+#screen-pack .pack-v12-num{width:28px!important;height:28px!important;flex:0 0 28px!important;font-size:12px!important}
+
+/* Compact bag setup cards. */
+#screen-pack .v158-bag-section{padding:9px!important;margin-bottom:8px!important}
+#screen-pack .v158-section-title{margin-bottom:6px!important}
+#screen-pack .v158-section-title h3{font-size:14px!important}
+#screen-pack .v158-bag-dock{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px!important}
+#screen-pack .v158-bag-card{padding:6px!important;grid-template-columns:36px minmax(0,1fr) auto!important;gap:5px!important;border-radius:9px!important}
+#screen-pack .v158-bag-icon{width:36px;height:29px}
+#screen-pack .v158-bag-icon svg{width:35px;height:25px}
+#screen-pack .v158-bag-main b{font-size:9px!important}
+#screen-pack .v158-bag-main small{font-size:7px!important}
+#screen-pack .v158-bag-main strong{font-size:8px!important}
+#screen-pack .v158-bag-actions select{height:23px!important;max-width:64px!important;font-size:7px!important}
+#screen-pack .v158-bag-toggle{padding:4px 5px!important;font-size:7px!important}
+
+/* Auto-pack becomes a compact horizontal control. */
+#screen-pack .v158-pack-bike-card .pack-v12-best{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:center!important;padding:8px 9px!important;margin:7px 0!important}
+#screen-pack .v158-pack-bike-card .pack-v12-best h3{font-size:12px!important;margin:0 0 2px!important}
+#screen-pack .v158-pack-bike-card .pack-v12-best p{font-size:8px!important;margin:0 0 4px!important}
+#screen-pack .v158-pack-bike-card .pack-v12-best>.btn{width:auto!important;margin:0!important;white-space:nowrap}
+#screen-pack .pack-v12-score{min-height:0!important}
+
+/* Bike + open bag inspector side-by-side. */
+#screen-pack .v15-bike-stage{display:grid!important;grid-template-columns:minmax(0,1.5fr) minmax(245px,.62fr);gap:9px;align-items:stretch}
+#screen-pack .v15-bike-tools{grid-column:1/-1;margin:0!important;padding:5px 0 6px!important}
+#screen-pack .v15-bike-image-wrap{grid-column:1;min-height:0!important;height:330px!important;padding:4px!important}
+#screen-pack .v152-pack-bike{height:100%!important;max-height:330px!important;width:100%!important}
+#screen-pack .v15-bag-detail{grid-column:2;align-self:stretch;min-height:330px!important;border:1px solid var(--line)!important;border-radius:12px!important;background:var(--v1581-card)!important}
+#screen-pack .v158-bag-detail-head{grid-template-columns:52px minmax(0,1fr) auto!important;padding:9px!important;gap:8px!important}
+#screen-pack .v158-bag-detail-icon{width:52px;height:40px}
+#screen-pack .v158-bag-detail-icon svg{width:44px;height:29px}
+#screen-pack .v158-bag-detail-head h3{font-size:15px!important}
+#screen-pack .v158-bag-detail-head p{font-size:8px!important}
+#screen-pack .v158-bag-detail-kpis{padding:8px 9px 0!important;gap:5px!important}
+#screen-pack .v158-bag-detail-kpis>div{padding:6px!important}
+#screen-pack .v158-bag-detail-items{padding:7px 9px!important;max-height:150px;overflow:auto}
+#screen-pack .v158-bag-detail-row{padding:5px 0!important}
+#screen-pack .v158-bag-detail-guide{font-size:8px!important;padding:4px 9px 6px!important}
+#screen-pack .v158-bag-detail-actions{padding:7px 9px!important}
+
+/* White bike frame with the existing warm bags. */
+#screen-pack .v152-bike-base>path:nth-of-type(1){stroke:#c9c1b5!important;stroke-width:11px!important}
+#screen-pack .v152-bike-base>path:nth-of-type(2){stroke:#fffdf8!important;stroke-width:7px!important}
+#screen-pack .v152-bike-base>path:nth-of-type(3){stroke:#3f4942!important}
+#screen-pack .v152-bike-base>circle:nth-of-type(1),#screen-pack .v152-bike-base>circle:nth-of-type(2){stroke:#4a514b!important}
+#screen-pack #packBike-saddle path:first-child{fill:#a85c37!important}
+#screen-pack #packBike-frame path:first-child{fill:#b9653d!important}
+#screen-pack #packBike-top rect{fill:#b96c43!important}
+#screen-pack #packBike-bar path:first-child{fill:#b9653d!important}
+#screen-pack #packBike-fork rect{fill:#b76b42!important}
+#screen-pack .v15-bike-callout{background:rgba(255,253,248,.96)!important;color:var(--forest)!important;box-shadow:0 4px 14px rgba(42,45,39,.09)!important}
+
+/* Keep the page short: long inventories scroll inside their cards on desktop. */
+#screen-pack .v158-pack-needs #packNeedList,#screen-pack .v158-pack-have #packHaveList{max-height:455px;overflow:auto;overscroll-behavior:contain;padding-right:3px;scrollbar-width:thin}
+#screen-pack .pack-v12-category{margin-bottom:7px!important}
+#screen-pack .pack-v12-cathead{padding:6px 0!important}
+#screen-pack .v158-pack-needs .pack-v12-needrow{padding:4px 0!important}
+#screen-pack .v158-pack-have .pack-v12-item{padding:6px!important;margin-bottom:4px!important}
+#screen-pack .v158-item-tabs{padding-bottom:4px!important}
+#screen-pack .v158-item-tabs button{padding:5px 8px!important;font-size:8px!important}
+#screen-pack .pack-v12-search{gap:6px!important;margin-bottom:6px!important}
+#screen-pack .v152-add-item{margin:3px 0 7px!important;padding:7px 9px!important}
+#screen-pack .pack-v13-fill-title{margin-top:9px!important}
+#screen-pack .pack-v13-fillgrid{gap:5px!important}
+#screen-pack .pack-v13-fillcard{padding:7px!important}
+#screen-pack .pack-v13-advice,#screen-pack .pack-v13-unassigned{margin-top:7px!important}
+
+/* Tablet: keep inspector next to bike where possible, lists stack afterwards. */
+@media(max-width:1180px){
+ #screen-pack .pack-v13-grid{grid-template-columns:minmax(0,1.45fr) minmax(240px,.58fr)!important;grid-template-areas:"bike side" "needs side" "have side"!important}
+ #screen-pack .v158-bag-dock{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #screen-pack .v15-bike-stage{grid-template-columns:1fr!important}
+ #screen-pack .v15-bike-image-wrap,#screen-pack .v15-bag-detail{grid-column:1!important}
+ #screen-pack .v15-bike-image-wrap{height:315px!important}
+ #screen-pack .v15-bag-detail{min-height:0!important}
+}
+@media(max-width:900px){
+ #screen-pack .pack-v13-grid{grid-template-columns:1fr!important;grid-template-areas:"bike" "needs" "have" "side"!important}
+ #screen-pack .v158-pack-side{position:static!important}
+ #screen-pack .v158-pack-overview{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #screen-pack .v158-pack-needs #packNeedList,#screen-pack .v158-pack-have #packHaveList{max-height:none;overflow:visible}
+ #screen-pack .v158-bag-dock{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #screen-pack .v15-bike-image-wrap{height:auto!important}
+ #screen-pack .v152-pack-bike{height:auto!important;max-height:330px!important}
+}
+@media(max-width:520px){
+ #screen-pack .v158-bag-dock{grid-template-columns:1fr!important}
+ #screen-pack .v158-pack-bike-card .pack-v12-best{grid-template-columns:1fr!important}
+ #screen-pack .v158-pack-bike-card .pack-v12-best>.btn{width:100%!important}
+}
+</style>\n</head>
 <body>
 <div class="app">
 <header class="topbar">
@@ -1193,7 +1311,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.8</div>
+<div class="prototype-pill">ROAM · Beta · V15.8.1</div>
 </div>
 
 <script>
@@ -3600,6 +3718,27 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
 })();
 </script>
 
+<script id="roam-v1581-patch">
+(() => {
+  const VERSION='15.8.1';
+  function ensureCompactPackInspector(){
+    const screen=document.getElementById('screen-pack');
+    if(!screen||!screen.classList.contains('active'))return;
+    const detail=document.getElementById('packBagDetail');
+    if(detail && detail.hidden){
+      const first=document.querySelector('#packBagDock .v158-bag-card.mounted [data-v158-open-bag]');
+      first?.click();
+    }
+  }
+  const oldShowScreenV1581=showScreen;
+  showScreen=function(name){oldShowScreenV1581(name);if(name==='pack')setTimeout(ensureCompactPackInspector,30)};
+  const oldRenderPackPrototypeV1581=renderPackPrototype;
+  renderPackPrototype=function(){oldRenderPackPrototypeV1581();setTimeout(ensureCompactPackInspector,0)};
+  const label=document.querySelector('#screen-pack .v15-bike-tools .muted');
+  if(label)label.textContent='Tasche am Bike antippen → Inhalt prüfen → direkt verschieben';
+  ensureCompactPackInspector();
+})();
+</script>\n
 </body>
 </html>
 
