@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.6 Mobile & Language Stability</title>
+<title>ROAM · Beta · V15.7 Planner & Stage Stability</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -712,6 +712,13 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 }
 @media(max-width:390px){#screen-pack .pack-v13-fillgrid{grid-template-columns:1fr!important}}
 </style>
+
+<style id="roam-v157-style">
+/* ===== ROAM V15.7 planner + stage stability ===== */
+.v157-plan-hint{display:flex;align-items:flex-start;gap:8px;margin:-3px 0 8px 42px;padding:8px 10px;border:1px solid rgba(47,71,52,.10);border-radius:9px;background:#f0f2ea;color:var(--muted);font-size:10px;line-height:1.4}
+.v157-plan-hint b{color:var(--forest);white-space:nowrap}.v157-plan-hint span{min-width:0}
+@media(max-width:600px){.v157-plan-hint{margin-left:0;display:block}.v157-plan-hint b{display:block;margin-bottom:2px}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -828,6 +835,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
        <div class="v12-form-row"><div class="v12-form-icon">⚑</div><div class="v12-form-label">Zwischenziele</div><input class="v12-control" id="planWaypoints" placeholder="z. B. Salzburg, Linz (optional)" autocomplete="off"></div>
        <div class="v12-form-row double"><div class="v12-form-icon">▦</div><div class="v12-form-label">Reisezeitraum</div><input class="v12-control" id="planStartDate" type="date"><div class="v12-form-label">bis</div><input class="v12-control" id="planEndDate" type="date"></div>
        <div class="v12-form-row v13-target-row"><div class="v12-form-icon">↔</div><div class="v12-form-label">Tagesziel</div><div class="v13-target-inputs"><label><input class="v12-control" id="planKmDay" type="number" inputmode="numeric" min="20" step="5" placeholder="z. B. 80"><span>km/Tag</span></label><label><input class="v12-control" id="planHmDay" type="number" inputmode="numeric" min="100" step="100" placeholder="z. B. 1500"><span>max. HM</span></label></div></div>
+       <div class="v157-plan-hint" id="planStageLogicV157"><b>Etappenlogik</b><span>Ohne eigene Vorgabe verwendet ROAM dein Fahrerprofil.</span></div>
        <div class="v12-form-row"><div class="v12-form-icon">⌁</div><div class="v12-form-label">Routing</div><select class="v12-control" id="planProfile"><option value="trekking">Bikepacking / Trekking</option><option value="fastbike">Schneller Asphalt</option></select></div>
        <div class="v12-form-row"><div class="v12-form-icon">▰</div><div class="v12-form-label">Übernachtung</div><select class="v12-control" id="planLodging"><option value="hotel">Hotel / Pension</option><option value="camping">Camping / Zelt</option><option value="mixed">Gemischt</option></select></div>
        <div class="v12-form-row double"><div class="v12-form-icon">◎</div><div class="v12-form-label">Preisniveau</div><select class="v12-control" id="planPrice"><option value="" selected>Bitte wählen …</option><option value="low">günstig</option><option value="mid">mittel</option><option value="high">komfortabel</option></select><div class="v12-form-label">Max. €/Nacht</div><input class="v12-control" id="planNightBudget" type="number" min="0" step="10" placeholder="optional"></div>
@@ -1130,7 +1138,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.6</div>
+<div class="prototype-pill">ROAM · Beta · V15.7</div>
 </div>
 
 <script>
@@ -1174,8 +1182,8 @@ function readStageNamesFor(saved){
  return null;
 }
 function clearPlannerFields(){['planStart','planDest','planWaypoints','planStartDate','planEndDate','planKmDay','planHmDay','planNightBudget'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});const price=document.getElementById('planPrice');if(price)price.value='';}
-function plannerRouteMatches(saved){if(!saved?.coords?.length)return false;const s=document.getElementById('planStart')?.value.trim()||'',d=document.getElementById('planDest')?.value.trim()||'';if(s&&cleanPlaceName(s).toLowerCase()!==cleanPlaceName(saved.start||'').toLowerCase())return false;if(d&&cleanPlaceName(d).toLowerCase()!==cleanPlaceName(saved.dest||'').toLowerCase())return false;const typed=(document.getElementById('planWaypoints')?.value||'').split(/[;,]/).map(x=>x.trim().toLowerCase()).filter(Boolean);const old=(saved.routePlan?.waypoints||[]).map(x=>String(x?.name||x||'').trim().toLowerCase()).filter(Boolean);if(typed.join('|')!==old.join('|'))return false;return true}
-function hydratePlannerFromActive(){const saved=readActiveRoute();if(!saved)return;const start=document.getElementById('planStart'),dest=document.getElementById('planDest'),wp=document.getElementById('planWaypoints');if(start&&!start.value)start.value=saved.start||'';if(dest&&!dest.value)dest.value=saved.dest||'';if(wp&&!wp.value)wp.value=(saved.routePlan?.waypoints||[]).map(x=>x?.name||x).filter(Boolean).join(', ');const sd=document.getElementById('planStartDate'),ed=document.getElementById('planEndDate');if(sd&&!sd.value)sd.value=saved.tripDates?.startDate||'';if(ed&&!ed.value)ed.value=saved.tripDates?.endDate||''}
+function plannerRouteMatches(saved){if(!saved?.coords?.length)return false;const s=document.getElementById('planStart')?.value.trim()||'',d=document.getElementById('planDest')?.value.trim()||'';if(s&&cleanPlaceName(s).toLowerCase()!==cleanPlaceName(saved.start||'').toLowerCase())return false;if(d&&cleanPlaceName(d).toLowerCase()!==cleanPlaceName(saved.dest||'').toLowerCase())return false;const typed=(document.getElementById('planWaypoints')?.value||'').split(/[;,]/).map(x=>x.trim().toLowerCase()).filter(Boolean),old=(saved.routePlan?.waypoints||[]).map(x=>String(x?.name||x||'').trim().toLowerCase()).filter(Boolean);if(typed.join('|')!==old.join('|'))return false;const sd=document.getElementById('planStartDate')?.value||'',ed=document.getElementById('planEndDate')?.value||'';if(sd!==(saved.tripDates?.startDate||'')||ed!==(saved.tripDates?.endDate||''))return false;const sp=saved.stagePlan;if(sp?.version){const t=effectivePlannerTargetsV157();if(Math.abs((Number(sp.targetKm)||0)-t.km)>.01||Math.abs((Number(sp.maxHm)||0)-t.hm)>.01)return false}return true}
+function hydratePlannerFromActive(){const saved=readActiveRoute();if(!saved)return;const start=document.getElementById('planStart'),dest=document.getElementById('planDest'),wp=document.getElementById('planWaypoints');if(start&&!start.value)start.value=saved.start||'';if(dest&&!dest.value)dest.value=saved.dest||'';if(wp&&!wp.value)wp.value=(saved.routePlan?.waypoints||[]).map(x=>x?.name||x).filter(Boolean).join(', ');const sd=document.getElementById('planStartDate'),ed=document.getElementById('planEndDate');if(sd&&!sd.value)sd.value=saved.tripDates?.startDate||'';if(ed&&!ed.value)ed.value=saved.tripDates?.endDate||'';const pk=document.getElementById('planKmDay'),ph=document.getElementById('planHmDay'),sp=saved.stagePlan||{};if(pk&&!pk.value&&sp.kmSource==='manual'&&sp.targetKm)pk.value=sp.targetKm;if(ph&&!ph.value&&sp.hmSource==='manual'&&sp.maxHm)ph.value=sp.maxHm;updatePlannerStageHintV157(saved)}
 
 const screens=[...document.querySelectorAll('.screen')];
 function renderCheckPage(){
@@ -2223,31 +2231,63 @@ for(let i=1;i<rows.length;i++){
 }
 return {dist,gain,totalDist:dist.at(-1)||0,totalGain};
 }
-function buildWebStages(rows,m,days,targetKm,maxHm){
-const count=rows.length;if(count<2)return [];
-if(!days){
-  const byKm=Math.ceil(m.totalDist/Math.max(20,targetKm||120));
-  const byHm=Math.ceil(m.totalGain/Math.max(200,maxHm||1800));
-  days=Math.max(1,byKm,byHm);
+function normalizeStageTargetsV157(targetKm,maxHm){
+return {km:Math.max(20,Number(targetKm)||80),hm:Math.max(100,Number(maxHm)||800)};
 }
-days=Math.max(1,Math.min(days,count-1));
-const totalScore=Math.max(.001,m.totalDist/Math.max(20,targetKm||120)+m.totalGain/Math.max(200,maxHm||1800));
-const cuts=[0];let last=0;
+function stageLoadV157(stage,targetKm,maxHm){
+const t=normalizeStageTargetsV157(targetKm,maxHm);return Math.max((Number(stage?.km)||0)/t.km,(Number(stage?.hm)||0)/t.hm);
+}
+function buildStagesForDaysV157(rows,m,days,targetKm,maxHm){
+const count=rows.length;if(count<2)return [];const t=normalizeStageTargetsV157(targetKm,maxHm);
+days=Math.max(1,Math.min(Math.round(Number(days)||1),count-1));
+const totalScore=Math.max(.001,m.totalDist/t.km+m.totalGain/t.hm),cuts=[0];let last=0;
 for(let part=1;part<days;part++){
-  const target=totalScore*(part/days);
-  let best=last+1,bestDelta=Infinity;
+  const targetCum=totalScore*(part/days),expectedLoad=Math.max(m.totalDist/(t.km*days),m.totalGain/(t.hm*days));
+  let best=last+1,bestCost=Infinity;
   for(let i=last+1;i<count-(days-part);i++){
-    const score=m.dist[i]/Math.max(20,targetKm||120)+m.gain[i]/Math.max(200,maxHm||1800);
-    const d=Math.abs(score-target);
-    if(d<bestDelta){bestDelta=d;best=i}
+    const km=m.dist[i]-m.dist[last],hm=m.gain[i]-m.gain[last],localLoad=Math.max(km/t.km,hm/t.hm);
+    const cum=m.dist[i]/t.km+m.gain[i]/t.hm,progressErr=Math.abs(cum-targetCum)/Math.max(.001,totalScore/days);
+    const futureParts=days-part,remKm=m.totalDist-m.dist[i],remHm=m.totalGain-m.gain[i],futureAvg=futureParts?Math.max(remKm/(t.km*futureParts),remHm/(t.hm*futureParts)):0;
+    const overloadBase=Math.max(1.05,expectedLoad*1.03),overload=Math.max(0,localLoad-overloadBase),futureOver=Math.max(0,futureAvg-overloadBase),tiny=expectedLoad>.55?Math.max(0,.32-localLoad):0;
+    const cost=progressErr*1.25+Math.abs(localLoad-expectedLoad)*.35+overload*4.5+futureOver*1.2+tiny*.4;
+    if(cost<bestCost){bestCost=cost;best=i}
   }
   cuts.push(best);last=best;
 }
 cuts.push(count-1);
-return cuts.slice(1).map((e,i)=>{
-  const s=cuts[i];
-  return {s,e,km:m.dist[e]-m.dist[s],hm:m.gain[e]-m.gain[s]};
-});
+return cuts.slice(1).map((e,i)=>{const s=cuts[i],km=m.dist[e]-m.dist[s],hm=m.gain[e]-m.gain[s];return {s,e,km,hm,load:Math.max(km/t.km,hm/t.hm)};});
+}
+function buildWebStages(rows,m,days,targetKm,maxHm){
+const count=rows.length;if(count<2)return [];const t=normalizeStageTargetsV157(targetKm,maxHm),fixedDays=Number.isFinite(Number(days))&&Number(days)>0;
+let n=fixedDays?Math.round(Number(days)):Math.max(1,Math.ceil(m.totalDist/t.km),Math.ceil(m.totalGain/t.hm));
+n=Math.max(1,Math.min(n,count-1));let stages=buildStagesForDaysV157(rows,m,n,t.km,t.hm);
+if(!fixedDays){
+  const maxDays=Math.min(count-1,60);let bestMax=Math.max(...stages.map(x=>stageLoadV157(x,t.km,t.hm)),0),stagnant=0;
+  while(bestMax>1.25&&n<maxDays){
+    const next=buildStagesForDaysV157(rows,m,n+1,t.km,t.hm),nextMax=Math.max(...next.map(x=>stageLoadV157(x,t.km,t.hm)),0);
+    if(nextMax<bestMax-.025)stagnant=0;else stagnant++;
+    n++;stages=next;bestMax=nextMax;if(stagnant>=3)break;
+  }
+}
+return stages;
+}
+function effectivePlannerTargetsV157(){
+const rider=readRiderProfileForm(),kmRaw=Number(document.getElementById('planKmDay')?.value),hmRaw=Number(document.getElementById('planHmDay')?.value),kmManual=Number.isFinite(kmRaw)&&kmRaw>=20,hmManual=Number.isFinite(hmRaw)&&hmRaw>=100;
+return {km:kmManual?kmRaw:rider.km,hm:hmManual?hmRaw:rider.hm,kmSource:kmManual?'manual':'profile',hmSource:hmManual?'manual':'profile'};
+}
+function makeStagePlanV157(metrics,requestedDays,targets,stages){
+const loads=stages.map(s=>stageLoadV157(s,targets.km,targets.hm));return {version:'15.7',mode:requestedDays?'fixed-dates':'auto',requestedDays:requestedDays||null,targetKm:targets.km,maxHm:targets.hm,kmSource:targets.kmSource,hmSource:targets.hmSource,stageCount:stages.length,maxLoad:loads.length?Math.max(...loads):0,manualEdited:false,manualCuts:[]};
+}
+function v157StagePlanSourceLabel(t){return t.kmSource==='profile'&&t.hmSource==='profile'?'Fahrerprofil':t.kmSource==='manual'&&t.hmSource==='manual'?'eigene Tagesziele':'eigene Vorgabe + Fahrerprofil'}
+function updatePlannerStageHintV157(saved=null){
+const t=effectivePlannerTargetsV157(),days=plannedTripDays(),km=document.getElementById('planKmDay'),hm=document.getElementById('planHmDay'),hint=document.getElementById('planStageLogicV157');
+if(km&&!km.value)km.placeholder=`Profil: ${t.km}`;if(hm&&!hm.value)hm.placeholder=`Profil: ${t.hm}`;
+if(!hint)return;const actual=saved?.stagePlan?.stageCount||saved?.stages?.length||0,mode=days?`${days} Tage aus Reisezeitraum`:`automatisch${actual?` · ${actual} Etappen`:''}`;hint.innerHTML=`<b>Etappenlogik</b><span>${mode} · Ziel ${t.km} km / ${t.hm} HM · ${v157StagePlanSourceLabel(t)}</span>`;
+}
+function v157CarryStageNames(saved,recalc,oldNames,metrics){
+const start=saved?.start||'Start',dest=saved?.dest||'Ziel';if(!Array.isArray(oldNames)||oldNames.length!==(saved?.stages||[]).length+1)return [start,...recalc.slice(0,-1).map(()=> 'Etappenort wird ermittelt …'),dest];
+const out=[start],oldStages=saved.stages||[],dist=metrics?.dist||[];
+for(let i=0;i<recalc.length-1;i++){const old=oldStages[i],next=recalc[i];let keep=false;if(old&&next){const a=Number(dist[Math.max(0,Math.min(dist.length-1,Number(old.e)||0))]||0),b=Number(dist[Math.max(0,Math.min(dist.length-1,Number(next.e)||0))]||0),span=Math.max(1,Number(old.km)||0);keep=Math.abs(a-b)<=Math.max(2.5,span*.06)}out.push(keep?(oldNames[i+1]||'Etappenort wird ermittelt …'):'Etappenort wird ermittelt …')}out.push(dest);return out;
 }
 function setPlanStatus(msg,kind=''){
 const el=document.getElementById('planStatus');if(!el)return;
@@ -2350,7 +2390,7 @@ function plannerRouteCandidate(){const saved=readActiveRoute();return plannerRou
 
 function renderHomePlanner(){
 const saved=plannerRouteCandidate();
-const rider=readRiderProfileForm();
+const rider=readRiderProfileForm();updatePlannerStageHintV157(saved);
 const chips=document.getElementById('homeProfileChips');if(chips)chips.innerHTML=`<div class="v12-profile-chip">◴ ${rider.km} km/Tag</div><div class="v12-profile-chip">▲ ${rider.hm} HM/Tag</div><div class="v12-profile-chip">▥ ${riderLabel('multi',rider.multi)}</div><div class="v12-profile-chip">♥ ${riderLabel('intensity',rider.intensity)}</div><div class="v12-profile-chip">✹ ${riderLabel('tech',rider.tech)}</div><div class="v12-profile-chip">▱ ${riderLabel('surface',rider.surface)}</div>`;
 const fitText=document.getElementById('homeRiderFit');if(fitText)fitText.innerHTML=`<strong>Fahrerprofil:</strong> ${rider.km} km / ${rider.hm} HM gewohnt · ${riderLabel('multi',rider.multi)} · ${riderLabel('intensity',rider.intensity)}.`;
 if(saved?.coords?.length>1){
@@ -2379,7 +2419,7 @@ let routeCalcTickerV15=null;
 function setRouteCalcBusyV15(on,label=''){const b=document.getElementById('planRouteBtn');if(b){b.disabled=!!on;b.textContent=on?(label||'Route wird berechnet …'):'Fahrradroute berechnen →'}if(!on&&routeCalcTickerV15){clearInterval(routeCalcTickerV15);routeCalcTickerV15=null}}
 async function calculateWebRoute(){
  const start=document.getElementById('planStart').value.trim(),dest=document.getElementById('planDest').value.trim(),startDate=document.getElementById('planStartDate').value,endDate=document.getElementById('planEndDate').value;
- const kmDay=Math.max(20,Number(document.getElementById('planKmDay').value)||120),hmDay=Math.max(200,Number(document.getElementById('planHmDay').value)||1800),profile=document.getElementById('planProfile').value||'trekking',lodging=document.getElementById('planLodging').value||'hotel';
+ const targets=effectivePlannerTargetsV157(),kmDay=targets.km,hmDay=targets.hm,profile=document.getElementById('planProfile').value||'trekking',lodging=document.getElementById('planLodging').value||'hotel';
  const waypoints=parseWaypoints(),rider=readRiderProfileForm(),bike=readBikeProfileV15();saveRiderProfile();saveBikeProfileV15();
  if(!start||!dest){setPlanStatus('Bitte Start und Ziel eingeben.','warn');return}if(startDate&&endDate&&!plannedTripDays()){setPlanStatus('Das Bis-Datum muss nach dem Startdatum liegen.','warn');return}
  const started=Date.now();setRouteCalcBusyV15(true);setPlanStatus('Routing wird gestartet …');routeCalcTickerV15=setInterval(()=>{const sec=Math.round((Date.now()-started)/1000);if(sec>=4)setPlanStatus(sec<18?`Route wird ermittelt … ${sec} s`:'Routing dauert länger als üblich – ROAM wartet nur noch begrenzt …','')},1000);
@@ -2387,11 +2427,11 @@ async function calculateWebRoute(){
    const simple=waypoints.length===0,endpoint=simple?'/api/route':'/api/route-plan',payload=simple?{start,destination:dest,profile}:{start,destination:dest,loop:false,waypoints,profile,bike};
    const r=await fetchWithTimeoutV15(API+endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)},45000),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d?.error||'Routing nicht verfügbar');
    let rows=normalizeAdventureCoords(d?.geometry?.coordinates);if(rows.length<20)throw new Error('Die Routingantwort enthält zu wenige Punkte.');setPlanStatus('Route gefunden · Höhenprofil wird ergänzt …');setRouteCalcBusyV15(true,'Höhenprofil …');rows=await enrichRouteElevation(rows);
-   const m=webRouteMetrics(rows),stages=buildWebStages(rows,m,plannedTripDays(),kmDay,hmDay);let ordered=Array.isArray(d?.ordered_points)?d.ordered_points:[];
+   const m=webRouteMetrics(rows),requestedDays=plannedTripDays(),stages=buildWebStages(rows,m,requestedDays,kmDay,hmDay),stagePlan=makeStagePlanV157(m,requestedDays,targets,stages);let ordered=Array.isArray(d?.ordered_points)?d.ordered_points:[];
    if(!ordered.length)ordered=[{name:start,label:start,lat:Number(d?.start?.lat??rows[0].lat),lon:Number(d?.start?.lon??rows[0].lon),kind:'start',route_index:0},{name:dest,label:dest,lat:Number(d?.destination?.lat??rows.at(-1).lat),lon:Number(d?.destination?.lon??rows.at(-1).lon),kind:'destination',route_index:rows.length-1}];
    const fixedNames=[start,...stages.slice(0,-1).map((_,i)=>ordered.find(x=>Number(x.route_index)===stages[i].e)?.name||'Etappenort wird ermittelt …'),dest],routePlan={type:'point',source:'generated',waypoints,orderedPoints:ordered,importName:'',bike};
    sessionStorage.removeItem('abo-mobile-lodging-selected');sessionStorage.removeItem('abo-mobile-terrain-v6');sessionStorage.removeItem('abo-mobile-weather-v7');sessionStorage.setItem('abo-mobile-trip-prefs-v2',JSON.stringify({startDate,endDate}));sessionStorage.setItem('abo-mobile-lodging-prefs',JSON.stringify({type:lodging,priceLevel:document.getElementById('planPrice')?.value||'mid',nightBudget:Number(document.getElementById('planNightBudget')?.value)||90,totalBudget:0}));
-   const newSaved={start,dest,coords:rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]),metrics:m,stages,routePlan,tripDates:{startDate,endDate},riderProfile:rider,terrainPreference:planTerrainPref,bikeProfile:bike};
+   const newSaved={start,dest,coords:rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]),metrics:m,stages,stagePlan,routePlan,tripDates:{startDate,endDate},riderProfile:rider,terrainPreference:planTerrainPref,bikeProfile:bike};
    activateStoredTrip(newSaved);writeStageNamesFor(newSaved,fixedNames);routeTerrain={status:'idle',stages:[],source:null,reliableCoverage:0,warning:null};applyRouteRows(rows,routePlan.orderedPoints,'stored',start,dest,stages);
    const sec=((Date.now()-started)/1000).toFixed(1).replace('.',',');setPlanStatus(`${Math.round(m.totalDist)} km · ${Math.round(m.totalGain).toLocaleString('de-DE')} HM · ${stages.length} Etappen · ${sec} s · noch nicht dauerhaft gespeichert`,'ok');renderHomePlanner();renderStagePrototype();renderOverviewDashboard();resolveWebStageNames();setTimeout(()=>showScreen('route'),100);
  }catch(e){setPlanStatus(e?.name==='AbortError'?'Routing hat das Zeitlimit erreicht. Bitte erneut versuchen – ROAM bleibt bedienbar.':(e?.message||'Route konnte nicht berechnet werden.'),'warn')}finally{setRouteCalcBusyV15(false)}
@@ -2401,15 +2441,15 @@ async function handleWebGpxImport(file){
  try{
    const xml=await file.text(),doc=new DOMParser().parseFromString(xml,'application/xml'),pts=[...doc.querySelectorAll('trkpt,rtept')];if(pts.length<2)throw new Error('Keine GPX-Trackpunkte gefunden.');
    let rows=pts.map(p=>({lat:Number(p.getAttribute('lat')),lon:Number(p.getAttribute('lon')),z:Number(p.querySelector('ele')?.textContent)})).filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lon));rows=await enrichRouteElevation(rows);
-   const m=webRouteMetrics(rows),kmDay=Math.max(20,Number(document.getElementById('planKmDay').value)||120),hmDay=Math.max(200,Number(document.getElementById('planHmDay').value)||1800),stages=buildWebStages(rows,m,plannedTripDays(),kmDay,hmDay),start=document.getElementById('planStart').value.trim()||'GPX Start',dest=document.getElementById('planDest').value.trim()||'GPX Ziel';
+   const m=webRouteMetrics(rows),targets=effectivePlannerTargetsV157(),requestedDays=plannedTripDays(),stages=buildWebStages(rows,m,requestedDays,targets.km,targets.hm),stagePlan=makeStagePlanV157(m,requestedDays,targets,stages),start=document.getElementById('planStart').value.trim()||'GPX Start',dest=document.getElementById('planDest').value.trim()||'GPX Ziel';
    sessionStorage.removeItem('abo-mobile-lodging-selected');sessionStorage.removeItem('abo-mobile-terrain-v6');sessionStorage.removeItem('abo-mobile-weather-v7');
-   const newSaved={start,dest,coords:rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]),metrics:m,stages,routePlan:{type:'gpx',source:'imported',waypoints:[],orderedPoints:[],importName:file.name},tripDates:{startDate:document.getElementById('planStartDate').value,endDate:document.getElementById('planEndDate').value},bikeProfile:readBikeProfileV15()};
+   const newSaved={start,dest,coords:rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]),metrics:m,stages,stagePlan,routePlan:{type:'gpx',source:'imported',waypoints:[],orderedPoints:[],importName:file.name},tripDates:{startDate:document.getElementById('planStartDate').value,endDate:document.getElementById('planEndDate').value},riderProfile:readRiderProfileForm(),terrainPreference:planTerrainPref,bikeProfile:readBikeProfileV15()};
    activateStoredTrip(newSaved);writeStageNamesFor(newSaved,[start,...stages.slice(0,-1).map(()=>'Etappenort wird ermittelt …'),dest]);applyRouteRows(rows,[],'stored',start,dest,stages);setPlanStatus(`GPX übernommen · ${Math.round(m.totalDist)} km · Originaltrack bleibt erhalten · noch nicht dauerhaft gespeichert`,'ok');renderHomePlanner();renderStagePrototype();renderOverviewDashboard();resolveWebStageNames();
  }catch(e){setPlanStatus(e?.message||'GPX konnte nicht importiert werden.','warn')}
 }
 function loadSavedRouteFromPlanner(){
  const saved=readSavedRouteRaw();if(!saved){setPlanStatus('Keine gespeicherte Route vorhanden.','warn');return}
- activateStoredTrip(saved);document.getElementById('planStart').value=saved.start||'';document.getElementById('planDest').value=saved.dest||'';document.getElementById('planWaypoints').value=(saved.routePlan?.waypoints||[]).map(x=>x?.name||x).filter(Boolean).join(', ');document.getElementById('planStartDate').value=saved.tripDates?.startDate||'';document.getElementById('planEndDate').value=saved.tripDates?.endDate||'';
+ activateStoredTrip(saved);document.getElementById('planStart').value=saved.start||'';document.getElementById('planDest').value=saved.dest||'';document.getElementById('planWaypoints').value=(saved.routePlan?.waypoints||[]).map(x=>x?.name||x).filter(Boolean).join(', ');document.getElementById('planStartDate').value=saved.tripDates?.startDate||'';document.getElementById('planEndDate').value=saved.tripDates?.endDate||'';const pk=document.getElementById('planKmDay'),ph=document.getElementById('planHmDay'),sp=saved.stagePlan||{};if(pk)pk.value=sp.kmSource==='manual'&&sp.targetKm?sp.targetKm:'';if(ph)ph.value=sp.hmSource==='manual'&&sp.maxHm?sp.maxHm:'';updatePlannerStageHintV157(saved);
  loadExactRouteGeometry().then(()=>{renderHomePlanner();renderOverviewDashboard();setPlanStatus('Gespeicherte Route bewusst als aktuelle Reise geöffnet.','ok');showScreen('route')});
 }
 restoreRiderProfile();
@@ -2695,7 +2735,7 @@ function openStageEditV15(i){const saved=readActiveRoute();if(!saved?.stages?.le
 document.getElementById('stageEditBtn')?.addEventListener('click',()=>openStageEditV15(selectedStagePrototype));
 function stageMetricRangeV15(rows,s,e){let km=0,hm=0;for(let i=s+1;i<=e;i++){km+=geoDistKm([rows[i-1].lat,rows[i-1].lon],[rows[i].lat,rows[i].lon]);const a=Number(rows[i-1].z),b=Number(rows[i].z);if(Number.isFinite(a)&&Number.isFinite(b)&&b>a)hm+=b-a}return {km,hm}}
 async function geocodeStagePlaceV15(q){const r=await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=1&lang=de`);const d=await r.json();const c=d?.features?.[0]?.geometry?.coordinates;if(!r.ok||!Array.isArray(c))throw new Error('Ort nicht gefunden');return {lon:Number(c[0]),lat:Number(c[1]),name:cleanPlaceName(d?.features?.[0]?.properties?.name||q)}}
-document.getElementById('stageEditForm')?.addEventListener('submit',async e=>{e.preventDefault();const saved=readActiveRoute(),q=document.getElementById('stageEditPlace').value.trim(),status=document.getElementById('stageEditStatus');if(!saved||!q)return;status.textContent='Ort wird entlang der Route gesucht …';try{const place=await geocodeStagePlaceV15(q),rows=normalizeAdventureCoords(saved.coords),i=stageEditIndexV15,prevStart=Number(saved.stages[i].s)||0,nextEnd=Number(saved.stages[i+1]?.e??rows.length-1);let best={idx:-1,d:1e9};for(let k=prevStart+4;k<=nextEnd-4;k++){const d=geoDistKm([rows[k].lat,rows[k].lon],[place.lat,place.lon]);if(d<best.d)best={idx:k,d}}if(best.idx<0||best.d>45)throw new Error('Der Ort liegt zu weit von der bestehenden Route entfernt.');saved.stages[i].e=best.idx;saved.stages[i+1].s=best.idx;saved.stages.forEach(st=>{const m=stageMetricRangeV15(rows,st.s,st.e);st.km=m.km;st.hm=m.hm});const names=readStageNamesFor(saved)||[saved.start,...saved.stages.slice(0,-1).map(()=>''),saved.dest];names[i+1]=place.name||q;writeSessionRoute(saved);writeStageNamesFor(saved,names);routeStages=normalizedRouteStages(saved.stages);status.textContent=`Etappenziel gesetzt: ${names[i+1]} · ${best.d.toFixed(1).replace('.',',')} km zur Route`;setTimeout(()=>{document.getElementById('stageEditDialog')?.close();renderStagePrototype();renderOverviewDashboard();drawRouteOnMap();showStagePrototype(i)},500)}catch(err){status.textContent=err.message||'Etappenziel konnte nicht geändert werden.'}});
+document.getElementById('stageEditForm')?.addEventListener('submit',async e=>{e.preventDefault();const saved=readActiveRoute(),q=document.getElementById('stageEditPlace').value.trim(),status=document.getElementById('stageEditStatus');if(!saved||!q)return;status.textContent='Ort wird entlang der Route gesucht …';try{const place=await geocodeStagePlaceV15(q),rows=normalizeAdventureCoords(saved.coords),i=stageEditIndexV15,prevStart=Number(saved.stages[i].s)||0,nextEnd=Number(saved.stages[i+1]?.e??rows.length-1);let best={idx:-1,d:1e9};for(let k=prevStart+4;k<=nextEnd-4;k++){const d=geoDistKm([rows[k].lat,rows[k].lon],[place.lat,place.lon]);if(d<best.d)best={idx:k,d}}if(best.idx<0||best.d>45)throw new Error('Der Ort liegt zu weit von der bestehenden Route entfernt.');saved.stages[i].e=best.idx;saved.stages[i+1].s=best.idx;saved.stages.forEach(st=>{const m=stageMetricRangeV15(rows,st.s,st.e);st.km=m.km;st.hm=m.hm});const names=readStageNamesFor(saved)||[saved.start,...saved.stages.slice(0,-1).map(()=>''),saved.dest];names[i+1]=place.name||q;const sp=saved.stagePlan||{},tk=Number(sp.targetKm)||readRiderProfileForm().km,th=Number(sp.maxHm)||readRiderProfileForm().hm;saved.stagePlan={...sp,version:'15.7',manualEdited:true,manualCuts:[...new Set([...(sp.manualCuts||[]),best.idx])],stageCount:saved.stages.length,maxLoad:Math.max(...saved.stages.map(x=>stageLoadV157(x,tk,th)),0)};writeSessionRoute(saved);writeStageNamesFor(saved,names);routeStages=normalizedRouteStages(saved.stages);status.textContent=`Etappenziel gesetzt: ${names[i+1]} · ${best.d.toFixed(1).replace('.',',')} km zur Route`;setTimeout(()=>{document.getElementById('stageEditDialog')?.close();renderStagePrototype();renderOverviewDashboard();drawRouteOnMap();showStagePrototype(i)},500)}catch(err){status.textContent=err.message||'Etappenziel konnte nicht geändert werden.'}});
 
 // Pack: exact approved bike artwork + bag drill-down
 let selectedPackBagV15='';
@@ -3082,10 +3122,11 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     try{
       const enriched=await enrichRouteElevation(rows);
       if(!v154ElevationUseful(enriched))return;
-      const m=webRouteMetrics(enriched),rider=readRiderProfileForm(),count=Math.max(1,saved.stages.length),recalc=buildWebStages(enriched,m,count,rider.km,rider.hm);
-      const next={...saved,coords:enriched.map(x=>[x.lon,x.lat,x.z]),metrics:m,stages:recalc};
+      const m=webRouteMetrics(enriched),rider=readRiderProfileForm(),plan=saved.stagePlan||{},targetKm=Number(plan.targetKm)||rider.km,targetHm=Number(plan.maxHm)||rider.hm,count=Math.max(1,saved.stages.length),oldNames=readStageNamesFor(saved);
+      let recalc;if(plan.manualEdited){recalc=saved.stages.map(st=>{const a=Math.max(0,Math.min(enriched.length-2,Number(st.s)||0)),b=Math.max(a+1,Math.min(enriched.length-1,Number(st.e)||enriched.length-1));return {s:a,e:b,km:m.dist[b]-m.dist[a],hm:m.gain[b]-m.gain[a],load:Math.max((m.dist[b]-m.dist[a])/Math.max(20,targetKm),(m.gain[b]-m.gain[a])/Math.max(100,targetHm))}})}else recalc=buildWebStages(enriched,m,count,targetKm,targetHm);
+      const stagePlan={...plan,version:'15.7',targetKm,maxHm:targetHm,stageCount:recalc.length,maxLoad:Math.max(...recalc.map(x=>stageLoadV157(x,targetKm,targetHm)),0)},next={...saved,coords:enriched.map(x=>[x.lon,x.lat,x.z]),metrics:m,stages:recalc,stagePlan};
       writeSessionRoute(next);routeGeo=enriched.map(x=>[x.lat,x.lon]);routeElev=enriched.map(x=>Number(x.z));rebuildRouteMeasures();routeStages=normalizedRouteStages(recalc);
-      const names=[next.start,...recalc.slice(0,-1).map(()=> 'Etappenort wird ermittelt …'),next.dest];writeStageNamesFor(next,names);
+      const names=plan.manualEdited&&Array.isArray(oldNames)?oldNames:v157CarryStageNames(saved,recalc,oldNames,m);writeStageNamesFor(next,names);
       renderStagePrototype();renderOverviewDashboard();resolveWebStageNames?.();v154RepairDone=true;
     }catch(e){console.warn('V15.4 elevation repair',e)}
     finally{v154RepairBusy=false}
@@ -3236,7 +3277,12 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     'Untergrund':['Surface','Superficie'],
     'Vorbereitung':['Preparation','Preparación'],
     'Reisevorbereitung':['Trip preparation','Preparación del viaje'],
-    'Was noch offen ist':['What is still open','Lo que queda pendiente']
+    'Was noch offen ist':['What is still open','Lo que queda pendiente'],
+    'Etappenlogik':['Stage logic','Lógica de etapas'],
+    'Fahrerprofil':['Rider profile','Perfil del ciclista'],
+    'eigene Tagesziele':['custom daily targets','objetivos diarios propios'],
+    'eigene Vorgabe + Fahrerprofil':['custom target + rider profile','objetivo propio + perfil del ciclista'],
+    'Ohne eigene Vorgabe verwendet ROAM dein Fahrerprofil.':['Without a custom target, ROAM uses your rider profile.','Sin un objetivo propio, ROAM utiliza tu perfil de ciclista.']
   };
   if(typeof ROAM_V152_TRANSLATIONS==='object')Object.assign(ROAM_V152_TRANSLATIONS,extra);
 
@@ -3284,6 +3330,9 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     if((m=t.match(/^([\d.,]+) \/ ([\d.,]+) kg verteilt · (\d+) aktive Taschen · Balance (\d+) \/ (\d+)$/)))return es?`${m[1]} / ${m[2]} kg distribuidos · ${m[3]} bolsas activas · Equilibrio ${m[4]} / ${m[5]}`:`${m[1]} / ${m[2]} kg assigned · ${m[3]} active bags · Balance ${m[4]} / ${m[5]}`;
     if((m=t.match(/^(\d+) Gegenstand\/Gegenstände ohne passenden Platz\.$/)))return es?`${m[1]} objeto(s) sin espacio adecuado.`:`${m[1]} item(s) without a suitable position.`;
     if((m=t.match(/^Keine Tasche ist überfüllt\. Voll belegte Taschen sind in Ordnung\. Balance (\d+)% vorne · (\d+)% hinten\.$/)))return es?`Ninguna bolsa supera su capacidad. Las bolsas completamente llenas están bien. Equilibrio ${m[1]}% delante · ${m[2]}% detrás.`:`No bag is over capacity. Fully used bags are fine. Balance ${m[1]}% front · ${m[2]}% rear.`;
+    if((m=t.match(/^(\d+) Tage aus Reisezeitraum · Ziel ([\d.,]+) km \/ ([\d.,]+) HM · (.+)$/))){const src=v154Exact(m[4],lang)||m[4];return es?`${m[1]} días del periodo de viaje · objetivo ${m[2]} km / ${m[3]} m↑ · ${src}`:`${m[1]} days from trip dates · target ${m[2]} km / ${m[3]} m↑ · ${src}`}
+    if((m=t.match(/^automatisch(?: · (\d+) Etappen)? · Ziel ([\d.,]+) km \/ ([\d.,]+) HM · (.+)$/))){const src=v154Exact(m[4],lang)||m[4],count=m[1]?(es?` · ${m[1]} etapas`:` · ${m[1]} stages`):'';return es?`automático${count} · objetivo ${m[2]} km / ${m[3]} m↑ · ${src}`:`automatic${count} · target ${m[2]} km / ${m[3]} m↑ · ${src}`}
+    if((m=t.match(/^Profil: ([\d.,]+)$/)))return es?`Perfil: ${m[1]}`:`Profile: ${m[1]}`;
     return t;
   }
   const textState=new WeakMap(),attrState=new WeakMap();
