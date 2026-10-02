@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.8.6 Approved Pack Reference</title>
+<title>ROAM · Beta · V15.8.8 Four Cargo Mounts</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -971,6 +971,77 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 }
 </style>
 
+<style id="roam-v1587-interactive-pack-lock">
+/* Interaction repair without changing the approved V15.8.6 geometry. */
+#screen-pack .v15-bike-image-wrap:before{pointer-events:none!important}
+#screen-pack .v15-bike-hotspot{
+ display:grid!important;place-items:center!important;position:absolute!important;z-index:12!important;
+ width:25px!important;height:25px!important;border-radius:50%!important;border:2px solid #fff!important;
+ background:#fff!important;box-shadow:0 1px 5px rgba(31,43,35,.22)!important;outline:0!important;
+ cursor:pointer!important;pointer-events:auto!important;color:#b85f3d!important;font-size:0!important
+}
+#screen-pack .v15-bike-hotspot:before{content:"+";font-size:20px;line-height:1;font-weight:800;color:#c95e3d}
+#screen-pack .v15-bike-hotspot.selected{background:#526448!important;color:white!important}
+#screen-pack .v15-bike-hotspot.selected:before{content:"✓";font-size:14px;color:#fff}
+#screen-pack .v15-bike-hotspot.v158-unmounted{display:grid!important;opacity:.9!important}
+#screen-pack .v15-bike-hotspot.saddle{left:22%!important;top:28%!important}
+#screen-pack .v15-bike-hotspot.top{left:49%!important;top:30%!important}
+#screen-pack .v15-bike-hotspot.frame{left:47%!important;top:50%!important}
+#screen-pack .v15-bike-hotspot.bar{left:80%!important;top:28%!important}
+#screen-pack .v15-bike-hotspot.fork{left:79%!important;top:58%!important}
+#screen-pack .v15-bike-hotspot.bottle{display:none!important}
+#screen-pack .v15-bike-callout{pointer-events:none!important}
+#screen-pack .pack-v13-fillcard{cursor:pointer!important;pointer-events:auto!important;position:relative!important}
+#screen-pack .pack-v13-fillcard:hover,#screen-pack .pack-v13-fillcard.selected{outline:2px solid rgba(184,95,61,.42)!important;outline-offset:-2px}
+#screen-pack .pack-v13-fillcard:after{content:"Inhalt";position:absolute;right:6px;bottom:5px;font-size:6px;font-weight:800;color:#7b8179;opacity:.75}
+/* Natural page scroll: no trapped inner columns. */
+#screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{height:auto!important;min-height:780px!important;max-height:none!important;overflow:visible!important}
+#screen-pack .v158-pack-needs #packNeedList,#screen-pack .v158-pack-have #packHaveList{height:auto!important;max-height:none!important;overflow:visible!important;padding-right:0!important}
+/* Bag inspector: compact overlay below the bike, fully interactive. */
+#screen-pack #packBagDetail.v15-bag-detail{display:block!important;position:relative!important;z-index:15!important;margin:8px 0!important;padding:10px!important;border:1px solid #d9d2c5!important;border-radius:10px!important;background:#fffdf8!important;box-shadow:0 8px 22px rgba(31,43,35,.08)!important;pointer-events:auto!important}
+#screen-pack #packBagDetail[hidden]{display:none!important}
+#screen-pack #packBagDetail .v158-bag-detail-head{display:grid!important;grid-template-columns:46px 1fr 28px!important;gap:8px!important;align-items:start!important}
+#screen-pack #packBagDetail .v158-bag-detail-icon svg{width:42px!important;height:34px!important}
+#screen-pack #packBagDetail h3{font-size:14px!important;margin:1px 0!important}
+#screen-pack #packBagDetail p{font-size:8px!important;margin:2px 0!important;color:#687067!important}
+#screen-pack #packBagDetail .v158-bag-detail-kpis{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:5px!important;margin:7px 0!important}
+#screen-pack #packBagDetail .v158-bag-detail-kpis>div{padding:6px!important;border:1px solid #e0dbd0!important;border-radius:7px!important}
+#screen-pack #packBagDetail .v158-bag-content{max-height:150px!important;overflow:auto!important;margin-top:6px!important}
+#screen-pack #packBagDetail .v158-bag-item-row{display:grid!important;grid-template-columns:24px 1fr 110px!important;gap:6px!important;align-items:center!important;padding:5px 0!important;border-top:1px solid #eee9df!important}
+#screen-pack #packBagDetail .v158-bag-item-row select{height:28px!important;font-size:8px!important}
+#screen-pack #packBagDetail .v158-bag-detail-actions{display:flex!important;justify-content:flex-end!important;gap:6px!important;margin-top:7px!important}
+#screen-pack #packBagDetail .v158-bag-detail-actions button{height:30px!important;border:1px solid #d9d2c5!important;border-radius:7px!important;background:#fff!important;font-size:8px!important;font-weight:800!important;padding:0 9px!important;cursor:pointer!important}
+#screen-pack #packBagDetail .v158-bag-detail-actions .remove{color:#a24e36!important}
+/* one consistent thin outline language */
+#screen-pack .thumb svg,#screen-pack .pack-v12-needrow svg,#screen-pack #packProgress svg{fill:none!important;stroke:currentColor!important;stroke-width:1.7!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+@media(min-width:901px) and (max-width:1180px){
+ #screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{min-height:720px!important}
+}
+</style>
+
+<style id="roam-v1588-four-cargo-mounts">
+#screen-pack .v1588-cargo-panel{margin:8px 0 0;padding:9px;border:1px solid #d9d2c5;border-radius:10px;background:#f7f3e9}
+#screen-pack .v1588-cargo-title{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px}
+#screen-pack .v1588-cargo-title b{font-size:10px}
+#screen-pack .v1588-cargo-title small{font-size:7px;color:#70776f}
+#screen-pack .v1588-cargo-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+#screen-pack .v1588-cargo{border:1px solid #d9d2c5;border-radius:8px;background:#fffdf8;padding:6px;min-width:0}
+#screen-pack .v1588-cargo.on{border-color:#839079;background:#f3f6ee}
+#screen-pack .v1588-cargo-head{display:flex;align-items:center;gap:5px;margin-bottom:4px}
+#screen-pack .v1588-cargo-icon{width:15px;height:27px;border:1.5px solid #435246;border-radius:5px;background:#65755b;position:relative;flex:0 0 auto}
+#screen-pack .v1588-cargo.rear .v1588-cargo-icon{background:#b85f3d}
+#screen-pack .v1588-cargo-icon:after{content:"";position:absolute;left:3px;right:3px;top:7px;border-top:1px solid #ddd1bf}
+#screen-pack .v1588-cargo b{font-size:7px;line-height:1.1}
+#screen-pack .v1588-cargo small{display:block;font-size:6px;color:#70776f;margin-top:2px}
+#screen-pack .v1588-cargo button{width:100%;height:23px;margin-top:5px;border:1px solid #d9d2c5;border-radius:6px;background:#f3eee4;font-size:6px;font-weight:800;cursor:pointer}
+#screen-pack .v1588-cargo.on button{background:#e8eee2}
+#screen-pack .v1588-rear-hotspot{position:absolute;z-index:10;width:28px;height:28px;border-radius:50%;border:2px solid #fff;background:#c85e3e;color:#fff;display:grid;place-items:center;font-weight:900;font-size:16px;cursor:pointer;box-shadow:0 1px 5px #0003}
+#screen-pack .v1588-rear-hotspot.left{left:24%;top:62%}
+#screen-pack .v1588-rear-hotspot.right{left:31%;top:66%}
+#screen-pack .v1588-rear-hotspot.on{background:#526448}
+@media(max-width:1100px){#screen-pack .v1588-cargo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1435,7 +1506,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.8.6</div>
+<div class="prototype-pill">ROAM · Beta · V15.8.8</div>
 </div>
 
 <script>
@@ -3173,7 +3244,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
 
   const packTools=document.querySelector('.v15-bike-tools');
   if(packTools){
-    packTools.innerHTML='<span class="v154-pack-mode" id="packBikeModeV154">Aktuelle Verteilung</span><span class="muted">Die Grafik zeigt nur tatsächlich verwendete Packpositionen. Zuweisung direkt in der Gegenstandsliste ändern.</span>';
+    packTools.innerHTML='<span class="v154-pack-mode" class="v154-pack-mode packBikeModeV154">Aktuelle Verteilung</span><span class="muted">Die Grafik zeigt nur tatsächlich verwendete Packpositionen. Zuweisung direkt in der Gegenstandsliste ändern.</span>';
   }
 
   function v154PackDisplayItems(){ return packProposal?.items || packItems; }
@@ -3298,7 +3369,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
       const st=bagStats(id,items),layer=document.getElementById(`packBike-${id}`),visible=st.items.length>0;
       if(layer)layer.classList.toggle('v154-hidden',!visible);
     });
-    const mode=document.getElementById('packBikeModeV154');
+    const mode=document.querySelector('.packBikeModeV154');
     if(mode){mode.textContent=packProposal?'Auto-Pack Vorschau':'Aktuelle Verteilung';mode.classList.toggle('preview',!!packProposal)}
   };
 
@@ -3798,7 +3869,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
   }
   renderPackBike=function(){
     const items=packProposal?.items||packItems;Object.keys(packBags).forEach(id=>{const mounted=isMountedV158(id),st=bagStats(id,items),layer=document.getElementById(`packBike-${id}`),lab=document.getElementById(`packBikeLabel-${id}`);if(layer){layer.classList.remove('v154-hidden');layer.classList.toggle('v158-bike-unmounted',!mounted);layer.classList.toggle('v158-empty-bag',mounted&&!st.items.length)}document.querySelectorAll(`[data-pack-bag="${id}"]`).forEach(el=>{el.removeAttribute('hidden');el.classList.toggle('v158-unmounted',!mounted);el.classList.toggle('selected',selectedPackBagV15===id)});if(lab)lab.textContent=st.items.length?`${formatLiters(st.l)} / ${formatLiters(st.cap)} L · ${st.pct}%`:`leer · ${formatLiters(st.cap)} L`});
-    const mode=document.getElementById('packBikeModeV154');if(mode){mode.textContent=packProposal?'Auto-Pack Vorschau':'Montierte Taschen';mode.classList.toggle('preview',!!packProposal)}bindBikeV158();
+    const mode=document.querySelector('.packBikeModeV154');if(mode){mode.textContent=packProposal?'Auto-Pack Vorschau':'Montierte Taschen';mode.classList.toggle('preview',!!packProposal)}bindBikeV158();
   };
 
   renderPackBagDetailV15=function(id){
@@ -3836,7 +3907,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
 
   // Existing reset means "empty contents", not remove physical bags. This is less destructive and matches its label.
   const reset=document.getElementById('resetPack');if(reset)reset.textContent='Inhalte leeren';
-  const packTools=document.querySelector('#screen-pack .v15-bike-tools');if(packTools)packTools.innerHTML='<span class="v154-pack-mode" id="packBikeModeV154">Montierte Taschen</span><span class="muted">Tasche direkt am Bike antippen → Inhalt öffnen → Gegenstände verschieben</span>';
+  const packTools=document.querySelector('#screen-pack .v15-bike-tools');if(packTools)packTools.innerHTML='<span class="v154-pack-mode" class="v154-pack-mode packBikeModeV154">Montierte Taschen</span><span class="muted">Tasche direkt am Bike antippen → Inhalt öffnen → Gegenstände verschieben</span>';
 
   renderPackPrototype();renderOverviewDashboard();
 })();
@@ -3876,6 +3947,108 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
  if(fill) fill.textContent='Taschenfüllstand';
  const reset=document.getElementById('resetPack'); if(reset) reset.textContent='Leere Taschen';
  const detail=document.getElementById('packBagDetail'); if(detail) detail.hidden=true;
+})();
+</script>
+
+<script id="roam-v1587-interactive-pack-js">
+(()=>{
+ const s=document.getElementById('screen-pack'); if(!s)return;
+ s.dataset.packInteraction='v1587';
+ function bagIdFrom(el){return el?.dataset?.bagId||el?.dataset?.packBag||''}
+ function openBag(id){
+   if(!id||!packBags?.[id])return;
+   if(typeof isMountedV158==='function'&&!isMountedV158(id)){
+     if(typeof setMountedV158==='function')setMountedV158(id,true);
+     return;
+   }
+   selectedPackBagV15=id;
+   if(typeof renderPackBagDetailV15==='function')renderPackBagDetailV15(id);
+   document.getElementById('packBagDetail')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+ }
+ // Delegation survives every renderPackPrototype() call.
+ s.addEventListener('click',e=>{
+   const fill=e.target.closest('.pack-v13-fillcard[data-bag-id]');
+   if(fill){e.preventDefault();e.stopPropagation();openBag(fill.dataset.bagId);return}
+   const hot=e.target.closest('.v15-bike-hotspot[data-pack-bag]');
+   if(hot){e.preventDefault();e.stopPropagation();openBag(hot.dataset.packBag);return}
+ });
+ // Keep all mounted bags visible in fill-level row, including empty bags.
+ const oldFillV1587=renderPackFillGrid;
+ renderPackFillGrid=function(){
+   const box=document.getElementById('packFillGrid');if(!box)return;
+   const items=packProposal?.items||packItems,ids=(typeof mountedIdsV158==='function'?mountedIdsV158():Object.keys(packBags));
+   box.innerHTML=ids.map(id=>{const b=packBags[id],st=bagStats(id,items),full=st.pct>=100;return `<div role="button" tabindex="0" class="pack-v13-fillcard ${st.over?'pack-v12-over':''} ${full?'full':''} ${!st.items.length?'empty':''} ${selectedPackBagV15===id?'selected':''}" data-bag-id="${id}" aria-label="${b.name}: Inhalt anzeigen"><div class="bag-svg">${bagIconSvg(id)}</div><b>${b.name}</b><strong>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</strong><div class="bar"><i style="width:${Math.min(100,st.pct)}%"></i></div><small>${st.items.length?`${st.pct}% · ${st.items.length} Teile`:'0% · leer'}</small></div>`}).join('');
+   box.querySelectorAll('[data-bag-id]').forEach(x=>x.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();openBag(x.dataset.bagId)}});
+ };
+ // Hotspots must stay available even when a bag is unmounted; they become Add buttons.
+ const oldBikeV1587=renderPackBike;
+ renderPackBike=function(){
+   if(typeof oldBikeV1587==='function')oldBikeV1587();
+   document.querySelectorAll('#screen-pack .v15-bike-hotspot[data-pack-bag]').forEach(x=>{
+     const id=x.dataset.packBag, mounted=typeof isMountedV158==='function'?isMountedV158(id):true;
+     x.hidden=false;x.removeAttribute('hidden');x.classList.toggle('v158-unmounted',!mounted);
+     x.setAttribute('aria-label',mounted?`${packBags[id]?.name||id}: Inhalt anzeigen`:`${packBags[id]?.name||id} hinzufügen`);
+   });
+ };
+ // Undo the V15.8.6 forced-hidden inspector.
+ const d=document.getElementById('packBagDetail');if(d&&selectedPackBagV15&&typeof renderPackBagDetailV15==='function')renderPackBagDetailV15(selectedPackBagV15);
+ if(typeof renderPackFillGrid==='function')renderPackFillGrid();
+ if(typeof renderPackBike==='function')renderPackBike();
+})();
+</script>
+
+<script id="roam-v1588-four-cargo-mounts-js">
+(()=>{
+ const screen=document.getElementById('screen-pack'); if(!screen)return;
+ const KEY='roamCargoMountsV1588';
+ const defaults={frontL:true,frontR:true,rearL:false,rearR:false};
+ const read=()=>{try{return {...defaults,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(e){return {...defaults}}};
+ const write=s=>localStorage.setItem(KEY,JSON.stringify(s));
+ const labels={
+   frontL:['Front links','Gabel · links'],frontR:['Front rechts','Gabel · rechts'],
+   rearL:['Heck links','Hinterbau · links'],rearR:['Heck rechts','Hinterbau · rechts']
+ };
+ function renderCargo(){
+   const fill=document.getElementById('packFillGrid'); if(!fill)return;
+   let panel=document.getElementById('v1588CargoPanel');
+   if(!panel){panel=document.createElement('div');panel.id='v1588CargoPanel';panel.className='v1588-cargo-panel';fill.insertAdjacentElement('afterend',panel)}
+   const st=read();
+   panel.innerHTML=`<div class="v1588-cargo-title"><b>Cargo-Aufnahmen</b><small>4 unabhängige Montagepositionen</small></div>
+   <div class="v1588-cargo-grid">${Object.keys(labels).map(id=>{
+     const rear=id.startsWith('rear'),on=!!st[id];
+     return `<div class="v1588-cargo ${rear?'rear':'front'} ${on?'on':''}" data-cargo="${id}">
+       <div class="v1588-cargo-head"><span class="v1588-cargo-icon"></span><div><b>${labels[id][0]}</b><small>${labels[id][1]}</small></div></div>
+       <small>${on?'aktiv · Auto-Pack erlaubt':'nicht montiert'}</small>
+       <button type="button">${on?'Entfernen':'+ Montieren'}</button>
+     </div>`}).join('')}</div>`;
+   panel.querySelectorAll('[data-cargo] button').forEach(b=>b.onclick=()=>{
+     const id=b.closest('[data-cargo]').dataset.cargo,s=read();s[id]=!s[id];write(s);syncLegacyFork(s);renderCargo();renderRearHotspots();
+   });
+ }
+ function syncLegacyFork(s){
+   // Existing "fork" capacity remains the aggregate front-cargo bag.
+   // It is available to Auto-Pack only while at least one front mount is active.
+   const front=!!(s.frontL||s.frontR);
+   try{
+     if(typeof setMountedV158==='function' && typeof isMountedV158==='function' && isMountedV158('fork')!==front) setMountedV158('fork',front);
+   }catch(e){}
+ }
+ function renderRearHotspots(){
+   const wrap=screen.querySelector('.v15-bike-image-wrap');if(!wrap)return;
+   wrap.querySelectorAll('.v1588-rear-hotspot').forEach(x=>x.remove());
+   const s=read();
+   [['rearL','left'],['rearR','right']].forEach(([id,side])=>{
+     const b=document.createElement('button');b.type='button';b.className=`v1588-rear-hotspot ${side} ${s[id]?'on':''}`;
+     b.title=labels[id][0]+' · '+(s[id]?'entfernen':'montieren');b.textContent=s[id]?'✓':'+';
+     b.onclick=()=>{const n=read();n[id]=!n[id];write(n);renderCargo();renderRearHotspots()};
+     wrap.appendChild(b);
+   });
+ }
+ // expose mount state for future Auto-Pack refinements and persistence
+ window.roamCargoMountsV1588={get:read,set:(id,val)=>{const s=read();s[id]=!!val;write(s);syncLegacyFork(s);renderCargo();renderRearHotspots()}};
+ const prev=window.renderPackPrototype;
+ if(typeof prev==='function') window.renderPackPrototype=function(){prev();renderCargo();renderRearHotspots()};
+ syncLegacyFork(read());renderCargo();renderRearHotspots();
 })();
 </script>
 
