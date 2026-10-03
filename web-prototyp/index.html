@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.8.9 Pack UX Final</title>
+<title>ROAM · Beta · V15.9.0 Route & POI Lock</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -1067,6 +1067,11 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 @media(max-width:1180px){#screen-pack #packFillGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
 @media(max-width:860px){#screen-pack #packFillGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
+<style id="roam-v1590-route-poi-lock">
+#screen-plan #planWaypoints{display:none!important}.v1590-waypoints{grid-column:3/-1;display:grid;gap:6px;width:100%}.v1590-waypoint{display:grid;grid-template-columns:28px minmax(0,1fr) 32px 32px 32px;gap:5px;align-items:center}.v1590-waypoint .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#526448;color:#fff;font-size:9px;font-weight:900}.v1590-waypoint input{height:36px}.v1590-waypoint button,.v1590-add-waypoint{height:36px;border:1px solid var(--line);border-radius:8px;background:#f8f5ed;color:var(--forest);font-weight:850;cursor:pointer}.v1590-add-waypoint{width:100%}.v1590-waypoint button:disabled{opacity:.35}.v1590-name-note{font-size:8px;color:var(--muted)}
+#mapWrap .v1590-poi-toolbar{position:absolute;z-index:700;left:58px;right:14px;top:12px;display:flex;gap:6px;align-items:center;pointer-events:none;overflow-x:auto;scrollbar-width:none}#mapWrap .v1590-poi-toolbar>*{pointer-events:auto}.v1590-poi-search{height:38px;min-width:180px;max-width:260px;flex:1;border:1px solid #d9d2c5;border-radius:10px;background:#fffdf8;padding:0 11px;font:inherit}.v1590-poi-btn{height:38px;border:1px solid #d9d2c5;border-radius:10px;background:#fffdf8;padding:0 10px;font-size:9px;font-weight:850;white-space:nowrap;cursor:pointer}.v1590-poi-btn.active{background:#e8eee2;border-color:#829078}.v1590-poi-status{position:absolute;z-index:690;left:14px;bottom:14px;background:rgba(255,253,248,.94);border:1px solid #d9d2c5;border-radius:999px;padding:5px 9px;font-size:8px;color:#586158}.v1590-poi-icon{width:25px!important;height:25px!important;border-radius:50%;display:grid!important;place-items:center;color:#fff;font-size:13px;font-weight:900;border:2px solid #fff;box-shadow:0 2px 7px #0003}.v1590-water{background:#2d84d8}.v1590-shop{background:#d99a13}.v1590-food{background:#d86a21}.v1590-lodge{background:#80523c}.v1590-sight{background:#7952a3}.v1590-poi-popup b{font-size:12px}.v1590-poi-popup small{display:block;color:#6f756d;margin-top:2px}.v1590-profile-pois{display:flex;align-items:center;gap:7px;min-height:32px;padding:5px 10px;border-top:1px solid #e0d9cd;overflow-x:auto}.v1590-profile-pois b{font-size:8px;white-space:nowrap}.v1590-profile-dot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10px;flex:0 0 auto}
+@media(max-width:860px){#mapWrap .v1590-poi-toolbar{left:10px;right:10px;top:10px}.v1590-poi-search{min-width:140px}.v1590-waypoint{grid-template-columns:24px minmax(0,1fr) 30px 30px 30px}}
+</style>
 </head>
 <body>
 <div class="app">
@@ -1531,7 +1536,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.8.9</div>
+<div class="prototype-pill">ROAM · Beta · V15.9.0</div>
 </div>
 
 <script>
@@ -4142,6 +4147,37 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
   'Gabel links':['Fork left','Horquilla izquierda'],'Gabel rechts':['Fork right','Horquilla derecha'],'Hinterbau links':['Rear left','Trasera izquierda'],'Hinterbau rechts':['Rear right','Trasera derecha'],'nicht montiert':['not mounted','no montada'],'+ montieren':['+ mount','+ montar']
  });
  renderPackPrototype();renderPackSummary();
+})();
+</script>
+<script id="roam-v1590-route-poi-js">
+(()=>{
+ const $=s=>document.querySelector(s);
+ // Multiple ordered waypoints, synced to the legacy comma-separated field so existing routing logic stays intact.
+ const legacy=$('#planWaypoints'); if(legacy){
+   const host=document.createElement('div');host.className='v1590-waypoints';host.id='v1590Waypoints';legacy.insertAdjacentElement('afterend',host);
+   let pts=(legacy.value||'').split(',').map(x=>x.trim()).filter(Boolean); if(!pts.length)pts=[''];
+   const sync=()=>{legacy.value=pts.map(x=>x.trim()).filter(Boolean).join(', ');legacy.dispatchEvent(new Event('input',{bubbles:true}));legacy.dispatchEvent(new Event('change',{bubbles:true}))};
+   const render=()=>{host.innerHTML=pts.map((v,i)=>`<div class="v1590-waypoint"><span class="n">${i+1}</span><input class="v12-control" data-wp="${i}" value="${v.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" placeholder="Zwischenziel ${i+1}"><button type="button" data-up="${i}" ${i===0?'disabled':''} aria-label="Nach oben">↑</button><button type="button" data-down="${i}" ${i===pts.length-1?'disabled':''} aria-label="Nach unten">↓</button><button type="button" data-del="${i}" aria-label="Löschen">×</button></div>`).join('')+`<button class="v1590-add-waypoint" type="button" id="v1590AddWaypoint">+ Zwischenziel hinzufügen</button><div class="v1590-name-note">Orts- und Eigennamen bleiben bei Sprachwechsel unverändert.</div>`;
+     host.querySelectorAll('[data-wp]').forEach(x=>x.oninput=()=>{pts[+x.dataset.wp]=x.value;sync()});
+     host.querySelectorAll('[data-up]').forEach(x=>x.onclick=()=>{let i=+x.dataset.up;[pts[i-1],pts[i]]=[pts[i],pts[i-1]];render();sync()});
+     host.querySelectorAll('[data-down]').forEach(x=>x.onclick=()=>{let i=+x.dataset.down;[pts[i+1],pts[i]]=[pts[i],pts[i+1]];render();sync()});
+     host.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>{pts.splice(+x.dataset.del,1);if(!pts.length)pts=[''];render();sync()});
+     $('#v1590AddWaypoint').onclick=()=>{pts.push('');render();setTimeout(()=>host.querySelector('[data-wp="'+(pts.length-1)+'"]')?.focus(),0)};
+   };render();
+ }
+ const mapWrap=$('#mapWrap'); if(!mapWrap)return;
+ const cats={water:{label:'Wasserstellen',icon:'●',cls:'v1590-water'},shop:{label:'Supermarkt',icon:'▣',cls:'v1590-shop'},food:{label:'Gasthof / Restaurant',icon:'♨',cls:'v1590-food'},lodge:{label:'Unterkunft',icon:'⌂',cls:'v1590-lodge'},sight:{label:'Sehenswürdigkeiten',icon:'◆',cls:'v1590-sight'}};
+ const active={water:true,shop:true,food:true,lodge:true,sight:false};let layer=null,poiData=[],timer=null;
+ const toolbar=document.createElement('div');toolbar.className='v1590-poi-toolbar';toolbar.innerHTML=`<input class="v1590-poi-search" id="v1590PoiSearch" placeholder="POI suchen …">`+Object.entries(cats).map(([k,c])=>`<button type="button" class="v1590-poi-btn ${active[k]?'active':''}" data-poi="${k}">${c.icon} ${c.label}</button>`).join('');mapWrap.appendChild(toolbar);
+ const status=document.createElement('div');status.className='v1590-poi-status';status.id='v1590PoiStatus';status.textContent='POIs werden geladen …';mapWrap.appendChild(status);
+ const prof=$('#routeHeightPanel');if(prof){const row=document.createElement('div');row.className='v1590-profile-pois';row.id='v1590ProfilePois';row.innerHTML='<b>Verpflegung & POI entlang der Route</b>';prof.appendChild(row)}
+ function typeOf(t){if(t.amenity==='drinking_water'||t.drinking_water==='yes')return'water';if(t.shop==='supermarket'||t.shop==='convenience')return'shop';if(['restaurant','cafe','fast_food','biergarten'].includes(t.amenity))return'food';if(['hotel','guest_house','hostel','camp_site'].includes(t.tourism))return'lodge';if(t.tourism==='attraction'||t.historic||t.viewpoint==='yes')return'sight';return null}
+ function renderPois(){if(typeof L==='undefined'||typeof roamMap==='undefined'||!roamMap)return;if(layer)roamMap.removeLayer(layer);layer=L.layerGroup().addTo(roamMap);const q=($('#v1590PoiSearch')?.value||'').toLowerCase();let shown=0;poiData.forEach(p=>{if(!active[p.type])return;if(q&&!p.name.toLowerCase().includes(q))return;const c=cats[p.type];const icon=L.divIcon({className:`v1590-poi-icon ${c.cls}`,html:c.icon,iconSize:[25,25],iconAnchor:[12,12]});L.marker([p.lat,p.lon],{icon}).bindPopup(`<div class="v1590-poi-popup"><b>${p.name}</b><small>${c.label}</small></div>`).addTo(layer);shown++});status.textContent=`${shown} POIs sichtbar · OpenStreetMap`;const r=$('#v1590ProfilePois');if(r)r.innerHTML='<b>Verpflegung & POI entlang der Route</b>'+Object.entries(cats).filter(([k])=>active[k]).map(([k,c])=>`<span class="v1590-profile-dot ${c.cls}" title="${c.label}">${c.icon}</span>`).join('')}
+ async function loadPois(){try{if(typeof routeGeo==='undefined'||routeGeo.length<2||typeof roamMap==='undefined'||!roamMap){status.textContent='POIs nach Routenberechnung verfügbar';return}const b=L.latLngBounds(routeGeo),sw=b.getSouthWest(),ne=b.getNorthEast();let south=sw.lat,west=sw.lng,north=ne.lat,east=ne.lng;if((north-south)>2||(east-west)>2){status.textContent='POI-Suche: Routengebiet zu groß';return}const bb=`${south},${west},${north},${east}`;const query=`[out:json][timeout:18];(nwr[amenity=drinking_water](${bb});nwr[shop~"supermarket|convenience"](${bb});nwr[amenity~"restaurant|cafe|fast_food|biergarten"](${bb});nwr[tourism~"hotel|guest_house|hostel|camp_site|attraction"](${bb});nwr[historic](${bb}););out center 350;`;const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(query)});if(!res.ok)throw Error('HTTP '+res.status);const j=await res.json();poiData=(j.elements||[]).map(e=>{const t=e.tags||{},type=typeOf(t),lat=e.lat??e.center?.lat,lon=e.lon??e.center?.lon;return type&&lat&&lon?{type,lat,lon,name:t.name||cats[type].label}:null}).filter(Boolean);renderPois()}catch(e){status.textContent='POIs derzeit nicht verfügbar';}}
+ toolbar.querySelectorAll('[data-poi]').forEach(b=>b.onclick=()=>{const k=b.dataset.poi;active[k]=!active[k];b.classList.toggle('active',active[k]);renderPois()});$('#v1590PoiSearch').oninput=()=>renderPois();
+ const obs=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(loadPois,700)});const geom=$('#routeGeometryStatus');if(geom)obs.observe(geom,{childList:true,subtree:true,characterData:true});setTimeout(loadPois,1200);
+ // Protect user-entered place names from UI language changes.
+ ['planStart','planDest','planWaypoints'].forEach(id=>{const e=document.getElementById(id);if(e)e.dataset.noTranslate='true'});
 })();
 </script>
 </body>
