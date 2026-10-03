@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.9.0 Route & POI Lock</title>
+<title>ROAM · Beta · V15.9.1 Planner Layout Lock</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -1536,7 +1536,7 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.9.0</div>
+<div class="prototype-pill">ROAM · Beta · V15.9.1</div>
 </div>
 
 <script>
@@ -4180,6 +4180,66 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
  ['planStart','planDest','planWaypoints'].forEach(id=>{const e=document.getElementById(id);if(e)e.dataset.noTranslate='true'});
 })();
 </script>
+
+<style id="roam-v1591-planner-layout-lock">
+/* V15.9.1 — approved planner composition. Keeps existing IDs/logic; only composes the planner. */
+#screen-plan{max-width:1480px;margin:0 auto;padding:22px 24px 34px}
+#screen-plan .v12-title{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:24px;align-items:end;margin:0 0 16px}
+#screen-plan .v12-title .eyebrow{grid-column:1}#screen-plan .v12-title h1{grid-column:1;margin:2px 0 4px;font-size:42px;line-height:1}
+#screen-plan .v12-title p{grid-column:1;max-width:720px;margin:0;color:#73786f}
+.v1591-top-actions{grid-column:2;grid-row:1/4;display:flex;gap:9px;align-self:center}.v1591-top-actions .btn{min-height:42px;padding:0 18px;white-space:nowrap}
+#screen-plan .v1591-planner-shell{display:grid;grid-template-columns:330px minmax(470px,1fr) 270px;gap:14px;align-items:start}
+#screen-plan .v1591-left,#screen-plan .v1591-center,#screen-plan .v1591-right{min-width:0;display:grid;gap:12px;align-content:start}
+#screen-plan .v12-panel,#screen-plan .v12-summary-card,#screen-plan .v12-preview-card{box-shadow:none;border-color:#ded8cb;background:rgba(255,253,248,.92)}
+#screen-plan .v12-panel{padding:14px}#screen-plan .v12-step-head{margin-bottom:10px}.v12-step-head h2{font-size:20px}
+#screen-plan .v12-step-head p{font-size:11px;line-height:1.35}.v1591-left .v12-panel:nth-child(2){margin-top:0}
+#screen-plan .v12-form-list{gap:7px}#screen-plan .v12-form-row{grid-template-columns:20px 82px minmax(0,1fr);gap:7px;min-height:35px}
+#screen-plan .v12-form-row.double{grid-template-columns:20px 82px minmax(0,1fr)}#screen-plan .v12-form-row.double>*:nth-child(n+4){grid-column:3}
+#screen-plan .v12-control{min-height:34px;font-size:11px;padding:7px 9px}#screen-plan .v12-form-label{font-size:10px}
+#screen-plan .v1590-waypoints{grid-column:3;gap:5px}#screen-plan .v1590-waypoint{grid-template-columns:22px minmax(0,1fr) 25px 25px 25px;gap:3px}
+#screen-plan .v1590-waypoint .v12-control{min-width:0}.v1590-name-note{display:none}.v1590-add-waypoint{min-height:31px}
+#screen-plan .v13-target-inputs{display:grid;grid-template-columns:1fr 1fr;gap:5px}.v13-target-inputs label{min-width:0}
+#screen-plan .v15-bike-profile{margin-top:7px;padding-top:10px}.v15-bike-fields{grid-template-columns:1fr 1fr;gap:6px}
+#screen-plan .v12-profile-row{grid-template-columns:20px 108px minmax(0,1fr);gap:6px;padding:6px 0}.v12-segment{gap:4px}.v12-segment button{font-size:8px;padding:7px 5px}
+#screen-plan .v12-info,#screen-plan .v12-fit-card{font-size:9px;padding:9px;margin-top:8px}
+.v1591-center .v1591-tabs{display:flex;gap:7px;padding:8px;background:#f6f2e9;border:1px solid #ded8cb;border-radius:14px}.v1591-tabs button{border:1px solid #d9d2c5;background:#fffdf8;border-radius:9px;padding:8px 15px;font-weight:800;color:#526057}.v1591-tabs button.active{background:#365443;color:#fff;border-color:#365443}
+.v1591-center .v12-preview-card{padding:10px}.v1591-center .v12-preview-head{margin-bottom:7px}.v1591-center .v12-map-preview{height:470px;border-radius:12px;overflow:hidden;background:#e7e8dc}.v1591-center .v12-map-preview svg{width:100%;height:100%}
+.v1591-center .v12-stage-rough{max-height:240px;overflow:auto}.v1591-center .v12-stage-rough-row{min-height:42px}
+.v1591-right .v12-summary-card{margin:0!important;padding:14px}.v1591-right .v12-summary-kpis{grid-template-columns:repeat(2,1fr)}
+.v1591-right .v12-summary-kpi{min-height:80px}.v1591-right .v12-profile-chips{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.v1591-right .v12-preview-card{padding:14px}.v1591-right .v12-elev-preview{height:145px}.v1591-right .v12-elev-preview svg{width:100%;height:100%}
+#screen-plan>.v12-home-grid,#screen-plan>.v12-home-preview,#screen-plan>.v12-home-actions,#screen-plan>.plan-status,#screen-plan>.privacy-inline-note{display:none!important}
+.v1591-bottom-note{font-size:9px;color:#8b8e86;text-align:center;margin-top:10px}
+@media(max-width:1180px){#screen-plan .v1591-planner-shell{grid-template-columns:300px minmax(400px,1fr) 235px;gap:10px}.v1591-center .v12-map-preview{height:410px}#screen-plan{padding-inline:14px}.v1591-top-actions .btn{padding-inline:12px}}
+@media(max-width:900px){#screen-plan .v12-title{display:block}.v1591-top-actions{margin-top:12px;display:flex;overflow-x:auto}.v1591-planner-shell{grid-template-columns:1fr!important}.v1591-left,.v1591-center,.v1591-right{display:grid}.v1591-center{grid-row:1}.v1591-left{grid-row:2}.v1591-right{grid-row:3}.v1591-center .v12-map-preview{height:52vw;min-height:300px;max-height:520px}}
+</style>
+<script id="roam-v1591-planner-layout-lock">
+(()=>{
+ function compose(){
+  const screen=document.getElementById('screen-plan'); if(!screen||screen.dataset.v1591)return; screen.dataset.v1591='1';
+  const title=screen.querySelector('.v12-title'), grid=screen.querySelector('.v12-home-grid'), previews=screen.querySelector('.v12-home-preview');
+  if(!title||!grid||!previews)return;
+  const panels=[...grid.children], cards=[...previews.children]; if(panels.length<3||cards.length<3)return;
+  const actions=document.createElement('div'); actions.className='v1591-top-actions';
+  const importBtn=document.createElement('button');importBtn.type='button';importBtn.className='btn';importBtn.textContent='GPX importieren';importBtn.onclick=()=>document.getElementById('planGpxInput')?.click();
+  const save=document.getElementById('saveDraftBtn'),calc=document.getElementById('planRouteBtn'); if(save)actions.append(importBtn,save,calc); else actions.append(importBtn);
+  title.appendChild(actions);
+  const shell=document.createElement('div');shell.className='v1591-planner-shell';
+  const left=document.createElement('div');left.className='v1591-left';left.append(panels[0],panels[1]);
+  const center=document.createElement('div');center.className='v1591-center';
+  const tabs=document.createElement('div');tabs.className='v1591-tabs';tabs.innerHTML='<button class="active" type="button">Karte</button><button type="button">Höhe</button><button type="button">Terrain</button><button type="button">Zwischenziele</button><button type="button">Etappen</button>';
+  tabs.querySelectorAll('button').forEach((b,i)=>b.onclick=()=>{if(i===0)return; const go=['route','route','route','route','stages'][i]; if(go){document.querySelector(`[data-go="${go}"]`)?.click();setTimeout(()=>{if(i>0&&i<4)document.querySelector(`#routeTabs [data-route-tab="${['map','height','terrain','waypoints'][i]}"]`)?.click()},60)}});
+  center.append(tabs,cards[0],cards[2]);
+  const right=document.createElement('div');right.className='v1591-right';right.append(panels[2],cards[1]);
+  shell.append(left,center,right);title.insertAdjacentElement('afterend',shell);
+  const status=document.getElementById('planStatus'),privacy=screen.querySelector('.privacy-inline-note');const note=document.createElement('div');note.className='v1591-bottom-note';note.textContent=privacy?.textContent||'';shell.insertAdjacentElement('afterend',note);
+  const syncTitle=()=>{const a=document.getElementById('planStart')?.value.trim(),b=document.getElementById('planDest')?.value.trim(),h=title.querySelector('h1');if(h)h.textContent=a&&b?`${a} → ${b}`:'Route planen'};
+  ['planStart','planDest'].forEach(id=>document.getElementById(id)?.addEventListener('input',syncTitle));syncTitle();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',compose);else compose();
+})();
+</script>
+
 </body>
 </html>
 
