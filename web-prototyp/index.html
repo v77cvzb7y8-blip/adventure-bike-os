@@ -4335,6 +4335,126 @@ body{overflow-x:hidden}button,input,select{max-width:100%}button{touch-action:ma
 })();
 </script>
 
+
+<style id="roam-v1512-clear-layout">
+/* V15.12: one primary workspace, details on demand; no changes to routing or packing calculations. */
+#screen-pack .pack-v13-grid{
+ display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr)!important;
+ grid-template-areas:"side bike" "needs have"!important;gap:16px!important;align-items:start!important
+}
+#screen-pack .v158-pack-bike-card{grid-area:bike!important}
+#screen-pack .v158-pack-side{grid-area:side!important;position:static!important}
+#screen-pack .v158-pack-needs{grid-area:needs!important}
+#screen-pack .v158-pack-have{grid-area:have!important}
+#screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{
+ height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;
+ padding:18px!important
+}
+#screen-pack .v158-pack-bike-card{max-width:100%!important}
+#screen-pack .v15-bike-image-wrap{height:auto!important;min-height:0!important;aspect-ratio:1.9/1!important;overflow:hidden!important}
+#screen-pack .v152-pack-bike{height:100%!important;max-height:470px!important;min-height:0!important}
+#screen-pack .v15-bike-callout{display:none!important}
+#screen-pack .v15-bike-callout:after{display:none!important}
+#screen-pack .v15-bike-hotspot.roam-bag-inactive,#screen-pack .v15-bike-callout.roam-bag-inactive,
+#screen-pack [data-bike-layer].roam-bag-inactive{display:none!important}
+#screen-pack .v15-bike-hotspot{width:28px!important;height:28px!important;opacity:.9}
+#screen-pack .v158-pack-needs #packNeedList,#screen-pack .v158-pack-have #packHaveList{height:auto!important;max-height:none!important;overflow:visible!important}
+#screen-pack .v158-pack-side{display:grid!important;grid-template-columns:1fr!important}
+#screen-pack .v158-pack-side>.card{padding:16px!important}
+#screen-pack .pack-v13-fillgrid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))!important}
+#screen-pack .roam-v1512-fold{display:flex;align-items:center;justify-content:space-between;gap:12px;
+ width:100%;padding:12px 14px;border:1px solid #d9d2c5;border-radius:10px;background:#f8f5ed;
+ color:#2e3a2f;font:700 14px inherit;cursor:pointer;text-align:left}
+#screen-pack .roam-v1512-fold span{font-size:12px;color:#647060}
+#screen-pack .roam-v1512-collapsed{display:none!important}
+#screen-pack .v158-pack-needs,#screen-pack .v158-pack-have{border-top:3px solid #d5dbce!important}
+#screen-pack .v158-pack-needs .pack-v12-head h2,#screen-pack .v158-pack-have .pack-v12-head h2{font-size:21px!important}
+#screen-pack .v158-pack-bike-card .pack-v12-head h2{font-size:23px!important}
+#screen-pack .v158-pack-bike-card .v158-bag-section{margin-bottom:10px}
+#screen-pack .v158-pack-bike-card .v158-bag-section.roam-v1512-collapsed,
+#screen-pack .v158-pack-bike-card .pack-v12-best.roam-v1512-collapsed{display:none!important}
+#screen-pack .v158-pack-bike-card #packBagDetail[hidden]{display:none!important}
+#screen-pack .v158-pack-bike-card .v15-bike-tools .muted{display:none!important}
+#screen-pack .v158-pack-bike-card .pack-v13-fill-title{font-size:14px!important;margin-top:12px}
+#screen-pack .v158-pack-bike-card .v15-bike-stage{margin-top:8px}
+#screen-pack .roam-compact-tools{justify-content:space-between!important}
+#screen-pack .roam-compact-tools small{flex:1 1 100%!important}
+#screen-plan .v1591-planner-shell{grid-template-columns:minmax(260px,350px) minmax(0,1fr)!important;gap:16px!important}
+#screen-plan .v1591-left{grid-column:1!important;grid-row:1!important}
+#screen-plan .v1591-center{grid-column:2!important;grid-row:1!important}
+#screen-plan .v1591-right{grid-column:1/-1!important;grid-row:2!important;display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important}
+#screen-plan .v1591-tabs{display:flex!important;gap:6px!important;overflow-x:auto!important}
+#screen-plan .v1591-tabs button{font-size:12px!important;white-space:nowrap!important}
+#screen-plan .v12-form-row{min-width:0!important}
+#screen-plan .v12-control{font-size:12px!important}
+#screen-plan .v1591-left .v12-panel{padding:16px!important}
+#screen-plan .v1591-center .v12-map-preview{min-height:330px}
+#screen-route .leaflet-container{isolation:isolate}
+#screen-route .leaflet-popup-content{overflow-wrap:anywhere}
+@media(max-width:900px){
+ #screen-pack .pack-v13-grid{grid-template-columns:1fr!important;
+ grid-template-areas:"bike" "side" "needs" "have"!important}
+ #screen-plan .v1591-planner-shell{grid-template-columns:1fr!important}
+ #screen-plan .v1591-left,#screen-plan .v1591-center,#screen-plan .v1591-right{grid-column:1!important;grid-row:auto!important}
+ #screen-plan .v1591-right{grid-template-columns:1fr!important}
+ #screen-pack .v15-bike-image-wrap{aspect-ratio:1.65/1!important;height:auto!important}
+}
+@media(max-width:580px){
+ #screen-pack .v15-bike-image-wrap{aspect-ratio:1.45/1!important}
+ #screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{padding:12px!important}
+ #screen-pack>.route-title-row .btn-row{flex-wrap:wrap!important}
+}
+</style>
+<script id="roam-v1512-clear-behavior">
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+function fold(buttonId,host,content,initiallyOpen){
+ if(!host||!content||$(buttonId))return;
+ const b=document.createElement('button');b.type='button';b.id=buttonId;b.className='roam-v1512-fold';
+ b.setAttribute('aria-controls',content.id);b.setAttribute('aria-expanded',String(initiallyOpen));
+ const name=document.createElement('strong');name.textContent=host;
+ const state=document.createElement('span');state.textContent=initiallyOpen?'Weniger anzeigen −':'Öffnen +';
+ b.append(name,state);content.insertBefore(b,content.firstChild);
+ const apply=open=>{for(const child of content.children){if(child!==b)child.classList.toggle('roam-v1512-collapsed',!open)}b.setAttribute('aria-expanded',String(open));state.textContent=open?'Weniger anzeigen −':'Öffnen +'};
+ b.addEventListener('click',()=>apply(b.getAttribute('aria-expanded')!=='true'));apply(initiallyOpen);
+}
+function init(){
+ const s=$('screen-pack');if(!s)return;
+ const needs=s.querySelector('.v158-pack-needs'),have=s.querySelector('.v158-pack-have');
+ if(needs){needs.id='roam-v1512-needs';fold('roam-v1512-toggle-needs','1 · Benötigte Ausrüstung',needs,false)}
+ if(have){have.id='roam-v1512-have';fold('roam-v1512-toggle-have','2 · Gegenstände zuordnen',have,false)}
+ const bike=s.querySelector('.v158-pack-bike-card');
+ if(bike){
+   const dock=bike.querySelector('.v158-bag-section');
+   if(dock){dock.id='roam-v1512-dock';fold('roam-v1512-toggle-dock','Taschenpositionen verwalten',dock,false)}
+   const proposal=bike.querySelector('.pack-v12-best');
+   if(proposal){proposal.id='roam-v1512-proposal';fold('roam-v1512-toggle-proposal','Auto-Pack-Details',proposal,false)}
+ }
+ // In the existing V15.11 code only bag layers were reliably filtered.
+ // Keep labels out of the graphic; hide hotspot buttons whenever the corresponding SVG bag is hidden.
+ function sync(){
+  if(!bike)return;
+  bike.querySelectorAll('.v15-bike-hotspot[data-pack-bag]').forEach(el=>{
+   const bag=el.getAttribute('data-pack-bag');
+   const layer=bike.querySelector('[data-bike-layer="'+bag+'"]');
+   if(layer)el.classList.toggle('roam-bag-inactive',layer.classList.contains('roam-bag-inactive')||getComputedStyle(layer).display==='none');
+  });
+ }
+ sync();let queued=false;
+ if(bike){const obs=new MutationObserver(changes=>{
+  if(changes.every(c=>c.type==='attributes'&&c.target.classList?.contains('v15-bike-hotspot')))return;
+  if(!queued){queued=true;requestAnimationFrame(()=>{queued=false;sync()})}
+ });obs.observe(bike,{subtree:true,attributes:true,attributeFilter:['class'],childList:true})}
+ // Footer version is a label only; do not modify saved trip schema.
+ document.querySelectorAll('body *').forEach(el=>{
+  if(el.children.length===0&&el.textContent?.trim()==='ROAM · Beta · V15.10')el.textContent='ROAM · Beta · V15.12';
+ });
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
 </body>
 </html>
 
