@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.10 Stability Foundation</title>
+<title>ROAM · Beta · V15.11 Clean Foundation</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -4242,6 +4242,96 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
   ['planStart','planDest'].forEach(id=>document.getElementById(id)?.addEventListener('input',syncTitle));syncTitle();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',compose);else compose();
+})();
+</script>
+
+
+<!-- V15.11: additive safety and clarity layer. Existing route computation and pack algorithms unchanged. -->
+<style id="roam-v1511-clean-ui">
+/* Correct accidental literal escaped newlines emitted outside the app */
+body{overflow-x:hidden}button,input,select{max-width:100%}button{touch-action:manipulation}
+/* Planner: clear primary action, no three squeezed columns on tablet */
+@media(min-width:901px) and (max-width:1399px){#screen-plan .v1591-planner-shell{grid-template-columns:minmax(260px,340px) minmax(0,1fr)!important}#screen-plan .v1591-right{grid-column:1/-1;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}#screen-plan .v1591-top-actions{flex-wrap:wrap;justify-content:flex-end}#screen-plan .v1591-center .v1591-tabs{overflow-x:auto}}
+@media(max-width:900px){#screen-plan .v1591-center .v1591-tabs{overflow-x:auto;max-width:100%}#screen-plan .v1591-top-actions{flex-wrap:wrap;overflow:visible}#screen-plan .v1591-right{grid-template-columns:1fr!important}}
+.v1591-tabs button{white-space:nowrap;font-size:12px!important;line-height:1.3;padding:9px 11px!important;flex-shrink:0}
+/* Pack: prioritize the bicycle, hide only inactive display elements (never delete items) */
+#screen-pack .pack-v13-grid{gap:14px!important}
+#screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{min-width:0!important}
+#screen-pack .v15-bike-image-wrap{overflow:hidden!important}
+#screen-pack [data-bike-layer].roam-bag-inactive{display:none!important}
+#screen-pack [data-pack-bag].roam-bag-inactive,#screen-pack .v1589-cargo-hotspot.roam-bag-inactive,#screen-pack .v1589-cargo-label.roam-bag-inactive{display:none!important}
+#screen-pack .pack-v13-fillcard.roam-bag-inactive{display:none!important}
+#screen-pack .v15-bike-image-wrap .v15-bike-callout{max-width:120px!important;overflow-wrap:anywhere}
+#screen-pack .v158-pack-have .pack-v12-item{min-height:0}
+#screen-pack .v158-pack-side{position:static!important}
+#screen-pack .roam-compact-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 11px;background:#f3f5ed;border:1px solid #dce2d6;border-radius:10px;margin:8px 0}
+#screen-pack .roam-compact-tools label{font-size:12px;font-weight:650;display:flex;align-items:center;gap:6px}
+#screen-pack .roam-compact-tools small{font-size:11px;color:#586458}
+#screen-pack .roam-compact-tools button{margin-left:auto;border:1px solid #cdd7c9;border-radius:8px;background:white;padding:7px 10px;cursor:pointer}
+/* Map toolbar: prevent controls and category chips covering one another */
+#screen-route .leaflet-container{isolation:isolate}
+#screen-route .route-map-tools,#screen-route .map-toolbar,#screen-route .map-actions{flex-wrap:wrap!important;max-width:100%;gap:6px!important}
+#screen-route .leaflet-top,#screen-route .leaflet-bottom{z-index:650}
+#screen-route .leaflet-popup-content{overflow-wrap:anywhere;max-width:min(250px,70vw)}
+/* A persistent, small safety entry instead of more dashboard cards */
+#roam-safety-tools{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:12px 0;padding:11px 13px;border:1px solid #d9dfd4;border-radius:12px;background:#f6f8f2}
+#roam-safety-tools button{border:1px solid #cad4c7;background:#fff;border-radius:8px;padding:9px 12px;font-weight:700;color:#2e3a2f;cursor:pointer}
+#roam-safety-tools .roam-safety-text{font-size:12px;color:#5b655c;flex:1 1 200px}
+#roam-safety-status{font-size:11px;color:#476044}
+@media(max-width:620px){#screen-pack .pack-v13-grid{display:flex!important;flex-direction:column!important}#screen-pack .v15-bike-image-wrap{height:300px!important}#screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{min-height:0!important}#screen-plan .v12-title h1{font-size:31px!important}}
+</style>
+<script id="roam-v1511-foundation">
+(()=>{'use strict';
+ const $=id=>document.getElementById(id);
+ const KEY='roam-v1511-ui-preferences';
+ const readPref=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(_){return {}}};
+ const pref=readPref();
+ // Only changes presentation: the underlying mounted/packed state is never mutated.
+ function usedBagIds(){try{const a=(typeof packProposal!=='undefined'&&packProposal?.items)||packItems;return new Set(a.filter(x=>x.needed&&x.have&&x.bag).map(x=>x.bag))}catch(_){return new Set()}}
+ function syncBags(){
+  const screen=$('screen-pack');if(!screen)return;
+  const showAll=!!$('roam-show-all-bags')?.checked;
+  const used=usedBagIds();
+  const known=new Set(['saddle','frame','top','bar','fork','frontL','frontR','rearL','rearR','bottle']);
+  screen.querySelectorAll('[data-bike-layer],[data-pack-bag],[data-bag-id],.v1589-cargo-hotspot,.v1589-cargo-label').forEach(el=>{
+   let id=el.dataset.bikeLayer||el.dataset.packBag||el.dataset.bagId;
+   if(!id){for(const c of known)if(el.classList.contains(c)){id=c;break}}
+   if(!id||!known.has(id))return;
+   const active=showAll||used.has(id)||(id==='bottle'&&used.has('water'));
+   el.classList.toggle('roam-bag-inactive',!active);
+  });
+  // The capacity view is also filtered, without altering its calculations.
+  screen.querySelectorAll('#packFillGrid [data-bag-id]').forEach(el=>el.classList.toggle('roam-bag-inactive',!showAll&&!used.has(el.dataset.bagId)));
+  const hint=$('roam-bag-hint');if(hint)hint.textContent=used.size?`${used.size} verwendete Taschenpositionen sichtbar`:'Noch keine Taschen befüllt – Vorschlag erstellen oder Gegenstände zuordnen';
+ }
+ function setupPack(){const card=document.querySelector('#screen-pack .v158-pack-bike-card');if(!card||$('roam-compact-tools'))return;
+  const tools=document.createElement('div');tools.id='roam-compact-tools';tools.className='roam-compact-tools';
+  const label=document.createElement('label'),toggle=document.createElement('input');toggle.type='checkbox';toggle.id='roam-show-all-bags';toggle.checked=!!pref.showAllBags;
+  label.append(toggle,document.createTextNode('Alle Taschenpositionen anzeigen'));
+  const hint=document.createElement('small');hint.id='roam-bag-hint';
+  const button=document.createElement('button');button.type='button';button.textContent='Taschen verwalten';
+  button.addEventListener('click',()=>{toggle.checked=true;toggle.dispatchEvent(new Event('change'));const dock=$('packBagDock');dock?.scrollIntoView({behavior:'smooth',block:'center'})});
+  tools.append(label,hint,button);const stage=$('packBikeStage');card.insertBefore(tools,stage||card.firstChild);
+  toggle.addEventListener('change',()=>{pref.showAllBags=toggle.checked;try{localStorage.setItem(KEY,JSON.stringify(pref))}catch(_){}syncBags()});
+  syncBags();
+  // DOM changes are produced by legacy pack renderers; debounce and ignore our own class updates.
+  let queued=false;const obs=new MutationObserver(records=>{if(records.every(r=>r.type==='attributes'&&r.attributeName==='class'))return;if(!queued){queued=true;requestAnimationFrame(()=>{queued=false;syncBags()})}});
+  obs.observe(card,{subtree:true,childList:true});
+  ['autoPack','packModeBtn','resetPack','packBestBtn'].forEach(id=>$(id)?.addEventListener('click',()=>setTimeout(syncBags,100)));
+ }
+ // Portable backup: scoped only to ROAM-related local/session storage keys.
+ function collect(storage){const out={};for(let i=0;i<storage.length;i++){const k=storage.key(i);if(/^(roam|abo-|ROAM|STAGE_)/i.test(k))out[k]=storage.getItem(k)}return out}
+ function downloadBackup(){try{const payload={format:'ROAM-backup',schema:1,createdAt:new Date().toISOString(),origin:location.origin,local:collect(localStorage),session:collect(sessionStorage)};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ROAM-Backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);setStatus('Backup erstellt. Datei sicher aufbewahren.')}catch(e){setStatus('Backup fehlgeschlagen: '+e.message)}}
+ function setStatus(msg){const el=$('roam-safety-status');if(el)el.textContent=msg}
+ function restoreBackup(file){if(!file)return;file.text().then(t=>{let x;try{x=JSON.parse(t)}catch(_){throw Error('Keine gültige JSON-Datei')};if(x?.format!=='ROAM-backup'||x.schema!==1||!x.local||typeof x.local!=='object'||Array.isArray(x.local))throw Error('Kein unterstütztes ROAM-Backup');const keys=Object.keys(x.local);if(keys.length>300||t.length>5_000_000||keys.some(k=>!/^(roam|abo-|ROAM|STAGE_)/i.test(k)||typeof x.local[k]!=='string'))throw Error('Ungültige oder zu große Sicherung');if(!confirm(`Backup vom ${x.createdAt||'unbekannten Datum'} wiederherstellen? ${keys.length} lokale Einträge werden überschrieben. Vorher am besten ein aktuelles Backup exportieren.`))return;for(const [k,v] of Object.entries(x.local))localStorage.setItem(k,v);if(x.session&&typeof x.session==='object')for(const [k,v] of Object.entries(x.session))if(/^(roam|abo-|ROAM|STAGE_)/i.test(k)&&typeof v==='string')sessionStorage.setItem(k,v);setStatus('Wiederhergestellt. Seite wird neu geladen.');location.reload()}).catch(e=>setStatus('Wiederherstellung nicht möglich: '+e.message))}
+ function setupBackup(){if($('roam-safety-tools'))return;const host=$('screen-home')||document.querySelector('main')||document.body;const panel=document.createElement('div');panel.id='roam-safety-tools';const title=document.createElement('strong');title.textContent='Meine Reisedaten';const note=document.createElement('span');note.className='roam-safety-text';note.textContent='Auf diesem Gerät gespeichert. Regelmäßig eine Sicherung exportieren.';
+  const save=document.createElement('button');save.type='button';save.textContent='Backup herunterladen';save.onclick=downloadBackup;
+  const load=document.createElement('button');load.type='button';load.textContent='Backup wiederherstellen';const input=document.createElement('input');input.type='file';input.accept='.json,application/json';input.hidden=true;load.onclick=()=>input.click();input.onchange=()=>{restoreBackup(input.files?.[0]);input.value=''};
+  const status=document.createElement('span');status.id='roam-safety-status';status.setAttribute('role','status');panel.append(title,note,save,load,input,status);host.appendChild(panel)
+ }
+ function cleanStray(){for(const node of [...document.body.childNodes])if(node.nodeType===3&&node.textContent.trim()==='\\n')node.remove()}
+ function start(){cleanStray();setupPack();setupBackup();}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
 
