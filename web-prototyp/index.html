@@ -4631,8 +4631,14 @@ function init(){
  BAG.forEach(([id])=>{const layer=svg.querySelector('[data-bike-layer="'+id+'"]');if(!layer)return;layer.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();open(id)});layer.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(id)}})});
  // Keep the original detail in the DOM for ROAM's existing update code, but show only the Explorer.
  $('packBagDetail').hidden=true;
- paint();let scheduled=false;const obs=new MutationObserver(records=>{if(records.every(r=>r.type==='attributes'))return;if(!scheduled){scheduled=true;requestAnimationFrame(()=>{scheduled=false;paint()})}});obs.observe(screen,{subtree:true,childList:true});
- document.querySelectorAll('body *').forEach(el=>{if(!el.children.length&&el.textContent?.trim()==='ROAM · Beta · V15.18')el.textContent='ROAM · Beta · V15.18'});
+ // Reconcile SVG visibility after legacy renderers update style/class attributes.
+ // Disconnect during paint so our own DOM writes cannot trigger a feedback loop.
+ const obs=new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;obs.disconnect();paint();observe()})});
+ const observe=()=>obs.observe(screen,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','hidden']});
+ let scheduled=false;paint();observe();
+ // Form updates may change pack state without replacing any SVG nodes.
+ screen.addEventListener('change',()=>requestAnimationFrame(()=>{obs.disconnect();paint();observe()}));
+ document.querySelectorAll('body *').forEach(el=>{if(!el.children.length&&/^ROAM · Beta · V15\.\d+$/.test(el.textContent?.trim()||''))el.textContent='ROAM · Beta · V15.19'});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
