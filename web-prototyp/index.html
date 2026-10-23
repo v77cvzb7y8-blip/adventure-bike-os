@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>ROAM · Beta · V15.9.1 Planner Layout Lock</title>
+<title>ROAM · Beta · V15.10 Stability Foundation</title>
 <style>
 :root{
  --forest:#2e3a2f; --olive:#556244; --rust:#a2573c; --sand:#d7ccbe;
@@ -1536,13 +1536,17 @@ box-shadow:0 10px 24px rgba(49,45,39,.14)!important;color:var(--ink)!important;p
 </section>
 </main>
 <footer class="roam-footer"><span>ROAM · Beta · Privacy by Design</span><div class="links"><button type="button" data-go="privacy">Datenschutz & Daten</button><button type="button" data-go="imprint">Impressum</button></div></footer>
-<div class="prototype-pill">ROAM · Beta · V15.9.1</div>
+<div class="prototype-pill">ROAM · Beta · V15.10</div>
 </div>
 
 <script>
+// V15.10: shared input/elevation guards; no dependency on later patch modules.
+function roamEscapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function roamElevation(value){return value===null||value===undefined||value===''?null:(Number.isFinite(Number(value))?Number(value):null);}
 const ACTIVE_TRIP_KEY='roam-active-trip-v15-memory';
 const ROAM_SAVED_ROUTE_KEY='abo-mobile-route',ROAM_SESSION_ROUTE_KEY='roam-session-route-v15';
 let roamActiveTripSession=false;
+try{roamActiveTripSession=sessionStorage.getItem(ACTIVE_TRIP_KEY)==='1'&&Array.isArray(JSON.parse(sessionStorage.getItem(ROAM_SESSION_ROUTE_KEY)||'null')?.coords)&&JSON.parse(sessionStorage.getItem(ROAM_SESSION_ROUTE_KEY)||'null').coords.length>=2}catch(e){roamActiveTripSession=false}
 try{localStorage.removeItem('roam-active-trip-v14-final')}catch(e){}
 function readSavedRouteRaw(){try{return JSON.parse(localStorage.getItem(ROAM_SAVED_ROUTE_KEY)||'null')}catch(e){return null}}
 function readSessionRouteRaw(){try{return JSON.parse(sessionStorage.getItem(ROAM_SESSION_ROUTE_KEY)||'null')}catch(e){return null}}
@@ -1550,10 +1554,11 @@ function writeSessionRoute(route){try{sessionStorage.setItem(ROAM_SESSION_ROUTE_
 function hasActiveTrip(){return roamActiveTripSession===true&&!!readSessionRouteRaw()?.coords?.length}
 function readActiveRoute(){return hasActiveTrip()?readSessionRouteRaw():null}
 function readStoredRouteRaw(){return hasActiveTrip()?readSessionRouteRaw():readSavedRouteRaw()}
-function activateStoredTrip(route=null){if(route)writeSessionRoute(route);else if(!readSessionRouteRaw()){const saved=readSavedRouteRaw();if(saved)writeSessionRoute(saved)}roamActiveTripSession=!!readSessionRouteRaw()?.coords?.length}
+function activateStoredTrip(route=null){if(route)writeSessionRoute(route);else if(!readSessionRouteRaw()){const saved=readSavedRouteRaw();if(saved)writeSessionRoute(saved)}roamActiveTripSession=!!readSessionRouteRaw()?.coords?.length;try{sessionStorage.setItem(ACTIVE_TRIP_KEY,roamActiveTripSession?'1':'0')}catch(e){}}
 function persistActiveRouteV15(){const route=readActiveRoute();if(!route?.coords?.length)return false;try{localStorage.setItem(ROAM_SAVED_ROUTE_KEY,JSON.stringify(route));persistStageNamesForV15(route);return true}catch(e){return false}}
 function deactivateTrip(){
  roamActiveTripSession=false;
+ try{sessionStorage.removeItem(ACTIVE_TRIP_KEY)}catch(e){}
  try{sessionStorage.removeItem(ROAM_SESSION_ROUTE_KEY);sessionStorage.removeItem(STAGE_NAMES_V14_KEY);sessionStorage.removeItem('abo-mobile-stage-names')}catch(e){}
  try{if(typeof setFlyPlaying==='function')setFlyPlaying(false)}catch(e){}
  try{routeGeo=[];routeElev=[];routeCum=[0];routeGeoTotal=0;routeDistanceKm=0;routeNamedPoints=[];routeStages=[];routeSource='loading';routeTerrain={status:'idle',stages:[],source:null,reliableCoverage:0,warning:null};flyProgress=0;flyVisualProgress=0;flyCameraState=null;if(typeof clearRouteVisuals==='function')clearRouteVisuals()}catch(e){}
@@ -1796,9 +1801,9 @@ return `${km} · ${src} · Straße/Weg-genau${terrain}`;
 }
 function normalizeAdventureCoords(coords){
 return (coords||[]).map(c=>{
-  const lon=Number(c?.[0]),lat=Number(c?.[1]),z=Number(c?.[2]);
+  const lon=Number(c?.[0]),lat=Number(c?.[1]),z=roamElevation(c?.[2]);
   if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
-  return {lat,lon,z:Number.isFinite(z)?z:null};
+  return {lat,lon,z};
 }).filter(Boolean);
 }
 function storedRouteCandidate(){
@@ -1817,13 +1822,13 @@ try{
 function fetchWithTimeoutV15(url,options={},timeoutMs=12000){const c=new AbortController(),t=setTimeout(()=>c.abort(),timeoutMs);return fetch(url,{...options,signal:c.signal}).finally(()=>clearTimeout(t))}
 async function enrichRouteElevation(rows){
  if(rows.length<2)return rows;
- const good=rows.filter(x=>Number.isFinite(Number(x.z))).length;if(good>=Math.min(rows.length,Math.max(2,Math.floor(rows.length*.85))))return rows;
+ const good=rows.filter(x=>roamElevation(x.z)!==null).length;if(good>=Math.min(rows.length,Math.max(2,Math.floor(rows.length*.85))))return rows;
  const n=rows.length,maxSamples=Math.min(180,n),indices=[];for(let j=0;j<maxSamples;j++){const idx=Math.round(j*(n-1)/Math.max(1,maxSamples-1));if(indices.at(-1)!==idx)indices.push(idx)}
  const out=rows.map(x=>({...x})),batches=[];for(let off=0;off<indices.length;off+=60)batches.push(indices.slice(off,off+60));
  const results=await Promise.allSettled(batches.map(async batch=>{const lat=batch.map(i=>rows[i].lat.toFixed(6)).join(','),lon=batch.map(i=>rows[i].lon.toFixed(6)).join(',');const r=await fetchWithTimeoutV15(`https://api.open-meteo.com/v1/elevation?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}`,{},8500);if(!r.ok)throw new Error(`Elevation ${r.status}`);const d=await r.json(),e=Array.isArray(d?.elevation)?d.elevation.map(Number):[];if(e.length!==batch.length)throw new Error('Elevation unvollständig');return {batch,e}}));
  let valid=0;results.forEach(res=>{if(res.status!=='fulfilled')return;res.value.batch.forEach((idx,k)=>{const z=res.value.e[k];if(Number.isFinite(z)){out[idx].z=z;valid++}})});if(valid<Math.max(2,Math.floor(indices.length*.45)))return rows;
- const known=indices.filter(i=>Number.isFinite(Number(out[i].z)));for(let k=0;k<known.length-1;k++){const a=known[k],b=known[k+1],za=Number(out[a].z),zb=Number(out[b].z);for(let i=a+1;i<b;i++){const t=(i-a)/(b-a);out[i].z=za+(zb-za)*t}}
- let last=null;for(let i=0;i<n;i++){if(Number.isFinite(Number(out[i].z)))last=Number(out[i].z);else if(Number.isFinite(last))out[i].z=last}last=null;for(let i=n-1;i>=0;i--){if(Number.isFinite(Number(out[i].z)))last=Number(out[i].z);else if(Number.isFinite(last))out[i].z=last}
+ const known=indices.filter(i=>roamElevation(out[i].z)!==null);for(let k=0;k<known.length-1;k++){const a=known[k],b=known[k+1],za=Number(out[a].z),zb=Number(out[b].z);for(let i=a+1;i<b;i++){const t=(i-a)/(b-a);out[i].z=za+(zb-za)*t}}
+ let last=null;for(let i=0;i<n;i++){if(roamElevation(out[i].z)!==null)last=Number(out[i].z);else if(Number.isFinite(last))out[i].z=last}last=null;for(let i=n-1;i>=0;i--){if(roamElevation(out[i].z)!==null)last=Number(out[i].z);else if(Number.isFinite(last))out[i].z=last}
  return out;
 }
 async function apiRouteCandidate(){
@@ -1883,7 +1888,7 @@ loadExactTerrain().catch(()=>{});
 }
 function persistEnrichedStoredRoute(rows,stages){
  const saved=readActiveRoute();if(!saved)return {stages:Array.isArray(stages)?stages:[]};
- const next={...saved,coords:rows.map(x=>Number.isFinite(Number(x.z))?[x.lon,x.lat,Number(x.z)]:[x.lon,x.lat]),stages:Array.isArray(stages)?stages:(saved.stages||[])};
+ const next={...saved,coords:rows.map(x=>roamElevation(x.z)!==null?[x.lon,x.lat,Number(x.z)]:[x.lon,x.lat]),stages:Array.isArray(stages)?stages:(saved.stages||[])};
  writeSessionRoute(next);return next;
 }
 async function loadExactRouteGeometry(){
@@ -2575,7 +2580,7 @@ function daysUntil(dateStr){if(!dateStr)return null;const d=parseDateOnly(dateSt
 let dashMap=null,dashRouteLayer=null,dashStartMarker=null,dashEndMarker=null;
 function drawDashboardElevation(saved){
 const rows=normalizeAdventureCoords(saved?.coords||[]);const area=document.getElementById('dashElevArea'),line=document.getElementById('dashElevLine');if(!area||!line||rows.length<2)return;
-let vals=rows.map((r,i)=>Number.isFinite(Number(r.z))?Number(r.z):(routeElev.length===rows.length&&Number.isFinite(routeElev[i])?routeElev[i]:NaN));
+let vals=rows.map((r,i)=>roamElevation(r.z)!==null?Number(r.z):(routeElev.length===rows.length&&Number.isFinite(routeElev[i])?routeElev[i]:NaN));
 const finite=vals.filter(Number.isFinite);if(finite.length<2){area.setAttribute('d','M16,82 L604,82 L604,88 L16,88 Z');line.setAttribute('d','M16,82 L604,82');return}
 const min=Math.min(...finite),max=Math.max(...finite),span=Math.max(120,max-min),pts=[],count=Math.min(180,rows.length);
 for(let j=0;j<count;j++){const idx=Math.round(j*(rows.length-1)/(count-1));let z=vals[idx];if(!Number.isFinite(z)){for(let d=1;d<rows.length;d++){if(idx-d>=0&&Number.isFinite(vals[idx-d])){z=vals[idx-d];break}if(idx+d<rows.length&&Number.isFinite(vals[idx+d])){z=vals[idx+d];break}}}const x=16+j/(count-1)*588,y=83-((z-min)/span)*64;pts.push([x,y])}
@@ -2623,8 +2628,8 @@ const dist=[0],gain=[0];
 let totalGain=0;
 for(let i=1;i<rows.length;i++){
   dist[i]=dist[i-1]+geoDistKm([rows[i-1].lat,rows[i-1].lon],[rows[i].lat,rows[i].lon]);
-  const z0=Number(rows[i-1].z),z1=Number(rows[i].z);
-  if(Number.isFinite(z0)&&Number.isFinite(z1)&&z1>z0)totalGain+=z1-z0;
+  const z0=roamElevation(rows[i-1].z),z1=roamElevation(rows[i].z);
+  if(z0!==null&&z1!==null&&z1>z0)totalGain+=z1-z0;
   gain[i]=totalGain;
 }
 return {dist,gain,totalDist:dist.at(-1)||0,totalGain};
@@ -2838,7 +2843,7 @@ async function handleWebGpxImport(file){
  if(!file)return;setPlanStatus('GPX wird gelesen …');
  try{
    const xml=await file.text(),doc=new DOMParser().parseFromString(xml,'application/xml'),pts=[...doc.querySelectorAll('trkpt,rtept')];if(pts.length<2)throw new Error('Keine GPX-Trackpunkte gefunden.');
-   let rows=pts.map(p=>({lat:Number(p.getAttribute('lat')),lon:Number(p.getAttribute('lon')),z:Number(p.querySelector('ele')?.textContent)})).filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lon));rows=await enrichRouteElevation(rows);
+   let rows=pts.map(p=>({lat:Number(p.getAttribute('lat')),lon:Number(p.getAttribute('lon')),z:roamElevation(p.querySelector('ele')?.textContent)})).filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lon));rows=await enrichRouteElevation(rows);
    const m=webRouteMetrics(rows),targets=effectivePlannerTargetsV157(),requestedDays=plannedTripDays(),stages=buildWebStages(rows,m,requestedDays,targets.km,targets.hm),stagePlan=makeStagePlanV157(m,requestedDays,targets,stages),start=document.getElementById('planStart').value.trim()||'GPX Start',dest=document.getElementById('planDest').value.trim()||'GPX Ziel';
    sessionStorage.removeItem('abo-mobile-lodging-selected');sessionStorage.removeItem('abo-mobile-terrain-v6');sessionStorage.removeItem('abo-mobile-weather-v7');
    const newSaved={start,dest,coords:rows.map(x=>Number.isFinite(x.z)?[x.lon,x.lat,x.z]:[x.lon,x.lat]),metrics:m,stages,stagePlan,routePlan:{type:'gpx',source:'imported',waypoints:[],orderedPoints:[],importName:file.name},tripDates:{startDate:document.getElementById('planStartDate').value,endDate:document.getElementById('planEndDate').value},riderProfile:readRiderProfileForm(),terrainPreference:planTerrainPref,bikeProfile:readBikeProfileV15()};
@@ -3131,7 +3136,7 @@ function decorateStageUIV15(){document.querySelectorAll('#stageListItems .stage-
 const _renderStagePrototypeV14=renderStagePrototype;renderStagePrototype=function(){_renderStagePrototypeV14();decorateStageUIV15()};
 function openStageEditV15(i){const saved=readActiveRoute();if(!saved?.stages?.length)return;stageEditIndexV15=Math.max(0,Math.min(saved.stages.length-1,i));const names=readStageNamesFor(saved)||[];const final=stageEditIndexV15===saved.stages.length-1;document.getElementById('stageEditTitle').textContent=final?'Reiseziel ändern':'Etappenziel ändern';document.getElementById('stageEditPlace').value=names[stageEditIndexV15+1]||'';document.getElementById('stageEditStatus').textContent=final?'Das Reiseziel wird über die Route neu berechnet. Für eine reine Etappengrenze bitte eine frühere Etappe bearbeiten.':'Der eingegebene Ort wird auf den nächstgelegenen Punkt der bestehenden Route gesetzt.';const dlg=document.getElementById('stageEditDialog');if(final){packToast('Das endgültige Reiseziel bitte unter Route ändern.');showScreen('plan');setTimeout(()=>document.getElementById('planDest')?.focus(),80);return}dlg?.showModal()}
 document.getElementById('stageEditBtn')?.addEventListener('click',()=>openStageEditV15(selectedStagePrototype));
-function stageMetricRangeV15(rows,s,e){let km=0,hm=0;for(let i=s+1;i<=e;i++){km+=geoDistKm([rows[i-1].lat,rows[i-1].lon],[rows[i].lat,rows[i].lon]);const a=Number(rows[i-1].z),b=Number(rows[i].z);if(Number.isFinite(a)&&Number.isFinite(b)&&b>a)hm+=b-a}return {km,hm}}
+function stageMetricRangeV15(rows,s,e){let km=0,hm=0;for(let i=s+1;i<=e;i++){km+=geoDistKm([rows[i-1].lat,rows[i-1].lon],[rows[i].lat,rows[i].lon]);const a=roamElevation(rows[i-1].z),b=roamElevation(rows[i].z);if(a!==null&&b!==null&&b>a)hm+=b-a}return {km,hm}}
 async function geocodeStagePlaceV15(q){const r=await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=1&lang=de`);const d=await r.json();const c=d?.features?.[0]?.geometry?.coordinates;if(!r.ok||!Array.isArray(c))throw new Error('Ort nicht gefunden');return {lon:Number(c[0]),lat:Number(c[1]),name:cleanPlaceName(d?.features?.[0]?.properties?.name||q)}}
 document.getElementById('stageEditForm')?.addEventListener('submit',async e=>{e.preventDefault();const saved=readActiveRoute(),q=document.getElementById('stageEditPlace').value.trim(),status=document.getElementById('stageEditStatus');if(!saved||!q)return;status.textContent='Ort wird entlang der Route gesucht …';try{const place=await geocodeStagePlaceV15(q),rows=normalizeAdventureCoords(saved.coords),i=stageEditIndexV15,prevStart=Number(saved.stages[i].s)||0,nextEnd=Number(saved.stages[i+1]?.e??rows.length-1);let best={idx:-1,d:1e9};for(let k=prevStart+4;k<=nextEnd-4;k++){const d=geoDistKm([rows[k].lat,rows[k].lon],[place.lat,place.lon]);if(d<best.d)best={idx:k,d}}if(best.idx<0||best.d>45)throw new Error('Der Ort liegt zu weit von der bestehenden Route entfernt.');saved.stages[i].e=best.idx;saved.stages[i+1].s=best.idx;saved.stages.forEach(st=>{const m=stageMetricRangeV15(rows,st.s,st.e);st.km=m.km;st.hm=m.hm});const names=readStageNamesFor(saved)||[saved.start,...saved.stages.slice(0,-1).map(()=>''),saved.dest];names[i+1]=place.name||q;const sp=saved.stagePlan||{},tk=Number(sp.targetKm)||readRiderProfileForm().km,th=Number(sp.maxHm)||readRiderProfileForm().hm;saved.stagePlan={...sp,version:'15.7',manualEdited:true,manualCuts:[...new Set([...(sp.manualCuts||[]),best.idx])],stageCount:saved.stages.length,maxLoad:Math.max(...saved.stages.map(x=>stageLoadV157(x,tk,th)),0)};writeSessionRoute(saved);writeStageNamesFor(saved,names);routeStages=normalizedRouteStages(saved.stages);status.textContent=`Etappenziel gesetzt: ${names[i+1]} · ${best.d.toFixed(1).replace('.',',')} km zur Route`;setTimeout(()=>{document.getElementById('stageEditDialog')?.close();renderStagePrototype();renderOverviewDashboard();drawRouteOnMap();showStagePrototype(i)},500)}catch(err){status.textContent=err.message||'Etappenziel konnte nicht geändert werden.'}});
 
@@ -3462,10 +3467,10 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     }));
     let valid=0;for(const res of results){if(res.status!=='fulfilled')continue;res.value.batch.forEach((idx,k)=>{const z=res.value.e[k];if(Number.isFinite(z)){out[idx].z=z;valid++}})}
     if(valid<Math.max(2,Math.floor(indices.length*.45)))return rows;
-    const known=indices.filter(i=>Number.isFinite(Number(out[i].z)));
+    const known=indices.filter(i=>roamElevation(out[i].z)!==null);
     for(let k=0;k<known.length-1;k++){const a=known[k],b=known[k+1],za=Number(out[a].z),zb=Number(out[b].z);for(let i=a+1;i<b;i++){const t=(i-a)/(b-a);out[i].z=za+(zb-za)*t}}
-    let last=null;for(let i=0;i<n;i++){if(Number.isFinite(Number(out[i].z)))last=Number(out[i].z);else if(Number.isFinite(last))out[i].z=last}
-    last=null;for(let i=n-1;i>=0;i--){if(Number.isFinite(Number(out[i].z)))last=Number(out[i].z);else if(Number.isFinite(last))out[i].z=last}
+    let last=null;for(let i=0;i<n;i++){if(roamElevation(out[i].z)!==null)last=Number(out[i].z);else if(Number.isFinite(last))out[i].z=last}
+    last=null;for(let i=n-1;i>=0;i--){if(roamElevation(out[i].z)!==null)last=Number(out[i].z);else if(Number.isFinite(last))out[i].z=last}
     return out;
   };
 
@@ -3473,7 +3478,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     const saved=readActiveRoute();if(!saved?.coords?.length||!saved?.stages?.[i])return {km:0,hm:0,rows:[]};
     const rows=normalizeAdventureCoords(saved.coords),st=saved.stages[i],a=Math.max(0,Math.min(rows.length-2,Number(st.s)||0)),b=Math.max(a+1,Math.min(rows.length-1,Number(st.e)||rows.length-1));
     let km=0,hm=0;
-    for(let k=a+1;k<=b;k++){km+=geoDistKm([rows[k-1].lat,rows[k-1].lon],[rows[k].lat,rows[k].lon]);const z0=Number(rows[k-1].z),z1=Number(rows[k].z);if(Number.isFinite(z0)&&Number.isFinite(z1)&&z1>z0)hm+=z1-z0}
+    for(let k=a+1;k<=b;k++){km+=geoDistKm([rows[k-1].lat,rows[k-1].lon],[rows[k].lat,rows[k].lon]);const z0=Number(rows[k-1].z),z1=Number(rows[k].z);if(z0!==null&&z1!==null&&z1>z0)hm+=z1-z0}
     return {km,hm,rows:rows.slice(a,b+1),s:a,e:b};
   }
 
@@ -3498,7 +3503,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
     if(empty)empty.hidden=true;
     const min=Math.min(...valid),max=Math.max(...valid),span=Math.max(1,max-min),W=760,H=180,pad=12;
     let cum=[0];for(let k=1;k<rows.length;k++)cum.push(cum[k-1]+geoDistKm([rows[k-1].lat,rows[k-1].lon],[rows[k].lat,rows[k].lon]));const total=cum.at(-1)||1;
-    const pts=rows.map((r,k)=>{const x=pad+(cum[k]/total)*(W-2*pad),zz=Number.isFinite(Number(r.z))?Number(r.z):min,y=H-pad-((zz-min)/span)*(H-2*pad);return [x,y]});
+    const pts=rows.map((r,k)=>{const x=pad+(cum[k]/total)*(W-2*pad),zz=roamElevation(r.z)!==null?Number(r.z):min,y=H-pad-((zz-min)/span)*(H-2*pad);return [x,y]});
     const d='M'+pts.map(p=>p.map(v=>v.toFixed(1)).join(' ')).join(' L');
     const da=d+` L ${pts.at(-1)[0].toFixed(1)} ${H-pad} L ${pts[0][0].toFixed(1)} ${H-pad} Z`;
     line.setAttribute('d',d);area.setAttribute('d',da);
@@ -4157,7 +4162,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
    const host=document.createElement('div');host.className='v1590-waypoints';host.id='v1590Waypoints';legacy.insertAdjacentElement('afterend',host);
    let pts=(legacy.value||'').split(',').map(x=>x.trim()).filter(Boolean); if(!pts.length)pts=[''];
    const sync=()=>{legacy.value=pts.map(x=>x.trim()).filter(Boolean).join(', ');legacy.dispatchEvent(new Event('input',{bubbles:true}));legacy.dispatchEvent(new Event('change',{bubbles:true}))};
-   const render=()=>{host.innerHTML=pts.map((v,i)=>`<div class="v1590-waypoint"><span class="n">${i+1}</span><input class="v12-control" data-wp="${i}" value="${v.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" placeholder="Zwischenziel ${i+1}"><button type="button" data-up="${i}" ${i===0?'disabled':''} aria-label="Nach oben">↑</button><button type="button" data-down="${i}" ${i===pts.length-1?'disabled':''} aria-label="Nach unten">↓</button><button type="button" data-del="${i}" aria-label="Löschen">×</button></div>`).join('')+`<button class="v1590-add-waypoint" type="button" id="v1590AddWaypoint">+ Zwischenziel hinzufügen</button><div class="v1590-name-note">Orts- und Eigennamen bleiben bei Sprachwechsel unverändert.</div>`;
+   const render=()=>{host.innerHTML=pts.map((v,i)=>`<div class="v1590-waypoint"><span class="n">${i+1}</span><input class="v12-control" data-wp="${i}" value="${roamEscapeHtml(v)}" placeholder="Zwischenziel ${i+1}"><button type="button" data-up="${i}" ${i===0?'disabled':''} aria-label="Nach oben">↑</button><button type="button" data-down="${i}" ${i===pts.length-1?'disabled':''} aria-label="Nach unten">↓</button><button type="button" data-del="${i}" aria-label="Löschen">×</button></div>`).join('')+`<button class="v1590-add-waypoint" type="button" id="v1590AddWaypoint">+ Zwischenziel hinzufügen</button><div class="v1590-name-note">Orts- und Eigennamen bleiben bei Sprachwechsel unverändert.</div>`;
      host.querySelectorAll('[data-wp]').forEach(x=>x.oninput=()=>{pts[+x.dataset.wp]=x.value;sync()});
      host.querySelectorAll('[data-up]').forEach(x=>x.onclick=()=>{let i=+x.dataset.up;[pts[i-1],pts[i]]=[pts[i],pts[i-1]];render();sync()});
      host.querySelectorAll('[data-down]').forEach(x=>x.onclick=()=>{let i=+x.dataset.down;[pts[i+1],pts[i]]=[pts[i],pts[i+1]];render();sync()});
@@ -4172,8 +4177,8 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
  const status=document.createElement('div');status.className='v1590-poi-status';status.id='v1590PoiStatus';status.textContent='POIs werden geladen …';mapWrap.appendChild(status);
  const prof=$('#routeHeightPanel');if(prof){const row=document.createElement('div');row.className='v1590-profile-pois';row.id='v1590ProfilePois';row.innerHTML='<b>Verpflegung & POI entlang der Route</b>';prof.appendChild(row)}
  function typeOf(t){if(t.amenity==='drinking_water'||t.drinking_water==='yes')return'water';if(t.shop==='supermarket'||t.shop==='convenience')return'shop';if(['restaurant','cafe','fast_food','biergarten'].includes(t.amenity))return'food';if(['hotel','guest_house','hostel','camp_site'].includes(t.tourism))return'lodge';if(t.tourism==='attraction'||t.historic||t.viewpoint==='yes')return'sight';return null}
- function renderPois(){if(typeof L==='undefined'||typeof roamMap==='undefined'||!roamMap)return;if(layer)roamMap.removeLayer(layer);layer=L.layerGroup().addTo(roamMap);const q=($('#v1590PoiSearch')?.value||'').toLowerCase();let shown=0;poiData.forEach(p=>{if(!active[p.type])return;if(q&&!p.name.toLowerCase().includes(q))return;const c=cats[p.type];const icon=L.divIcon({className:`v1590-poi-icon ${c.cls}`,html:c.icon,iconSize:[25,25],iconAnchor:[12,12]});L.marker([p.lat,p.lon],{icon}).bindPopup(`<div class="v1590-poi-popup"><b>${p.name}</b><small>${c.label}</small></div>`).addTo(layer);shown++});status.textContent=`${shown} POIs sichtbar · OpenStreetMap`;const r=$('#v1590ProfilePois');if(r)r.innerHTML='<b>Verpflegung & POI entlang der Route</b>'+Object.entries(cats).filter(([k])=>active[k]).map(([k,c])=>`<span class="v1590-profile-dot ${c.cls}" title="${c.label}">${c.icon}</span>`).join('')}
- async function loadPois(){try{if(typeof routeGeo==='undefined'||routeGeo.length<2||typeof roamMap==='undefined'||!roamMap){status.textContent='POIs nach Routenberechnung verfügbar';return}const b=L.latLngBounds(routeGeo),sw=b.getSouthWest(),ne=b.getNorthEast();let south=sw.lat,west=sw.lng,north=ne.lat,east=ne.lng;if((north-south)>2||(east-west)>2){status.textContent='POI-Suche: Routengebiet zu groß';return}const bb=`${south},${west},${north},${east}`;const query=`[out:json][timeout:18];(nwr[amenity=drinking_water](${bb});nwr[shop~"supermarket|convenience"](${bb});nwr[amenity~"restaurant|cafe|fast_food|biergarten"](${bb});nwr[tourism~"hotel|guest_house|hostel|camp_site|attraction"](${bb});nwr[historic](${bb}););out center 350;`;const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(query)});if(!res.ok)throw Error('HTTP '+res.status);const j=await res.json();poiData=(j.elements||[]).map(e=>{const t=e.tags||{},type=typeOf(t),lat=e.lat??e.center?.lat,lon=e.lon??e.center?.lon;return type&&lat&&lon?{type,lat,lon,name:t.name||cats[type].label}:null}).filter(Boolean);renderPois()}catch(e){status.textContent='POIs derzeit nicht verfügbar';}}
+ function renderPois(){if(typeof L==='undefined'||typeof roamMap==='undefined'||!roamMap)return;if(layer)roamMap.removeLayer(layer);layer=L.layerGroup().addTo(roamMap);const q=($('#v1590PoiSearch')?.value||'').toLowerCase();let shown=0;poiData.forEach(p=>{if(!active[p.type])return;if(q&&!p.name.toLowerCase().includes(q))return;const c=cats[p.type];const icon=L.divIcon({className:`v1590-poi-icon ${c.cls}`,html:c.icon,iconSize:[25,25],iconAnchor:[12,12]});L.marker([p.lat,p.lon],{icon}).bindPopup(`<div class="v1590-poi-popup"><b>${roamEscapeHtml(p.name)}</b><small>${c.label}</small></div>`).addTo(layer);shown++});status.textContent=`${shown} POIs sichtbar · OpenStreetMap`;const r=$('#v1590ProfilePois');if(r)r.innerHTML='<b>Verpflegung & POI entlang der Route</b>'+Object.entries(cats).filter(([k])=>active[k]).map(([k,c])=>`<span class="v1590-profile-dot ${c.cls}" title="${c.label}">${c.icon}</span>`).join('')}
+ async function loadPois(){try{if(typeof routeGeo==='undefined'||routeGeo.length<2||typeof roamMap==='undefined'||!roamMap){status.textContent='POIs nach Routenberechnung verfügbar';return}const b=L.latLngBounds(routeGeo),sw=b.getSouthWest(),ne=b.getNorthEast();let south=sw.lat,west=sw.lng,north=ne.lat,east=ne.lng;if((north-south)>2||(east-west)>2){status.textContent='POI-Suche: Routengebiet zu groß';return}const bb=`${south},${west},${north},${east}`;const query=`[out:json][timeout:18];(nwr[amenity=drinking_water](${bb});nwr[shop~"supermarket|convenience"](${bb});nwr[amenity~"restaurant|cafe|fast_food|biergarten"](${bb});nwr[tourism~"hotel|guest_house|hostel|camp_site|attraction"](${bb});nwr[historic](${bb}););out center 350;`;const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:'data='+encodeURIComponent(query)});if(!res.ok)throw Error('HTTP '+res.status);const j=await res.json();poiData=(j.elements||[]).map(e=>{const t=e.tags||{},type=typeOf(t),lat=e.lat??e.center?.lat,lon=e.lon??e.center?.lon;return type&&Number.isFinite(lat)&&Number.isFinite(lon)?{type,lat,lon,name:t.name||cats[type].label}:null}).filter(Boolean);renderPois()}catch(e){status.textContent='POIs derzeit nicht verfügbar';}}
  toolbar.querySelectorAll('[data-poi]').forEach(b=>b.onclick=()=>{const k=b.dataset.poi;active[k]=!active[k];b.classList.toggle('active',active[k]);renderPois()});$('#v1590PoiSearch').oninput=()=>renderPois();
  const obs=new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(loadPois,700)});const geom=$('#routeGeometryStatus');if(geom)obs.observe(geom,{childList:true,subtree:true,characterData:true});setTimeout(loadPois,1200);
  // Protect user-entered place names from UI language changes.
@@ -4227,7 +4232,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
   const shell=document.createElement('div');shell.className='v1591-planner-shell';
   const left=document.createElement('div');left.className='v1591-left';left.append(panels[0],panels[1]);
   const center=document.createElement('div');center.className='v1591-center';
-  const tabs=document.createElement('div');tabs.className='v1591-tabs';tabs.innerHTML='<button class="active" type="button">Karte</button><button type="button">Höhe</button><button type="button">Terrain</button><button type="button">Zwischenziele</button><button type="button">Etappen</button>';
+  const tabs=document.createElement('div');tabs.className='v1591-tabs';tabs.innerHTML='<button class="active" type="button" aria-current="page">Karte</button><button type="button" title="Zur Routenansicht: Höhenprofil">Höhe ↗</button><button type="button" title="Zur Routenansicht: Terrain">Terrain ↗</button><button type="button" title="Zur Routenansicht: Zwischenziele">Zwischenziele ↗</button><button type="button" title="Zur Etappenansicht">Etappen ↗</button>';
   tabs.querySelectorAll('button').forEach((b,i)=>b.onclick=()=>{if(i===0)return; const go=['route','route','route','route','stages'][i]; if(go){document.querySelector(`[data-go="${go}"]`)?.click();setTimeout(()=>{if(i>0&&i<4)document.querySelector(`#routeTabs [data-route-tab="${['map','height','terrain','waypoints'][i]}"]`)?.click()},60)}});
   center.append(tabs,cards[0],cards[2]);
   const right=document.createElement('div');right.className='v1591-right';right.append(panels[2],cards[1]);
