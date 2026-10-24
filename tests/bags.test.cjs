@@ -69,7 +69,7 @@ for(const file of ['index.html','ROAM_Foundation_02_Bike_Visibility_Test.html'])
     const f=await fixture(file);try{const {p}=f;
       const initial=await p.evaluate(()=>localStorage.getItem(PACK_STATE_KEY));
       assert.equal(await visible(p,'bar'),false);
-      await mode(p,'Taschen bearbeiten');assert.equal(await visible(p,'bar'),true);
+      await mode(p,'Taschen bearbeiten');assert.equal(await visible(p,'bar'),true,JSON.stringify(await p.evaluate(()=>({mounted:ROAMPack.getBag('bar')?.mounted,bag:ROAMPack.getBag('bar'),layer:(()=>{const e=document.querySelector('[data-bike-layer="bar"]');return e?{class:e.getAttribute('class'),style:e.getAttribute('style'),display:getComputedStyle(e).display}:null})()}))));
       await mode(p,'Ohne Taschen');
       for(const id of ['saddle','frame','bar','top','fork','bottle'])assert.equal(await visible(p,id),false);
       assert.equal(await p.locator('#roam-v1516-modal').isVisible(),false);
@@ -129,7 +129,7 @@ for(const file of ['index.html','ROAM_Foundation_02_Bike_Visibility_Test.html'])
       await bag(p,'saddle').focus();await p.keyboard.press('Enter');
       assert.equal(await p.evaluate(()=>ROAMPack.isMounted('saddle')),true);
       await bag(p,'bar').focus();await p.keyboard.press(' ');
-      assert.equal(await p.evaluate(()=>ROAMPack.isMounted('bar')),false);
+      assert.equal(await p.evaluate(()=>ROAMPack.isMounted('bar')),false,JSON.stringify(await p.evaluate(()=>({mode:ROAMFoundation03.snapshot().mode,mounted:ROAMPack.isMounted('bar'),layer:(()=>{const e=document.querySelector('[data-bike-layer="bar"]');return e?{style:e.getAttribute('style'),tabindex:e.getAttribute('tabindex')}:null})()}))));
       assert.equal(await visible(p,'bar'),false);
       await p.locator('#roam-v1516-positions button').filter({hasText:'Lenkertasche'}).click();
       assert.equal(await visible(p,'bar'),true);
