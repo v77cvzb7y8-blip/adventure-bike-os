@@ -1,0 +1,32 @@
+name: ROAM Foundation 03 – Private Preview Package
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - roam-foundation-03-preview
+    paths:
+      - 'web-prototyp/**'
+      - '.github/workflows/roam-private-preview.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out private preview branch
+        uses: actions/checkout@v4
+      - name: Validate preview entry point
+        run: |
+          test -s web-prototyp/index.html
+          test -s web-prototyp/bag-explorer.js
+          test -s web-prototyp/pack-management.js
+      - name: Upload private downloadable preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: ROAM-Foundation-03-Private-Preview
+          path: web-prototyp/
+          if-no-files-found: error
+          retention-days: 14
