@@ -25,6 +25,8 @@ function init(){
      layer.classList.toggle('roam-v1514-visible',on);layer.classList.toggle('roam-v1514-hidden',!on);
      layer.classList.remove('v152-hidden','v154-hidden','roam-bag-inactive','v158-bike-unmounted');
      layer.style.setProperty('display',on?'inline':'none','important');
+     layer.style.setProperty('animation','none','important');
+     layer.style.setProperty('transition','none','important');
      layer.style.setProperty('opacity',on?'1':'0','important');
      layer.style.setProperty('visibility',on?'visible':'hidden','important');
      layer.style.pointerEvents=on?'auto':'none';layer.style.cursor=on?'pointer':'default';
