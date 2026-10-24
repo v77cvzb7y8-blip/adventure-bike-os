@@ -69,7 +69,7 @@ for(const file of ['index.html','ROAM_Foundation_02_Bike_Visibility_Test.html'])
     const f=await fixture(file);try{const {p}=f;
       const initial=await p.evaluate(()=>localStorage.getItem(PACK_STATE_KEY));
       assert.equal(await visible(p,'bar'),false);
-      await mode(p,'Taschen bearbeiten');assert.equal(await visible(p,'bar'),true,JSON.stringify(await p.evaluate(()=>({mounted:ROAMPack.getBag('bar')?.mounted,bag:ROAMPack.getBag('bar'),layer:(()=>{const e=document.querySelector('[data-bike-layer="bar"]');return e?{class:e.getAttribute('class'),style:e.getAttribute('style'),display:getComputedStyle(e).display}:null})()}))));
+      await mode(p,'Taschen bearbeiten');assert.equal(await visible(p,'bar'),true,JSON.stringify(await p.evaluate(()=>({mounted:ROAMPack.getBag('bar')?.mounted,bag:ROAMPack.getBag('bar'),layer:(()=>{const e=document.querySelector('[data-bike-layer="bar"]');return e?{class:e.getAttribute('class'),style:e.getAttribute('style'),display:getComputedStyle(e).display,visibility:getComputedStyle(e).visibility,opacity:getComputedStyle(e).opacity,outer:e.outerHTML.slice(0,400),parent:e.parentElement?.outerHTML.slice(0,450)}:null})()}))));
       await mode(p,'Ohne Taschen');
       for(const id of ['saddle','frame','bar','top','fork','bottle'])assert.equal(await visible(p,id),false);
       assert.equal(await p.locator('#roam-v1516-modal').isVisible(),false);
