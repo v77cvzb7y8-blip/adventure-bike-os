@@ -3831,202 +3831,9 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
   packPersist();renderPackPrototype();renderOverviewDashboard();translateTextNodes(document.body,['de','en','es'].includes(savedLang)?savedLang:'de');
 })();
 </script>
-<script id="roam-v158-patch">
-(() => {
-  const VERSION='15.8';
-  const PACK_MOUNTED_KEY='roam-pack-mounted-v158';
-  const bagGuide={
-    saddle:{short:'Kleidung · Schlafsachen',why:'Leicht und voluminös – gut für Dinge, die unterwegs selten gebraucht werden.'},
-    frame:{short:'Werkzeug · Essen · Powerbank',why:'Schwere, kompakte Ausrüstung sitzt hier zentral und fahrstabil.'},
-    top:{short:'Snacks · Geld · Elektronik',why:'Für kleine Dinge, die du während der Fahrt schnell erreichen willst.'},
-    bar:{short:'Jacke · Schlafsack · leichte Teile',why:'Ideal für leichte, voluminöse Ausrüstung an der Front.'},
-    fork:{short:'Drybags · Camping',why:'Zusätzlicher Stauraum an der Gabel – möglichst links und rechts ausgewogen beladen.'},
-    bottle:{short:'Wasser',why:'Wasser bleibt tief, zentral und jederzeit erreichbar.'}
-  };
+<script src="pack-management.js"></script>
 
-  // Mounted bags are independent from contents. Migrate old state conservatively: everything remains mounted once.
-  let mountedV158={};
-  try{mountedV158=JSON.parse(localStorage.getItem(PACK_MOUNTED_KEY)||'null')||{}}catch(e){}
-  if(!Object.keys(mountedV158).length){Object.keys(packBags).forEach(id=>mountedV158[id]=true);}
-  Object.keys(packBags).forEach(id=>{if(typeof mountedV158[id]!=='boolean')mountedV158[id]=true});
-  function persistMountedV158(){try{localStorage.setItem(PACK_MOUNTED_KEY,JSON.stringify(mountedV158))}catch(e){}}
-  function isMountedV158(id){return !!mountedV158[id]&&!!packBags[id]}
-  function mountedIdsV158(){return Object.keys(packBags).filter(isMountedV158)}
-  persistMountedV158();
-
-  function setMountedV158(id,on){
-    if(!packBags[id]||isMountedV158(id)===on)return;
-    const assigned=packItems.filter(x=>x.bag===id);
-    if(!on&&assigned.length&&typeof confirm==='function'&&!confirm(`${packBags[id].name} entfernen? ${assigned.length} Gegenstand/Gegenstände werden dadurch wieder ungepackt.`))return;
-    mountedV158[id]=on;
-    if(!on){packItems.forEach(x=>{if(x.bag===id)x.bag=''});if(selectedPackBagV15===id)selectedPackBagV15='';}
-    packProposal=null;invalidateAppliedPack();persistMountedV158();packPersist();renderPackPrototype();renderOverviewDashboard();
-    packToast(on?`${packBags[id].name} am Bike montiert`:`${packBags[id].name} entfernt${assigned.length?` · ${assigned.length} Teil(e) ohne Tasche`:''}`);
-  }
-
-  // Refined, consistent line icons.
-  itemIcon=function(id,cat){
-    const a='viewBox="0 0 24 24" aria-hidden="true"';
-    const p=d=>`<svg ${a}><path d="${d}"/></svg>`;
-    if(id==='sleep')return p('M7 3h8c2 0 3 1 3 3v15H6V7c0-2 1-4 1-4Zm2 4h6M9 10h6M9 13h6M9 16h5');
-    if(id==='tent')return p('M3 20 12 4l9 16H3Zm9-16v16M7 20l5-8 5 8');
-    if(id==='mat')return p('M6 5h10a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h10M6 5v14');
-    if(['shirt','down','rain'].includes(id))return p('M8 4 4 6l2 5 2-1v10h8V10l2 1 2-5-4-2-2 2h-4L8 4Z');
-    if(id==='shorts')return p('M7 4h10l-1 7 2 9h-5l-1-6-1 6H6l2-9-1-7Z');
-    if(id==='under')return p('M6 6h12l-1 5-5 3-5-3-1-5Zm6 8v6');
-    if(id==='socks')return p('M9 3h5v9l4 3-2 4H9c-2 0-3-1-3-3s1-3 3-3V3Z');
-    if(id==='sandals')return p('M5 14c4 0 7 1 10 4l-2 3H6c-2 0-3-1-3-3 0-2 1-4 2-4Zm9-9c2 2 3 5 2 8M10 4c1 3 1 6 0 9');
-    if(id==='water')return p('M9 3h6v3l2 3v12H7V9l2-3V3Zm0 7h8');
-    if(id==='food')return p('M5 5h14l-1 15H6L5 5Zm3 0V3h8v2M8 10h8');
-    if(id==='snacks')return p('M7 3h10l2 5-2 13H7L5 8l2-5Zm-1 5h12');
-    if(id==='stove')return p('M7 11h10l2 8H5l2-8Zm2-3h6M10 5h4M12 2v3');
-    if(id==='dishes')return p('M4 11h16c0 5-3 8-8 8s-8-3-8-8Zm8-7v5M8 6v3M16 6v3');
-    if(id==='fuel')return p('M8 4h8v3l2 3v10H6V10l2-3V4Zm2 3h4');
-    if(id==='tools')return p('M4 5l5 5m2 1 8 8M16 4a4 4 0 0 0-4 5L5 16l3 3 7-7a4 4 0 0 0 5-4l-3 2-3-3 2-3Z');
-    if(id==='spares')return p('M5 12a7 7 0 1 0 14 0 7 7 0 1 0-14 0Zm7-3v6M9 12h6');
-    if(id==='power')return p('M8 3h8v4h2v14H6V7h2V3Zm2 5h4M10 13h4');
-    if(id==='electronics')return p('M8 3h8v18H8V3Zm2 3h4M11 18h2');
-    if(id==='docs')return p('M6 3h9l3 3v15H6V3Zm8 0v4h4M9 11h6M9 15h6');
-    if(id==='money')return p('M3 7h18v11H3V7Zm3 3h12M12 13a2 2 0 1 0 0 4 2 2 0 1 0 0-4Z');
-    if(id==='hygiene')return p('M9 3h6v4l2 3v11H7V10l2-3V3Zm0 10h6M11 3h2');
-    if(cat==='tools')return p('M4 5l5 5m2 1 8 8M15 4l5 5M5 19l6-6');
-    if(cat==='electronics')return p('M13 2 6 13h5l-1 9 8-12h-5V2Z');
-    if(cat==='food')return p('M5 3v7M3 3v4c0 2 4 2 4 0V3M5 10v11M14 3c4 3 4 9 0 11v7');
-    if(cat==='sleep')return p('M5 4h14v16H5V4Zm3 3h8M8 10h8');
-    return `<svg ${a}><circle cx="12" cy="12" r="8"/></svg>`;
-  };
-
-  bagIconSvg=function(id){
-    const c=packBags[id]?.color||'#607057',stroke='#e8dfd1';
-    if(id==='saddle')return `<svg viewBox="0 0 56 34"><path d="M4 11Q22 2 51 9l-6 20H11Q6 28 5 23Z" fill="${c}" stroke="${stroke}" stroke-width="1.6"/><path d="M13 10 38 27M24 7l-4 20" fill="none" stroke="#d9cebd" stroke-width="1.4"/></svg>`;
-    if(id==='frame')return `<svg viewBox="0 0 56 34"><path d="M5 5h46L36 29H7Z" fill="${c}" stroke="${stroke}" stroke-width="1.6"/><path d="M12 9h30" fill="none" stroke="#efe5d8" stroke-width="1.3"/></svg>`;
-    if(id==='top')return `<svg viewBox="0 0 56 34"><rect x="6" y="10" width="44" height="14" rx="7" fill="${c}" stroke="${stroke}" stroke-width="1.6"/><path d="M14 12h26" stroke="#efe5d8" stroke-width="1.2"/></svg>`;
-    if(id==='bar')return `<svg viewBox="0 0 56 34"><path d="M6 9Q28 2 50 9v17Q28 32 6 25Z" fill="${c}" stroke="${stroke}" stroke-width="1.6"/><path d="M18 7q3 10 5 20M37 7q-2 10 0 20" fill="none" stroke="#405044" stroke-width="3"/></svg>`;
-    if(id==='fork')return `<svg viewBox="0 0 56 34"><rect x="9" y="3" width="14" height="28" rx="6" fill="${c}" stroke="${stroke}" stroke-width="1.6"/><rect x="32" y="4" width="13" height="27" rx="6" fill="${c}" opacity=".78" stroke="${stroke}" stroke-width="1.4"/></svg>`;
-    if(id==='bottle')return `<svg viewBox="0 0 56 34"><path d="M14 3h9v5l3 4v18H11V12l3-4V3Z" fill="#f7f8f2" stroke="#52604f" stroke-width="1.8"/><path d="M36 4h8v5l3 4v17H33V13l3-4V4Z" fill="#f7f8f2" stroke="#52604f" stroke-width="1.8"/><path d="M12 18h13M34 20h12" stroke="${c}" stroke-width="2.4"/></svg>`;
-    return `<svg viewBox="0 0 56 34"><rect x="8" y="5" width="40" height="24" rx="8" fill="${c}" stroke="${stroke}" stroke-width="1.6"/></svg>`;
-  };
-
-  // Only mounted bags are valid pack destinations.
-  bagOptions=function(selected){
-    const ids=mountedIdsV158();
-    return `<option value="">nicht zugewiesen</option>`+ids.map(id=>`<option value="${id}" ${selected===id?'selected':''}>${packBags[id].name}</option>`).join('');
-  };
-  packAlternative=function(item,current){for(const id of preferredBags(item)){if(id===current||!isMountedV158(id))continue;const st=bagStats(id);if(st.l+item.l<=st.cap+1e-6)return id}return ''};
-  movePackItemDirect=function(itemId,bagId){
-    const item=packItems.find(x=>x.id===itemId);if(!item||!bagId||!isMountedV158(bagId))return;const st=bagStats(bagId),existing=item.bag===bagId?item.l:0;if(st.l-existing+item.l>st.cap+1e-6){packToast(`${packBags[bagId].name}: zu wenig Platz`);return}item.bag=bagId;packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard();packToast(`${item.name} → ${packBags[bagId].name}`);
-  };
-  buildPackProposal=function(){
-    const items=packItems.map(x=>({...x})),ids=mountedIdsV158(),used=Object.fromEntries(ids.map(k=>[k,0])),unassigned=[];
-    const ordered=relevantPackItems(items).sort((a,b)=>b.kg-a.kg||b.l-a.l);ordered.forEach(i=>i.bag='');
-    for(const item of ordered){let best='',score=1e9;for(const id of ids){if(id==='bottle'&&item.id!=='water'&&!/wasser|water|bidon|flasche/i.test(item.name||''))continue;const cap=bagCapacity(id),after=(used[id]||0)+item.l;if(after>cap+1e-6)continue;let pref=preferredBags(item).indexOf(id);if(pref<0)pref=9;let sc=pref*12;if(!(used[id]||0))sc+=18;if(item.id==='water'&&id==='bottle')sc-=120;if(item.kg>=1&&packBags[id].zone!=='center')sc+=18;if(item.access==='high'&&!['top','bar','bottle'].includes(id))sc+=12;if(item.preferredBag===id)sc-=24;sc+=(after/Math.max(.1,cap))*3;if(sc<score){score=sc;best=id}}if(best){item.bag=best;used[best]=(used[best]||0)+item.l}else unassigned.push(item)}
-    return {items,unassigned};
-  };
-
-  let itemFilterV158='all';
-  function matchesFilterV158(i){if(itemFilterV158==='missing')return !i.have;if(itemFilterV158==='available')return i.have;if(itemFilterV158==='packed')return i.have&&!!i.bag;if(itemFilterV158==='unpacked')return i.have&&!i.bag;return true}
-  function itemStatusV158(i,preview){if(!i.have)return ['Fehlt','missing',''];if(i.bag)return [preview?'Vorschau':'Gepackt',preview?'preview':'',packBags[i.bag]?.name||''];return ['Noch ohne Tasche','unpacked','']}
-
-  renderPackNeeds=function(){
-    applyLodgingPackRules();const box=document.getElementById('packNeedList');if(!box)return;
-    box.innerHTML=visiblePackCategories().map(c=>{const arr=(typeof itemsForCategoryV152==='function'?itemsForCategoryV152(c):c.items.map(id=>packItems.find(x=>x.id===id)).filter(Boolean)).filter(x=>x.needed||x.cat!=='sleep'),needed=arr.filter(x=>x.needed).length;if(!arr.length)return '';return `<div class="pack-v12-category"><div class="pack-v12-cathead"><b>${c.name}</b><span>${needed}/${arr.length}</span></div>${arr.map(i=>`<div class="pack-v12-needrow"><button class="pack-v12-check ${i.needed?'':'off'}" data-need="${i.id}" type="button" aria-label="${i.name}: benötigt">✓</button><span class="v158-need-icon">${itemIcon(i.id,i.cat)}</span><span>${i.name}</span><span class="mini-badge">${i.needed?'benötigt':'optional'}</span></div>`).join('')}</div>`}).join('');
-    box.querySelectorAll('[data-need]').forEach(b=>b.onclick=()=>{const i=packItems.find(x=>x.id===b.dataset.need);if(!i)return;i.needed=!i.needed;i.needOverride=true;if(!i.needed)i.bag='';packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()});
-  };
-
-  renderPackHave=function(){
-    applyLodgingPackRules();const box=document.getElementById('packHaveList');if(!box)return;const q=(document.getElementById('packSearch')?.value||'').toLowerCase(),filter=document.getElementById('packCategoryFilter')?.value||'all',items=packProposal?.items||packItems,preview=!!packProposal;
-    box.innerHTML=visiblePackCategories().filter(c=>filter==='all'||c.id===filter).map(c=>{const all=items.filter(x=>x.cat===c.id);const arr=all.filter(i=>i.needed&&matchesFilterV158(i)&&(!q||i.name.toLowerCase().includes(q)));if(!arr.length)return '';return `<div class="pack-v13-group"><div class="pack-v13-grouphead"><b>${c.name}</b><span>${arr.filter(x=>x.have).length}/${arr.length}</span></div>${arr.map(i=>{const [status,cls,statusBag]=itemStatusV158(i,preview);return `<div class="pack-v12-item ${preview?'v154-preview-item':''}"><button class="pack-v12-check ${i.have?'':'off'}" data-have="${i.id}" type="button">✓</button><div class="thumb">${itemIcon(i.id,i.cat)}</div><div><b>${i.name}</b><small>${Number(i.kg||0).toFixed(2).replace('.',',')} kg · ${formatLiters(i.l)} L${i.note?` · ${i.note}`:''}</small><span class="v158-item-status ${cls}"><span>${status}</span>${statusBag?`<span> · ${statusBag}</span>`:''}</span></div><select class="pack-v12-bagselect ${preview?'v154-preview-select':''}" data-bagitem="${i.id}" ${i.have?'':'disabled'}>${bagOptions(i.bag)}</select>${i.custom?`<button class="v152-custom-delete" data-delete-custom="${i.id}" type="button" title="Eigenen Gegenstand löschen">×</button>`:'<span class="menu-dots">⋮</span>'}</div>`}).join('')}</div>`}).join('')||'<div class="muted" style="font-size:11px;padding:12px">Keine Gegenstände in dieser Ansicht.</div>';
-    box.querySelectorAll('[data-have]').forEach(b=>b.onclick=()=>{const base=packItems.find(x=>x.id===b.dataset.have);if(!base)return;base.have=!base.have;if(!base.have)base.bag='';packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()});
-    box.querySelectorAll('[data-bagitem]').forEach(el=>el.onchange=()=>{const target=preview?packProposal?.items?.find(x=>x.id===el.dataset.bagitem):packItems.find(x=>x.id===el.dataset.bagitem);if(!target)return;if(el.value&&!isMountedV158(el.value)){renderPackPrototype();return}if(el.value){const src=preview?packProposal.items:packItems,st=bagStats(el.value,src),existing=target.bag===el.value?target.l:0;if(st.l-existing+target.l>st.cap+1e-6){packToast(`${packBags[el.value].name}: zu wenig Platz`);renderPackPrototype();return}}target.bag=el.value;if(preview){if(typeof v154RefreshProposalUnassigned==='function')v154RefreshProposalUnassigned();renderPackPrototype()}else{invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()}});
-    box.querySelectorAll('[data-delete-custom]').forEach(btn=>btn.onclick=()=>{const idx=packItems.findIndex(x=>x.id===btn.dataset.deleteCustom&&x.custom);if(idx<0)return;const name=packItems[idx].name;packItems.splice(idx,1);packProposal=null;packPersist();renderPackPrototype();renderOverviewDashboard();packToast(`${name} entfernt`)});
-  };
-
-  function renderBagDockV158(){
-    const box=document.getElementById('packBagDock');if(!box)return;
-    box.innerHTML=Object.entries(packBags).map(([id,b])=>{const on=isMountedV158(id),st=bagStats(id,packProposal?.items||packItems),g=bagGuide[id]||{short:'Ausrüstung',why:''},sizes=b.sizes||[b.size];return `<div class="v158-bag-card ${on?'mounted':'unmounted'} ${selectedPackBagV15===id?'selected':''}" data-v158-bag-card="${id}"><button class="v158-bag-icon" type="button" data-v158-open-bag="${id}" aria-label="${b.name} öffnen">${bagIconSvg(id)}</button><div class="v158-bag-main"><button type="button" data-v158-open-bag="${id}"><b>${b.name}</b><small>${g.short}</small><strong>${on?(st.items.length?`${st.items.length} <span>Teile</span> · ${formatLiters(st.l)}/${formatLiters(st.cap)} L`:'montiert · leer'):'nicht montiert'}</strong></button></div><div class="v158-bag-actions"><select data-v158-size="${id}" ${on?'':'disabled'} aria-label="Größe ${b.name}">${sizes.map(v=>`<option value="${v}" ${Number(b.size)===Number(v)?'selected':''}>${formatLiters(v*(b.qty||1))} L</option>`).join('')}</select><button type="button" class="v158-bag-toggle" data-v158-toggle-bag="${id}">${on?'Entfernen':'+ Hinzufügen'}</button></div></div>`}).join('');
-    box.querySelectorAll('[data-v158-toggle-bag]').forEach(btn=>btn.onclick=()=>setMountedV158(btn.dataset.v158ToggleBag,!isMountedV158(btn.dataset.v158ToggleBag)));
-    box.querySelectorAll('[data-v158-open-bag]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.v158OpenBag;if(!isMountedV158(id)){setMountedV158(id,true)}selectedPackBagV15=id;renderPackBagDetailV15(id);renderBagDockV158()});
-    box.querySelectorAll('[data-v158-size]').forEach(sel=>sel.onchange=()=>{const id=sel.dataset.v158Size,v=Number(sel.value);if(packBags[id]?.sizes?.includes(v)){packBags[id].size=v;packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard();packToast(`${packBags[id].name}: ${formatLiters(bagCapacity(id))} L`)}});
-  }
-
-  renderPackFillGrid=function(){
-    const box=document.getElementById('packFillGrid');if(!box)return;const items=packProposal?.items||packItems,ids=mountedIdsV158();
-    box.innerHTML=ids.length?ids.map(id=>{const b=packBags[id],st=bagStats(id,items),full=st.pct>=100;return `<div class="pack-v13-fillcard ${st.over?'pack-v12-over':''} ${full?'full':''} ${!st.items.length?'empty':''} ${selectedPackBagV15===id?'selected':''}" data-bag-id="${id}"><div class="bag-svg">${bagIconSvg(id)}</div><b>${b.name}</b><strong>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</strong><div class="bar"><i style="width:${Math.min(100,st.pct)}%"></i></div><small>${st.items.length?`${st.pct}% · ${st.items.length} <span>Teile</span>`:'leer · bereit'}</small></div>`}).join(''):'<div class="v154-pack-empty-note">Noch keine Tasche am Bike montiert.</div>';
-    const u=document.getElementById('packUnassigned'),ua=items.filter(x=>x.needed&&x.have&&!x.bag);if(u)u.innerHTML=ua.length?`<div class="pack-v13-unassigned-list">${ua.map(x=>`<span>${x.name}</span>`).join('')}</div>`:'<div class="muted" style="font-size:9px;margin-top:5px">Alles ist einer montierten Tasche zugewiesen.</div>';
-    bindPackBagClicksV15();
-  };
-
-  function bindBikeV158(){
-    Object.keys(packBags).forEach(id=>{const g=document.getElementById(`packBike-${id}`);if(g){g.style.cursor=isMountedV158(id)?'pointer':'default';g.onclick=isMountedV158(id)?()=>{selectedPackBagV15=id;renderPackBagDetailV15(id);renderBagDockV158()}:null}});
-    document.querySelectorAll('[data-pack-bag]').forEach(x=>{const id=x.dataset.packBag;if(!id)return;x.onclick=()=>{if(isMountedV158(id)){selectedPackBagV15=id;renderPackBagDetailV15(id);renderBagDockV158()}}});
-  }
-  renderPackBike=function(){
-    const items=packProposal?.items||packItems;Object.keys(packBags).forEach(id=>{const mounted=isMountedV158(id),st=bagStats(id,items),layer=document.getElementById(`packBike-${id}`),lab=document.getElementById(`packBikeLabel-${id}`);if(layer){layer.classList.remove('v154-hidden');layer.classList.toggle('v158-bike-unmounted',!mounted);layer.classList.toggle('v158-empty-bag',mounted&&!st.items.length)}document.querySelectorAll(`[data-pack-bag="${id}"]`).forEach(el=>{el.removeAttribute('hidden');el.classList.toggle('v158-unmounted',!mounted);el.classList.toggle('selected',selectedPackBagV15===id)});if(lab)lab.textContent=st.items.length?`${formatLiters(st.l)} / ${formatLiters(st.cap)} L · ${st.pct}%`:`leer · ${formatLiters(st.cap)} L`});
-    const mode=document.querySelector('.packBikeModeV154');if(mode){mode.textContent=packProposal?'Auto-Pack Vorschau':'Montierte Taschen';mode.classList.toggle('preview',!!packProposal)}bindBikeV158();
-  };
-
-  renderPackBagDetailV15=function(id){
-    const el=document.getElementById('packBagDetail');if(!el)return;if(!id||!isMountedV158(id)){selectedPackBagV15='';el.hidden=true;return}selectedPackBagV15=id;el.hidden=false;const items=packProposal?.items||packItems,st=bagStats(id,items),b=packBags[id],g=bagGuide[id]||{short:'Ausrüstung',why:''},pct=Math.min(100,st.pct);
-    const rows=st.items.map(i=>{const access=i.access==='high'?'schnell erreichbar':i.access==='low'?'selten benötigt':'normaler Zugriff';return `<div class="v158-bag-item-row"><span class="v158-bag-item-icon">${itemIcon(i.id,i.cat)}</span><div><b>${i.name}</b><small>${Number(i.kg||0).toFixed(2).replace('.',',')} kg · ${formatLiters(i.l)} L · <span>${access}</span></small></div><select data-v158-detail-move="${i.id}">${bagOptions(id)}</select></div>`}).join('');
-    el.innerHTML=`<div class="v158-bag-detail-head"><div class="v158-bag-detail-icon">${bagIconSvg(id)}</div><div><div class="eyebrow">Tascheninhalt</div><h3>${b.name}</h3><p>${g.why}</p></div><button class="v158-close" type="button" id="closeBagDetailV158" aria-label="Tascheninhalt schließen">×</button></div><div class="v158-bag-detail-kpis"><div><small>Volumen</small><b>${formatLiters(st.l)} / ${formatLiters(st.cap)} L</b></div><div><small>Gewicht</small><b>${st.kg.toFixed(1).replace('.',',')} kg</b></div><div><small>Inhalt</small><b>${st.items.length} <span>Teile</span></b></div></div><div class="v158-bag-detail-bar"><i style="width:${pct}%"></i></div><div class="v158-bag-detail-guide">Gut geeignet für: <b>${g.short}</b>${st.over?' · ⚠ Kapazität überschritten':''}</div><div class="v158-bag-content"><div class="v158-bag-content-title"><b>Was ist drin?</b><span>direkt verschiebbar</span></div>${rows||'<div class="v158-empty-content">Diese Tasche ist montiert, aber noch leer. Weise unten einen Gegenstand zu oder nutze Auto-Pack.</div>'}</div><div class="v158-bag-detail-actions"><button type="button" data-v158-scroll-items>Gegenstände anzeigen</button><button type="button" class="remove" data-v158-remove-detail="${id}">Tasche entfernen</button></div>`;
-    document.getElementById('closeBagDetailV158')?.addEventListener('click',()=>{selectedPackBagV15='';el.hidden=true;renderBagDockV158();renderPackBike();renderPackFillGrid()});
-    el.querySelectorAll('[data-v158-detail-move]').forEach(sel=>sel.onchange=()=>{const target=sel.value;if(!target){const base=packItems.find(x=>x.id===sel.dataset.v158DetailMove);if(base){base.bag='';packProposal=null;invalidateAppliedPack();packPersist();renderPackPrototype();renderOverviewDashboard()}return}movePackItemDirect(sel.dataset.v158DetailMove,target)});
-    el.querySelector('[data-v158-remove-detail]')?.addEventListener('click',()=>setMountedV158(id,false));
-    el.querySelector('[data-v158-scroll-items]')?.addEventListener('click',()=>document.querySelector('.v158-pack-have')?.scrollIntoView({behavior:'smooth',block:'start'}));
-    document.querySelectorAll('[data-pack-bag]').forEach(x=>x.classList.toggle('selected',x.dataset.packBag===id));document.querySelectorAll('.pack-v13-fillcard').forEach(x=>x.classList.toggle('selected',x.dataset.bagId===id));
-  };
-
-  renderPackSummary=function(){
-    const items=packProposal?.items||packItems,rel=relevantPackItems(items),assigned=rel.filter(x=>x.bag),total=rel.reduce((a,x)=>a+x.kg,0),assignedKg=assigned.reduce((a,x)=>a+x.kg,0),bal=packBalance(items),mounted=mountedIdsV158().length,cov=rel.length?Math.round(assigned.length/rel.length*100):0;const pw=document.getElementById('packWeight');if(pw)pw.textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg`;const fb=document.getElementById('frontBalance'),rb=document.getElementById('rearBalance'),bb=document.getElementById('balanceBar');if(fb)fb.textContent=`${bal.front}% vorne`;if(rb)rb.textContent=`${bal.rear}% hinten`;if(bb)bb.style.gridTemplateColumns=`${bal.front}fr ${bal.rear}fr`;const sb=document.getElementById('packStatBags'),si=document.getElementById('packStatItems'),sc=document.getElementById('packStatCoverage');if(sb)sb.textContent=mounted;if(si)si.textContent=assigned.length;if(sc)sc.textContent=`${cov}%`;const meta=document.getElementById('packMeta');if(meta)meta.textContent=`${assignedKg.toFixed(1).replace('.',',')} / ${total.toFixed(1).replace('.',',')} kg verteilt · ${mounted} Taschen montiert · Balance ${bal.front} / ${bal.rear}`;
-  };
-
-  function renderQuickStatsV158(){const items=packProposal?.items||packItems,need=items.filter(x=>x.needed).length,missing=items.filter(x=>x.needed&&!x.have).length,packed=items.filter(x=>x.needed&&x.have&&x.bag).length,total=items.filter(x=>x.needed&&x.have).reduce((s,x)=>s+(Number(x.kg)||0),0);const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('v158NeedKpi',need);set('v158MissingKpi',missing);set('v158PackedKpi',`${packed}/${items.filter(x=>x.needed&&x.have).length}`);set('v158WeightKpi',`${total.toFixed(1).replace('.',',')} kg`)}
-
-  // Add exact translations for the new pack interface. Dynamic values are kept as separate text nodes where practical.
-  if(typeof ROAM_V152_TRANSLATIONS==='object')Object.assign(ROAM_V152_TRANSLATIONS,{
-    'Benötigt':['Required','Necesario'],'Fehlt':['Missing','Falta'],'Gepackt':['Packed','Empacado'],'Gewicht':['Weight','Peso'],'Alle':['All','Todo'],'Vorhanden':['Available','Disponible'],'Ohne Tasche':['No bag','Sin bolsa'],'Bike & Taschen':['Bike & bags','Bici y bolsas'],'Taschen-Setup':['Bag setup','Configuración de bolsas'],'Welche Taschen sind am Bike?':['Which bags are on the bike?','¿Qué bolsas están en la bici?'],'Hinzufügen, entfernen und Größe wählen':['Add, remove and choose size','Añadir, quitar y elegir tamaño'],'Entfernen':['Remove','Quitar'],'+ Hinzufügen':['+ Add','+ Añadir'],'Montierte Taschen':['Mounted bags','Bolsas montadas'],'Füllstand der montierten Taschen':['Mounted bag fill levels','Nivel de las bolsas montadas'],'Noch ohne Tasche':['Not packed yet','Aún sin bolsa'],'Tascheninhalt':['Bag contents','Contenido de la bolsa'],'Volumen':['Volume','Volumen'],'Inhalt':['Contents','Contenido'],'Was ist drin?':['What is inside?','¿Qué hay dentro?'],'direkt verschiebbar':['move directly','mover directamente'],'Gegenstände anzeigen':['Show items','Mostrar objetos'],'Tasche entfernen':['Remove bag','Quitar bolsa'],'Diese Tasche ist montiert, aber noch leer. Weise unten einen Gegenstand zu oder nutze Auto-Pack.':['This bag is mounted but still empty. Assign an item below or use Auto-Pack.','Esta bolsa está montada pero aún vacía. Asigna un objeto abajo o usa Auto-Pack.'],'Alles ist einer montierten Tasche zugewiesen.':['Everything is assigned to a mounted bag.','Todo está asignado a una bolsa montada.'],'Noch keine Tasche am Bike montiert.':['No bag is mounted on the bike yet.','Aún no hay ninguna bolsa montada en la bici.'],'nicht montiert':['not mounted','no montada'],'montiert · leer':['mounted · empty','montada · vacía'],'leer · bereit':['empty · ready','vacía · lista'],'Gut geeignet für:':['Well suited for:','Ideal para:'],'Keine Gegenstände in dieser Ansicht.':['No items in this view.','No hay objetos en esta vista.'],
-    'Inhalte leeren':['Empty contents','Vaciar contenido'],'Vorschau':['Preview','Vista previa'],'Teile':['items','objetos'],'benötigt':['required','necesario'],'schnell erreichbar':['quick access','acceso rápido'],'selten benötigt':['rarely needed','uso poco frecuente'],'normaler Zugriff':['normal access','acceso normal'],'Kapazität überschritten':['over capacity','capacidad superada'],
-    'Montiere zuerst deine Taschen. Tippe danach direkt am Bike oder auf eine Tasche, um Inhalt, Füllstand und Position zu prüfen.':['Mount your bags first. Then tap a bag on the bike or in the list to review contents, fill level and position.','Monta primero las bolsas. Después toca una bolsa en la bici o en la lista para revisar contenido, nivel de llenado y posición.'],
-    'Tasche direkt am Bike antippen → Inhalt öffnen → Gegenstände verschieben':['Tap a bag on the bike → open contents → move items','Toca una bolsa en la bici → abre el contenido → mueve objetos'],
-    'Kleidung · Schlafsachen':['Clothing · sleep gear','Ropa · equipo de dormir'],'Werkzeug · Essen · Powerbank':['Tools · food · power bank','Herramientas · comida · batería externa'],'Snacks · Geld · Elektronik':['Snacks · money · electronics','Snacks · dinero · electrónica'],'Jacke · Schlafsack · leichte Teile':['Jacket · sleeping bag · light gear','Chaqueta · saco de dormir · equipo ligero'],'Drybags · Camping':['Dry bags · camping','Bolsas estancas · camping'],
-    'Leicht und voluminös – gut für Dinge, die unterwegs selten gebraucht werden.':['Light and bulky — good for items you rarely need while riding.','Ligero y voluminoso: ideal para cosas que necesitas poco durante la marcha.'],'Schwere, kompakte Ausrüstung sitzt hier zentral und fahrstabil.':['Heavy, compact gear stays central and stable here.','El equipo pesado y compacto queda aquí centrado y estable.'],'Für kleine Dinge, die du während der Fahrt schnell erreichen willst.':['For small items you want to reach quickly while riding.','Para objetos pequeños que quieres alcanzar rápidamente durante la marcha.'],'Ideal für leichte, voluminöse Ausrüstung an der Front.':['Ideal for light, bulky gear at the front.','Ideal para equipo ligero y voluminoso en la parte delantera.'],'Zusätzlicher Stauraum an der Gabel – möglichst links und rechts ausgewogen beladen.':['Extra fork storage — keep left and right loads balanced.','Espacio extra en la horquilla: reparte la carga entre izquierda y derecha.'],'Wasser bleibt tief, zentral und jederzeit erreichbar.':['Water stays low, central and easy to reach.','El agua queda baja, centrada y siempre accesible.'],
-    'Schlafsack':['Sleeping bag','Saco de dormir'],'Zelt':['Tent','Tienda'],'Isomatte':['Sleeping mat','Esterilla'],'Trikot / Shirt':['Jersey / shirt','Maillot / camiseta'],'Shorts / Hose':['Shorts / trousers','Shorts / pantalón'],'Unterwäsche':['Underwear','Ropa interior'],'Socken':['Socks','Calcetines'],'Regenjacke':['Rain jacket','Chaqueta impermeable'],'Daunenjacke':['Down jacket','Chaqueta de plumas'],'Sandalen':['Sandals','Sandalias'],'Nahrung':['Food','Comida'],'Snacks':['Snacks','Snacks'],'Kocher':['Stove','Hornillo'],'Essgeschirr':['Cookware','Vajilla'],'Fuel':['Fuel','Combustible'],'Werkzeug-Set':['Tool kit','Kit de herramientas'],'Ersatzteile':['Spare parts','Repuestos'],'Powerbank':['Power bank','Batería externa'],'Elektronik':['Electronics','Electrónica'],'Dokumente':['Documents','Documentos'],'Geld / Karte':['Cash / card','Dinero / tarjeta'],'Hygiene-Set':['Toiletries','Kit de higiene']
-  });
-
-  const oldRenderPackPrototypeV158=renderPackPrototype;
-  renderPackPrototype=function(){oldRenderPackPrototypeV158();renderBagDockV158();renderQuickStatsV158();renderPackBike();renderPackFillGrid();if(selectedPackBagV15&&isMountedV158(selectedPackBagV15))renderPackBagDetailV15(selectedPackBagV15);scheduleRoamTranslation?.()};
-
-  document.getElementById('packItemTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-v158-item-filter]');if(!b)return;itemFilterV158=b.dataset.v158ItemFilter;document.querySelectorAll('#packItemTabs [data-v158-item-filter]').forEach(x=>x.classList.toggle('active',x===b));renderPackHave();scheduleRoamTranslation?.()});
-
-  // Existing reset means "empty contents", not remove physical bags. This is less destructive and matches its label.
-  const reset=document.getElementById('resetPack');if(reset)reset.textContent='Inhalte leeren';
-  const packTools=document.querySelector('#screen-pack .v15-bike-tools');if(packTools)packTools.innerHTML='<span class="v154-pack-mode" class="v154-pack-mode packBikeModeV154">Montierte Taschen</span><span class="muted">Tasche direkt am Bike antippen → Inhalt öffnen → Gegenstände verschieben</span>';
-
-  renderPackPrototype();renderOverviewDashboard();
-})();
-</script>
-
-<script id="roam-v1581-patch">
-(() => {
-  const VERSION='15.8.1';
-  function ensureCompactPackInspector(){
-    const screen=document.getElementById('screen-pack');
-    if(!screen||!screen.classList.contains('active'))return;
-    const detail=document.getElementById('packBagDetail');
-    if(detail && detail.hidden){
-      const first=document.querySelector('#packBagDock .v158-bag-card.mounted [data-v158-open-bag]');
-      first?.click();
-    }
-  }
-  const oldShowScreenV1581=showScreen;
-  showScreen=function(name){oldShowScreenV1581(name);if(name==='pack')setTimeout(ensureCompactPackInspector,30)};
-  const oldRenderPackPrototypeV1581=renderPackPrototype;
-  renderPackPrototype=function(){oldRenderPackPrototypeV1581();setTimeout(ensureCompactPackInspector,0)};
-  const label=document.querySelector('#screen-pack .v15-bike-tools .muted');
-  if(label)label.textContent='Tasche am Bike antippen → Inhalt prüfen → direkt verschieben';
-  ensureCompactPackInspector();
-})();
-</script>\n
+\n
 
 <script id="roam-v1585-pack-master-js">(()=>{const s=document.getElementById("screen-pack");if(s){s.dataset.packDesign="master-v1585";s.dataset.packVisualLayers="1"}})();</script>
 
@@ -4090,60 +3897,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
 })();
 </script>
 
-<script id="roam-v1588-four-cargo-mounts-js">
-(()=>{
- const screen=document.getElementById('screen-pack'); if(!screen)return;
- const KEY='roamCargoMountsV1588';
- const defaults={frontL:true,frontR:true,rearL:false,rearR:false};
- const read=()=>{try{return {...defaults,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(e){return {...defaults}}};
- const write=s=>localStorage.setItem(KEY,JSON.stringify(s));
- const labels={
-   frontL:['Front links','Gabel · links'],frontR:['Front rechts','Gabel · rechts'],
-   rearL:['Heck links','Hinterbau · links'],rearR:['Heck rechts','Hinterbau · rechts']
- };
- function renderCargo(){
-   const fill=document.getElementById('packFillGrid'); if(!fill)return;
-   let panel=document.getElementById('v1588CargoPanel');
-   if(!panel){panel=document.createElement('div');panel.id='v1588CargoPanel';panel.className='v1588-cargo-panel';fill.insertAdjacentElement('afterend',panel)}
-   const st=read();
-   panel.innerHTML=`<div class="v1588-cargo-title"><b>Cargo-Aufnahmen</b><small>4 unabhängige Montagepositionen</small></div>
-   <div class="v1588-cargo-grid">${Object.keys(labels).map(id=>{
-     const rear=id.startsWith('rear'),on=!!st[id];
-     return `<div class="v1588-cargo ${rear?'rear':'front'} ${on?'on':''}" data-cargo="${id}">
-       <div class="v1588-cargo-head"><span class="v1588-cargo-icon"></span><div><b>${labels[id][0]}</b><small>${labels[id][1]}</small></div></div>
-       <small>${on?'aktiv · Auto-Pack erlaubt':'nicht montiert'}</small>
-       <button type="button">${on?'Entfernen':'+ Montieren'}</button>
-     </div>`}).join('')}</div>`;
-   panel.querySelectorAll('[data-cargo] button').forEach(b=>b.onclick=()=>{
-     const id=b.closest('[data-cargo]').dataset.cargo,s=read();s[id]=!s[id];write(s);syncLegacyFork(s);renderCargo();renderRearHotspots();
-   });
- }
- function syncLegacyFork(s){
-   // Existing "fork" capacity remains the aggregate front-cargo bag.
-   // It is available to Auto-Pack only while at least one front mount is active.
-   const front=!!(s.frontL||s.frontR);
-   try{
-     if(typeof setMountedV158==='function' && typeof isMountedV158==='function' && isMountedV158('fork')!==front) setMountedV158('fork',front);
-   }catch(e){}
- }
- function renderRearHotspots(){
-   const wrap=screen.querySelector('.v15-bike-image-wrap');if(!wrap)return;
-   wrap.querySelectorAll('.v1588-rear-hotspot').forEach(x=>x.remove());
-   const s=read();
-   [['rearL','left'],['rearR','right']].forEach(([id,side])=>{
-     const b=document.createElement('button');b.type='button';b.className=`v1588-rear-hotspot ${side} ${s[id]?'on':''}`;
-     b.title=labels[id][0]+' · '+(s[id]?'entfernen':'montieren');b.textContent=s[id]?'✓':'+';
-     b.onclick=()=>{const n=read();n[id]=!n[id];write(n);renderCargo();renderRearHotspots()};
-     wrap.appendChild(b);
-   });
- }
- // expose mount state for future Auto-Pack refinements and persistence
- window.roamCargoMountsV1588={get:read,set:(id,val)=>{const s=read();s[id]=!!val;write(s);syncLegacyFork(s);renderCargo();renderRearHotspots()}};
- const prev=window.renderPackPrototype;
- if(typeof prev==='function') window.renderPackPrototype=function(){prev();renderCargo();renderRearHotspots()};
- syncLegacyFork(read());renderCargo();renderRearHotspots();
-})();
-</script>
+
 
 <script id="roam-v1589-pack-ux-final-js">
 (()=>{
@@ -4162,7 +3916,10 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
  // Migrate the old aggregate fork destination once, without losing packed items.
  const legacy=packItems.filter(x=>x.bag==='fork');
  legacy.forEach((x,i)=>x.bag=i%2?'frontR':'frontL');
- try{if(typeof setMountedV158==='function'){CARGO.forEach(id=>setMountedV158(id,!!cargoState[id]));setMountedV158('fork',false)}}catch(e){}
+ const savedMounted=(()=>{try{return JSON.parse(localStorage.getItem('roam-pack-mounted-v158')||'{}')}catch(e){return {}}})();
+ CARGO.forEach(id=>{if(typeof savedMounted[id]!=='boolean')setMountedV158(id,!!cargoState[id])});
+ setMountedV158('fork',false);
+ window.roamCargoMountsV1588={get:()=>Object.fromEntries(CARGO.map(id=>[id,ROAMPack.isMounted(id)])),set:(id,on)=>{if(CARGO.includes(id))ROAMPack.setMounted(id,!!on)}};
  try{packPersist()}catch(e){}
  const oldIcon=bagIconSvg;
  bagIconSvg=function(id){
@@ -4191,7 +3948,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
  function openOrMount(id){if(!packBags[id])return;if(typeof isMountedV158==='function'&&!isMountedV158(id)){setMountedV158(id,true);return}selectedPackBagV15=id;renderPackBagDetailV15(id);renderPackFillGrid();renderCargoBikeControls()}
  renderPackFillGrid=function(){
    const box=document.getElementById('packFillGrid');if(!box)return;const items=packProposal?.items||packItems;
-   box.innerHTML=MAIN.map(id=>{const b=packBags[id],mounted=typeof isMountedV158==='function'?isMountedV158(id):true,st=bagStats(id,items);return `<div role="button" tabindex="0" class="pack-v13-fillcard ${mounted?'':'unmounted'} ${st.over?'pack-v12-over':''} ${selectedPackBagV15===id?'selected':''}" data-bag-id="${id}"><div class="bag-svg">${bagIconSvg(id)}</div><b>${b.name}</b><strong>${mounted?`${formatLiters(st.l)} / ${formatLiters(st.cap)} L`:'nicht montiert'}</strong><div class="bar"><i style="width:${mounted?Math.min(100,st.pct):0}%"></i></div><small>${mounted?`${st.pct}% · ${st.items.length} Teile`:'+ montieren'}</small></div>`}).join('');
+   box.innerHTML=MAIN.map(id=>{const st=ROAMPack.getBag(id),b=st,mounted=st.mounted;return `<div role="button" tabindex="0" class="pack-v13-fillcard ${mounted?'':'unmounted'} ${st.over?'pack-v12-over':''} ${selectedPackBagV15===id?'selected':''}" data-bag-id="${id}"><div class="bag-svg">${bagIconSvg(id)}</div><b>${b.name}</b><strong>${mounted?`${formatLiters(st.l)} / ${formatLiters(st.cap)} L`:'nicht montiert'}</strong><div class="bar"><i style="width:${mounted?Math.min(100,st.pct):0}%"></i></div><small>${mounted?`${st.pct}% · ${st.items.length} Teile`:'+ montieren'}</small></div>`}).join('');
    box.querySelectorAll('[data-bag-id]').forEach(x=>{x.onclick=()=>openOrMount(x.dataset.bagId);x.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openOrMount(x.dataset.bagId)}}});
  };
  function renderCargoBikeControls(){
@@ -4202,7 +3959,7 @@ applyLodgingPackRules();const w152=packItems.find(x=>x.id==='water');if(w152&&(!
  const collapsed=new Set(['sleep','food','tools','electronics','docs']);
  function wireCollapse(rootId){const root=document.getElementById(rootId);if(!root)return;root.querySelectorAll('.pack-v13-group').forEach((g,i)=>{g.classList.add('v1589-collapsible');const name=g.querySelector('.pack-v13-grouphead b')?.textContent?.trim()||String(i);g.dataset.collapseKey=rootId+'-'+name;if(collapsed.has(name.toLowerCase())||sessionStorage.getItem('roam-collapse-'+g.dataset.collapseKey)==='1')g.classList.add('collapsed');const head=g.querySelector('.pack-v13-grouphead');if(head&&!head.dataset.v1589){head.dataset.v1589='1';head.onclick=()=>{g.classList.toggle('collapsed');sessionStorage.setItem('roam-collapse-'+g.dataset.collapseKey,g.classList.contains('collapsed')?'1':'0')}}})}
  const oldRenderHave=renderPackHave;renderPackHave=function(){oldRenderHave();wireCollapse('packHaveList')};
- const oldRenderNeed=renderPackNeed;renderPackNeed=function(){oldRenderNeed();wireCollapse('packNeedList')};
+ const oldRenderNeed=renderPackNeeds;renderPackNeeds=function(){oldRenderNeed();wireCollapse('packNeedList')};
  const oldRender=renderPackPrototype;renderPackPrototype=function(){oldRender();renderPackFillGrid();renderCargoBikeControls();wireCollapse('packNeedList');wireCollapse('packHaveList')};
  // Count physical bags only; bottle cages are storage/accessory, not one of the 8 bag positions.
  const oldSummary=renderPackSummary;renderPackSummary=function(){oldSummary();const e=document.getElementById('packStatBags');if(e)e.textContent=MAIN.filter(id=>typeof isMountedV158!=='function'||isMountedV158(id)).length;const meta=document.getElementById('packMeta');if(meta){const n=MAIN.filter(id=>typeof isMountedV158!=='function'||isMountedV158(id)).length;meta.textContent=meta.textContent.replace(/\d+ Taschen montiert/,`${n} Taschen montiert`)}};
@@ -4351,7 +4108,7 @@ body{overflow-x:hidden}button,input,select{max-width:100%}button{touch-action:ma
   const showAll=!!$('roam-show-all-bags')?.checked;
   const used=usedBagIds();
   const known=new Set(['saddle','frame','top','bar','fork','frontL','frontR','rearL','rearR','bottle']);
-  screen.querySelectorAll('[data-bike-layer],[data-pack-bag],[data-bag-id],.v1589-cargo-hotspot,.v1589-cargo-label').forEach(el=>{
+  screen.querySelectorAll('[data-bag-id]').forEach(el=>{
    let id=el.dataset.bikeLayer||el.dataset.packBag||el.dataset.bagId;
    if(!id){for(const c of known)if(el.classList.contains(c)){id=c;break}}
    if(!id||!known.has(id))return;
@@ -4461,6 +4218,7 @@ body{overflow-x:hidden}button,input,select{max-width:100%}button{touch-action:ma
 @media(max-width:580px){
  #screen-pack .v15-bike-image-wrap{aspect-ratio:1.45/1!important}
  #screen-pack .v158-pack-needs,#screen-pack .v158-pack-have,#screen-pack .v158-pack-bike-card{padding:12px!important}
+ #screen-pack>.route-title-row{grid-template-columns:minmax(0,1fr)!important}
  #screen-pack>.route-title-row .btn-row{flex-wrap:wrap!important}
 }
 </style>
@@ -4565,84 +4323,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </style>
 
 
-<style id="roam-v1516-explorer-css">
-#screen-pack .v15-bike-image-wrap{height:310px!important;max-height:38vh!important}
-#screen-pack .v152-pack-bike{max-height:100%!important}
-#screen-pack #roam-v1516-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
-#screen-pack #roam-v1516-toolbar button,#screen-pack #roam-v1516-positions button{border:1px solid #d8d0c1;background:#fffdf8;color:#344b3b;padding:10px 13px;border-radius:10px;font-weight:700;cursor:pointer}
-#screen-pack #roam-v1516-toolbar button[aria-pressed=true]{background:#395341;color:#fff}
-#screen-pack #roam-v1516-positions{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0 10px}
-#screen-pack #roam-v1516-positions[hidden]{display:none!important}
-#screen-pack #roam-v1516-positions button[aria-pressed=true]{background:#e4ebde;border-color:#597457}
-#screen-pack #roam-v1516-tip{font-size:12px;color:#697568;margin:4px 0 10px}
-#screen-pack .v158-pack-bike-card #packBagDetail{display:none!important}
-#screen-pack .pack-v13-fillgrid{display:none!important}
-#screen-pack .v158-pack-bike-card .pack-v13-fill-title{display:none!important}
-#roam-v1516-modal[hidden]{display:none!important}
-#roam-v1516-modal{position:fixed;inset:0;z-index:99999;background:rgba(24,35,29,.65);display:grid;place-items:center;padding:20px;overflow:auto}
-#roam-v1516-panel{background:#faf8f1;color:#283b30;width:min(900px,96vw);max-height:min(90vh,850px);overflow:auto;border-radius:22px;box-shadow:0 25px 80px #0004;padding:20px}
-#roam-v1516-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
-#roam-v1516-close{border:1px solid #d9d0bf;background:white;border-radius:50%;width:42px;height:42px;font-size:23px;cursor:pointer}
-#roam-v1516-headline{margin:0;font-size:25px}
-#roam-v1516-content{display:grid;grid-template-columns:minmax(160px,.8fr) minmax(0,1.2fr);gap:18px;align-items:start;margin-top:15px}
-#roam-v1516-bag-hero{background:#e9e4d5;border-radius:16px;min-height:240px;display:grid;place-items:center;padding:20px}
-#roam-v1516-bag-hero svg{width:90%;height:auto;max-height:220px;filter:drop-shadow(0 10px 8px #0002)}
-#roam-v1516-gear{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-#roam-v1516-gear .v158-bag-item-row{border:1px solid #e1dbce;border-radius:13px;background:white;padding:12px;display:flex;align-items:center;gap:9px;min-width:0}
-#roam-v1516-gear .v158-bag-item-row>div{min-width:0;flex:1}
-#roam-v1516-gear .v158-bag-item-row b{font-size:13px;display:block}
-#roam-v1516-gear .v158-bag-item-row small{font-size:11px;color:#6b756b;display:block}
-#roam-v1516-gear .v158-bag-item-row select{max-width:100%;font-size:11px;margin-top:5px}
-#roam-v1516-stats{color:#677469;font-size:13px;margin:8px 0}
-#roam-v1516-empty{padding:18px;background:#fff;border-radius:12px;color:#657266}
-#roam-v1516-gear .v158-bag-item-icon svg{width:25px;height:25px}
-@media(max-width:680px){#roam-v1516-modal{padding:7px}#roam-v1516-panel{padding:14px;max-height:95vh}#roam-v1516-content{grid-template-columns:1fr}#roam-v1516-bag-hero{min-height:125px}#roam-v1516-bag-hero svg{max-height:125px}#roam-v1516-gear{grid-template-columns:1fr}#roam-v1516-headline{font-size:20px}}
-</style>
-<script id="roam-v1516-explorer-js">
-(()=>{'use strict';
-const BAG=[['saddle','Satteltasche'],['frame','Rahmentasche'],['top','Oberrohrtasche'],['bar','Lenkertasche'],['fork','Gabeltaschen'],['bottle','Flaschenhalter']];
-const KEY='roam-pack-mounted-v158', $=id=>document.getElementById(id);
-function mounted(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){return {}}}
-function init(){
- const screen=$('screen-pack'),stage=$('packBikeStage'),svg=screen?.querySelector('.v152-pack-bike');if(!screen||!stage||!svg||$('roam-v1516-toolbar'))return;
- const toolbar=document.createElement('div');toolbar.id='roam-v1516-toolbar';const positions=document.createElement('div');positions.id='roam-v1516-positions';positions.hidden=true;const tip=document.createElement('p');tip.id='roam-v1516-tip';
- let mode='used',selected=null;
- const modal=document.createElement('div');modal.id='roam-v1516-modal';modal.hidden=true;modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','Taschen-Explorer');
- modal.innerHTML='<div id="roam-v1516-panel"><div id="roam-v1516-top"><div><div style="font-size:11px;letter-spacing:.12em;color:#73806e">BIKE & BAG EXPLORER</div><h2 id="roam-v1516-headline">Tasche</h2><div id="roam-v1516-stats"></div></div><button id="roam-v1516-close" aria-label="Zurück zum Fahrrad">×</button></div><div id="roam-v1516-content"><div id="roam-v1516-bag-hero"></div><div><h3 style="margin:0 0 10px">Was ist drin?</h3><div id="roam-v1516-gear"></div></div></div></div>';
- document.body.append(modal);
- function close(){modal.hidden=true;selected=null;document.body.style.removeProperty('overflow');$('packBagDetail').hidden=true;}
- $('roam-v1516-close').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!modal.hidden)close()});
- const modeButtons={};[['empty','Ohne Taschen'],['used','Meine Taschen'],['edit','Taschen bearbeiten']].forEach(([id,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{mode=id;close();paint()};toolbar.append(b);modeButtons[id]=b});
- const posButtons={};BAG.forEach(([id,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>toggle(id);positions.append(b);posButtons[id]=b});
- stage.parentNode.insertBefore(toolbar,stage);stage.parentNode.insertBefore(positions,stage);stage.parentNode.insertBefore(tip,stage);
- function paint(){const m=mounted();BAG.forEach(([id,label])=>{const layer=svg.querySelector('[data-bike-layer="'+id+'"]');if(!layer)return;const occupied=(()=>{try{const items=(typeof packProposal!=='undefined'&&packProposal?.items)||packItems;return bagStats(id,items).items.length>0}catch(_){return false}})();const on=mode!=='empty'&&m[id]===true&&(mode==='edit'||occupied);layer.classList.toggle('roam-v1514-visible',on);layer.classList.toggle('roam-v1514-hidden',!on);layer.classList.remove('v152-hidden','v154-hidden','roam-bag-inactive');layer.style.setProperty('display',on?'inline':'none','important');layer.style.setProperty('opacity',on?'1':'0','important');layer.style.setProperty('visibility',on?'visible':'hidden','important');layer.style.pointerEvents=on?'auto':'none';layer.style.cursor=on?'pointer':'default';layer.setAttribute('tabindex',on?'0':'-1');layer.setAttribute('role','button');layer.setAttribute('aria-label',label+' öffnen');posButtons[id].setAttribute('aria-pressed',String(m[id]===true))});Object.entries(modeButtons).forEach(([id,b])=>b.setAttribute('aria-pressed',String(mode===id)));positions.hidden=mode!=='edit';tip.textContent=mode==='empty'?'Fahrrad ohne Gepäck.':mode==='edit'?'Tippe eine Taschenposition an, um sie zu montieren oder zu entfernen.':'Nur befüllte Taschen werden am Fahrrad angezeigt. Leere Taschen bleiben unter „Taschen bearbeiten“ verfügbar.';}
- function toggle(id){const target=screen.querySelector('[data-v158-toggle-bag="'+id+'"]');if(!target){tip.textContent='Taschenverwaltung derzeit nicht verfügbar.';return}target.click();requestAnimationFrame(()=>{paint();setTimeout(paint,100)});}
- function open(id){if(mode==='empty'||mounted()[id]!==true)return;if(mode==='edit'){toggle(id);return}selected=id;
- // Reuse existing ROAM calculation and item move controls; do not copy or fork packing data.
- if(typeof renderPackBagDetailV15!=='function')return;renderPackBagDetailV15(id);const detail=$('packBagDetail');if(!detail)return;
- const header=detail.querySelector('h3'),stats=detail.querySelector('.v158-bag-detail-kpis'),rows=detail.querySelectorAll('.v158-bag-item-row');
- $('roam-v1516-headline').textContent=header?.textContent||BAG.find(x=>x[0]===id)?.[1]||'Tasche';$('roam-v1516-stats').textContent=Array.from(stats?.querySelectorAll('b')||[]).map(x=>x.textContent.trim()).join(' · ');
- const hero=$('roam-v1516-bag-hero');hero.replaceChildren();const icon=detail.querySelector('.v158-bag-detail-icon svg');if(icon)hero.append(icon.cloneNode(true));
- const gear=$('roam-v1516-gear');gear.replaceChildren();if(!rows.length){const empty=document.createElement('div');empty.id='roam-v1516-empty';empty.textContent='Noch keine Gegenstände in dieser Tasche.';gear.append(empty)}else rows.forEach(r=>gear.append(r));
- // Delegated item-change handler remains on detail; rows must be kept inside it for original handlers to work.
- // Bind moved select directly to its original callback before moving.
- gear.querySelectorAll('select').forEach(sel=>{const original=sel.onchange;if(original)sel.addEventListener('change',()=>{setTimeout(()=>{if(!modal.hidden)open(id)},70)})});
- modal.hidden=false;document.body.style.overflow='hidden';$('roam-v1516-close').focus();}
- BAG.forEach(([id])=>{const layer=svg.querySelector('[data-bike-layer="'+id+'"]');if(!layer)return;layer.addEventListener('click',e=>{e.stopPropagation();e.preventDefault();open(id)});layer.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(id)}})});
- // Keep the original detail in the DOM for ROAM's existing update code, but show only the Explorer.
- $('packBagDetail').hidden=true;
- // Reconcile SVG visibility after legacy renderers update style/class attributes.
- // Disconnect during paint so our own DOM writes cannot trigger a feedback loop.
- const obs=new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;obs.disconnect();paint();observe()})});
- const observe=()=>obs.observe(screen,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','hidden']});
- let scheduled=false;paint();observe();
- // Form updates may change pack state without replacing any SVG nodes.
- screen.addEventListener('change',()=>requestAnimationFrame(()=>{obs.disconnect();paint();observe()}));
- document.querySelectorAll('body *').forEach(el=>{if(!el.children.length&&/^ROAM · Beta · V15\.\d+$/.test(el.textContent?.trim()||''))el.textContent='ROAM · Beta · V15.19'});
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-})();
-</script>
+<link rel="stylesheet" href="bag-explorer.css">
+<script src="bag-explorer.js"></script>
 </body>
 </html>
 
