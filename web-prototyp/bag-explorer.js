@@ -14,6 +14,7 @@ function init(){
  const posButtons={};BAG.forEach(([id,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>toggle(id);positions.append(b);posButtons[id]=b});
  stage.parentNode.insertBefore(toolbar,stage);stage.parentNode.insertBefore(positions,stage);stage.parentNode.insertBefore(tip,stage);
  function paint(){
+   screen.dataset.bagMode=mode;
    BAG.forEach(([id,label])=>{
      const state=ROAMPack.getBag(id),layer=svg.querySelector('[data-bike-layer="'+id+'"]');
      // The old fork artwork represents the two independent front cargo mounts.

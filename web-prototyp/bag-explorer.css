@@ -36,3 +36,8 @@
 #roam-v1516-gear b{overflow-wrap:anywhere}
 #roam-v1516-top{position:sticky;top:-20px;background:#faf8f1;z-index:1}
 @media(min-width:681px) and (max-width:1024px){#roam-v1516-gear{grid-template-columns:1fr}}
+
+#screen-pack[data-bag-mode="edit"] .v158-pack-bike-card .v158-bag-section{display:block!important}
+#screen-pack[data-bag-mode="edit"] .v158-bag-dock{grid-template-columns:repeat(2,minmax(0,1fr))}
+#screen-pack[data-bag-mode="edit"] .v158-bag-main button{min-height:44px}
+@media(max-width:680px){#screen-pack[data-bag-mode="edit"] .v158-bag-dock{grid-template-columns:1fr}}
