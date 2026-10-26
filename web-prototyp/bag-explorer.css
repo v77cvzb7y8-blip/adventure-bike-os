@@ -41,3 +41,6 @@
 #screen-pack[data-bag-mode="edit"] .v158-bag-dock{grid-template-columns:repeat(2,minmax(0,1fr))}
 #screen-pack[data-bag-mode="edit"] .v158-bag-main button{min-height:44px}
 @media(max-width:680px){#screen-pack[data-bag-mode="edit"] .v158-bag-dock{grid-template-columns:1fr}}
+/* Size the panel against the padded overlay, rather than the full viewport. */
+#roam-v1516-modal{box-sizing:border-box;min-width:0}
+#roam-v1516-panel{width:min(900px,100%);min-width:0}
