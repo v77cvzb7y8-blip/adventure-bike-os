@@ -19,7 +19,7 @@ before(async()=>{
 });
 after(async()=>{await browser?.close();await new Promise(r=>server?server.close(r):r())});
 async function fixture(file,viewport){
-  const context=await browser.newContext({viewport:viewport||{width:1280,height:900}}),p=await context.newPage(),errors=[];
+  const context=await browser.newContext({viewport:viewport||{width:1280,height:900},hasTouch:true}),p=await context.newPage(),errors=[];
   p.setDefaultTimeout(5000);p.setDefaultNavigationTimeout(10000);
   p.on('pageerror',e=>errors.push(e.message));
   // These packing tests run offline: external route/map services are outside their scope.
@@ -148,6 +148,38 @@ for(const file of ['index.html','ROAM_Foundation_02_Bike_Visibility_Test.html'])
       assert.deepEqual(await p.evaluate(()=>['frontL','frontR','fork'].map(ROAMPack.isMounted)),[true,true,false]);
       await p.locator('#roam-v1516-positions button').filter({hasText:'Gabeltaschen'}).click();
       assert.deepEqual(await p.evaluate(()=>['frontL','frontR','fork'].map(ROAMPack.isMounted)),[false,false,false]);
+    }finally{await f.close()}
+  });
+
+  test(`${file}: tablet empty bag detail uses one native activation and restores focus`,async()=>{
+    const f=await fixture(file,{width:820,height:1180});try{const {p}=f;
+      await mode(p,'Taschen bearbeiten');
+      const opener=p.locator('[data-v158-bag-card="bar"] .v158-bag-main button');
+      await opener.tap();assert.equal(await p.locator('#roam-v1516-empty').count(),1);await p.locator('#roam-v1516-close').tap();
+      for(const key of ['Enter',' ']){
+        await opener.focus();await p.keyboard.press(key);
+        assert.equal(await p.locator('#roam-v1516-modal').isVisible(),true);
+        assert.equal(await p.locator('#roam-v1516-empty').count(),1);
+        assert.equal(await p.evaluate(()=>ROAMPack.isMounted('bar')),true);
+        assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+        const close=p.locator('#roam-v1516-close');
+        await p.keyboard.press('Shift+Tab');assert.equal(await close.evaluate(el=>el===document.activeElement),true);
+        await p.keyboard.press('Escape');assert.equal(await opener.evaluate(el=>el===document.activeElement),true);
+      }
+      await p.reload();assert.equal(await p.evaluate(()=>ROAMPack.isMounted('bar')),true);
+    }finally{await f.close()}
+  });
+  test(`${file}: pack interactions preserve active route and GPX geometry`,async()=>{
+    const f=await fixture(file);try{const {p}=f;
+      const initial=await p.evaluate(()=>{activateStoredTrip({coords:[[11.6,46.7,560],[11.61,46.71,590]],start:'A & B',dest:'Ziel',km:2});return JSON.stringify(readActiveRoute())});
+      await mode(p,'Taschen bearbeiten');
+      await p.locator('[data-v158-bag-card="bar"] .v158-bag-main button').click();
+      await p.keyboard.press('Escape');await mode(p,'Ohne Taschen');await mode(p,'Meine Taschen');
+      await p.reload();assert.equal(await p.evaluate(()=>JSON.stringify(readActiveRoute())),initial);
+      const downloadPromise=p.waitForEvent('download');await p.evaluate(()=>exportActiveGpx());
+      const download=await downloadPromise;const xml=await fs.readFile(await download.path(),'utf8');
+      assert.match(xml,/A &amp; B/);assert.equal((xml.match(/<trkpt /g)||[]).length,2);
+      assert.match(xml,/<trkpt lat="46.7000000" lon="11.6000000"><ele>560.0<\/ele>/);
     }finally{await f.close()}
   });
 

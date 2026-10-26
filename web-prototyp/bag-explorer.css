@@ -29,3 +29,10 @@
 #roam-v1516-empty{padding:18px;background:#fff;border-radius:12px;color:#657266}
 #roam-v1516-gear .v158-bag-item-icon svg{width:25px;height:25px}
 @media(max-width:680px){#roam-v1516-modal{padding:7px}#roam-v1516-panel{padding:14px;max-height:95vh}#roam-v1516-content{grid-template-columns:1fr}#roam-v1516-bag-hero{min-height:125px}#roam-v1516-bag-hero svg{max-height:125px}#roam-v1516-gear{grid-template-columns:1fr}#roam-v1516-headline{font-size:20px}}
+
+/* Keep detail controls reachable at tablet widths and with long item names. */
+#roam-v1516-close{min-width:44px;min-height:44px;flex-shrink:0}
+#roam-v1516-gear select{min-height:44px;width:100%}
+#roam-v1516-gear b{overflow-wrap:anywhere}
+#roam-v1516-top{position:sticky;top:-20px;background:#faf8f1;z-index:1}
+@media(min-width:681px) and (max-width:1024px){#roam-v1516-gear{grid-template-columns:1fr}}

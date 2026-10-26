@@ -18,3 +18,9 @@ including inconsistent legacy mounted flags. No personal browser data is require
 Coverage: saddle visibility and mounted status; frame contents; all three display modes;
 empty mounted bags; moves and capacity checks; proposal isolation; cancel/confirm removal;
 reload persistence; mobile width and Escape. Browser script errors fail the checked flows.
+
+Additional detail regressions (22 tests total): 820px tablet viewport with touch,
+empty mounted bag opened from the dock, native Enter/Space activation without
+unmounting, dialog focus loop/return, empty mount persistence, and active route
+preservation with downloaded GPX trackpoints/elevation/XML escaping. External
+routing services and real iPad Safari remain outside this Chromium suite.

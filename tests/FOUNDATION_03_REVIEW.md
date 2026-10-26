@@ -17,3 +17,43 @@ Das bestehende Explorer-Stylesheet ist in `bag-explorer.css` ausgelagert. Die Di
 Siehe [Testanleitung](README.md). Die Browserprüfungen verwenden synthetische Gegenstände mit exakt 4 Teilen / 5 von 14 Litern sowie 8 Teilen / 7,9 von 8 Litern und widersprüchlichen alten Montageflags. Die vier Kernprüfungen (zwei je HTML-Datei) scheitern auf dem unveränderten Ausgangsstand. Weitere Prüfungen betreffen alle drei Modi, leere Taschen, Verschieben, Kapazitätsgrenzen, Vorschau-Isolation, Entfernen mit Abbruch/Bestätigung, Neuladen, Tastaturbedienung, Cargo-Montage und mobile Dialogdarstellung.
 
 Getestet wird in Headless-Chromium. Karten, Routing, Wetter, andere Browser und reale persönliche Speicherstände sind nicht Bestandteil dieser Tests. Es gibt keine vollständige Regression aller Reiseplanungsfunktionen. Die HTML-Seiten benötigen jetzt die drei benachbarten JS/CSS-Dateien; sie sind keine eigenständigen Einzeldateien mehr.
+
+---
+
+# Foundation 03 review — 26 October 2026
+
+Reviewed PR #1 at 151d1e2 and issue #3. PR is open/draft on
+`codex/roam-foundation-03`; main at 2b26f19 is not a write target.
+The existing head has a successful GitHub Actions run (40113094265).
+
+## Next improvement
+
+Dock open buttons previously invoked the legacy detail renderer, whose panel is
+hidden by Explorer CSS. They now open the same Explorer as the bike, including
+empty mounted bags in edit mode. Opening an unmounted dock bag no longer silently
+mounts it; use its explicit Add action. Native buttons retain native Enter/Space
+click synthesis; custom SVG handlers ignore repeated keydowns. Dialog Tab stays
+inside, Escape/close returns focus, and prior body overflow is restored.
+Tablet detail rows use one column; close/select targets are at least 44px high.
+
+The original 18 browser cases are retained. Four additional cases cover both HTML
+entry points: tablet touch/keyboard empty detail and mount persistence; route
+preservation across pack interactions/reload and downloaded GPX coordinates,
+elevation and XML escaping. This is an offline regression, not live routing QA.
+
+## Remaining contradictions and gaps
+
+- Issue test strategy names `roam-foundation-03-preview`; actual PR head is
+  `codex/roam-foundation-03`. Continue on the PR head.
+- In edit mode the bike SVG still toggles mounting; issue asks direct taps to open
+  contents. Existing regression explicitly expects this toggle. Resolve together
+  with updated bike interaction tests; dock details are now available independently.
+- Fork artwork aggregates legacy fork/frontL/frontR, while its toggle only changes
+  frontL/frontR. A stored legacy fork can stay visible after toggling the pair.
+- Pair removal calls independent confirmations. Cancelling one can still remove the
+  other. Atomic pair removal needs separate implementation and regression coverage.
+- Display mode resets to used on reload; mounting/items persist, selected view does
+  not. Clarify/fix before claiming full view-state persistence.
+- No real-device Safari validation or personal legacy-storage validation yet.
+- Local JS syntax and diff checks pass. Local npm test could not launch Chromium:
+  browser download returned corrupt archives. CI is the browser validation gate.

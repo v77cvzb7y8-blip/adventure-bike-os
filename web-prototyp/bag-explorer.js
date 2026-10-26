@@ -4,12 +4,12 @@ const $=id=>document.getElementById(id);
 function init(){
  const screen=$('screen-pack'),stage=$('packBikeStage'),svg=screen?.querySelector('.v152-pack-bike');if(!screen||!stage||!svg||$('roam-v1516-toolbar'))return;
  const toolbar=document.createElement('div');toolbar.id='roam-v1516-toolbar';const positions=document.createElement('div');positions.id='roam-v1516-positions';positions.hidden=true;const tip=document.createElement('p');tip.id='roam-v1516-tip';
- let mode='used',selected=null;
+ let mode='used',selected=null,returnFocus=null,previousOverflow='';
  const modal=document.createElement('div');modal.id='roam-v1516-modal';modal.hidden=true;modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','Taschen-Explorer');
  modal.innerHTML='<div id="roam-v1516-panel"><div id="roam-v1516-top"><div><div style="font-size:11px;letter-spacing:.12em;color:#73806e">BIKE & BAG EXPLORER</div><h2 id="roam-v1516-headline">Tasche</h2><div id="roam-v1516-stats"></div></div><button id="roam-v1516-close" aria-label="Zurück zum Fahrrad">×</button></div><div id="roam-v1516-content"><div id="roam-v1516-bag-hero"></div><div><h3 style="margin:0 0 10px">Was ist drin?</h3><div id="roam-v1516-gear"></div></div></div></div>';
  document.body.append(modal);
- function close(){modal.hidden=true;selected=null;document.body.style.removeProperty('overflow');$('packBagDetail').hidden=true;}
- $('roam-v1516-close').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!modal.hidden)close()});
+ function close(){const wasOpen=!modal.hidden;modal.hidden=true;selected=null;if(wasOpen){document.body.style.overflow=previousOverflow;if(returnFocus?.isConnected)returnFocus.focus()}$('packBagDetail').hidden=true;}
+ $('roam-v1516-close').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('keydown',e=>{if(modal.hidden)return;if(e.key==='Escape'){e.preventDefault();close()}else if(e.key==='Tab'){const controls=[...modal.querySelectorAll('button,select')].filter(el=>!el.disabled);const first=controls[0],last=controls.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
  const modeButtons={};[['empty','Ohne Taschen'],['used','Meine Taschen'],['edit','Taschen bearbeiten']].forEach(([id,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{mode=id;close();paint()};toolbar.append(b);modeButtons[id]=b});
  const posButtons={};BAG.forEach(([id,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>toggle(id);positions.append(b);posButtons[id]=b});
  stage.parentNode.insertBefore(toolbar,stage);stage.parentNode.insertBefore(positions,stage);stage.parentNode.insertBefore(tip,stage);
@@ -65,12 +65,12 @@ function init(){
      text.append(name,stats,select);row.append(icon,text);gear.append(row);
    });
  }
- function open(id){
+ function open(id,contentsOnly=false){
    if(mode==='empty')return;
-   if(mode==='edit'){toggle(id);return}
+   if(mode==='edit'&&!contentsOnly){toggle(id);return}
    if(id==='fork'&&!ROAMPack.getBag(id)?.items.length){id=['frontL','frontR'].find(key=>ROAMPack.getBag(key)?.items.length)||id}
    if(!ROAMPack.getBag(id)?.mounted)return;
-   selected=id;renderContents(id);modal.hidden=false;document.body.style.overflow='hidden';$('roam-v1516-close').focus();
+   returnFocus=document.activeElement;previousOverflow=document.body.style.overflow;selected=id;renderContents(id);modal.hidden=false;document.body.style.overflow='hidden';$('roam-v1516-close').focus();
  }
  window.ROAMFoundation03={snapshot:()=>({mode,bags:Object.fromEntries(ROAMPack.bagIds().map(id=>[id,ROAMPack.getBag(id)]))}),refresh:paint};
  // Keep the original detail in the DOM for ROAM's existing update code, but show only the Explorer.
@@ -84,10 +84,15 @@ function init(){
  // Fill cards and cargo controls open the same contents, without scraping another view.
  function activate(event){
    if(event.type==='keydown'&&!['Enter',' '].includes(event.key))return;
-   const card=event.target.closest('[data-bag-id],.v1589-cargo-hotspot,[data-bike-layer]');if(!card)return;
-   const id=card.dataset.bagId||card.dataset.bikeLayer||['frontL','frontR','rearL','rearR'].find(id=>card.classList.contains(id));
+   const dock=event.target.closest('[data-v158-open-bag]');
+   const card=dock||event.target.closest('[data-bag-id],.v1589-cargo-hotspot,[data-bike-layer]');if(!card)return;
+   // Native controls synthesize a click for Enter/Space. Handle that click only.
+   if(event.type==='keydown'&&card.matches('button,input,select,a[href]'))return;
+   const id=card.dataset.v158OpenBag||card.dataset.bagId||card.dataset.bikeLayer||['frontL','frontR','rearL','rearR'].find(id=>card.classList.contains(id));
    if(!ROAMPack.getBag(id))return;
-   event.preventDefault();event.stopImmediatePropagation();open(id);
+   event.preventDefault();event.stopImmediatePropagation();if(event.repeat)return;
+   if(dock&&!ROAMPack.isMounted(id))return;
+   open(id,!!dock);
  }
  screen.addEventListener('click',activate,true);
  screen.addEventListener('keydown',activate,true);
