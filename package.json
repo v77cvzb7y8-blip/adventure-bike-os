@@ -1,0 +1,6 @@
+{
+  "name": "roam-foundation-tests",
+  "private": true,
+  "scripts": {"test": "node --test tests/bags.test.cjs"},
+  "devDependencies": {"playwright": "1.61.1"}
+}

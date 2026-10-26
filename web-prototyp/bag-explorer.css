@@ -1,0 +1,58 @@
+#screen-pack .v15-bike-image-wrap{height:310px!important;max-height:38vh!important}
+#screen-pack .v152-pack-bike{max-height:100%!important}
+#screen-pack #roam-v1516-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
+#screen-pack #roam-v1516-toolbar button,#screen-pack #roam-v1516-positions button{border:1px solid #d8d0c1;background:#fffdf8;color:#344b3b;padding:10px 13px;border-radius:10px;font-weight:700;cursor:pointer}
+#screen-pack #roam-v1516-toolbar button[aria-pressed=true]{background:#395341;color:#fff}
+#screen-pack #roam-v1516-positions{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0 10px}
+#screen-pack #roam-v1516-positions[hidden]{display:none!important}
+#screen-pack #roam-v1516-positions button[aria-pressed=true]{background:#e4ebde;border-color:#597457}
+#screen-pack #roam-v1516-tip{font-size:12px;color:#697568;margin:4px 0 10px}
+#screen-pack .v158-pack-bike-card #packBagDetail{display:none!important}
+#screen-pack .pack-v13-fillgrid{display:none!important}
+#screen-pack .v158-pack-bike-card .pack-v13-fill-title{display:none!important}
+#roam-v1516-modal[hidden]{display:none!important}
+#roam-v1516-modal{position:fixed;inset:0;z-index:99999;background:rgba(24,35,29,.65);display:grid;place-items:center;padding:20px;overflow:auto}
+#roam-v1516-panel{box-sizing:border-box;background:#faf8f1;color:#283b30;width:min(900px,96vw);max-height:min(90vh,850px);overflow:auto;border-radius:22px;box-shadow:0 25px 80px #0004;padding:20px}
+#roam-v1516-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+#roam-v1516-close{border:1px solid #d9d0bf;background:white;border-radius:50%;width:42px;height:42px;font-size:23px;cursor:pointer}
+#roam-v1516-headline{margin:0;font-size:25px}
+#roam-v1516-content{display:grid;grid-template-columns:minmax(160px,.8fr) minmax(0,1.2fr);gap:18px;align-items:start;margin-top:15px}
+#roam-v1516-bag-hero{background:#e9e4d5;border-radius:16px;min-height:240px;display:grid;place-items:center;padding:20px}
+#roam-v1516-bag-hero svg{width:90%;height:auto;max-height:220px;filter:drop-shadow(0 10px 8px #0002)}
+#roam-v1516-gear{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#roam-v1516-gear .v158-bag-item-row{border:1px solid #e1dbce;border-radius:13px;background:white;padding:12px;display:flex;align-items:center;gap:9px;min-width:0}
+#roam-v1516-gear .v158-bag-item-row>div{min-width:0;flex:1}
+#roam-v1516-gear .v158-bag-item-row b{font-size:13px;display:block}
+#roam-v1516-gear .v158-bag-item-row small{font-size:11px;color:#6b756b;display:block}
+#roam-v1516-gear .v158-bag-item-row select{max-width:100%;font-size:11px;margin-top:5px}
+#roam-v1516-stats{color:#677469;font-size:13px;margin:8px 0}
+#roam-v1516-empty{padding:18px;background:#fff;border-radius:12px;color:#657266}
+#roam-v1516-gear .v158-bag-item-icon svg{width:25px;height:25px}
+@media(max-width:680px){#roam-v1516-modal{padding:7px}#roam-v1516-panel{padding:14px;max-height:95vh}#roam-v1516-content{grid-template-columns:1fr}#roam-v1516-bag-hero{min-height:125px}#roam-v1516-bag-hero svg{max-height:125px}#roam-v1516-gear{grid-template-columns:1fr}#roam-v1516-headline{font-size:20px}}
+
+/* Keep detail controls reachable at tablet widths and with long item names. */
+#roam-v1516-close{min-width:44px;min-height:44px;flex-shrink:0}
+#roam-v1516-gear select{min-height:44px;width:100%}
+#roam-v1516-gear b{overflow-wrap:anywhere}
+#roam-v1516-top{position:sticky;top:-20px;background:#faf8f1;z-index:1}
+@media(min-width:681px) and (max-width:1024px){#roam-v1516-gear{grid-template-columns:1fr}}
+
+#screen-pack[data-bag-mode="edit"] .v158-pack-bike-card .v158-bag-section{display:block!important}
+#screen-pack[data-bag-mode="edit"] .v158-bag-dock{grid-template-columns:repeat(2,minmax(0,1fr))}
+#screen-pack[data-bag-mode="edit"] .v158-bag-main button{min-height:44px}
+@media(max-width:680px){#screen-pack[data-bag-mode="edit"] .v158-bag-dock{grid-template-columns:1fr}}
+/* Size the panel against the padded overlay, rather than the full viewport. */
+#roam-v1516-modal{box-sizing:border-box;min-width:0}
+#roam-v1516-panel{width:min(900px,100%);min-width:0}
+
+/* Tablet: the desktop header and pack actions exceed the available row width. */
+@media(min-width:721px) and (max-width:1024px){
+  .topbar{height:auto;flex-wrap:wrap;gap:12px;padding:12px 24px}
+  .top-actions{margin-left:auto}
+  .topbar .nav{order:1;flex-basis:100%;min-width:0;flex-wrap:wrap}
+}
+@media(min-width:601px) and (max-width:1024px){
+  #screen-pack .route-title-row{flex-wrap:wrap}
+  #screen-pack .route-title-row>.btn-row{width:100%;min-width:0}
+  #screen-pack .route-title-row>.btn-row .btn{min-width:0;max-width:100%;white-space:normal}
+}
