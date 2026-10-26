@@ -116,7 +116,7 @@ for(const file of ['index.html','ROAM_Foundation_02_Bike_Visibility_Test.html'])
     const f=await fixture(file,{width:390,height:844});try{const {p}=f;
       await bag(p,'frame').dispatchEvent('click');
       assert.equal(await p.locator('#roam-v1516-modal').isVisible(),true);
-      assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+      assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,JSON.stringify(await p.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,overflow:[...document.querySelectorAll('body *')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&r.right>innerWidth+1}).map(e=>({tag:e.tagName,id:e.id,cls:String(e.className).slice(0,80),right:Math.round(e.getBoundingClientRect().right)})).slice(0,20)}))));
       if(process.env.ROAM_SCREENSHOT_DIR){await fs.mkdir(process.env.ROAM_SCREENSHOT_DIR,{recursive:true});await p.screenshot({path:path.join(process.env.ROAM_SCREENSHOT_DIR,file+'.png')})}
       await p.keyboard.press('Escape');assert.equal(await p.locator('#roam-v1516-modal').isVisible(),false);
       assert.deepEqual(f.errors,[]);
@@ -161,7 +161,7 @@ for(const file of ['index.html','ROAM_Foundation_02_Bike_Visibility_Test.html'])
         assert.equal(await p.locator('#roam-v1516-modal').isVisible(),true);
         assert.equal(await p.locator('#roam-v1516-empty').count(),1);
         assert.equal(await p.evaluate(()=>ROAMPack.isMounted('bar')),true);
-        assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+        assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,JSON.stringify(await p.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,overflow:[...document.querySelectorAll('body *')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&r.right>innerWidth+1}).map(e=>({tag:e.tagName,id:e.id,cls:String(e.className).slice(0,80),right:Math.round(e.getBoundingClientRect().right)})).slice(0,20)}))));
         const close=p.locator('#roam-v1516-close');
         await p.keyboard.press('Shift+Tab');assert.equal(await close.evaluate(el=>el===document.activeElement),true);
         await p.keyboard.press('Escape');assert.equal(await opener.evaluate(el=>el===document.activeElement),true);
