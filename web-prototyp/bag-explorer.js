@@ -3,6 +3,10 @@ const BAG=[['saddle','Satteltasche'],['frame','Rahmentasche'],['top','Oberrohrta
 const $=id=>document.getElementById(id);
 function init(){
  const screen=$('screen-pack'),stage=$('packBikeStage'),svg=screen?.querySelector('.v152-pack-bike');if(!screen||!stage||!svg||$('roam-v1516-toolbar'))return;
+ // Explorer edit mode owns setup visibility; retire the legacy nested accordion.
+ $('roam-v1512-toggle-dock')?.remove();
+ $('packBagDock')?.classList.remove('roam-v1512-collapsed');
+ screen.querySelector('.v158-section-title')?.classList.remove('roam-v1512-collapsed');
  const toolbar=document.createElement('div');toolbar.id='roam-v1516-toolbar';const positions=document.createElement('div');positions.id='roam-v1516-positions';positions.hidden=true;const tip=document.createElement('p');tip.id='roam-v1516-tip';
  let mode='used',selected=null,returnFocus=null,previousOverflow='';
  const modal=document.createElement('div');modal.id='roam-v1516-modal';modal.hidden=true;modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-label','Taschen-Explorer');
